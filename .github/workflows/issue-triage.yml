@@ -1,0 +1,97 @@
+name: "Automated Issue Triage"
+
+on:
+  issues:
+    types: [opened, edited, reopened]
+
+permissions:
+  contents: read
+  issues: write
+  models: read
+
+jobs:
+  triage:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      # 1️⃣ Regex-based labeling
+      - name: Apply regex labels
+        uses: actions/labeler@v5
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          configuration-path: .github/labeler.yml
+
+      # 2️⃣ AI semantic labeling
+      - name: AI-based classification
+        id: ai_label
+        uses: actions/github-script@v7
+        continue-on-error: true
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const { data: issue } = await github.rest.issues.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number
+            });
+
+            // Skip if labels already exist
+            if (issue.labels.length > 0) {
+              console.log("Regex labels applied, skipping AI.");
+              return;
+            }
+
+            const prompt = `Classify this GitHub issue into labels from the following:
+["bug","feature","documentation","question","discussion","security","priority: high","priority: medium","priority: low","status: needs triage","status: in progress","status: needs review","status: duplicate","status: wontfix"]
+Title: "${issue.title}"
+Body: "${issue.body}"
+Return only a JSON array of labels.`;
+
+            let response;
+            try {
+              response = await github.models.run({
+                model: "github/semantic-classifier",
+                input: prompt
+              });
+              console.log("Model response:", response.result);
+            } catch (err) {
+              console.error("Error calling GitHub Model:", err.message);
+              return;
+            }
+
+            let labels = [];
+            try {
+              labels = JSON.parse(response.result);
+            } catch (err) {
+              console.error("Failed to parse AI output:", err.message);
+              return;
+            }
+
+            if (labels.length > 0) {
+              await github.rest.issues.addLabels({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                labels
+              });
+              console.log("AI labels applied:", labels);
+            }
+
+      # 3️⃣ Duplicate detection
+      - name: Duplicate detection
+        uses: pelikhan/action-genai-issue-dedup@v0
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          labels: auto
+          count: 20
+          max_duplicates: 2
+          label_as_duplicate: true
+          comment: true
+
+      # 4️⃣ Final logging
+      - name: Workflow Summary
+        run: |
+          echo "✅ Issue triage workflow completed for #${{ github.event.issue.number }}"

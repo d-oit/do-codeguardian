@@ -18,6 +18,18 @@ pub struct Config {
     /// Non-production code detector settings
     pub non_production: NonProductionConfig,
     
+    /// Dependency analyzer settings
+    pub dependency: DependencyAnalyzerConfig,
+    
+    /// Performance analyzer settings  
+    pub performance_analyzer: PerformanceAnalyzerConfig,
+    
+    /// Security analyzer settings
+    pub security_analyzer: SecurityAnalyzerConfig,
+    
+    /// Code quality analyzer settings
+    pub code_quality: CodeQualityConfig,
+    
     /// Security settings
     pub security: SecurityConfig,
     
@@ -163,6 +175,10 @@ impl Default for Config {
             integrity: IntegrityConfig::default(),
             lint_drift: LintDriftConfig::default(),
             non_production: NonProductionConfig::default(),
+            dependency: DependencyAnalyzerConfig::default(),
+            performance_analyzer: PerformanceAnalyzerConfig::default(),
+            security_analyzer: SecurityAnalyzerConfig::default(),
+            code_quality: CodeQualityConfig::default(),
             security: SecurityConfig::default(),
             performance: PerformanceConfig::default(),
         }
@@ -634,6 +650,129 @@ impl Config {
                 use_mmap: true,
                 memory_pool_mb: 512,
             },
+        }
+    }
+}
+
+// New analyzer configurations
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct DependencyAnalyzerConfig {
+    /// Enable dependency analysis
+    pub enabled: bool,
+    /// Check for vulnerable packages
+    pub check_vulnerabilities: bool,
+    /// Check for outdated dependencies
+    pub check_outdated: bool,
+    /// Check for license compliance
+    pub check_licenses: bool,
+    /// Allowed licenses (empty = allow all)
+    pub allowed_licenses: Vec<String>,
+}
+
+impl Default for DependencyAnalyzerConfig {
+    fn default() -> Self {
+        Self {
+            enabled: true,
+            check_vulnerabilities: true,
+            check_outdated: true,
+            check_licenses: false,
+            allowed_licenses: vec![
+                "MIT".to_string(),
+                "Apache-2.0".to_string(),
+                "BSD-3-Clause".to_string(),
+                "ISC".to_string(),
+            ],
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PerformanceAnalyzerConfig {
+    /// Enable performance analysis
+    pub enabled: bool,
+    /// Check for nested loops
+    pub check_nested_loops: bool,
+    /// Check for inefficient string operations
+    pub check_string_operations: bool,
+    /// Check for blocking I/O
+    pub check_blocking_io: bool,
+    /// Maximum acceptable cyclomatic complexity
+    pub max_complexity: usize,
+    /// Maximum acceptable function length
+    pub max_function_length: usize,
+}
+
+impl Default for PerformanceAnalyzerConfig {
+    fn default() -> Self {
+        Self {
+            enabled: true,
+            check_nested_loops: true,
+            check_string_operations: true,
+            check_blocking_io: true,
+            max_complexity: 10,
+            max_function_length: 50,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SecurityAnalyzerConfig {
+    /// Enable security analysis
+    pub enabled: bool,
+    /// Check for SQL injection vulnerabilities
+    pub check_sql_injection: bool,
+    /// Check for XSS vulnerabilities
+    pub check_xss: bool,
+    /// Check for command injection
+    pub check_command_injection: bool,
+    /// Check for hardcoded secrets
+    pub check_hardcoded_secrets: bool,
+    /// Minimum entropy threshold for secret detection
+    pub min_entropy_threshold: f64,
+}
+
+impl Default for SecurityAnalyzerConfig {
+    fn default() -> Self {
+        Self {
+            enabled: true,
+            check_sql_injection: true,
+            check_xss: true,
+            check_command_injection: true,
+            check_hardcoded_secrets: true,
+            min_entropy_threshold: 3.5,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CodeQualityConfig {
+    /// Enable code quality analysis
+    pub enabled: bool,
+    /// Check for magic numbers
+    pub check_magic_numbers: bool,
+    /// Check for complex conditions
+    pub check_complex_conditions: bool,
+    /// Check for deep nesting
+    pub check_deep_nesting: bool,
+    /// Check for commented-out code
+    pub check_commented_code: bool,
+    /// Maximum acceptable nesting depth
+    pub max_nesting_depth: usize,
+    /// Maximum acceptable file size (lines)
+    pub max_file_size: usize,
+}
+
+impl Default for CodeQualityConfig {
+    fn default() -> Self {
+        Self {
+            enabled: true,
+            check_magic_numbers: true,
+            check_complex_conditions: true,
+            check_deep_nesting: true,
+            check_commented_code: true,
+            max_nesting_depth: 6,
+            max_file_size: 500,
         }
     }
 }

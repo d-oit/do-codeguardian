@@ -65,6 +65,37 @@ secret_patterns = [
     "(?i)authorization\\s*:\\s*bearer\\s+([a-zA-Z0-9_\\-\\.]{20,})"
 ]
 
+[analyzers.dependency]
+enabled = true
+check_vulnerabilities = true
+check_outdated = true
+check_licenses = false
+
+[analyzers.performance_analyzer]
+enabled = true
+check_nested_loops = true
+check_string_operations = true
+check_blocking_io = true
+max_complexity = 10
+max_function_length = 50
+
+[analyzers.security_analyzer]
+enabled = true
+check_sql_injection = true
+check_xss = true
+check_command_injection = true
+check_hardcoded_secrets = true
+min_entropy_threshold = 3.5
+
+[analyzers.code_quality]
+enabled = true
+check_magic_numbers = true
+check_complex_conditions = true
+check_deep_nesting = true
+check_commented_code = true
+max_nesting_depth = 6
+max_file_size = 500
+
 # Suppression support
 [suppression]
 # Inline suppression format

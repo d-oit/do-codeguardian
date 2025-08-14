@@ -1,0 +1,44 @@
+# Rust
+/target/
+**/*.rs.bk
+Cargo.lock
+
+# VS Code
+.vscode/
+.code-workspace
+
+.env
+
+# OS generated
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# By-products
+*.tmp
+*.swp
+*.swo
+
+# Backup files
+*~
+
+# Python (if any scripts or notebooks are added)
+__pycache__/
+*.pyc
+
+# Shell history
+*.history
+
+# Ignore local config
+examples/codeguardian.toml
+
+# Ignore compiled binaries
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Ignore notebooks (if any)
+*.ipynb

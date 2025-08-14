@@ -4,6 +4,7 @@ use crate::core::GuardianEngine;
 use crate::types::AnalysisResults;
 use crate::utils::progress::ProgressReporter;
 use anyhow::Result;
+use is_terminal::IsTerminal;
 use std::time::Instant;
 use tokio::fs;
 
@@ -17,7 +18,7 @@ pub async fn run(args: CheckArgs) -> Result<()> {
     });
 
     // Initialize progress reporter (TTY-aware)
-    let progress = ProgressReporter::new(!args.quiet && atty::is(atty::Stream::Stdout));
+    let progress = ProgressReporter::new(!args.quiet && std::io::stdout().is_terminal());
 
     // Initialize the Guardian engine
     let mut engine = GuardianEngine::new(config, progress).await?;

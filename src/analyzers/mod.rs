@@ -1,6 +1,11 @@
 pub mod integrity;
 pub mod lint_drift;
 pub mod non_production;
+pub mod dependency_analyzer;
+pub mod performance_analyzer;
+pub mod security_analyzer;
+pub mod code_quality_analyzer;
+pub mod optimized_patterns;
 
 use crate::types::{AnalysisResults, Finding};
 use anyhow::Result;
@@ -26,6 +31,12 @@ impl AnalyzerRegistry {
         registry.register(Box::new(integrity::IntegrityAnalyzer::new()));
         registry.register(Box::new(lint_drift::LintDriftAnalyzer::new()));
         registry.register(Box::new(non_production::NonProductionAnalyzer::new()));
+        
+        // Register enhanced analyzers
+        registry.register(Box::new(dependency_analyzer::DependencyAnalyzer::new()));
+        registry.register(Box::new(performance_analyzer::PerformanceAnalyzer::new()));
+        registry.register(Box::new(security_analyzer::SecurityAnalyzer::new()));
+        registry.register(Box::new(code_quality_analyzer::CodeQualityAnalyzer::new()));
         
         registry
     }

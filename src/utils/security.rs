@@ -1,15 +1,14 @@
 use regex::Regex;
 use std::collections::HashSet;
+use once_cell::sync::Lazy;
 
 /// Security-by-default: redact common secret patterns
 pub fn redact_secrets(text: &str) -> String {
-    lazy_static::lazy_static! {
-        static ref SECRET_PATTERNS: Vec<Regex> = vec![
-            Regex::new(r"(?i)(token|secret|password|bearer|api[_-]?key)\s*[:=]\s*['\"]?([a-zA-Z0-9_\-]{8,})['\"]?").unwrap(),
-            Regex::new(r"(?i)authorization\s*:\s*bearer\s+([a-zA-Z0-9_\-\.]{20,})").unwrap(),
-            Regex::new(r"(?i)(aws_access_key_id|aws_secret_access_key)\s*[:=]\s*['\"]?([A-Z0-9]{16,})['\"]?").unwrap(),
-        ];
-    }
+    static SECRET_PATTERNS: Lazy<Vec<Regex>> = Lazy::new(|| vec![
+        Regex::new(r"(?i)(token|secret|password|bearer|api[_-]?key)\s*[:=]\s*['\"]?([a-zA-Z0-9_\-]{8,})['\"]?").unwrap(),
+        Regex::new(r"(?i)authorization\s*:\s*bearer\s+([a-zA-Z0-9_\-\.]{20,})").unwrap(),
+        Regex::new(r"(?i)(aws_access_key_id|aws_secret_access_key)\s*[:=]\s*['\"]?([A-Z0-9]{16,})['\"]?").unwrap(),
+    ]);
 
     let mut redacted = text.to_string();
     

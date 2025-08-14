@@ -7,8 +7,13 @@ mod core;
 mod types;
 mod analyzers;
 mod github;
+mod github_api;
 mod utils;
 mod report;
+mod cache;
+mod error;
+mod ml;
+mod streaming;
 
 use cli::*;
 
