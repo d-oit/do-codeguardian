@@ -25,7 +25,7 @@ jobs:
     - name: Install CodeGuardian
       run: |
         # Replace with actual installation method
-        cargo install --git https://github.com/your-org/codeguardian
+        cargo install --git https://github.com/d-oit/do-codeguardian
     
     - name: Run CodeGuardian (PR diff-only)
       run: |
@@ -65,7 +65,7 @@ jobs:
     - name: Install CodeGuardian
       run: |
         # Replace with actual installation method
-        cargo install --git https://github.com/your-org/codeguardian
+        cargo install --git https://github.com/d-oit/do-codeguardian
     
     - name: Run CodeGuardian (Full scan)
       run: |
@@ -103,7 +103,7 @@ jobs:
     
     - name: Install CodeGuardian
       run: |
-        cargo install --git https://github.com/your-org/codeguardian
+        cargo install --git https://github.com/d-oit/do-codeguardian
     
     - name: Update baseline
       run: |
