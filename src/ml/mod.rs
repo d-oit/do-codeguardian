@@ -18,7 +18,7 @@ impl MLClassifier {
             .and_then(|path| fann_classifier::FannClassifier::load(path).ok());
         
         Self {
-            classifier,
+            classifier: classifier.clone(),
             feature_extractor: feature_extractor::FeatureExtractor::new(),
             enabled: classifier.is_some(),
         }

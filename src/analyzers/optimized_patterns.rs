@@ -34,32 +34,32 @@ impl SecurityPatterns {
         Self {
             // Combined secret patterns - single regex instead of multiple
             secrets_combined: Regex::new(
-                r"(?i)(?:password|secret|token|api[_-]?key|private[_-]?key|auth[_-]?token|jwt[_-]?secret)\s*[:=]\s*['\"]([^'\"]{8,})['\"]|AKIA[0-9A-Z]{16}|ghp_[0-9a-zA-Z]{36}|xox[baprs]-[0-9a-zA-Z-]{10,48}"
+                r#"(?i)(?:password|secret|token|api[_-]?key|private[_-]?key|auth[_-]?token|jwt[_-]?secret)\s*[:=]\s*["']([^"']{8,})["']|AKIA[0-9A-Z]{16}|ghp_[0-9a-zA-Z]{36}|xox[baprs]-[0-9a-zA-Z-]{10,48}"#
             ).unwrap(),
             
             // Simplified SQL injection pattern - focus on most common cases
             sql_injection_fast: Regex::new(
-                r"(?i)(?:select|insert|update|delete)\s+.*\+.*['\"]|query\s*\(\s*['\"].*\+"
+                r#"(?i)(?:select|insert|update|delete)\s+.*\+.*["']|query\s*\(\s*["'].*\+"#
             ).unwrap(),
             
             // Simplified XSS pattern
             xss_fast: Regex::new(
-                r"(?i)innerHTML\s*=.*\+|document\.write\s*\(.*\+|dangerouslySetInnerHTML"
+                r#"(?i)innerHTML\s*=.*\+|document\.write\s*\(.*\+|dangerouslySetInnerHTML"#
             ).unwrap(),
             
             // Simplified command injection
             command_injection_fast: Regex::new(
-                r"(?i)(?:system|exec|shell_exec)\s*\(.*\$|Runtime\.getRuntime\(\)\.exec\(.*\+"
+                r#"(?i)(?:system|exec|shell_exec)\s*\(.*\$|Runtime\.getRuntime\(\)\.exec\(.*\+"#
             ).unwrap(),
             
             // Simplified weak crypto
             weak_crypto_fast: Regex::new(
-                r"(?i)(?:md5|sha1|des|rc4)\s*\(|MessageDigest\.getInstance\s*\(\s*['\"](?:MD5|SHA1)"
+                r#"(?i)(?:md5|sha1|des|rc4)\s*\(|MessageDigest\.getInstance\s*\(\s*["'](?:MD5|SHA1)"#
             ).unwrap(),
             
             // High entropy string detection (optimized)
             high_entropy_check: Regex::new(
-                r"['\"][a-zA-Z0-9+/=]{32,}['\"]"
+                r#"["'][a-zA-Z0-9+/=]{32,}["']"#
             ).unwrap(),
         }
     }
@@ -83,7 +83,7 @@ impl PerformancePatterns {
             
             // Optimized string concatenation detection
             string_concat_fast: Regex::new(
-                r"\+=\s*['\"]|String\s*\+\s*['\"]|\+\s*['\"][^'\"]*['\"]"
+                r#"\+=\s*["']|String\s*\+\s*["']|\+\s*["'][^"']*["']"#
             ).unwrap(),
             
             // Simplified blocking I/O detection
@@ -160,7 +160,7 @@ impl DependencyPatterns {
             
             // Cargo.toml dependency patterns
             cargo_toml_deps: Regex::new(
-                r"^(\w+)\s*=\s*(?:\{[^}]*\}|['\"][^'\"]*['\"])"
+                r#"^(\w+)\s*=\s*(?:\{[^}]*\}|["'][^"']*["'])"#
             ).unwrap(),
             
             // Version range detection

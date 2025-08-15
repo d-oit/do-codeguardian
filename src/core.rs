@@ -137,7 +137,7 @@ impl GuardianEngine {
             let streaming_analyzer = Arc::new(&self.streaming_analyzer);
             
             let findings: Vec<Vec<Finding>> = uncached_files
-                .par_chunks(uncached_files.len() / num_workers.max(1))
+                .chunks(uncached_files.len() / num_workers.max(1))
                 .map(|chunk| {
                     let mut chunk_findings = Vec::new();
                     for file_path in chunk {

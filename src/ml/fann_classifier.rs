@@ -4,7 +4,7 @@ use std::path::Path;
 
 /// Lightweight neural network classifier using FANN
 pub struct FannClassifier {
-    network: fann::FannNetwork,
+    network: fann::Fann,
     input_size: usize,
     learning_rate: f32,
 }
@@ -21,17 +21,17 @@ pub struct NetworkConfig {
 impl FannClassifier {
     /// Create a new classifier with the given configuration
     pub fn new(config: NetworkConfig) -> Result<Self> {
-        let mut layers = vec![config.input_size];
-        layers.extend(config.hidden_layers);
-        layers.push(config.output_size);
+        let mut layers = vec![config.input_size as u32];
+        layers.extend(config.hidden_layers.iter().map(|&x| x as u32));
+        layers.push(config.output_size as u32);
 
-        let network = fann::FannNetwork::new(&layers)
+        let network = fann::Fann::new(&layers)
             .map_err(|e| anyhow!("Failed to create FANN network: {:?}", e))?;
 
         // Configure network
         network.set_learning_rate(config.learning_rate);
-        network.set_activation_function_hidden(fann::ActivationFunction::Sigmoid);
-        network.set_activation_function_output(fann::ActivationFunction::Sigmoid);
+        network.set_activation_func_hidden(fann::ActivationFunc::Sigmoid);
+        network.set_activation_func_output(fann::ActivationFunc::Sigmoid);
 
         Ok(Self {
             network,
@@ -42,7 +42,7 @@ impl FannClassifier {
 
     /// Load a pre-trained model from file
     pub fn load<P: AsRef<Path>>(path: P) -> Result<Self> {
-        let network = fann::FannNetwork::load(path.as_ref())
+        let network = fann::Fann::from_file(path.as_ref())
             .map_err(|e| anyhow!("Failed to load FANN network: {:?}", e))?;
 
         // Extract configuration from loaded network

@@ -5,6 +5,7 @@ use crate::types::AnalysisResults;
 use crate::utils::progress::ProgressReporter;
 use anyhow::Result;
 use is_terminal::IsTerminal;
+use std::path::Path;
 use std::time::Instant;
 use tokio::fs;
 
@@ -12,7 +13,7 @@ pub async fn run(args: CheckArgs) -> Result<()> {
     let start_time = Instant::now();
     
     // Load configuration
-    let config = Config::load_from_file("codeguardian.toml").unwrap_or_else(|_| {
+    let config = Config::load(Path::new("codeguardian.toml")).unwrap_or_else(|_| {
         eprintln!("Warning: No configuration file found, using defaults");
         Config::default()
     });

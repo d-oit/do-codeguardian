@@ -2,6 +2,7 @@ use crate::analyzers::Analyzer;
 use crate::analyzers::optimized_patterns::{PERFORMANCE_PATTERNS, AnalysisOptimizer, FileType};
 use crate::types::{Finding, Severity};
 use anyhow::Result;
+use regex::Regex;
 use std::path::Path;
 
 /// Analyzer for detecting potential performance issues and anti-patterns
@@ -18,12 +19,12 @@ pub struct PerformanceAnalyzer {
 impl PerformanceAnalyzer {
     pub fn new() -> Self {
         Self {
-            nested_loop_pattern: Regex::new(r"for\s*\([^}]*for\s*\(|while\s*\([^}]*while\s*\(|\.forEach\([^}]*\.forEach\(").unwrap(),
-            string_concat_pattern: Regex::new(r"\+\s*=\s*[\"']|String\s*\+|str\s*\+\s*str").unwrap(),
-            inefficient_collection_pattern: Regex::new(r"\.contains\(.*\).*for|\.indexOf\(.*\).*for|in\s+list.*for").unwrap(),
-            blocking_io_pattern: Regex::new(r"\.read\(\)|\.write\(\)|\.sleep\(|Thread\.sleep|time\.sleep|fs\.readFileSync|fs\.writeFileSync").unwrap(),
-            memory_leak_pattern: Regex::new(r"setInterval\(|addEventListener\(.*,.*\)|on\(.*,.*function|\.on\(.*,.*=>").unwrap(),
-            inefficient_regex_pattern: Regex::new(r"new\s+RegExp\(|Regex::new\(.*\).*for|Pattern\.compile\(.*\).*for").unwrap(),
+            nested_loop_pattern: Regex::new(r#"for\s*\([^}]*for\s*\(|while\s*\([^}]*while\s*\(|\.forEach\([^}]*\.forEach\("#).unwrap(),
+            string_concat_pattern: Regex::new(r#"\+\s*=\s*[\"']|String\s*\+|str\s*\+\s*str"#).unwrap(),
+            inefficient_collection_pattern: Regex::new(r#"\.contains\(.*\).*for|\.indexOf\(.*\).*for|in\s+list.*for"#).unwrap(),
+            blocking_io_pattern: Regex::new(r#"\.read\(\)|\.write\(\)|\.sleep\(|Thread\.sleep|time\.sleep|fs\.readFileSync|fs\.writeFileSync"#).unwrap(),
+            memory_leak_pattern: Regex::new(r#"setInterval\(|addEventListener\(.*,.*\)|on\(.*,.*function|\.on\(.*,.*=>"#).unwrap(),
+            inefficient_regex_pattern: Regex::new(r#"new\s+RegExp\(|Regex::new\(.*\).*for|Pattern\.compile\(.*\).*for"#).unwrap(),
         }
     }
 

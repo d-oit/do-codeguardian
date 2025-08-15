@@ -77,7 +77,7 @@ impl IntegrityAnalyzer {
     
     fn should_not_be_empty(&self, file_path: &Path) -> bool {
         if let Some(ext) = file_path.extension().and_then(|e| e.to_str()) {
-            matches!(ext, "rs" | "js" | "ts" | "py" | "java" | "cpp" | "c" | "h")
+            matches!(ext, "rs" | "js" | "ts" | "py" | "java" | "cpp" | "c" | "h" | "sh")
         } else {
             false
         }

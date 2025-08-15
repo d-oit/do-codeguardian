@@ -4,6 +4,7 @@ pub mod non_production;
 pub mod dependency_analyzer;
 pub mod performance_analyzer;
 pub mod security_analyzer;
+pub mod security_checks;
 pub mod code_quality_analyzer;
 pub mod optimized_patterns;
 

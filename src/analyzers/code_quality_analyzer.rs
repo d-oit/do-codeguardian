@@ -65,8 +65,8 @@ impl CodeQualityAnalyzer {
                     line_number,
                     "Magic number detected".to_string(),
                 )
-                .with_description("Magic numbers make code harder to understand and maintain")
-                .with_suggestion("Replace magic numbers with named constants")
+                .with_description("Magic numbers make code harder to understand and maintain".to_string())
+                .with_suggestion("Replace magic numbers with named constants".to_string())
             );
         }
 
@@ -81,8 +81,8 @@ impl CodeQualityAnalyzer {
                     line_number,
                     "Complex conditional expression".to_string(),
                 )
-                .with_description("Complex conditions with multiple logical operators are hard to read and test")
-                .with_suggestion("Break complex conditions into smaller, named boolean variables")
+                .with_description("Complex conditions with multiple logical operators are hard to read and test".to_string())
+                .with_suggestion("Break complex conditions into smaller, named boolean variables".to_string())
             );
         }
 
@@ -97,8 +97,8 @@ impl CodeQualityAnalyzer {
                     line_number,
                     format!("Long line ({} characters)", line.len()),
                 )
-                .with_description("Long lines reduce readability and can indicate complex logic")
-                .with_suggestion("Break long lines into multiple lines or simplify the expression")
+                .with_description("Long lines reduce readability and can indicate complex logic".to_string())
+                .with_suggestion("Break long lines into multiple lines or simplify the expression".to_string())
             );
         }
 
@@ -114,8 +114,8 @@ impl CodeQualityAnalyzer {
                     line_number,
                     "Deep nesting detected".to_string(),
                 )
-                .with_description("Deep nesting makes code harder to understand and test")
-                .with_suggestion("Consider extracting nested logic into separate functions")
+                .with_description("Deep nesting makes code harder to understand and test".to_string())
+                .with_suggestion("Consider extracting nested logic into separate functions".to_string())
             );
         }
 
@@ -242,8 +242,8 @@ impl CodeQualityAnalyzer {
                         start_line,
                         format!("Function '{}' is too long ({} lines)", func_name, line_count),
                     )
-                    .with_description("Long functions are harder to understand and maintain")
-                    .with_suggestion("Break this function into smaller, more focused functions")
+                    .with_description("Long functions are harder to understand and maintain".to_string())
+                    .with_suggestion("Break this function into smaller, more focused functions".to_string())
                 );
             }
 
@@ -259,8 +259,8 @@ impl CodeQualityAnalyzer {
                         start_line,
                         format!("Function '{}' has too many parameters ({})", func_name, param_count),
                     )
-                    .with_description("Functions with many parameters are hard to use and test")
-                    .with_suggestion("Consider using a struct/object to group related parameters")
+                    .with_description("Functions with many parameters are hard to use and test".to_string())
+                    .with_suggestion("Consider using a struct/object to group related parameters".to_string())
                 );
             }
         }
@@ -333,7 +333,7 @@ impl CodeQualityAnalyzer {
                                     .with_suggestion("Follow PEP 8: group imports at the top")
                                 );
                             }
-                        } else if !trimmed.is_empty() && !trimmed.startswith("#") && !trimmed.startswith("\"\"\"") {
+                        } else if !trimmed.is_empty() && !trimmed.starts_with("#") && !trimmed.starts_with("\"\"\"") {
                             found_non_import = true;
                         }
                     }

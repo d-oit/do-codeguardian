@@ -223,6 +223,7 @@ impl RateLimiter {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[cfg(test)]
     use tokio::time::{advance, pause, resume};
 
     #[tokio::test]

@@ -45,10 +45,10 @@ jobs:
             }
 
             const prompt = `Classify this GitHub issue into labels from the following:
-["bug","feature","documentation","question","discussion","security","priority: high","priority: medium","priority: low","status: needs triage","status: in progress","status: needs review","status: duplicate","status: wontfix"]
-Title: "${issue.title}"
-Body: "${issue.body}"
-Return only a JSON array of labels.`;
+              ["bug","feature","documentation","question","discussion","security","priority: high","priority: medium","priority: low","status: needs triage","status: in progress","status: needs review","status: duplicate","status: wontfix"]
+              Title: "${issue.title}"
+              Body: "${issue.body}"
+              Return only a JSON array of labels.`;
 
             let response;
             try {

@@ -99,6 +99,10 @@ pub struct CheckArgs {
     #[arg(short, long, default_value = "0")]
     pub parallel: usize,
 
+    /// Suppress all output except errors
+    #[arg(short, long)]
+    pub quiet: bool,
+
     /// Baseline file for drift analysis
     #[arg(short, long)]
     pub baseline: Option<PathBuf>,

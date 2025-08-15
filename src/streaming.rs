@@ -165,6 +165,7 @@ impl AdaptiveChunking {
 mod tests {
     use super::*;
     use tempfile::NamedTempFile;
+use std::io::Write;
     use tokio::io::AsyncWriteExt;
 
     #[tokio::test]

@@ -162,18 +162,18 @@ async fn create_interactive_config() -> Result<Config> {
         config.security.max_memory_mb = 512;
         config.security.operation_timeout = 180;
         config.integrity.verify_signatures = true;
-        config.integrity.baseline_file = Some("security-baseline.json".to_string());
+        config.integrity.baseline_file = Some("security-baseline.json".to_string().into());
         
         // Add security-focused patterns
         config.non_production.patterns.extend(vec![
             crate::config::NonProdPattern {
-                pattern: r"(?i)(password|secret|key|token)\s*=\s*[\"'][^\"']+[\"']".to_string(),
+                pattern: r#"(?i)(password|secret|key|token)\s*=\s*["'][^"']+["']"#.to_string(),
                 description: "Hardcoded credentials".to_string(),
                 severity: "critical".to_string(),
                 exclude_paths: vec!["**/tests/**".to_string(), "**/examples/**".to_string()],
             },
             crate::config::NonProdPattern {
-                pattern: r"(?i)api[_-]?key\s*[:=]\s*[\"'][^\"']+[\"']".to_string(),
+                pattern: r#"(?i)api[_-]?key\s*[:=]\s*["'][^"']+["']"#.to_string(),
                 description: "Hardcoded API key".to_string(),
                 severity: "critical".to_string(),
                 exclude_paths: vec!["**/tests/**".to_string()],
@@ -186,12 +186,12 @@ async fn create_interactive_config() -> Result<Config> {
         config.performance.worker_threads = 0; // Auto-detect
         config.performance.memory_pool_mb = 512;
         config.security.operation_timeout = 600; // 10 minutes for CI
-        config.lint_drift.baseline_file = Some("ci-baseline.json".to_string());
+        config.lint_drift.baseline_ref = "ci-baseline.json".to_string();
     }
     
     // Apply user preferences
     config.general.max_file_size = max_file_size_mb * 1024 * 1024;
-    config.general.max_depth = Some(max_depth);
+    config.general.max_depth = Some(max_depth as usize);
     
     println!("\n✅ Configuration created successfully!");
     println!("📝 Review the generated codeguardian.toml file and customize as needed.");

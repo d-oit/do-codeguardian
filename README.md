@@ -254,5 +254,3 @@ MIT License - see [LICENSE](LICENSE) for details.
 - [ ] Additional language-specific analyzers
 - [ ] Baseline drift detection
 - [ ] Custom rule definitions
-- [ ] VS Code extension
-- [ ] Integration with more CI platforms

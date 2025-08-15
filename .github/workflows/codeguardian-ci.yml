@@ -22,6 +22,12 @@ jobs:
       with:
         fetch-depth: 0 # Need full history for diff
     
+    - name: Setup Rust
+      uses: actions-rust-lang/setup-rust-toolchain@v1
+      with:
+        toolchain: stable
+        cache: true
+    
     - name: Install CodeGuardian
       run: |
         # Replace with actual installation method
@@ -62,6 +68,12 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     
+    - name: Setup Rust
+      uses: actions-rust-lang/setup-rust-toolchain@v1
+      with:
+        toolchain: stable
+        cache: true
+    
     - name: Install CodeGuardian
       run: |
         # Replace with actual installation method
@@ -100,6 +112,12 @@ jobs:
     
     steps:
     - uses: actions/checkout@v4
+    
+    - name: Setup Rust
+      uses: actions-rust-lang/setup-rust-toolchain@v1
+      with:
+        toolchain: stable
+        cache: true
     
     - name: Install CodeGuardian
       run: |
