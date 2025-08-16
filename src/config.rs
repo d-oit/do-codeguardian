@@ -1,339 +1,214 @@
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
-use std::path::{Path, PathBuf};
-use std::fs;
+use std::path::Path;
 use crate::error::GuardianError;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Config {
-    pub general: GeneralConfig,
-    pub integrity: IntegrityConfig,
-    pub lint_drift: LintDriftConfig,
-    pub non_production: NonProductionConfig,
-    pub dependency: DependencyAnalyzerConfig,
-    pub performance_analyzer: PerformanceAnalyzerConfig,
-    pub security_analyzer: SecurityAnalyzerConfig,
-    pub code_quality: CodeQualityConfig,
-    pub security: SecurityConfig,
-    pub performance: PerformanceConfig,
+pub struct GeneralConfig {
+    pub max_file_size: u64,
+    pub max_memory_mb: u64,
+    pub parallel_workers: usize,
+    pub timeout_seconds: u64,
+    pub exclude_patterns: Vec<String>,
+    pub include_patterns: Vec<String>,
 }
 
-impl Config {
-    /// Load configuration from file
-    pub fn load(path: &Path) -> Result<Self> {
-        if !path.exists() {
-            return Ok(Self::default());
-        }
-
-        let content = std::fs::read_to_string(path)
-            .map_err(|e| GuardianError::io("Failed to read config file", e).into())?;
-
-        let config: Config = toml::from_str(&content)
-            .map_err(|e| GuardianError::config(
-                format!("Failed to parse config file: {}", e),
-                Some(path.to_path_buf()),
-            ).into())?;
-
-        config.validate()?;
-        Ok(config)
-    }
-
-    /// Save configuration to file
-    pub fn save(&self, path: &Path) -> Result<()> {
-        let content = toml::to_string_pretty(self)?;
-        std::fs::write(path, content)
-            .map_err(|e| GuardianError::io("Failed to write config file", e).into())?;
-        Ok(())
-    }
-
-    /// Create default configuration file
-    pub fn create_default_config() -> Result<()> {
-        let config = Self::default();
-        config.save(Path::new("codeguardian.toml"))?;
-        Ok(())
-    }
-
-    /// Validate configuration
-    pub fn validate(&self) -> Result<()> {
-        // Validate general config
-        if self.general.max_file_size == 0 {
-            return Err(GuardianError::config(
-                "max_file_size must be greater than 0",
-                None,
-            ));
-        }
-
-        // Validate security config
-        if self.security.max_memory_mb == 0 {
-            return Err(GuardianError::config(
-                "max_memory_mb must be greater than 0",
-                None,
-            ));
-        }
-
-        if self.security.operation_timeout == 0 {
-            return Err(GuardianError::config(
-                "operation_timeout must be greater than 0",
-                None,
-            ).into());
-        }
-
-        // Validate performance config
-        if self.performance.buffer_size_kb == 0 {
-            return Err(GuardianError::config(
-                "buffer_size_kb must be greater than 0",
-                None,
-            ).into());
-        }
-
-        // Validate patterns
-        for pattern in &self.non_production.patterns {
-            if pattern.pattern.is_empty() {
-                return Err(GuardianError::config(
-                    "Non-production pattern cannot be empty",
-                    None,
-                ).into());
-            }
-        }
-
-        Ok(())
-    }
-
-    /// Get effective worker thread count
-    pub fn effective_worker_threads(&self) -> usize {
-        if self.performance.worker_threads == 0 {
-            num_cpus::get()
-        } else {
-            self.performance.worker_threads
-        }
-    }
-
-    /// Create minimal configuration for basic usage
-    pub fn minimal() -> Self {
+impl Default for GeneralConfig {
+    fn default() -> Self {
         Self {
-            general: GeneralConfig {
-                max_file_size: 10 * 1024 * 1024, // 10MB
-                include_patterns: vec![
-                    "**/*.rs".to_string(),
-                    "**/*.py".to_string(),
-                    "**/*.js".to_string(),
-                ],
-                exclude_patterns: vec![
-                    "**/target/**".to_string(),
-                    "**/node_modules/**".to_string(),
-                    "**/.git/**".to_string(),
-                ],
-                follow_symlinks: false,
-                max_depth: Some(10),
-            },
-            code_quality: CodeQualityConfig::default(),
-            dependency: DependencyAnalyzerConfig::default(),
-            performance_analyzer: PerformanceAnalyzerConfig::default(),
-            security_analyzer: SecurityAnalyzerConfig::default(),
-            integrity: IntegrityConfig {
-                algorithm: HashAlgorithm::Blake3,
-                use_xattr: false,
-                baseline_file: None,
-                verify_signatures: false,
-            },
-            lint_drift: LintDriftConfig {
-                config_files: vec![
-                    ".eslintrc*".to_string(),
-                    "pyproject.toml".to_string(),
-                ],
-                git_repo: None,
-                baseline_ref: "main".to_string(),
-                check_missing: false,
-                custom_rules: HashMap::new(),
-            },
-            non_production: NonProductionConfig {
-                patterns: vec![
-                    NonProdPattern {
-                        pattern: r"todo!\s*\(".to_string(),
-                        description: "TODO macro".to_string(),
-                        severity: "high".to_string(),
-                        exclude_paths: vec![],
-                    },
-                ],
-                file_extensions: vec!["rs".to_string(), "py".to_string()],
-                include_test_dirs: false,
-                custom_rules: vec![],
-            },
-            security: SecurityConfig::default(),
-            performance: PerformanceConfig {
-                worker_threads: 2,
-                buffer_size_kb: 32,
-                use_mmap: false,
-                memory_pool_mb: 128,
-            },
+            max_file_size: 10 * 1024 * 1024, // 10MB
+            max_memory_mb: 512,
+            parallel_workers: num_cpus::get(),
+            timeout_seconds: 300,
+            exclude_patterns: vec![
+                "target/**".to_string(),
+                "node_modules/**".to_string(),
+                ".git/**".to_string(),
+                "*.min.js".to_string(),
+                "*.min.css".to_string(),
+            ],
+            include_patterns: vec!["**/*.rs".to_string(), "**/*.toml".to_string()],
         }
-    }
-
-    /// Create security-focused configuration
-    pub fn security_focused() -> Self {
-        Self {
-            general: GeneralConfig {
-                max_file_size: 50 * 1024 * 1024, // 50MB
-                include_patterns: vec![
-                    "**/*.rs".to_string(),
-                    "**/*.py".to_string(),
-                    "**/*.js".to_string(),
-                    "**/*.ts".to_string(),
-                    "**/*.go".to_string(),
-                    "**/*.java".to_string(),
-                    "**/*.c".to_string(),
-                    "**/*.cpp".to_string(),
-                    "**/*.sh".to_string(),
-                    "**/*.yml".to_string(),
-                    "**/*.yaml".to_string(),
-                    "**/*.json".to_string(),
-                ],
-                exclude_patterns: vec![
-                    "**/target/**".to_string(),
-                    "**/node_modules/**".to_string(),
-                    "**/.git/**".to_string(),
-                    "**/build/**".to_string(),
-                ],
-                follow_symlinks: false,
-                max_depth: Some(15),
-            },
-            code_quality: CodeQualityConfig::default(),
-            dependency: DependencyAnalyzerConfig::default(),
-            performance_analyzer: PerformanceAnalyzerConfig::default(),
-            security_analyzer: SecurityAnalyzerConfig::default(),
-            integrity: IntegrityConfig {
-                algorithm: HashAlgorithm::Blake3,
-                use_xattr: true,
-                baseline_file: Some("security-baseline.json".to_string().into()),
-                verify_signatures: true,
-            },
-            lint_drift: LintDriftConfig::default(),
-            non_production: NonProductionConfig {
-                patterns: vec![
-                    NonProdPattern {
-                        pattern: r"todo!\s*\(".to_string(),
-                        description: "TODO macro".to_string(),
-                        severity: "high".to_string(),
-                        exclude_paths: vec![],
-                    },
-                    NonProdPattern {
-                        pattern: r"unimplemented!\s*\(".to_string(),
-                        description: "Unimplemented macro".to_string(),
-                        severity: "critical".to_string(),
-                        exclude_paths: vec![],
-                    },
-                    NonProdPattern {
-                        pattern: r"panic!\s*\(".to_string(),
-                        description: "Panic macro".to_string(),
-                        severity: "high".to_string(),
-                        exclude_paths: vec!["**/tests/**".to_string()],
-                    },
-                    NonProdPattern {
-                        pattern: r#"(?i)(password|secret|key|token)\s*=\s*["'][^"']+["']"#.to_string(),
-                        description: "Hardcoded credentials".to_string(),
-                        severity: "critical".to_string(),
-                        exclude_paths: vec!["**/tests/**".to_string(), "**/examples/**".to_string()],
-                    },
-                    NonProdPattern {
-                        pattern: r#"(?i)api[_-]?key\s*[:=]\s*["'][^"']+["']"#.to_string(),
-                        description: "Hardcoded API key".to_string(),
-                        severity: "critical".to_string(),
-                        exclude_paths: vec!["**/tests/**".to_string()],
-                    },
-                ],
-                file_extensions: vec![
-                    "rs".to_string(),
-                    "py".to_string(),
-                    "js".to_string(),
-                    "ts".to_string(),
-                    "go".to_string(),
-                    "java".to_string(),
-                    "sh".to_string(),
-                ],
-                include_test_dirs: false,
-                custom_rules: vec![],
-            },
-            security: SecurityConfig {
-                sandbox_enabled: true,
-                max_memory_mb: 512,
-                operation_timeout: 180,
-                redact_sensitive_data: true,
-                allowed_paths: vec![],
-            },
-            performance: PerformanceConfig::default(),
-        }
-    }
-
-    /// Create CI-optimized configuration
-    pub fn ci_optimized() -> Self {
-        let mut config = Self {
-            general: GeneralConfig {
-                max_file_size: 20 * 1024 * 1024, // 20MB
-                include_patterns: vec![
-                    "**/*.rs".to_string(),
-                    "**/*.py".to_string(),
-                    "**/*.js".to_string(),
-                    "**/*.ts".to_string(),
-                    "**/*.go".to_string(),
-                    "**/*.java".to_string(),
-                ],
-                exclude_patterns: vec![
-                    "**/target/**".to_string(),
-                    "**/node_modules/**".to_string(),
-                    "**/.git/**".to_string(),
-                ],
-                follow_symlinks: false,
-                max_depth: Some(12),
-            },
-            code_quality: CodeQualityConfig::default(),
-            dependency: DependencyAnalyzerConfig::default(),
-            performance_analyzer: PerformanceAnalyzerConfig::default(),
-            security_analyzer: SecurityAnalyzerConfig::default(),
-            security: SecurityConfig::default(),
-            performance: PerformanceConfig::default(),
-            non_production: NonProductionConfig::default(),
-            integrity: IntegrityConfig::default(),
-            lint_drift: LintDriftConfig::default(),
-        };
-
-        config.security.sandbox_enabled = true;
-        config.security.max_memory_mb = 512;
-        config.performance.worker_threads = 4;
-
-        config
     }
 }
 
-// New analyzer configurations
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum HashAlgorithm {
+    Blake3,
+    Sha256,
+}
+
+impl Default for HashAlgorithm {
+    fn default() -> Self {
+        HashAlgorithm::Blake3
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct IntegrityConfig {
+    pub enabled: bool,
+    pub algorithm: HashAlgorithm,
+    pub baseline_file: String,
+    pub auto_update_baseline: bool,
+    pub check_permissions: bool,
+}
+
+impl Default for IntegrityConfig {
+    fn default() -> Self {
+        Self {
+            enabled: true,
+            algorithm: HashAlgorithm::Blake3,
+            baseline_file: ".codeguardian/integrity.baseline".to_string(),
+            auto_update_baseline: false,
+            check_permissions: true,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct LintDriftConfig {
+    pub enabled: bool,
+    pub config_files: Vec<String>,
+    pub baseline_file: String,
+    pub auto_update_baseline: bool,
+    pub strict_mode: bool,
+}
+
+impl Default for LintDriftConfig {
+    fn default() -> Self {
+        Self {
+            enabled: true,
+            config_files: vec![
+                "Cargo.toml".to_string(),
+                ".clippy.toml".to_string(),
+                "rustfmt.toml".to_string(),
+                ".rustfmt.toml".to_string(),
+            ],
+            baseline_file: ".codeguardian/lint_drift.baseline".to_string(),
+            auto_update_baseline: false,
+            strict_mode: false,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct NonProdPattern {
+    pub pattern: String,
+    pub description: String,
+    pub severity: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct NonProductionConfig {
+    pub enabled: bool,
+    pub patterns: Vec<NonProdPattern>,
+    pub exclude_test_files: bool,
+    pub exclude_example_files: bool,
+}
+
+impl Default for NonProductionConfig {
+    fn default() -> Self {
+        Self {
+            enabled: true,
+            patterns: vec![
+                NonProdPattern {
+                    pattern: r"(?i)\b(todo|fixme|hack|xxx)\b".to_string(),
+                    description: "Non-production code markers".to_string(),
+                    severity: "medium".to_string(),
+                },
+                NonProdPattern {
+                    pattern: r"(?i)\bdebug\s*!".to_string(),
+                    description: "Debug print statements".to_string(),
+                    severity: "low".to_string(),
+                },
+                NonProdPattern {
+                    pattern: r"(?i)\bprintln\s*!".to_string(),
+                    description: "Print statements in production code".to_string(),
+                    severity: "low".to_string(),
+                },
+            ],
+            exclude_test_files: true,
+            exclude_example_files: true,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SecurityConfig {
+    pub enabled: bool,
+    pub check_secrets: bool,
+    pub check_unsafe_code: bool,
+    pub check_dependencies: bool,
+    pub secret_patterns: Vec<String>,
+    pub entropy_threshold: f64,
+}
+
+impl Default for SecurityConfig {
+    fn default() -> Self {
+        Self {
+            enabled: true,
+            check_secrets: true,
+            check_unsafe_code: true,
+            check_dependencies: true,
+            secret_patterns: vec![
+                r"(?i)(password|passwd|pwd)\s*[:=]\s*['\x22][^'\x22]{8,}['\x22]".to_string(),
+                r"(?i)(api[_-]?key|apikey)\s*[:=]\s*['\x22][^'\x22]{16,}['\x22]".to_string(),
+                r"(?i)(secret|token)\s*[:=]\s*['\x22][^'\x22]{16,}['\x22]".to_string(),
+            ],
+            entropy_threshold: 4.5,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PerformanceConfig {
+    pub enabled: bool,
+    pub check_allocations: bool,
+    pub check_async_blocking: bool,
+    pub max_complexity: usize,
+    pub max_function_length: usize,
+}
+
+impl Default for PerformanceConfig {
+    fn default() -> Self {
+        Self {
+            enabled: true,
+            check_allocations: true,
+            check_async_blocking: true,
+            max_complexity: 10,
+            max_function_length: 100,
+        }
+    }
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DependencyAnalyzerConfig {
     /// Enable dependency analysis
     pub enabled: bool,
-    /// Check for vulnerable packages
-    pub check_vulnerabilities: bool,
     /// Check for outdated dependencies
     pub check_outdated: bool,
-    /// Check for license compliance
-    pub check_licenses: bool,
-    /// Allowed licenses (empty = allow all)
-    pub allowed_licenses: Vec<String>,
+    /// Check for vulnerable dependencies
+    pub check_vulnerabilities: bool,
+    /// Check for unused dependencies
+    pub check_unused: bool,
+    /// Check for duplicate dependencies
+    pub check_duplicates: bool,
+    /// Maximum allowed dependency age in days
+    pub max_age_days: u32,
+    /// Severity threshold for vulnerabilities
+    pub vulnerability_threshold: String,
 }
 
 impl Default for DependencyAnalyzerConfig {
     fn default() -> Self {
         Self {
             enabled: true,
-            check_vulnerabilities: true,
             check_outdated: true,
-            check_licenses: false,
-            allowed_licenses: vec![
-                "MIT".to_string(),
-                "Apache-2.0".to_string(),
-                "BSD-3-Clause".to_string(),
-                "ISC".to_string(),
-            ],
+            check_vulnerabilities: true,
+            check_unused: true,
+            check_duplicates: true,
+            max_age_days: 365,
+            vulnerability_threshold: "medium".to_string(),
         }
     }
 }
@@ -424,6 +299,179 @@ impl Default for CodeQualityConfig {
             check_commented_code: true,
             max_nesting_depth: 6,
             max_file_size: 500,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Config {
+    pub general: GeneralConfig,
+    pub integrity: IntegrityConfig,
+    pub lint_drift: LintDriftConfig,
+    pub non_production: NonProductionConfig,
+    pub dependency: DependencyAnalyzerConfig,
+    pub performance_analyzer: PerformanceAnalyzerConfig,
+    pub security_analyzer: SecurityAnalyzerConfig,
+    pub code_quality: CodeQualityConfig,
+    pub security: SecurityConfig,
+    pub performance: PerformanceConfig,
+}
+
+impl Default for Config {
+    fn default() -> Self {
+        Self::minimal()
+    }
+}
+
+impl Config {
+    /// Load configuration from file
+    pub fn load(path: &Path) -> Result<Self> {
+        if !path.exists() {
+            return Ok(Self::minimal());
+        }
+
+        let content = std::fs::read_to_string(path)
+            .map_err(|e| anyhow::Error::from(GuardianError::io("Failed to read config file", e)))?;
+
+        let config: Config = toml::from_str(&content)
+            .map_err(|e| anyhow::Error::from(GuardianError::config(
+                format!("Failed to parse config file: {}", e),
+                Some(path.to_path_buf()),
+            )))?;
+
+        config.validate()?;
+        Ok(config)
+    }
+
+    /// Save configuration to file
+    pub fn save(&self, path: &Path) -> Result<()> {
+        let content = toml::to_string_pretty(self)?;
+        std::fs::write(path, content)
+            .map_err(|e| anyhow::Error::from(GuardianError::io("Failed to write config file", e)))?;
+        Ok(())
+    }
+
+    /// Create default configuration file
+    pub fn create_default_config() -> Result<()> {
+        let config = Self::default();
+        config.save(Path::new("codeguardian.toml"))?;
+        Ok(())
+    }
+
+    /// Validate configuration
+    pub fn validate(&self) -> Result<()> {
+        // Validate general config
+        if self.general.max_file_size == 0 {
+            return Err(anyhow::Error::from(GuardianError::config(
+                "max_file_size must be greater than 0",
+                None,
+            )));
+        }
+
+        if self.general.max_memory_mb == 0 {
+            return Err(anyhow::Error::from(GuardianError::config(
+                "max_memory_mb must be greater than 0",
+                None,
+            )));
+        }
+
+        // Validate patterns
+        for pattern in &self.non_production.patterns {
+            if pattern.pattern.is_empty() {
+                return Err(anyhow::Error::from(GuardianError::config(
+                    "Non-production pattern cannot be empty",
+                    None,
+                )));
+            }
+        }
+
+        Ok(())
+    }
+
+    /// Minimal configuration for basic usage
+    pub fn minimal() -> Self {
+        Self {
+            general: GeneralConfig {
+                max_file_size: 5 * 1024 * 1024, // 5MB
+                max_memory_mb: 256,
+                parallel_workers: 2,
+                timeout_seconds: 120,
+                exclude_patterns: vec![
+                    "target/**".to_string(),
+                    ".git/**".to_string(),
+                ],
+                include_patterns: vec!["**/*.rs".to_string()],
+            },
+            integrity: IntegrityConfig {
+                algorithm: HashAlgorithm::Blake3,
+                enabled: true,
+                baseline_file: ".codeguardian/integrity.baseline".to_string(),
+                auto_update_baseline: false,
+                check_permissions: false,
+            },
+            lint_drift: LintDriftConfig {
+                enabled: false,
+                config_files: vec!["Cargo.toml".to_string()],
+                baseline_file: ".codeguardian/lint_drift.baseline".to_string(),
+                auto_update_baseline: false,
+                strict_mode: false,
+            },
+            non_production: NonProductionConfig {
+                enabled: true,
+                patterns: vec![
+                    NonProdPattern {
+                        pattern: r"(?i)\b(todo|fixme|hack|xxx)\b".to_string(),
+                        description: "Non-production code markers".to_string(),
+                        severity: "medium".to_string(),
+                    },
+                ],
+                exclude_test_files: true,
+                exclude_example_files: true,
+            },
+            dependency: DependencyAnalyzerConfig::default(),
+            performance_analyzer: PerformanceAnalyzerConfig::default(),
+            security_analyzer: SecurityAnalyzerConfig::default(),
+            code_quality: CodeQualityConfig::default(),
+            security: SecurityConfig::default(),
+            performance: PerformanceConfig {
+                enabled: false,
+                check_allocations: false,
+                check_async_blocking: false,
+                max_complexity: 15,
+                max_function_length: 150,
+            },
+        }
+    }
+
+    /// Security-focused configuration
+    pub fn security_focused() -> Self {
+        Self {
+            general: GeneralConfig::default(),
+            integrity: IntegrityConfig::default(),
+            lint_drift: LintDriftConfig::default(),
+            non_production: NonProductionConfig::default(),
+            dependency: DependencyAnalyzerConfig::default(),
+            performance_analyzer: PerformanceAnalyzerConfig::default(),
+            security_analyzer: SecurityAnalyzerConfig::default(),
+            code_quality: CodeQualityConfig::default(),
+            security: SecurityConfig::default(),
+            performance: PerformanceConfig::default(),
+        }
+    }
+
+    /// CI-optimized configuration
+    pub fn ci_optimized() -> Self {
+        Self {
+            general: GeneralConfig::default(),
+            integrity: IntegrityConfig::default(),
+            lint_drift: LintDriftConfig::default(),
+            non_production: NonProductionConfig::default(),
+            dependency: DependencyAnalyzerConfig::default(),
+            performance_analyzer: PerformanceAnalyzerConfig::default(),
+            security_analyzer: SecurityAnalyzerConfig::default(),
+            code_quality: CodeQualityConfig::default(),
+            security: SecurityConfig::default(),
+            performance: PerformanceConfig::default(),
         }
     }
 }

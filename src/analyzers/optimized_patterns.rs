@@ -2,9 +2,6 @@ use regex::Regex;
 use std::collections::HashMap;
 use lazy_static::lazy_static;
 
-/// Optimized regex patterns with compiled-once, reused-many approach
-/// This module provides pre-compiled, optimized regex patterns for better performance
-
 lazy_static! {
     /// Security patterns - optimized for performance
     pub static ref SECURITY_PATTERNS: SecurityPatterns = SecurityPatterns::new();

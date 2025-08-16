@@ -10,7 +10,9 @@ pub struct DependencyAnalyzer {
     // Known vulnerable package patterns
     vulnerable_packages: HashMap<String, VulnerabilityInfo>,
     // Patterns for detecting dependency issues
+    #[allow(dead_code)]
     outdated_pattern: Regex,
+    #[allow(dead_code)]
     dev_dependency_pattern: Regex,
 }
 
@@ -137,8 +139,8 @@ impl DependencyAnalyzer {
                             1,
                             format!("Overly permissive version specification for {}", package_name),
                         )
-                        .with_description("Wildcard or overly broad version ranges can introduce breaking changes")
-                        .with_suggestion("Use more specific version ranges or exact versions for stability")
+                        .with_description("Wildcard or overly broad version ranges can introduce breaking changes".to_string())
+                        .with_suggestion("Use more specific version ranges or exact versions for stability".to_string())
                     );
                 }
 
@@ -153,8 +155,8 @@ impl DependencyAnalyzer {
                             1,
                             format!("Pre-release dependency in production: {}", package_name),
                         )
-                        .with_description("Pre-release versions may be unstable for production use")
-                        .with_suggestion("Consider using stable releases for production dependencies")
+                        .with_description("Pre-release versions may be unstable for production use".to_string())
+                        .with_suggestion("Consider using stable releases for production dependencies".to_string())
                     );
                 }
             }
@@ -179,8 +181,8 @@ impl DependencyAnalyzer {
                             1,
                             format!("Git dependency without pinned revision: {}", package_name),
                         )
-                        .with_description("Git dependencies should be pinned to specific commits or tags")
-                        .with_suggestion("Add 'rev' or 'tag' field to pin the dependency to a specific version")
+                        .with_description("Git dependencies should be pinned to specific commits or tags".to_string())
+                        .with_suggestion("Add 'rev' or 'tag' field to pin the dependency to a specific version".to_string())
                     );
                 }
 
@@ -195,8 +197,8 @@ impl DependencyAnalyzer {
                             1,
                             format!("Path dependency detected: {}", package_name),
                         )
-                        .with_description("Path dependencies may not be available in all environments")
-                        .with_suggestion("Consider publishing to crates.io or use git dependencies")
+                        .with_description("Path dependencies may not be available in all environments".to_string())
+                        .with_suggestion("Consider publishing to crates.io or use git dependencies".to_string())
                     );
                 }
             }
@@ -219,8 +221,8 @@ impl DependencyAnalyzer {
                     1,
                     "Missing repository field in package.json".to_string(),
                 )
-                .with_description("Repository field helps with security auditing and transparency")
-                .with_suggestion("Add repository field with your project's source code location")
+                .with_description("Repository field helps with security auditing and transparency".to_string())
+                .with_suggestion("Add repository field with your project's source code location".to_string())
             );
         }
 
@@ -235,8 +237,8 @@ impl DependencyAnalyzer {
                     1,
                     "Missing license field in package.json".to_string(),
                 )
-                .with_description("License field is important for legal compliance")
-                .with_suggestion("Add license field specifying your project's license")
+                .with_description("License field is important for legal compliance".to_string())
+                .with_suggestion("Add license field specifying your project's license".to_string())
             );
         }
 
@@ -258,8 +260,8 @@ impl DependencyAnalyzer {
                         1,
                         "Missing license field in Cargo.toml".to_string(),
                     )
-                    .with_description("License field is required for publishing and legal compliance")
-                    .with_suggestion("Add license field or license-file to [package] section")
+                    .with_description("License field is required for publishing and legal compliance".to_string())
+                    .with_suggestion("Add license field or license-file to [package] section".to_string())
                 );
             }
 
@@ -273,8 +275,8 @@ impl DependencyAnalyzer {
                         1,
                         "Missing repository field in Cargo.toml".to_string(),
                     )
-                    .with_description("Repository field helps with transparency and security auditing")
-                    .with_suggestion("Add repository field to [package] section")
+                    .with_description("Repository field helps with transparency and security auditing".to_string())
+                    .with_suggestion("Add repository field to [package] section".to_string())
                 );
             }
         }

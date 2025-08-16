@@ -8,9 +8,12 @@ use std::collections::HashMap;
 /// Analyzer for code quality issues, maintainability problems, and code smells
 pub struct CodeQualityAnalyzer {
     // Patterns for detecting code smells
+    #[allow(dead_code)]
     long_parameter_list_pattern: Regex,
+    #[allow(dead_code)]
     duplicate_code_pattern: Regex,
     magic_number_pattern: Regex,
+    #[allow(dead_code)]
     dead_code_pattern: Regex,
     complex_condition_pattern: Regex,
     // Complexity tracking
@@ -21,7 +24,7 @@ impl CodeQualityAnalyzer {
     pub fn new() -> Self {
         Self {
             long_parameter_list_pattern: Regex::new(r"(?:fn|function|def|public|private|protected)\s+\w+\s*\([^)]{100,}\)").unwrap(),
-            duplicate_code_pattern: Regex::new(r"(.{50,})\n.*\1").unwrap(),
+            duplicate_code_pattern: Regex::new(r"(.{50,})\n.*(.{50,})").unwrap(),
             magic_number_pattern: Regex::new(r"\b(?!0|1|2|10|100|1000)\d{2,}\b").unwrap(),
             dead_code_pattern: Regex::new(r"(?i)(unreachable|dead|unused|deprecated)").unwrap(),
             complex_condition_pattern: Regex::new(r"if\s*\([^)]*&&[^)]*&&[^)]*\)|if\s*\([^)]*\|\|[^)]*\|\|[^)]*\)").unwrap(),
@@ -130,8 +133,8 @@ impl CodeQualityAnalyzer {
                     line_number,
                     "Commented-out code detected".to_string(),
                 )
-                .with_description("Commented-out code clutters the codebase and should be removed")
-                .with_suggestion("Remove commented-out code; use version control to track changes")
+                .with_description("Commented-out code clutters the codebase and should be removed".to_string())
+                .with_suggestion("Remove commented-out code; use version control to track changes".to_string())
             );
         }
 
@@ -155,8 +158,8 @@ impl CodeQualityAnalyzer {
                     1,
                     format!("Large file ({} lines)", lines.len()),
                 )
-                .with_description("Large files are harder to understand and maintain")
-                .with_suggestion("Consider breaking this file into smaller, more focused modules")
+                .with_description("Large files are harder to understand and maintain".to_string())
+                .with_suggestion("Consider breaking this file into smaller, more focused modules".to_string())
             );
         }
 
@@ -169,7 +172,7 @@ impl CodeQualityAnalyzer {
             }
         }
 
-        for (line_content, occurrences) in line_counts {
+        for (_line_content, occurrences) in line_counts {
             if occurrences.len() > 2 {
                 findings.push(
                     Finding::new(
@@ -180,8 +183,8 @@ impl CodeQualityAnalyzer {
                         occurrences[0] as u32,
                         format!("Duplicate line found {} times", occurrences.len()),
                     )
-                    .with_description("Duplicate lines indicate potential code duplication")
-                    .with_suggestion("Consider extracting common logic into a shared function")
+                    .with_description("Duplicate lines indicate potential code duplication".to_string())
+                    .with_suggestion("Consider extracting common logic into a shared function".to_string())
                 );
             }
         }
@@ -213,8 +216,8 @@ impl CodeQualityAnalyzer {
                         start_line,
                         format!("Function '{}' has high cyclomatic complexity ({})", func_name, complexity),
                     )
-                    .with_description("High complexity functions are harder to understand, test, and maintain")
-                    .with_suggestion("Break this function into smaller, more focused functions")
+                    .with_description("High complexity functions are harder to understand, test, and maintain".to_string())
+                    .with_suggestion("Break this function into smaller, more focused functions".to_string())
                 );
             } else if complexity > 7 {
                 findings.push(
@@ -226,8 +229,8 @@ impl CodeQualityAnalyzer {
                         start_line,
                         format!("Function '{}' has moderate complexity ({})", func_name, complexity),
                     )
-                    .with_description("Consider simplifying this function")
-                    .with_suggestion("Look for opportunities to extract helper functions")
+                    .with_description("Consider simplifying this function".to_string())
+                    .with_suggestion("Look for opportunities to extract helper functions".to_string())
                 );
             }
 
@@ -304,8 +307,8 @@ impl CodeQualityAnalyzer {
                                         (line_num + 1) as u32,
                                         "Import statement after non-import code".to_string(),
                                     )
-                                    .with_description("Imports should be grouped at the top of the file")
-                                    .with_suggestion("Move all imports to the top of the file")
+                                    .with_description("Imports should be grouped at the top of the file".to_string())
+                                    .with_suggestion("Move all imports to the top of the file".to_string())
                                 );
                             }
                         } else if !trimmed.is_empty() && !trimmed.starts_with("//") && !trimmed.starts_with("#") {
@@ -329,8 +332,8 @@ impl CodeQualityAnalyzer {
                                         (line_num + 1) as u32,
                                         "Import statement after non-import code".to_string(),
                                     )
-                                    .with_description("Imports should be at the top of the file")
-                                    .with_suggestion("Follow PEP 8: group imports at the top")
+                                    .with_description("Imports should be at the top of the file".to_string())
+                                    .with_suggestion("Follow PEP 8: group imports at the top".to_string())
                                 );
                             }
                         } else if !trimmed.is_empty() && !trimmed.starts_with("#") && !trimmed.starts_with("\"\"\"") {
@@ -498,8 +501,8 @@ impl CodeQualityAnalyzer {
                     line_number,
                     "unwrap() usage detected".to_string(),
                 )
-                .with_description("unwrap() can panic; consider using proper error handling")
-                .with_suggestion("Use expect(), match, or the ? operator for better error handling")
+                .with_description("unwrap() can panic; consider using proper error handling".to_string())
+                .with_suggestion("Use expect(), match, or the ? operator for better error handling".to_string())
             );
         }
 
@@ -514,8 +517,8 @@ impl CodeQualityAnalyzer {
                     line_number,
                     "Generic expect message".to_string(),
                 )
-                .with_description("Generic expect messages don't provide useful debugging information")
-                .with_suggestion("Use specific, descriptive expect messages")
+                .with_description("Generic expect messages don't provide useful debugging information".to_string())
+                .with_suggestion("Use specific, descriptive expect messages".to_string())
             );
         }
 
@@ -536,8 +539,8 @@ impl CodeQualityAnalyzer {
                     line_number,
                     "var keyword usage".to_string(),
                 )
-                .with_description("var has function scope and can lead to unexpected behavior")
-                .with_suggestion("Use let or const instead of var")
+                .with_description("var has function scope and can lead to unexpected behavior".to_string())
+                .with_suggestion("Use let or const instead of var".to_string())
             );
         }
 
@@ -552,8 +555,8 @@ impl CodeQualityAnalyzer {
                     line_number,
                     "Loose equality operator".to_string(),
                 )
-                .with_description("== performs type coercion which can be unexpected")
-                .with_suggestion("Use === for strict equality comparison")
+                .with_description("== performs type coercion which can be unexpected".to_string())
+                .with_suggestion("Use === for strict equality comparison".to_string())
             );
         }
 
@@ -574,8 +577,8 @@ impl CodeQualityAnalyzer {
                     line_number,
                     "Bare except clause".to_string(),
                 )
-                .with_description("Bare except catches all exceptions, including system exits")
-                .with_suggestion("Catch specific exceptions or use 'except Exception:'")
+                .with_description("Bare except catches all exceptions, including system exits".to_string())
+                .with_suggestion("Catch specific exceptions or use 'except Exception:'".to_string())
             );
         }
 
@@ -590,8 +593,8 @@ impl CodeQualityAnalyzer {
                     line_number,
                     "Mutable default argument".to_string(),
                 )
-                .with_description("Mutable default arguments can cause unexpected behavior")
-                .with_suggestion("Use None as default and create the mutable object inside the function")
+                .with_description("Mutable default arguments can cause unexpected behavior".to_string())
+                .with_suggestion("Use None as default and create the mutable object inside the function".to_string())
             );
         }
 
@@ -613,8 +616,8 @@ impl CodeQualityAnalyzer {
                     line_number,
                     "Single-letter variable name".to_string(),
                 )
-                .with_description("Single-letter variables reduce code readability")
-                .with_suggestion("Use descriptive variable names")
+                .with_description("Single-letter variables reduce code readability".to_string())
+                .with_suggestion("Use descriptive variable names".to_string())
             );
         }
 
@@ -633,8 +636,8 @@ impl CodeQualityAnalyzer {
                                 line_number,
                                 "Function name should use snake_case".to_string(),
                             )
-                            .with_description("Rust convention is to use snake_case for function names")
-                            .with_suggestion("Convert function name to snake_case")
+                            .with_description("Rust convention is to use snake_case for function names".to_string())
+                            .with_suggestion("Convert function name to snake_case".to_string())
                         );
                     }
                 }
@@ -653,8 +656,8 @@ impl CodeQualityAnalyzer {
                                 line_number,
                                 "Function name should use camelCase".to_string(),
                             )
-                            .with_description("JavaScript convention is to use camelCase for function names")
-                            .with_suggestion("Convert function name to camelCase")
+                            .with_description("JavaScript convention is to use camelCase for function names".to_string())
+                            .with_suggestion("Convert function name to camelCase".to_string())
                         );
                     }
                 }

@@ -1,7 +1,6 @@
 use crate::types::{Finding, Severity};
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
-use std::path::PathBuf;
 
 /// Training data management for the ML classifier
 #[derive(Debug, Serialize, Deserialize)]
@@ -25,6 +24,12 @@ pub enum FeedbackSource {
     UserFeedback,      // Manual user classification
     AutomaticHeuristic, // Rule-based classification
     ExpertReview,      // Security expert review
+}
+
+impl Default for TrainingDataset {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl TrainingDataset {
@@ -211,6 +216,12 @@ pub struct TrainingDataCollector {
     feature_extractor: crate::ml::feature_extractor::FeatureExtractor,
 }
 
+impl Default for TrainingDataCollector {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl TrainingDataCollector {
     pub fn new() -> Self {
         Self {
@@ -258,12 +269,11 @@ impl TrainingDataCollector {
     /// Simple heuristic classification based on patterns
     fn heuristic_classification(&self, finding: &Finding) -> bool {
         // High confidence true positives
-        if matches!(finding.severity, Severity::Critical | Severity::High) {
-            if finding.analyzer == "integrity" || 
-               (finding.analyzer == "non_production" && finding.message.contains("secret")) {
+        if matches!(finding.severity, Severity::Critical | Severity::High)
+            && (finding.analyzer == "integrity" || 
+               (finding.analyzer == "non_production" && finding.message.contains("secret"))) {
                 return true;
             }
-        }
 
         // High confidence false positives
         if finding.message.to_lowercase().contains("todo") && 

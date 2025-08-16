@@ -54,6 +54,7 @@ pub async fn create_or_update_issue(results: &AnalysisResults, args: &GhIssueArg
     Ok(())
 }
 
+#[allow(dead_code)]
 async fn find_existing_issue(title: &str, repo: &str, dry_run: bool) -> Result<Option<u64>> {
     let search_query = format!("{} in:title", title);
     
@@ -82,6 +83,7 @@ async fn find_existing_issue(title: &str, repo: &str, dry_run: bool) -> Result<O
     Ok(None)
 }
 
+#[allow(dead_code)]
 async fn create_issue(title: &str, body: &str, labels: &str, repo: &str, dry_run: bool) -> Result<u64> {
     // Write body to temporary file to handle large content
     let temp_file = "tmp_rovodev_issue_body.md";
@@ -122,6 +124,7 @@ async fn create_issue(title: &str, body: &str, labels: &str, repo: &str, dry_run
     Ok(0)
 }
 
+#[allow(dead_code)]
 async fn update_issue(issue_number: u64, body: &str, labels: &str, repo: &str, dry_run: bool) -> Result<()> {
     // Write body to temporary file
     let temp_file = "tmp_rovodev_issue_body.md";
@@ -154,7 +157,7 @@ async fn update_issue(issue_number: u64, body: &str, labels: &str, repo: &str, d
     Ok(())
 }
 
-fn generate_issue_title(prefix: &str, repo: &str) -> Result<String> {
+fn generate_issue_title(prefix: &str, _repo: &str) -> Result<String> {
     // Try to get current commit hash for PR context
     let output = Command::new("git")
         .args(&["rev-parse", "--short", "HEAD"])
@@ -431,7 +434,7 @@ fn generate_children_body(results: &AnalysisResults, args: &GhIssueArgs) -> Resu
     Ok(body)
 }
 
-fn truncate_body(mut body: String, results: &AnalysisResults) -> String {
+fn truncate_body(_body: String, results: &AnalysisResults) -> String {
     let mut truncated = String::new();
     
     truncated.push_str("## ⚠️ Report Truncated\n\n");

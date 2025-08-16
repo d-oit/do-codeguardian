@@ -8,8 +8,15 @@ use tokio::io::{AsyncBufReadExt, BufReader as AsyncBufReader};
 /// Threshold for switching to streaming analysis (5MB)
 const STREAMING_THRESHOLD: u64 = 5 * 1024 * 1024;
 
+#[derive(Clone)]
 pub struct StreamingAnalyzer {
     chunk_size: usize,
+}
+
+impl Default for StreamingAnalyzer {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl StreamingAnalyzer {
@@ -117,6 +124,12 @@ pub struct AdaptiveChunking {
     base_chunk_size: usize,
     max_chunk_size: usize,
     available_memory: usize,
+}
+
+impl Default for AdaptiveChunking {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl AdaptiveChunking {

@@ -24,6 +24,12 @@ pub struct RetryConfig {
     max_delay: Duration,
 }
 
+impl Default for GitHubApiClient {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl GitHubApiClient {
     pub fn new() -> Self {
         Self {
@@ -146,7 +152,7 @@ impl GitHubApiClient {
         
         // Extract issue number from GitHub CLI output (usually a URL)
         if let Some(issue_url) = output.lines().last() {
-            if let Some(number_str) = issue_url.split('/').last() {
+            if let Some(number_str) = issue_url.split('/').next_back() {
                 return Ok(number_str.parse().unwrap_or(0));
             }
         }

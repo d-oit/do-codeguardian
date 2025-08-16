@@ -7,6 +7,12 @@ pub struct LintDriftAnalyzer {
     // Configuration for lint drift detection
 }
 
+impl Default for LintDriftAnalyzer {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl LintDriftAnalyzer {
     pub fn new() -> Self {
         Self {}

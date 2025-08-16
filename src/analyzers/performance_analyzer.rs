@@ -1,5 +1,4 @@
 use crate::analyzers::Analyzer;
-use crate::analyzers::optimized_patterns::{PERFORMANCE_PATTERNS, AnalysisOptimizer, FileType};
 use crate::types::{Finding, Severity};
 use anyhow::Result;
 use regex::Regex;
@@ -47,8 +46,8 @@ impl PerformanceAnalyzer {
                         line_number,
                         "Nested loops detected - potential O(n²) complexity".to_string(),
                     )
-                    .with_description("Nested loops can lead to quadratic time complexity and poor performance with large datasets")
-                    .with_suggestion("Consider using more efficient algorithms, hash maps, or breaking early when possible")
+                    .with_description("Nested loops can lead to quadratic time complexity and poor performance with large datasets".to_string())
+                    .with_suggestion("Consider using more efficient algorithms, hash maps, or breaking early when possible".to_string())
                 );
             }
 
@@ -63,8 +62,8 @@ impl PerformanceAnalyzer {
                         line_number,
                         "String concatenation in loop detected".to_string(),
                     )
-                    .with_description("String concatenation in loops can be inefficient due to repeated memory allocations")
-                    .with_suggestion("Use StringBuilder, Vec<String>, or similar efficient string building methods")
+                    .with_description("String concatenation in loops can be inefficient due to repeated memory allocations".to_string())
+                    .with_suggestion("Use StringBuilder, Vec<String>, or similar efficient string building methods".to_string())
                 );
             }
 
@@ -79,8 +78,8 @@ impl PerformanceAnalyzer {
                         line_number,
                         "Potentially inefficient collection operation".to_string(),
                     )
-                    .with_description("Linear search operations in loops can lead to O(n²) complexity")
-                    .with_suggestion("Consider using HashSet, HashMap, or other O(1) lookup data structures")
+                    .with_description("Linear search operations in loops can lead to O(n²) complexity".to_string())
+                    .with_suggestion("Consider using HashSet, HashMap, or other O(1) lookup data structures".to_string())
                 );
             }
 
@@ -96,8 +95,8 @@ impl PerformanceAnalyzer {
                         line_number,
                         "Blocking I/O operation detected".to_string(),
                     )
-                    .with_description("Blocking I/O operations can freeze the application and reduce responsiveness")
-                    .with_suggestion("Use async/await patterns or non-blocking I/O operations")
+                    .with_description("Blocking I/O operations can freeze the application and reduce responsiveness".to_string())
+                    .with_suggestion("Use async/await patterns or non-blocking I/O operations".to_string())
                 );
             }
 
@@ -112,8 +111,8 @@ impl PerformanceAnalyzer {
                         line_number,
                         "Potential memory leak pattern detected".to_string(),
                     )
-                    .with_description("Event listeners and intervals without proper cleanup can cause memory leaks")
-                    .with_suggestion("Ensure proper cleanup with removeEventListener, clearInterval, or similar cleanup methods")
+                    .with_description("Event listeners and intervals without proper cleanup can cause memory leaks".to_string())
+                    .with_suggestion("Ensure proper cleanup with removeEventListener, clearInterval, or similar cleanup methods".to_string())
                 );
             }
 
@@ -128,8 +127,8 @@ impl PerformanceAnalyzer {
                         line_number,
                         "Regex compilation in loop detected".to_string(),
                     )
-                    .with_description("Compiling regex patterns repeatedly is expensive")
-                    .with_suggestion("Compile regex patterns once outside the loop and reuse them")
+                    .with_description("Compiling regex patterns repeatedly is expensive".to_string())
+                    .with_suggestion("Compile regex patterns once outside the loop and reuse them".to_string())
                 );
             }
 
@@ -207,8 +206,8 @@ impl PerformanceAnalyzer {
                     line_number,
                     "Potentially unnecessary clone() call".to_string(),
                 )
-                .with_description("Cloning can be expensive; consider using references or borrowing")
-                .with_suggestion("Use references (&) or borrowing instead of cloning when possible")
+                .with_description("Cloning can be expensive; consider using references or borrowing".to_string())
+                .with_suggestion("Use references (&) or borrowing instead of cloning when possible".to_string())
             );
         }
 
@@ -223,8 +222,8 @@ impl PerformanceAnalyzer {
                     line_number,
                     "Vector without capacity hint".to_string(),
                 )
-                .with_description("Growing vectors without capacity hints can cause multiple reallocations")
-                .with_suggestion("Use Vec::with_capacity() if you know the approximate size")
+                .with_description("Growing vectors without capacity hints can cause multiple reallocations".to_string())
+                .with_suggestion("Use Vec::with_capacity() if you know the approximate size".to_string())
             );
         }
 
@@ -239,8 +238,8 @@ impl PerformanceAnalyzer {
                     line_number,
                     "Inefficient string building pattern".to_string(),
                 )
-                .with_description("Building strings character by character can be inefficient")
-                .with_suggestion("Consider using format! macro or collecting into String")
+                .with_description("Building strings character by character can be inefficient".to_string())
+                .with_suggestion("Consider using format! macro or collecting into String".to_string())
             );
         }
 
@@ -262,8 +261,8 @@ impl PerformanceAnalyzer {
                         line_number,
                         "DOM query in loop detected".to_string(),
                     )
-                    .with_description("DOM queries are expensive and should be cached when used repeatedly")
-                    .with_suggestion("Cache DOM elements outside the loop")
+                    .with_description("DOM queries are expensive and should be cached when used repeatedly".to_string())
+                    .with_suggestion("Cache DOM elements outside the loop".to_string())
                 );
             }
         }
@@ -279,8 +278,8 @@ impl PerformanceAnalyzer {
                     line_number,
                     "Chained array operations detected".to_string(),
                 )
-                .with_description("Chaining filter and map creates intermediate arrays")
-                .with_suggestion("Consider using reduce() or a single loop for better performance")
+                .with_description("Chaining filter and map creates intermediate arrays".to_string())
+                .with_suggestion("Consider using reduce() or a single loop for better performance".to_string())
             );
         }
 
@@ -295,8 +294,8 @@ impl PerformanceAnalyzer {
                     line_number,
                     "Loose equality operator used".to_string(),
                 )
-                .with_description("Loose equality (==) performs type coercion which can be slower")
-                .with_suggestion("Use strict equality (===) for better performance and clarity")
+                .with_description("Loose equality (==) performs type coercion which can be slower".to_string())
+                .with_suggestion("Use strict equality (===) for better performance and clarity".to_string())
             );
         }
 
@@ -317,8 +316,8 @@ impl PerformanceAnalyzer {
                     line_number,
                     "List append in loop - consider list comprehension".to_string(),
                 )
-                .with_description("List comprehensions are generally faster than append() in loops")
-                .with_suggestion("Use list comprehension: [expr for item in iterable]")
+                .with_description("List comprehensions are generally faster than append() in loops".to_string())
+                .with_suggestion("Use list comprehension: [expr for item in iterable]".to_string())
             );
         }
 
@@ -333,8 +332,8 @@ impl PerformanceAnalyzer {
                     line_number,
                     "String concatenation with + operator".to_string(),
                 )
-                .with_description("String concatenation with + can be inefficient for multiple strings")
-                .with_suggestion("Use f-strings, .join(), or .format() for better performance")
+                .with_description("String concatenation with + can be inefficient for multiple strings".to_string())
+                .with_suggestion("Use f-strings, .join(), or .format() for better performance".to_string())
             );
         }
 
@@ -355,8 +354,8 @@ impl PerformanceAnalyzer {
                     line_number,
                     "String concatenation with + operator".to_string(),
                 )
-                .with_description("String concatenation creates new objects and can be inefficient")
-                .with_suggestion("Use StringBuilder for multiple concatenations")
+                .with_description("String concatenation creates new objects and can be inefficient".to_string())
+                .with_suggestion("Use StringBuilder for multiple concatenations".to_string())
             );
         }
 
@@ -371,8 +370,8 @@ impl PerformanceAnalyzer {
                     line_number,
                     "ArrayList without initial capacity".to_string(),
                 )
-                .with_description("ArrayList without capacity hint may cause multiple resizing operations")
-                .with_suggestion("Use ArrayList(int initialCapacity) if size is known")
+                .with_description("ArrayList without capacity hint may cause multiple resizing operations".to_string())
+                .with_suggestion("Use ArrayList(int initialCapacity) if size is known".to_string())
             );
         }
 
@@ -383,7 +382,7 @@ impl PerformanceAnalyzer {
         let mut findings = Vec::new();
 
         let line_count = content.lines().count();
-        let char_count = content.chars().count();
+        let _char_count = content.chars().count();
 
         // Check for very large files
         if line_count > 1000 {
@@ -396,8 +395,8 @@ impl PerformanceAnalyzer {
                     1,
                     format!("Large file detected ({} lines)", line_count),
                 )
-                .with_description("Large files can be difficult to maintain and may indicate need for refactoring")
-                .with_suggestion("Consider breaking this file into smaller, more focused modules")
+                .with_description("Large files can be difficult to maintain and may indicate need for refactoring".to_string())
+                .with_suggestion("Consider breaking this file into smaller, more focused modules".to_string())
             );
         }
 
@@ -413,8 +412,8 @@ impl PerformanceAnalyzer {
                         (line_num + 1) as u32,
                         format!("Long line detected ({} characters)", line.len()),
                     )
-                    .with_description("Very long lines can impact readability and code review efficiency")
-                    .with_suggestion("Consider breaking long lines for better readability")
+                    .with_description("Very long lines can impact readability and code review efficiency".to_string())
+                    .with_suggestion("Consider breaking long lines for better readability".to_string())
                 );
                 break; // Only report first occurrence to avoid spam
             }

@@ -100,7 +100,7 @@ async fn create_interactive_config() -> Result<Config> {
         .parse::<u64>()
         .unwrap_or(50);
     
-    let max_depth = read_input("Maximum directory depth to scan", "15")?
+    let _max_depth = read_input("Maximum directory depth to scan", "15")?
         .parse::<u32>()
         .unwrap_or(15);
     
@@ -159,10 +159,10 @@ async fn create_interactive_config() -> Result<Config> {
     
     // Adjust for security focus
     if security_focused {
-        config.security.max_memory_mb = 512;
-        config.security.operation_timeout = 180;
-        config.integrity.verify_signatures = true;
-        config.integrity.baseline_file = Some("security-baseline.json".to_string().into());
+        // Security config is now properly structured
+        config.security.check_secrets = true;
+        config.security.check_unsafe_code = true;
+        config.integrity.baseline_file = "security-baseline.json".to_string();
         
         // Add security-focused patterns
         config.non_production.patterns.extend(vec![
@@ -170,28 +170,24 @@ async fn create_interactive_config() -> Result<Config> {
                 pattern: r#"(?i)(password|secret|key|token)\s*=\s*["'][^"']+["']"#.to_string(),
                 description: "Hardcoded credentials".to_string(),
                 severity: "critical".to_string(),
-                exclude_paths: vec!["**/tests/**".to_string(), "**/examples/**".to_string()],
             },
             crate::config::NonProdPattern {
                 pattern: r#"(?i)api[_-]?key\s*[:=]\s*["'][^"']+["']"#.to_string(),
                 description: "Hardcoded API key".to_string(),
                 severity: "critical".to_string(),
-                exclude_paths: vec!["**/tests/**".to_string()],
             },
         ]);
     }
     
     // Adjust for CI usage
     if ci_usage {
-        config.performance.worker_threads = 0; // Auto-detect
-        config.performance.memory_pool_mb = 512;
-        config.security.operation_timeout = 600; // 10 minutes for CI
-        config.lint_drift.baseline_ref = "ci-baseline.json".to_string();
+        config.performance.max_complexity = 15; // More lenient for CI
+        config.performance.max_function_length = 200;
+        config.lint_drift.baseline_file = "ci-baseline.json".to_string();
     }
     
     // Apply user preferences
     config.general.max_file_size = max_file_size_mb * 1024 * 1024;
-    config.general.max_depth = Some(max_depth as usize);
     
     println!("\n✅ Configuration created successfully!");
     println!("📝 Review the generated codeguardian.toml file and customize as needed.");

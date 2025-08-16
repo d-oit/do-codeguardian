@@ -8,11 +8,18 @@ pub struct IntegrityAnalyzer {
     // Configuration for integrity checking
 }
 
+impl Default for IntegrityAnalyzer {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl IntegrityAnalyzer {
     pub fn new() -> Self {
         Self {}
     }
     
+    #[allow(dead_code)]
     fn compute_hash(&self, content: &[u8]) -> String {
         let mut hasher = Hasher::new();
         hasher.update(content);

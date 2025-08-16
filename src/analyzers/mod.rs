@@ -8,7 +8,7 @@ pub mod security_checks;
 pub mod code_quality_analyzer;
 pub mod optimized_patterns;
 
-use crate::types::{AnalysisResults, Finding};
+use crate::types::Finding;
 use anyhow::Result;
 use std::path::Path;
 

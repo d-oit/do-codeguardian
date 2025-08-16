@@ -1,4 +1,4 @@
-use crate::types::{Finding, AnalysisResults};
+use crate::types::Finding;
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;

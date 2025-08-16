@@ -1,9 +1,8 @@
 use crate::analyzers::Analyzer;
-use crate::analyzers::optimized_patterns::{SECURITY_PATTERNS, AnalysisOptimizer, FileType, PatternCache};
+use crate::analyzers::optimized_patterns::{SECURITY_PATTERNS, AnalysisOptimizer, PatternCache};
 use crate::analyzers::security_checks::SecurityChecks;
 use crate::types::{Finding, Severity};
 use anyhow::Result;
-use regex::Regex;
 use std::path::Path;
 use std::collections::HashSet;
 
@@ -174,6 +173,7 @@ impl SecurityAnalyzer {
         Ok(findings)
     }
 
+    #[allow(dead_code)]
     fn has_high_entropy(&self, s: &str) -> bool {
         // Simple entropy check - look for strings with good character distribution
         let mut char_counts = std::collections::HashMap::new();
