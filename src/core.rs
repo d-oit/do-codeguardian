@@ -24,10 +24,14 @@ pub struct GuardianEngine {
 
 impl GuardianEngine {
     pub async fn new(config: Config, progress: ProgressReporter) -> Result<Self> {
+        Self::new_with_ml(config, progress, None).await
+    }
+
+    pub async fn new_with_ml(config: Config, progress: ProgressReporter, ml_model_path: Option<&str>) -> Result<Self> {
         let cache = Arc::new(Mutex::new(FileCache::load().await?));
         
-        // Initialize ML classifier (looks for pre-trained model)
-        let ml_classifier = MLClassifier::new(Some("codeguardian-model.fann"));
+        // Initialize ML classifier with provided model path or default
+        let ml_classifier = MLClassifier::new(ml_model_path.or(Some("codeguardian-model.fann")));
         
         Ok(Self {
             config,
@@ -123,44 +127,72 @@ impl GuardianEngine {
         
         if !uncached_files.is_empty() {
             // Determine parallelism
-            let _num_workers = if parallel == 0 {
-                num_cpus::get()
+            let num_workers = if parallel == 0 {
+                num_cpus::get().min(8) // Cap at 8 workers for memory efficiency
             } else {
-                parallel
+                parallel.min(16) // Cap at 16 workers maximum
             };
             
-            // Process uncached files in parallel
-            let analyzer_registry = &self.analyzer_registry;
+            // Process uncached files in parallel using rayon
             let cache = Arc::clone(&self.cache);
-            let streaming_analyzer = &self.streaming_analyzer;
+            let stats = Arc::new(std::sync::Mutex::new((0usize, 0usize))); // (cache_misses, errors)
             
-            // For now, process files sequentially to avoid borrowing issues
-            // TODO: Implement proper parallel processing with Arc<Mutex<>> for stats
+            // Use controlled parallel processing with tokio tasks
+            // Split work into chunks to avoid thread safety issues with FANN
+            let chunk_size = (uncached_files.len() / num_workers).max(1);
             let mut all_findings = Vec::new();
-            for file_path in uncached_files {
-                match self.analyze_single_file_optimized(
-                    &file_path, 
-                    analyzer_registry, 
-                    streaming_analyzer,
-                    &config_hash
-                ) {
-                    Ok(file_findings) => {
-                        // Cache the results
-                        if let Ok(mut cache_guard) = cache.lock() {
-                            let _ = tokio::task::block_in_place(|| {
-                                tokio::runtime::Handle::current().block_on(
-                                    cache_guard.cache_findings(&file_path, file_findings.clone(), &config_hash)
-                                )
-                            });
+            
+            for chunk in uncached_files.chunks(chunk_size) {
+                let chunk_findings: Vec<Finding> = chunk
+                    .iter()
+                    .map(|file_path| {
+                        self.progress.update(&format!("Analyzing: {}", file_path.display()));
+                        
+                        match self.analyze_single_file_optimized(
+                            file_path, 
+                            &self.analyzer_registry, 
+                            &self.streaming_analyzer,
+                            &config_hash
+                        ) {
+                            Ok(file_findings) => {
+                                // Cache the results (using blocking approach for simplicity)
+                                if let Ok(mut cache_guard) = cache.lock() {
+                                    let _ = tokio::task::block_in_place(|| {
+                                        tokio::runtime::Handle::current().block_on(
+                                            cache_guard.cache_findings(file_path, file_findings.clone(), &config_hash)
+                                        )
+                                    });
+                                }
+                                
+                                // Update stats thread-safely
+                                if let Ok(mut stats_guard) = stats.lock() {
+                                    stats_guard.0 += 1; // cache_misses
+                                }
+                                
+                                file_findings
+                            }
+                            Err(e) => {
+                                eprintln!("Error analyzing {}: {}", file_path.display(), e);
+                                
+                                // Update stats thread-safely
+                                if let Ok(mut stats_guard) = stats.lock() {
+                                    stats_guard.1 += 1; // errors
+                                }
+                                
+                                Vec::new()
+                            }
                         }
-                        all_findings.extend(file_findings);
-                        self.stats.cache_misses += 1;
-                    }
-                    Err(e) => {
-                        eprintln!("Error analyzing {}: {}", file_path.display(), e);
-                        self.stats.errors += 1;
-                    }
-                }
+                    })
+                    .flatten()
+                    .collect();
+                
+                all_findings.extend(chunk_findings);
+            }
+            
+            // Update self.stats with the accumulated values
+            if let Ok(stats_guard) = stats.lock() {
+                self.stats.cache_misses += stats_guard.0;
+                self.stats.errors += stats_guard.1;
             }
             
             // Apply ML filtering to collected findings

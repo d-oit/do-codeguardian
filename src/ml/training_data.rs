@@ -267,7 +267,7 @@ impl TrainingDataCollector {
     }
 
     /// Simple heuristic classification based on patterns
-    fn heuristic_classification(&self, finding: &Finding) -> bool {
+    pub fn heuristic_classification(&self, finding: &Finding) -> bool {
         // High confidence true positives
         if matches!(finding.severity, Severity::Critical | Severity::High)
             && (finding.analyzer == "integrity" || 

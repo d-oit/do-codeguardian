@@ -36,6 +36,10 @@ enum Commands {
     GhIssue(GhIssueArgs),
     /// Initialize configuration
     Init(InitArgs),
+    /// Train ML model for false positive reduction
+    Train(TrainArgs),
+    /// View ML model performance metrics
+    Metrics(MetricsArgs),
 }
 
 #[tokio::main]
@@ -47,5 +51,7 @@ async fn main() -> Result<()> {
         Commands::Report(args) => cli::report::run(args).await,
         Commands::GhIssue(args) => cli::gh_issue::run(args).await,
         Commands::Init(args) => cli::init::run(args).await,
+        Commands::Train(args) => cli::train::run(args).await,
+        Commands::Metrics(args) => cli::metrics::run(args).await,
     }
 }

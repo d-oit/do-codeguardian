@@ -1,0 +1,183 @@
+{
+  "schema_version": "1.0.0",
+  "tool_metadata": {
+    "name": "codeguardian",
+    "version": "0.1.0",
+    "config_hash": "063df732c3ec1222",
+    "timestamp": "2025-08-17T08:19:34.806097284Z"
+  },
+  "findings": [
+    {
+      "id": "a6fb5a7cbebf4223",
+      "analyzer": "non_production",
+      "rule": "potential_secret",
+      "severity": "Critical",
+      "file": "/workspaces/do-codeguardian/src/analyzers/optimized_patterns.rs",
+      "line": 34,
+      "column": null,
+      "message": "Potential hardcoded secret detected",
+      "description": "Line may contain hardcoded credentials or API keys",
+      "suggestion": "Move secrets to environment variables or secure configuration",
+      "metadata": {}
+    },
+    {
+      "id": "966c2f69c22b99da",
+      "analyzer": "non_production",
+      "rule": "potential_secret",
+      "severity": "Critical",
+      "file": "/workspaces/do-codeguardian/src/analyzers/optimized_patterns.rs",
+      "line": 357,
+      "column": null,
+      "message": "Potential hardcoded secret detected",
+      "description": "Line may contain hardcoded credentials or API keys",
+      "suggestion": "Move secrets to environment variables or secure configuration",
+      "metadata": {}
+    },
+    {
+      "id": "eaa7481e64939663",
+      "analyzer": "non_production",
+      "rule": "potential_secret",
+      "severity": "Critical",
+      "file": "/workspaces/do-codeguardian/src/analyzers/security_analyzer.rs",
+      "line": 139,
+      "column": null,
+      "message": "Potential hardcoded secret detected",
+      "description": "Line may contain hardcoded credentials or API keys",
+      "suggestion": "Move secrets to environment variables or secure configuration",
+      "metadata": {}
+    },
+    {
+      "id": "c9b30ddd65004097",
+      "analyzer": "non_production",
+      "rule": "potential_secret",
+      "severity": "Critical",
+      "file": "/workspaces/do-codeguardian/src/analyzers/security_analyzer.rs",
+      "line": 251,
+      "column": null,
+      "message": "Potential hardcoded secret detected",
+      "description": "Line may contain hardcoded credentials or API keys",
+      "suggestion": "Move secrets to environment variables or secure configuration",
+      "metadata": {}
+    },
+    {
+      "id": "50b57079dbef6210",
+      "analyzer": "non_production",
+      "rule": "potential_secret",
+      "severity": "Critical",
+      "file": "/workspaces/do-codeguardian/src/cli/init.rs",
+      "line": 170,
+      "column": null,
+      "message": "Potential hardcoded secret detected",
+      "description": "Line may contain hardcoded credentials or API keys",
+      "suggestion": "Move secrets to environment variables or secure configuration",
+      "metadata": {}
+    },
+    {
+      "id": "857b353da5edd062",
+      "analyzer": "non_production",
+      "rule": "potential_secret",
+      "severity": "Critical",
+      "file": "/workspaces/do-codeguardian/src/config.rs",
+      "line": 154,
+      "column": null,
+      "message": "Potential hardcoded secret detected",
+      "description": "Line may contain hardcoded credentials or API keys",
+      "suggestion": "Move secrets to environment variables or secure configuration",
+      "metadata": {}
+    },
+    {
+      "id": "1a4b0aaf373c277d",
+      "analyzer": "non_production",
+      "rule": "potential_secret",
+      "severity": "Critical",
+      "file": "/workspaces/do-codeguardian/src/config.rs",
+      "line": 155,
+      "column": null,
+      "message": "Potential hardcoded secret detected",
+      "description": "Line may contain hardcoded credentials or API keys",
+      "suggestion": "Move secrets to environment variables or secure configuration",
+      "metadata": {}
+    },
+    {
+      "id": "c0ba0a36d6b97486",
+      "analyzer": "non_production",
+      "rule": "potential_secret",
+      "severity": "Critical",
+      "file": "/workspaces/do-codeguardian/src/config.rs",
+      "line": 156,
+      "column": null,
+      "message": "Potential hardcoded secret detected",
+      "description": "Line may contain hardcoded credentials or API keys",
+      "suggestion": "Move secrets to environment variables or secure configuration",
+      "metadata": {}
+    },
+    {
+      "id": "d5f1142f96547f6c",
+      "analyzer": "non_production",
+      "rule": "potential_secret",
+      "severity": "Critical",
+      "file": "/workspaces/do-codeguardian/src/utils/security.rs",
+      "line": 7,
+      "column": null,
+      "message": "Potential hardcoded secret detected",
+      "description": "Line may contain hardcoded credentials or API keys",
+      "suggestion": "Move secrets to environment variables or secure configuration",
+      "metadata": {}
+    },
+    {
+      "id": "0a63d9f2979bee95",
+      "analyzer": "non_production",
+      "rule": "potential_secret",
+      "severity": "Critical",
+      "file": "/workspaces/do-codeguardian/src/utils/security.rs",
+      "line": 8,
+      "column": null,
+      "message": "Potential hardcoded secret detected",
+      "description": "Line may contain hardcoded credentials or API keys",
+      "suggestion": "Move secrets to environment variables or secure configuration",
+      "metadata": {}
+    },
+    {
+      "id": "7bd88dd798366957",
+      "analyzer": "non_production",
+      "rule": "potential_secret",
+      "severity": "Critical",
+      "file": "/workspaces/do-codeguardian/src/utils/security.rs",
+      "line": 10,
+      "column": null,
+      "message": "Potential hardcoded secret detected",
+      "description": "Line may contain hardcoded credentials or API keys",
+      "suggestion": "Move secrets to environment variables or secure configuration",
+      "metadata": {}
+    },
+    {
+      "id": "7308765c9ab1052c",
+      "analyzer": "non_production",
+      "rule": "todo_comment",
+      "severity": "High",
+      "file": "/workspaces/do-codeguardian/src/analyzers/code_quality_analyzer.rs",
+      "line": 520,
+      "column": null,
+      "message": "BUG comment found",
+      "description": "Line contains a bug comment that should be resolved before production",
+      "suggestion": "Resolve the issue or create a proper issue tracker entry",
+      "metadata": {
+        "comment_type": "bug"
+      }
+    }
+  ],
+  "summary": {
+    "total_files_scanned": 38,
+    "total_findings": 12,
+    "findings_by_severity": {
+      "High": 1,
+      "Critical": 11
+    },
+    "findings_by_analyzer": {
+      "non_production": 12
+    },
+    "scan_duration_ms": 10826
+  },
+  "config_hash": "063df732c3ec1222",
+  "timestamp": "2025-08-17T08:19:34.806100408Z"
+}

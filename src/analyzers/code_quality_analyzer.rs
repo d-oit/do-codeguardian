@@ -25,7 +25,7 @@ impl CodeQualityAnalyzer {
         Self {
             long_parameter_list_pattern: Regex::new(r"(?:fn|function|def|public|private|protected)\s+\w+\s*\([^)]{100,}\)").unwrap(),
             duplicate_code_pattern: Regex::new(r"(.{50,})\n.*(.{50,})").unwrap(),
-            magic_number_pattern: Regex::new(r"\b(?!0|1|2|10|100|1000)\d{2,}\b").unwrap(),
+            magic_number_pattern: Regex::new(r"\b\d{2,}\b").unwrap(),
             dead_code_pattern: Regex::new(r"(?i)(unreachable|dead|unused|deprecated)").unwrap(),
             complex_condition_pattern: Regex::new(r"if\s*\([^)]*&&[^)]*&&[^)]*\)|if\s*\([^)]*\|\|[^)]*\|\|[^)]*\)").unwrap(),
             complexity_keywords: vec![

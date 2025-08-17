@@ -21,8 +21,8 @@ pub async fn run(args: CheckArgs) -> Result<()> {
     // Initialize progress reporter (TTY-aware)
     let progress = ProgressReporter::new(!args.quiet && std::io::stdout().is_terminal());
 
-    // Initialize the Guardian engine
-    let mut engine = GuardianEngine::new(config, progress).await?;
+    // Initialize the Guardian engine with optional ML model
+    let mut engine = GuardianEngine::new_with_ml(config, progress, args.ml_model.as_deref()).await?;
 
     // Determine files to scan
     let files_to_scan = if let Some(diff_spec) = &args.diff {

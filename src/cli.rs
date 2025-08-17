@@ -5,6 +5,8 @@ pub mod check;
 pub mod report;
 pub mod gh_issue;
 pub mod init;
+pub mod train;
+pub mod metrics;
 
 #[derive(Parser)]
 #[command(
@@ -106,6 +108,10 @@ pub struct CheckArgs {
     /// Baseline file for drift analysis
     #[arg(short, long)]
     pub baseline: Option<PathBuf>,
+
+    /// Path to ML model for false positive reduction
+    #[arg(long)]
+    pub ml_model: Option<String>,
 }
 
 #[derive(Parser)]
@@ -175,6 +181,73 @@ pub struct InitArgs {
     /// Template to use
     #[arg(long)]
     pub template: Option<String>,
+}
+
+#[derive(Parser)]
+pub struct TrainArgs {
+    /// Paths to analyze for training data (files or directories)
+    #[arg(default_value = ".")]
+    pub paths: Vec<std::path::PathBuf>,
+
+    /// Path to save/load the trained model
+    #[arg(long, short = 'm', default_value = "codeguardian-model.fann")]
+    pub model_path: Option<String>,
+
+    /// Path to save/load training dataset
+    #[arg(long, short = 'd')]
+    pub dataset: Option<String>,
+
+    /// Number of training epochs
+    #[arg(long, default_value = "100")]
+    pub epochs: u32,
+
+    /// Generate bootstrap training data from codebase analysis
+    #[arg(long)]
+    pub bootstrap: bool,
+
+    /// Number of synthetic training samples to generate
+    #[arg(long, default_value = "0")]
+    pub synthetic_samples: usize,
+
+    /// Use balanced training data (equal true/false positives)
+    #[arg(long)]
+    pub balanced: bool,
+
+    /// Suppress all output except errors
+    #[arg(short, long)]
+    pub quiet: bool,
+
+    /// Show detailed training progress
+    #[arg(long)]
+    pub verbose: bool,
+}
+
+#[derive(Parser)]
+pub struct MetricsArgs {
+    /// Path to the ML model file
+    #[arg(long, short = 'm', default_value = "codeguardian-model.fann")]
+    pub model_path: String,
+
+    /// Suppress all output except errors
+    #[arg(short, long)]
+    pub quiet: bool,
+
+    #[command(subcommand)]
+    pub command: MetricsCommand,
+}
+
+#[derive(clap::Subcommand)]
+pub enum MetricsCommand {
+    /// Show detailed metrics report
+    Show,
+    /// Export metrics to JSON file
+    Export {
+        /// Output file path
+        #[arg(short, long, default_value = "model-metrics.json")]
+        output: String,
+    },
+    /// Show condensed metrics summary
+    Summary,
 }
 
 #[derive(ValueEnum, Clone, Debug)]
