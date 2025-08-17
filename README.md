@@ -1,7 +1,5 @@
 # CodeGuardian
 
-**Work in Progress!**
-
 A security-first code analysis CLI with GitHub integration, built with best-practice defaults for CI/CD workflows.
 
 ## Features
