@@ -4,7 +4,7 @@
     "name": "codeguardian",
     "version": "0.1.0",
     "config_hash": "063df732c3ec1222",
-    "timestamp": "2025-08-18T08:06:35.011821526Z"
+    "timestamp": "2025-08-18T07:59:27.298999045Z"
   },
   "findings": [
     {
@@ -805,19 +805,6 @@
       "metadata": {}
     },
     {
-      "id": "0f80f646e4e29e55",
-      "analyzer": "security",
-      "rule": "dangerous_function",
-      "severity": "High",
-      "file": "/workspaces/do-codeguardian/src/analyzers/optimized_patterns.rs",
-      "line": 49,
-      "column": null,
-      "message": "Dangerous function 'shell_exec' detected",
-      "description": "Dangerous functions can lead to security vulnerabilities",
-      "suggestion": "Avoid using dangerous functions or ensure proper input validation",
-      "metadata": {}
-    },
-    {
       "id": "406b12171b355c15",
       "analyzer": "security",
       "rule": "dangerous_function",
@@ -839,6 +826,19 @@
       "line": 49,
       "column": null,
       "message": "Dangerous function 'exec' detected",
+      "description": "Dangerous functions can lead to security vulnerabilities",
+      "suggestion": "Avoid using dangerous functions or ensure proper input validation",
+      "metadata": {}
+    },
+    {
+      "id": "0f80f646e4e29e55",
+      "analyzer": "security",
+      "rule": "dangerous_function",
+      "severity": "High",
+      "file": "/workspaces/do-codeguardian/src/analyzers/optimized_patterns.rs",
+      "line": 49,
+      "column": null,
+      "message": "Dangerous function 'shell_exec' detected",
       "description": "Dangerous functions can lead to security vulnerabilities",
       "suggestion": "Avoid using dangerous functions or ensure proper input validation",
       "metadata": {}
@@ -1132,19 +1132,6 @@
       "metadata": {}
     },
     {
-      "id": "348149137924d865",
-      "analyzer": "security",
-      "rule": "dangerous_function",
-      "severity": "High",
-      "file": "/workspaces/do-codeguardian/src/analyzers/security_analyzer.rs",
-      "line": 142,
-      "column": null,
-      "message": "Dangerous function 'system' detected",
-      "description": "Dangerous functions can lead to security vulnerabilities",
-      "suggestion": "Avoid using dangerous functions or ensure proper input validation",
-      "metadata": {}
-    },
-    {
       "id": "2df5b86a2e5b45bc",
       "analyzer": "security",
       "rule": "dangerous_function",
@@ -1153,6 +1140,19 @@
       "line": 142,
       "column": null,
       "message": "Dangerous function 'exec' detected",
+      "description": "Dangerous functions can lead to security vulnerabilities",
+      "suggestion": "Avoid using dangerous functions or ensure proper input validation",
+      "metadata": {}
+    },
+    {
+      "id": "348149137924d865",
+      "analyzer": "security",
+      "rule": "dangerous_function",
+      "severity": "High",
+      "file": "/workspaces/do-codeguardian/src/analyzers/security_analyzer.rs",
+      "line": 142,
+      "column": null,
+      "message": "Dangerous function 'system' detected",
       "description": "Dangerous functions can lead to security vulnerabilities",
       "suggestion": "Avoid using dangerous functions or ensure proper input validation",
       "metadata": {}
@@ -18627,23 +18627,23 @@
     }
   ],
   "summary": {
-    "total_files_scanned": 64,
+    "total_files_scanned": 62,
     "total_findings": 1418,
     "findings_by_severity": {
-      "Critical": 13,
       "Low": 406,
       "Info": 63,
-      "High": 157,
-      "Medium": 779
+      "Medium": 779,
+      "Critical": 13,
+      "High": 157
     },
     "findings_by_analyzer": {
-      "security": 38,
       "non_production": 386,
       "code_quality": 758,
+      "security": 38,
       "performance": 236
     },
-    "scan_duration_ms": 627
+    "scan_duration_ms": 559
   },
   "config_hash": "063df732c3ec1222",
-  "timestamp": "2025-08-18T08:06:35.011821865Z"
+  "timestamp": "2025-08-18T07:59:27.298999315Z"
 }

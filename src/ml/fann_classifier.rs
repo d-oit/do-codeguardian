@@ -58,8 +58,8 @@ impl FannClassifier {
             .map_err(|e| anyhow!("Failed to load FANN network: {:?}", e))?;
 
         // Extract configuration from loaded network
-        let input_size = 8; // Default input size for now
-        let learning_rate = 0.1; // Default learning rate
+        let input_size = 12; // Enhanced input size for new features
+        let learning_rate = 0.05; // Enhanced learning rate
 
         Ok(Self {
             network,
