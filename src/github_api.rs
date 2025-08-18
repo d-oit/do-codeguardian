@@ -249,7 +249,7 @@ mod tests {
         limiter.record_request();
         
         // Third request should be rate limited
-        let start = Instant::now();
+        let _start = Instant::now();
         let wait_future = limiter.wait_if_needed();
         
         // Advance time to simulate waiting

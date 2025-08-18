@@ -88,7 +88,7 @@ pub async fn run(args: TrainArgs) -> Result<()> {
 
     let training_start = std::time::Instant::now();
     let final_error = classifier.train_batch(&training_pairs, args.epochs)?;
-    let training_duration = training_start.elapsed();
+    let _training_duration = training_start.elapsed();
     
     progress.update(&format!("Training completed. Final error: {:.6}", final_error));
 

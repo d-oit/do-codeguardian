@@ -44,9 +44,9 @@ impl FeatureExtractor {
         }
     }
 
-    /// Extract feature vector from a finding
+    /// Extract enhanced feature vector from a finding (12 features)
     pub fn extract_features(&self, finding: &Finding) -> Result<Vec<f32>> {
-        let mut features = Vec::with_capacity(8);
+        let mut features = Vec::with_capacity(12);
 
         // Feature 1: Severity score (0.0-1.0)
         features.push(self.severity_to_score(&finding.severity));
@@ -71,6 +71,18 @@ impl FeatureExtractor {
 
         // Feature 8: Rule specificity (based on rule name length/complexity)
         features.push(self.rule_specificity_score(&finding.rule));
+
+        // Feature 9: Message complexity (entropy-based)
+        features.push(self.calculate_message_complexity(&finding.message));
+
+        // Feature 10: File path depth (deeper paths often less critical)
+        features.push(self.calculate_path_depth(&finding.file));
+
+        // Feature 11: Rule category confidence (security vs quality vs performance)
+        features.push(self.rule_category_confidence(&finding.rule, &finding.analyzer));
+
+        // Feature 12: Context richness (combination of description + suggestion quality)
+        features.push(self.calculate_context_richness(finding));
 
         Ok(features)
     }
@@ -136,6 +148,89 @@ impl FeatureExtractor {
         let adjustment = if is_reliable { 0.02 } else { -0.02 };
         let new_score = (current_score + adjustment).clamp(0.1, 0.95);
         self.analyzer_confidence.insert(analyzer.to_string(), new_score);
+    }
+
+    /// Calculate message complexity using entropy
+    fn calculate_message_complexity(&self, message: &str) -> f32 {
+        if message.is_empty() {
+            return 0.0;
+        }
+
+        let mut char_counts = std::collections::HashMap::new();
+        let chars: Vec<char> = message.chars().collect();
+        
+        for &ch in &chars {
+            *char_counts.entry(ch).or_insert(0) += 1;
+        }
+
+        let len = chars.len() as f32;
+        let entropy: f32 = char_counts.values()
+            .map(|&count| {
+                let p = count as f32 / len;
+                if p > 0.0 { -p * p.log2() } else { 0.0 }
+            })
+            .sum();
+
+        // Normalize entropy to 0.0-1.0 range (max entropy for ASCII is ~6.6)
+        (entropy / 6.6).min(1.0)
+    }
+
+    /// Calculate file path depth score
+    fn calculate_path_depth(&self, file_path: &std::path::Path) -> f32 {
+        let depth = file_path.components().count();
+        // Normalize: shallow paths (1-3 levels) = 1.0, deep paths (10+ levels) = 0.1
+        let normalized = 1.0 - ((depth as f32 - 1.0) / 10.0);
+        normalized.clamp(0.1, 1.0)
+    }
+
+    /// Determine rule category confidence based on rule and analyzer type
+    fn rule_category_confidence(&self, rule: &str, analyzer: &str) -> f32 {
+        // Security rules generally have higher confidence
+        let security_patterns = ["secret", "injection", "xss", "crypto", "auth", "password"];
+        let performance_patterns = ["loop", "memory", "clone", "inefficient", "blocking"];
+        let quality_patterns = ["magic", "complex", "naming", "style", "format"];
+
+        let rule_lower = rule.to_lowercase();
+        let analyzer_lower = analyzer.to_lowercase();
+
+        if security_patterns.iter().any(|&p| rule_lower.contains(p) || analyzer_lower.contains(p)) {
+            0.9 // High confidence for security issues
+        } else if performance_patterns.iter().any(|&p| rule_lower.contains(p) || analyzer_lower.contains(p)) {
+            0.7 // Medium-high confidence for performance issues
+        } else if quality_patterns.iter().any(|&p| rule_lower.contains(p) || analyzer_lower.contains(p)) {
+            0.6 // Medium confidence for quality issues
+        } else {
+            0.5 // Default confidence
+        }
+    }
+
+    /// Calculate context richness from description and suggestion quality
+    fn calculate_context_richness(&self, finding: &Finding) -> f32 {
+        let mut richness = 0.0;
+
+        // Base score for having description
+        if let Some(desc) = &finding.description {
+            richness += 0.3;
+            // Bonus for detailed descriptions
+            if desc.len() > 50 {
+                richness += 0.2;
+            }
+            // Bonus for technical terms
+            if desc.contains("vulnerability") || desc.contains("security") || desc.contains("performance") {
+                richness += 0.1;
+            }
+        }
+
+        // Base score for having suggestion
+        if let Some(sugg) = &finding.suggestion {
+            richness += 0.3;
+            // Bonus for actionable suggestions
+            if sugg.contains("Use") || sugg.contains("Consider") || sugg.contains("Replace") {
+                richness += 0.1;
+            }
+        }
+
+        richness.min(1.0)
     }
 }
 

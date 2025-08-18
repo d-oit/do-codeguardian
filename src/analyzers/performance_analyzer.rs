@@ -18,7 +18,7 @@ pub struct PerformanceAnalyzer {
 impl PerformanceAnalyzer {
     pub fn new() -> Self {
         Self {
-            nested_loop_pattern: Regex::new(r#"for\s*\([^}]*for\s*\(|while\s*\([^}]*while\s*\(|\.forEach\([^}]*\.forEach\("#).unwrap(),
+            nested_loop_pattern: Regex::new(r#"for\s*\([^{]*\{[^}]*for\s*\(|while\s*\([^{]*\{[^}]*while\s*\(|\.forEach\([^}]*\.forEach\("#).unwrap(),
             string_concat_pattern: Regex::new(r#"\+\s*=\s*[\"']|String\s*\+|str\s*\+\s*str"#).unwrap(),
             inefficient_collection_pattern: Regex::new(r#"\.contains\(.*\).*for|\.indexOf\(.*\).*for|in\s+list.*for"#).unwrap(),
             blocking_io_pattern: Regex::new(r#"\.read\(\)|\.write\(\)|\.sleep\(|Thread\.sleep|time\.sleep|fs\.readFileSync|fs\.writeFileSync"#).unwrap(),
@@ -36,7 +36,7 @@ impl PerformanceAnalyzer {
             let line_number = (line_num + 1) as u32;
 
             // Check for nested loops (O(n²) complexity warning)
-            if self.nested_loop_pattern.is_match(line) {
+            if self.nested_loop_pattern.is_match(line) || self.detect_nested_loops(&lines, line_num) {
                 findings.push(
                     Finding::new(
                         "performance",
@@ -140,6 +140,27 @@ impl PerformanceAnalyzer {
         findings.extend(self.check_file_size_issues(file_path, &content_str)?);
 
         Ok(findings)
+    }
+
+    fn detect_nested_loops(&self, lines: &[&str], current_line: usize) -> bool {
+        // Check if current line is a loop and if we're already inside another loop
+        let current = lines[current_line].trim();
+        if current.contains("for ") || current.contains("while ") || current.contains(".forEach") {
+            // Look backwards to see if we're inside another loop
+            let start = current_line.saturating_sub(20);
+            let mut brace_count = 0;
+            for i in (start..current_line).rev() {
+                let line = lines[i].trim();
+                // Count braces to track nesting
+                brace_count += line.matches('}').count() as i32;
+                brace_count -= line.matches('{').count() as i32;
+                
+                if brace_count <= 0 && (line.contains("for ") || line.contains("while ") || line.contains(".forEach")) {
+                    return true; // Found an outer loop
+                }
+            }
+        }
+        false
     }
 
     fn is_in_loop_context(&self, lines: &[&str], current_line: usize) -> bool {

@@ -46,21 +46,10 @@ impl SecurityAnalyzer {
             }
         }
 
-        // Use optimized line analysis
-        let line_findings = AnalysisOptimizer::analyze_lines_optimized(&content_str, |line_num, line| {
-            self.analyze_line_security(file_path, line, (line_num + 1) as u32)
-        });
-
-        for (line_num, finding_msg) in line_findings {
-            // Convert to Finding objects (simplified for performance)
-            findings.push(Finding::new(
-                "security",
-                "security_issue",
-                Severity::Medium,
-                file_path.to_path_buf(),
-                (line_num + 1) as u32,
-                finding_msg,
-            ));
+        // Analyze each line for security issues
+        for (line_num, line) in content_str.lines().enumerate() {
+            let line_number = (line_num + 1) as u32;
+            findings.extend(self.analyze_line_security(file_path, line, line_number));
         }
 
         // File-level security checks (optimized)
@@ -95,40 +84,96 @@ impl SecurityAnalyzer {
         Ok(findings)
     }
 
-    fn analyze_line_security(&mut self, _file_path: &Path, line: &str, _line_number: u32) -> Option<String> {
+    fn analyze_line_security(&mut self, file_path: &Path, line: &str, line_number: u32) -> Vec<Finding> {
+        let mut findings = Vec::new();
+        
         // Check for hardcoded secrets first (most critical)
         if self.pattern_cache.check_pattern(&SECURITY_PATTERNS.secrets_combined, line) {
-            return Some("Potential hardcoded secret detected".to_string());
+            findings.push(Finding::new(
+                "security",
+                "hardcoded_secret",
+                Severity::Critical,
+                file_path.to_path_buf(),
+                line_number,
+                "Potential hardcoded secret detected".to_string(),
+            )
+            .with_description("Hardcoded secrets in source code pose a security risk".to_string())
+            .with_suggestion("Move secrets to environment variables or secure configuration".to_string()));
         }
         
         // Check for SQL injection vulnerabilities
         if self.pattern_cache.check_pattern(&SECURITY_PATTERNS.sql_injection_fast, line) {
-            return Some("Potential SQL injection vulnerability".to_string());
+            findings.push(Finding::new(
+                "security",
+                "sql_injection",
+                Severity::High,
+                file_path.to_path_buf(),
+                line_number,
+                "Potential SQL injection vulnerability".to_string(),
+            )
+            .with_description("SQL injection vulnerabilities can allow attackers to access or modify data".to_string())
+            .with_suggestion("Use parameterized queries or prepared statements".to_string()));
         }
         
         // Check for XSS vulnerabilities
         if self.pattern_cache.check_pattern(&SECURITY_PATTERNS.xss_fast, line) {
-            return Some("Potential XSS vulnerability".to_string());
+            findings.push(Finding::new(
+                "security",
+                "xss_vulnerability",
+                Severity::High,
+                file_path.to_path_buf(),
+                line_number,
+                "Potential XSS vulnerability".to_string(),
+            )
+            .with_description("XSS vulnerabilities can allow attackers to execute malicious scripts".to_string())
+            .with_suggestion("Sanitize user input and use safe DOM manipulation methods".to_string()));
         }
         
         // Check for command injection
         if self.pattern_cache.check_pattern(&SECURITY_PATTERNS.command_injection_fast, line) {
-            return Some("Potential command injection vulnerability".to_string());
+            findings.push(Finding::new(
+                "security",
+                "command_injection",
+                Severity::High,
+                file_path.to_path_buf(),
+                line_number,
+                "Potential command injection vulnerability".to_string(),
+            )
+            .with_description("Command injection can allow attackers to execute arbitrary system commands".to_string())
+            .with_suggestion("Validate and sanitize all user input before using in system commands".to_string()));
         }
         
         // Check for weak cryptography
         if self.pattern_cache.check_pattern(&SECURITY_PATTERNS.weak_crypto_fast, line) {
-            return Some("Weak cryptographic algorithm detected".to_string());
+            findings.push(Finding::new(
+                "security",
+                "weak_crypto",
+                Severity::Medium,
+                file_path.to_path_buf(),
+                line_number,
+                "Weak cryptographic algorithm detected".to_string(),
+            )
+            .with_description("Weak cryptographic algorithms are vulnerable to attacks".to_string())
+            .with_suggestion("Use strong, modern cryptographic algorithms like AES-256, SHA-256, or better".to_string()));
         }
         
         // Check for dangerous functions
         for func in &self.dangerous_functions {
             if line.contains(func) && !line.trim_start().starts_with("//") && !line.trim_start().starts_with("#") {
-                return Some(format!("Dangerous function '{}' detected", func));
+                findings.push(Finding::new(
+                    "security",
+                    "dangerous_function",
+                    Severity::High,
+                    file_path.to_path_buf(),
+                    line_number,
+                    format!("Dangerous function '{}' detected", func),
+                )
+                .with_description("Dangerous functions can lead to security vulnerabilities".to_string())
+                .with_suggestion("Avoid using dangerous functions or ensure proper input validation".to_string()));
             }
         }
         
-        None
+        findings
     }
     
     fn check_file_level_security_fast(&self, file_path: &Path, content: &str) -> Result<Vec<Finding>> {

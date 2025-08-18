@@ -179,7 +179,7 @@ mod tests {
     use super::*;
     use tempfile::NamedTempFile;
 use std::io::Write;
-    use tokio::io::AsyncWriteExt;
+    // use tokio::io::AsyncWriteExt;
 
     #[tokio::test]
     async fn test_streaming_analysis() {

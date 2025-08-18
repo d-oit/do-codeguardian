@@ -112,9 +112,9 @@ pub struct QualityPatterns {
 impl QualityPatterns {
     fn new() -> Self {
         Self {
-            // Optimized magic number detection (exclude common acceptable numbers)
+            // Optimized magic number detection (simple pattern for numbers > 10)
             magic_numbers_fast: Regex::new(
-                r"\b(?!(?:0|1|2|3|4|5|10|16|24|32|60|64|100|128|256|512|1000|1024)\b)\d{2,}\b"
+                r"\b\d{2,}\b"
             ).unwrap(),
             
             // Simplified complex condition detection
