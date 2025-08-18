@@ -206,7 +206,7 @@ impl FeatureExtractor {
 
     /// Calculate context richness from description and suggestion quality
     fn calculate_context_richness(&self, finding: &Finding) -> f32 {
-        let mut richness = 0.0;
+        let mut richness: f32 = 0.0;
 
         // Base score for having description
         if let Some(desc) = &finding.description {
@@ -257,12 +257,16 @@ mod tests {
 
         let features = extractor.extract_features(&finding).unwrap();
         
-        assert_eq!(features.len(), 8);
+        assert_eq!(features.len(), 12);
         assert!(features[0] > 0.7); // High severity
         assert!(features[1] > 0.8); // Rust file
         assert!(features[2] > 0.9); // Integrity analyzer
         assert!(features[5] > 0.0); // Has description
         assert!(features[6] > 0.0); // Has suggestion
+        assert!(features[8] > 0.0); // Message complexity
+        assert!(features[9] > 0.0); // Path depth
+        assert!(features[10] > 0.0); // Rule category confidence
+        assert!(features[11] > 0.0); // Context richness
     }
 
     #[test]
