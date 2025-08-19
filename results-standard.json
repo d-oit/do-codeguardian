@@ -4,7 +4,7 @@
     "name": "codeguardian",
     "version": "0.1.0",
     "config_hash": "063df732c3ec1222",
-    "timestamp": "2025-08-18T07:59:27.996216994Z"
+    "timestamp": "2025-08-18T08:06:44.370938280Z"
   },
   "findings": [
     {
@@ -805,14 +805,14 @@
       "metadata": {}
     },
     {
-      "id": "0f80f646e4e29e55",
+      "id": "3198cc9fb87feb70",
       "analyzer": "security",
       "rule": "dangerous_function",
       "severity": "High",
       "file": "/workspaces/do-codeguardian/src/analyzers/optimized_patterns.rs",
       "line": 49,
       "column": null,
-      "message": "Dangerous function 'shell_exec' detected",
+      "message": "Dangerous function 'exec' detected",
       "description": "Dangerous functions can lead to security vulnerabilities",
       "suggestion": "Avoid using dangerous functions or ensure proper input validation",
       "metadata": {}
@@ -831,14 +831,14 @@
       "metadata": {}
     },
     {
-      "id": "3198cc9fb87feb70",
+      "id": "0f80f646e4e29e55",
       "analyzer": "security",
       "rule": "dangerous_function",
       "severity": "High",
       "file": "/workspaces/do-codeguardian/src/analyzers/optimized_patterns.rs",
       "line": 49,
       "column": null,
-      "message": "Dangerous function 'exec' detected",
+      "message": "Dangerous function 'shell_exec' detected",
       "description": "Dangerous functions can lead to security vulnerabilities",
       "suggestion": "Avoid using dangerous functions or ensure proper input validation",
       "metadata": {}
@@ -18627,23 +18627,23 @@
     }
   ],
   "summary": {
-    "total_files_scanned": 63,
+    "total_files_scanned": 64,
     "total_findings": 1418,
     "findings_by_severity": {
-      "Critical": 13,
+      "Low": 406,
       "High": 157,
       "Medium": 779,
       "Info": 63,
-      "Low": 406
+      "Critical": 13
     },
     "findings_by_analyzer": {
-      "non_production": 386,
       "code_quality": 758,
-      "security": 38,
-      "performance": 236
+      "performance": 236,
+      "non_production": 386,
+      "security": 38
     },
-    "scan_duration_ms": 535
+    "scan_duration_ms": 744
   },
   "config_hash": "063df732c3ec1222",
-  "timestamp": "2025-08-18T07:59:27.996217397Z"
+  "timestamp": "2025-08-18T08:06:44.370938820Z"
 }

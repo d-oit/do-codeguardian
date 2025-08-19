@@ -6,6 +6,24 @@ use anyhow::Result;
 use std::path::Path;
 use std::collections::HashSet;
 
+/// Context in which a secret is found
+#[derive(Debug, Clone, PartialEq)]
+enum SecretContext {
+    Test,
+    NonProduction,
+    Production,
+}
+
+impl std::fmt::Display for SecretContext {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            SecretContext::Test => write!(f, "test"),
+            SecretContext::NonProduction => write!(f, "non_production"),
+            SecretContext::Production => write!(f, "production"),
+        }
+    }
+}
+
 /// Advanced security analyzer for detecting vulnerabilities and security anti-patterns
 pub struct SecurityAnalyzer {
     // Pattern cache for performance
@@ -89,16 +107,37 @@ impl SecurityAnalyzer {
         
         // Check for hardcoded secrets first (most critical)
         if self.pattern_cache.check_pattern(&SECURITY_PATTERNS.secrets_combined, line) {
+            // Check if this is in a test or non-production context
+            let context = self.analyze_secret_context(file_path, line, line_number);
+            let (severity, message, description) = match context {
+                SecretContext::Test => (
+                    Severity::Low,
+                    "Hardcoded secret in test code".to_string(),
+                    "Test secrets should use mock values or be clearly marked as test data".to_string()
+                ),
+                SecretContext::NonProduction => (
+                    Severity::Medium,
+                    "Hardcoded secret in non-production code".to_string(),
+                    "Non-production secrets should be externalized or clearly documented".to_string()
+                ),
+                SecretContext::Production => (
+                    Severity::Critical,
+                    "Potential hardcoded secret detected".to_string(),
+                    "Hardcoded secrets in source code pose a security risk".to_string()
+                ),
+            };
+            
             findings.push(Finding::new(
                 "security",
                 "hardcoded_secret",
-                Severity::Critical,
+                severity,
                 file_path.to_path_buf(),
                 line_number,
-                "Potential hardcoded secret detected".to_string(),
+                message,
             )
-            .with_description("Hardcoded secrets in source code pose a security risk".to_string())
-            .with_suggestion("Move secrets to environment variables or secure configuration".to_string()));
+            .with_description(description)
+            .with_suggestion("Move secrets to environment variables or secure configuration".to_string())
+            .with_metadata("context".to_string(), serde_json::Value::String(context.to_string())));
         }
         
         // Check for SQL injection vulnerabilities
@@ -174,6 +213,97 @@ impl SecurityAnalyzer {
         }
         
         findings
+    }
+    
+    /// Analyze the context of a potential secret to determine if it's in test/non-production code
+    fn analyze_secret_context(&self, file_path: &Path, line: &str, _line_number: u32) -> SecretContext {
+        // Check file path indicators
+        let file_path_str = file_path.to_string_lossy().to_lowercase();
+        
+        // Test file indicators
+        if file_path_str.contains("test") || 
+           file_path_str.contains("spec") || 
+           file_path_str.contains("__tests__") ||
+           file_path_str.contains("tests/") ||
+           file_path_str.contains("/test/") ||
+           file_path_str.ends_with("_test.rs") ||
+           file_path_str.ends_with(".test.js") ||
+           file_path_str.ends_with(".test.ts") ||
+           file_path_str.ends_with("_spec.rb") {
+            return SecretContext::Test;
+        }
+        
+        // Non-production file indicators
+        if file_path_str.contains("example") ||
+           file_path_str.contains("demo") ||
+           file_path_str.contains("sample") ||
+           file_path_str.contains("mock") ||
+           file_path_str.contains("fixture") ||
+           file_path_str.contains("dev") ||
+           file_path_str.contains("development") ||
+           file_path_str.contains("staging") {
+            return SecretContext::NonProduction;
+        }
+        
+        // Check line content for test/non-production indicators
+        let line_lower = line.to_lowercase();
+        
+        // Test function/method indicators
+        if line_lower.contains("#[test]") ||
+           line_lower.contains("fn test_") ||
+           line_lower.contains("function test") ||
+           line_lower.contains("it(") ||
+           line_lower.contains("describe(") ||
+           line_lower.contains("test(") ||
+           line_lower.contains("@test") ||
+           line_lower.contains("def test_") ||
+           line_lower.contains("class test") {
+            return SecretContext::Test;
+        }
+        
+        // Non-production indicators in code
+        if line_lower.contains("example") ||
+           line_lower.contains("demo") ||
+           line_lower.contains("sample") ||
+           line_lower.contains("mock") ||
+           line_lower.contains("fake") ||
+           line_lower.contains("dummy") ||
+           line_lower.contains("placeholder") ||
+           line_lower.contains("test_") ||
+           line_lower.contains("_test") ||
+           line_lower.contains("dev_") ||
+           line_lower.contains("development") {
+            return SecretContext::NonProduction;
+        }
+        
+        // Check for obvious test/example values (but not if already in test context)
+        if line_lower.contains("your_") ||
+           line_lower.contains("replace_") ||
+           line_lower.contains("insert_") ||
+           line_lower.contains("placeholder") ||
+           line_lower.contains("example") ||
+           line_lower.contains("demo") ||
+           line_lower.contains("mock") ||
+           line_lower.contains("fake") ||
+           line_lower.contains("dummy") {
+            return SecretContext::NonProduction;
+        }
+        
+        // Check for obvious placeholder patterns (but be more specific)
+        if line_lower.contains("xxxx") ||
+           line_lower.contains("abcd") ||
+           (line_lower.contains("1234") && (
+               line_lower.contains("example") ||
+               line_lower.contains("demo") ||
+               line_lower.contains("test") ||
+               line_lower.contains("placeholder") ||
+               line_lower.contains("your_")
+           )) {
+            return SecretContext::NonProduction;
+        }
+        
+        // Default to production context for safety
+        SecretContext::Production
     }
     
     fn check_file_level_security_fast(&self, file_path: &Path, content: &str) -> Result<Vec<Finding>> {

@@ -121,12 +121,66 @@ impl FileCache {
             .unwrap()
             .as_secs() - (max_age_days * 24 * 60 * 60);
 
+        let initial_count = self.entries.len();
         self.entries.retain(|_, entry| {
             entry.cached_at
                 .duration_since(SystemTime::UNIX_EPOCH)
                 .map(|d| d.as_secs() > cutoff)
                 .unwrap_or(false)
         });
+        
+        let removed_count = initial_count - self.entries.len();
+        if removed_count > 0 {
+            println!("Cache cleanup: removed {} stale entries", removed_count);
+        }
+    }
+
+    /// Cleanup cache based on size limit
+    pub fn cleanup_by_size(&mut self, max_size_mb: usize) {
+        let max_size_bytes = max_size_mb * 1024 * 1024;
+        let current_size = self.estimate_size();
+        
+        if current_size > max_size_bytes {
+            // Remove oldest entries first - collect paths to remove
+            let mut entries_vec: Vec<_> = self.entries.iter()
+                .map(|(path, entry)| (path.clone(), entry.cached_at))
+                .collect();
+            entries_vec.sort_by_key(|(_, cached_at)| *cached_at);
+            
+            let target_size = max_size_bytes * 80 / 100; // Target 80% of max size
+            let mut current_size = self.estimate_size();
+            let mut removed_count = 0;
+            
+            for (path, _) in entries_vec {
+                if current_size <= target_size {
+                    break;
+                }
+                
+                if self.entries.remove(&path).is_some() {
+                    // Rough estimate: each entry is about 1KB
+                    current_size = current_size.saturating_sub(1024);
+                    removed_count += 1;
+                }
+            }
+            
+            if removed_count > 0 {
+                println!("Cache size cleanup: removed {} entries to reduce size", removed_count);
+            }
+        }
+    }
+
+    /// Perform comprehensive cache maintenance
+    pub async fn perform_maintenance(&mut self, max_age_days: u64, max_size_mb: usize) -> Result<()> {
+        // Clean up stale entries
+        self.cleanup_stale_entries(max_age_days);
+        
+        // Clean up by size if needed
+        self.cleanup_by_size(max_size_mb);
+        
+        // Save the cleaned cache
+        self.save().await?;
+        
+        Ok(())
     }
 
     pub fn stats(&self) -> CacheStats {

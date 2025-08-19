@@ -7,6 +7,7 @@ pub mod security_analyzer;
 pub mod security_checks;
 pub mod code_quality_analyzer;
 pub mod optimized_patterns;
+pub mod optimized_analyzer;
 
 use crate::types::Finding;
 use anyhow::Result;
@@ -38,6 +39,9 @@ impl AnalyzerRegistry {
         registry.register(Box::new(performance_analyzer::PerformanceAnalyzer::new()));
         registry.register(Box::new(security_analyzer::SecurityAnalyzer::new()));
         registry.register(Box::new(code_quality_analyzer::CodeQualityAnalyzer::new()));
+        
+        // Register optimized analyzer for high-performance analysis
+        registry.register(Box::new(optimized_analyzer::OptimizedAnalyzer::new()));
         
         registry
     }

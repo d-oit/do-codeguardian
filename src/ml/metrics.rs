@@ -368,6 +368,9 @@ impl MetricsCollector {
     fn update_classification_metrics(&mut self, confidence: f32, predicted: bool, actual: bool) {
         let cm = &mut self.metrics.classification_metrics;
         
+        // Store prediction for future analysis
+        self.predictions.push((confidence, actual));
+        
         match (predicted, actual) {
             (true, true) => cm.true_positives += 1,
             (true, false) => cm.false_positives += 1,
@@ -442,8 +445,45 @@ impl MetricsCollector {
     }
 
     fn update_temporal_metrics(&mut self) {
-        // TODO: Implement temporal trend tracking
-        // This would track metrics over time for drift detection
+        // Analyze recent inference records for temporal trends
+        if self.current_window.len() > 10 {
+            let recent_records = &self.current_window[self.current_window.len().saturating_sub(100)..];
+            
+            // Calculate recent accuracy if we have labeled data
+            let labeled_records: Vec<_> = recent_records.iter()
+                .filter(|r| r.actual_positive.is_some())
+                .collect();
+                
+            if labeled_records.len() > 5 {
+                let correct_predictions = labeled_records.iter()
+                    .filter(|r| r.predicted_positive == r.actual_positive.unwrap())
+                    .count();
+                let recent_accuracy = correct_predictions as f32 / labeled_records.len() as f32;
+                
+                // Store daily accuracy with timestamp
+                let date_str = chrono::Utc::now().format("%Y-%m-%d").to_string();
+                self.metrics.temporal_metrics.daily_accuracy.push((date_str, recent_accuracy));
+                
+                // Keep only last 30 days
+                if self.metrics.temporal_metrics.daily_accuracy.len() > 30 {
+                    self.metrics.temporal_metrics.daily_accuracy.remove(0);
+                }
+            }
+            
+            // Calculate recent throughput
+            let recent_time_span = recent_records.last().unwrap().timestamp
+                .duration_since(recent_records.first().unwrap().timestamp);
+            if recent_time_span.as_secs() > 0 {
+                let throughput = recent_records.len() as f32 / recent_time_span.as_secs_f32();
+                let week_str = chrono::Utc::now().format("%Y-W%U").to_string();
+                self.metrics.temporal_metrics.weekly_throughput.push((week_str, throughput as u64));
+                
+                // Keep only last 12 weeks
+                if self.metrics.temporal_metrics.weekly_throughput.len() > 12 {
+                    self.metrics.temporal_metrics.weekly_throughput.remove(0);
+                }
+            }
+        }
     }
 
     fn check_performance_alerts(&mut self) {
@@ -516,11 +556,77 @@ impl MetricsCollector {
             recommendations.push_str("  • Rebalance training dataset for better model performance\n");
         }
         
+        // Analyze prediction patterns for additional recommendations
+        if !self.predictions.is_empty() {
+            let avg_confidence = self.predictions.iter().map(|(conf, _)| conf).sum::<f32>() / self.predictions.len() as f32;
+            if avg_confidence < 0.6 {
+                recommendations.push_str("  • Model shows low confidence - consider retraining with more diverse data\n");
+            }
+        }
+        
         if recommendations.is_empty() {
             recommendations.push_str("  • Model performance looks good! Consider periodic retraining with new data\n");
         }
         
         recommendations
+    }
+
+    /// Analyze confidence calibration using stored predictions
+    pub fn analyze_confidence_calibration(&self) -> f32 {
+        if self.predictions.is_empty() {
+            return 0.0;
+        }
+        
+        // Simple calibration analysis: how well do confidence scores match actual accuracy
+        let mut calibration_error = 0.0;
+        let bins = 10;
+        
+        for bin in 0..bins {
+            let bin_start = bin as f32 / bins as f32;
+            let bin_end = (bin + 1) as f32 / bins as f32;
+            
+            let bin_predictions: Vec<_> = self.predictions.iter()
+                .filter(|(conf, _)| *conf >= bin_start && *conf < bin_end)
+                .collect();
+                
+            if !bin_predictions.is_empty() {
+                let avg_confidence = bin_predictions.iter().map(|(conf, _)| *conf).sum::<f32>() / bin_predictions.len() as f32;
+                let actual_accuracy = bin_predictions.iter().filter(|(conf, actual)| (*conf >= 0.5) == *actual).count() as f32 / bin_predictions.len() as f32;
+                calibration_error += (avg_confidence - actual_accuracy).abs();
+            }
+        }
+        
+        calibration_error / bins as f32
+    }
+
+    /// Get recent inference statistics from the sliding window
+    pub fn get_recent_inference_stats(&self) -> (f32, f32, usize) {
+        if self.current_window.is_empty() {
+            return (0.0, 0.0, 0);
+        }
+        
+        let recent_avg_confidence = self.current_window.iter()
+            .map(|record| record.confidence)
+            .sum::<f32>() / self.current_window.len() as f32;
+            
+        let recent_avg_inference_time = self.current_window.iter()
+            .map(|record| record.inference_time.as_secs_f32() * 1000.0)
+            .sum::<f32>() / self.current_window.len() as f32;
+            
+        let recent_findings_count = self.current_window.len();
+        
+        (recent_avg_confidence, recent_avg_inference_time, recent_findings_count)
+    }
+
+    /// Get findings by severity from recent window
+    pub fn get_findings_by_severity(&self) -> std::collections::HashMap<Severity, usize> {
+        let mut severity_counts = std::collections::HashMap::new();
+        
+        for record in &self.current_window {
+            *severity_counts.entry(record.finding.severity.clone()).or_insert(0) += 1;
+        }
+        
+        severity_counts
     }
 }
 

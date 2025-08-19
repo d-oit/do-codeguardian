@@ -3,6 +3,9 @@ use serde::{Deserialize, Serialize};
 use std::path::Path;
 use crate::error::GuardianError;
 
+pub mod performance;
+pub use performance::PerformanceConfig as OptimizationConfig;
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GeneralConfig {
     pub max_file_size: u64,
@@ -315,6 +318,7 @@ pub struct Config {
     pub code_quality: CodeQualityConfig,
     pub security: SecurityConfig,
     pub performance: PerformanceConfig,
+    pub optimization: OptimizationConfig,
 }
 
 impl Default for Config {
@@ -440,6 +444,7 @@ impl Config {
                 max_complexity: 15,
                 max_function_length: 150,
             },
+            optimization: OptimizationConfig::default(),
         }
     }
 
@@ -456,6 +461,7 @@ impl Config {
             code_quality: CodeQualityConfig::default(),
             security: SecurityConfig::default(),
             performance: PerformanceConfig::default(),
+            optimization: OptimizationConfig::thorough(),
         }
     }
 
@@ -472,6 +478,7 @@ impl Config {
             code_quality: CodeQualityConfig::default(),
             security: SecurityConfig::default(),
             performance: PerformanceConfig::default(),
+            optimization: OptimizationConfig::ci_optimized(),
         }
     }
 }
