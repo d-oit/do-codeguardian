@@ -41,7 +41,7 @@ impl OptimizedAnalyzer {
         }
 
         // Use optimized line analysis with early termination
-        let security_findings = AnalysisOptimizer::analyze_lines_optimized(content, |line_num, line| {
+        let security_findings = AnalysisOptimizer::analyze_lines_optimized(content, |_line_num, line| {
             // Check for secrets using combined pattern
             if self.pattern_cache.check_pattern(&SECURITY_PATTERNS.secrets_combined, line) {
                 return Some(format!("Potential secret detected: {}", 
@@ -114,7 +114,7 @@ impl OptimizedAnalyzer {
             }
         }
 
-        let performance_findings = AnalysisOptimizer::analyze_lines_optimized(content, |line_num, line| {
+        let performance_findings = AnalysisOptimizer::analyze_lines_optimized(content, |_line_num, line| {
             // Check for nested loops
             if self.pattern_cache.check_pattern(&PERFORMANCE_PATTERNS.nested_loops_fast, line) {
                 return Some("Nested loops detected - potential O(n²) complexity".to_string());
@@ -178,7 +178,7 @@ impl OptimizedAnalyzer {
             ));
         }
 
-        let quality_findings = AnalysisOptimizer::analyze_lines_optimized(content, |line_num, line| {
+        let quality_findings = AnalysisOptimizer::analyze_lines_optimized(content, |_line_num, line| {
             // Check for magic numbers
             if self.pattern_cache.check_pattern(&QUALITY_PATTERNS.magic_numbers_fast, line) {
                 // Skip common acceptable numbers
@@ -235,7 +235,7 @@ impl OptimizedAnalyzer {
             }
         }
 
-        let dependency_findings = AnalysisOptimizer::analyze_lines_optimized(content, |line_num, line| {
+        let dependency_findings = AnalysisOptimizer::analyze_lines_optimized(content, |_line_num, line| {
             // Check for version ranges that might be too permissive
             if self.pattern_cache.check_pattern(&DEPENDENCY_PATTERNS.version_ranges, line) {
                 return Some("Permissive version range detected - consider pinning versions".to_string());
@@ -364,10 +364,17 @@ mod tests {
     #[test]
     fn test_complexity_calculation() {
         let analyzer = OptimizedAnalyzer::new();
-        let complex_content = b"if (a) { if (b) { while (c) { for (d) { if (e) { } } } } }";
+        // Create content with complexity > 15 to trigger the finding
+        let complex_content = "if (a) { if (b) { while (c) { for (d) { if (e) { if (f) { if (g) { if (h) { if (i) { if (j) { if (k) { if (l) { if (m) { if (n) { if (o) { if (p) { } } } } } } } } } } } } } } } }";
         let path = PathBuf::from("test.js");
         
-        let findings = analyzer.analyze(&path, complex_content).unwrap();
-        assert!(findings.iter().any(|f| f.message.contains("complexity")));
+        let findings = analyzer.analyze(&path, complex_content.as_bytes()).unwrap();
+        
+        // Check the complexity calculation directly
+        let complexity = AnalysisOptimizer::calculate_complexity_fast(complex_content);
+        assert!(complexity > 15, "Complexity should be > 15, got {}", complexity);
+        
+        assert!(findings.iter().any(|f| f.message.contains("complexity")), 
+                "Should find complexity issue. Found {} findings", findings.len());
     }
 }

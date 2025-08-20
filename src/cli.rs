@@ -7,6 +7,7 @@ pub mod gh_issue;
 pub mod init;
 pub mod train;
 pub mod metrics;
+pub mod turbo;
 
 #[derive(Parser)]
 #[command(
@@ -49,6 +50,9 @@ pub enum Commands {
     
     /// Initialize configuration
     Init(InitArgs),
+    
+    /// High-performance analysis for large codebases
+    Turbo(turbo::TurboArgs),
 }
 
 #[derive(Parser)]

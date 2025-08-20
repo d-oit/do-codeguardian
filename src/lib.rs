@@ -23,6 +23,7 @@ pub mod github_api;
 pub mod ml;
 pub mod report;
 pub mod streaming;
+pub mod performance;
 pub mod types;
 pub mod utils;
 

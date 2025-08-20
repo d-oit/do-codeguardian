@@ -14,8 +14,10 @@ mod cache;
 mod error;
 mod ml;
 mod streaming;
+mod performance;
 
 use cli::*;
+use cli::turbo::TurboArgs;
 
 #[derive(Parser)]
 #[command(name = "codeguardian")]
@@ -40,6 +42,8 @@ enum Commands {
     Train(TrainArgs),
     /// View ML model performance metrics
     Metrics(MetricsArgs),
+    /// High-performance analysis for large codebases
+    Turbo(TurboArgs),
 }
 
 #[tokio::main]
@@ -53,5 +57,10 @@ async fn main() -> Result<()> {
         Commands::Init(args) => cli::init::run(args).await,
         Commands::Train(args) => cli::train::run(args).await,
         Commands::Metrics(args) => cli::metrics::run(args).await,
+        Commands::Turbo(args) => {
+            let config = config::Config::load(&std::path::PathBuf::from("codeguardian.toml"))
+                .unwrap_or_else(|_| config::Config::minimal());
+            cli::turbo::run_turbo_analysis(args, config).await
+        },
     }
 }
