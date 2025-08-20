@@ -1,0 +1,292 @@
+name: 🔍 Turbo PR Analysis
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches: [ main, develop ]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  quick-turbo-scan:
+    name: ⚡ Quick Turbo Scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    
+    steps:
+    - name: 📥 Checkout PR
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    
+    - name: 🦀 Setup Rust
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: stable
+        profile: minimal
+        override: true
+    
+    - name: 📦 Cache dependencies
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+          target/
+        key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+    
+    - name: 🔨 Build CodeGuardian
+      run: cargo build --release --quiet
+    
+    - name: 🎯 Get Changed Files
+      id: changed-files
+      run: |
+        # Get list of changed files in this PR
+        git diff --name-only origin/${{ github.base_ref }}..HEAD > changed_files.txt
+        
+        # Filter for supported file types
+        grep -E '\.(rs|js|jsx|ts|tsx|py|java|cpp|cc|cxx|c|go|php|rb|json|toml|yaml|yml)$' changed_files.txt > analyzable_files.txt || true
+        
+        CHANGED_COUNT=$(wc -l < analyzable_files.txt)
+        echo "changed_count=${CHANGED_COUNT}" >> $GITHUB_OUTPUT
+        
+        echo "📁 Changed files to analyze: $CHANGED_COUNT"
+        if [ "$CHANGED_COUNT" -gt 0 ]; then
+          echo "Files:"
+          cat analyzable_files.txt | head -10
+          if [ "$CHANGED_COUNT" -gt 10 ]; then
+            echo "... and $((CHANGED_COUNT - 10)) more"
+          fi
+        fi
+    
+    - name: 🚀 Turbo Analysis on Changed Files
+      if: steps.changed-files.outputs.changed_count > 0
+      id: turbo-scan
+      run: |
+        echo "🚀 Running Turbo analysis on changed files..."
+        
+        # Create temporary directory for changed files
+        mkdir -p changed_files_analysis
+        
+        # Copy changed files to analysis directory (preserving structure)
+        while IFS= read -r file; do
+          if [ -f "$file" ]; then
+            mkdir -p "changed_files_analysis/$(dirname "$file")"
+            cp "$file" "changed_files_analysis/$file"
+          fi
+        done < analyzable_files.txt
+        
+        # Run turbo analysis on changed files only
+        START_TIME=$(date +%s.%N)
+        
+        ./target/release/codeguardian turbo changed_files_analysis \
+          --max-parallel 4 \
+          --memory-limit 256 \
+          --format json \
+          --output pr-analysis.json \
+          --metrics
+        
+        END_TIME=$(date +%s.%N)
+        DURATION=$(echo "$END_TIME - $START_TIME" | bc -l)
+        
+        echo "duration=${DURATION}" >> $GITHUB_OUTPUT
+        echo "✅ Analysis completed in ${DURATION}s"
+    
+    - name: 📊 Analyze Results
+      if: steps.changed-files.outputs.changed_count > 0
+      id: results
+      run: |
+        if [ -f "pr-analysis.json" ]; then
+          # Extract key metrics
+          TOTAL_FINDINGS=$(jq '.summary.total_findings' pr-analysis.json)
+          CRITICAL_FINDINGS=$(jq '[.findings[] | select(.severity == "Critical")] | length' pr-analysis.json)
+          HIGH_FINDINGS=$(jq '[.findings[] | select(.severity == "High")] | length' pr-analysis.json)
+          MEDIUM_FINDINGS=$(jq '[.findings[] | select(.severity == "Medium")] | length' pr-analysis.json)
+          
+          echo "total_findings=${TOTAL_FINDINGS}" >> $GITHUB_OUTPUT
+          echo "critical_findings=${CRITICAL_FINDINGS}" >> $GITHUB_OUTPUT
+          echo "high_findings=${HIGH_FINDINGS}" >> $GITHUB_OUTPUT
+          echo "medium_findings=${MEDIUM_FINDINGS}" >> $GITHUB_OUTPUT
+          
+          # Create findings summary for new issues
+          jq -r '.findings[] | select(.severity == "Critical" or .severity == "High") | 
+            "🔴 **\(.severity)**: \(.message) (\(.file | split("/") | last):\(.line))"' pr-analysis.json > critical_high_findings.txt
+          
+          echo "📊 PR Analysis Results:"
+          echo "  🔍 Total findings: $TOTAL_FINDINGS"
+          echo "  🔴 Critical: $CRITICAL_FINDINGS"
+          echo "  🟠 High: $HIGH_FINDINGS"
+          echo "  🟡 Medium: $MEDIUM_FINDINGS"
+          
+          # Set status for PR checks
+          if [ "$CRITICAL_FINDINGS" -gt 0 ]; then
+            echo "status=critical" >> $GITHUB_OUTPUT
+            echo "message=Critical security issues found in PR" >> $GITHUB_OUTPUT
+          elif [ "$HIGH_FINDINGS" -gt 0 ]; then
+            echo "status=warning" >> $GITHUB_OUTPUT
+            echo "message=High severity issues found in PR" >> $GITHUB_OUTPUT
+          else
+            echo "status=success" >> $GITHUB_OUTPUT
+            echo "message=No critical security issues found" >> $GITHUB_OUTPUT
+          fi
+        else
+          echo "status=success" >> $GITHUB_OUTPUT
+          echo "message=No analyzable files changed" >> $GITHUB_OUTPUT
+        fi
+    
+    - name: 💬 Comment on PR
+      if: steps.changed-files.outputs.changed_count > 0
+      uses: actions/github-script@v6
+      with:
+        script: |
+          const fs = require('fs');
+          
+          // Determine status emoji and message
+          const status = '${{ steps.results.outputs.status }}';
+          const statusEmoji = {
+            'critical': '🚨',
+            'warning': '⚠️',
+            'success': '✅'
+          }[status] || '📊';
+          
+          const statusMessage = {
+            'critical': '**Action Required**: Critical security issues found',
+            'warning': '**Review Recommended**: High severity issues found', 
+            'success': '**Passed**: No critical security issues detected'
+          }[status] || 'Analysis completed';
+          
+          // Read critical/high findings if they exist
+          let criticalHighFindings = '';
+          if (fs.existsSync('critical_high_findings.txt')) {
+            const findings = fs.readFileSync('critical_high_findings.txt', 'utf8').trim();
+            if (findings) {
+              criticalHighFindings = `
+          ### 🔍 Critical & High Severity Issues
+          ${findings}
+          `;
+            }
+          }
+          
+          const comment = `## ${statusEmoji} Turbo Security Analysis - PR Review
+          
+          ### 📊 Quick Scan Results
+          - **Files analyzed**: ${{ steps.changed-files.outputs.changed_count }} changed files
+          - **Analysis time**: ${{ steps.turbo-scan.outputs.duration }}s
+          - **Critical issues**: ${{ steps.results.outputs.critical_findings }}
+          - **High severity**: ${{ steps.results.outputs.high_findings }}
+          - **Medium severity**: ${{ steps.results.outputs.medium_findings }}
+          - **Total findings**: ${{ steps.results.outputs.total_findings }}
+          
+          ### 🎯 Status
+          ${statusMessage}
+          ${criticalHighFindings}
+          
+          <details>
+          <summary>🚀 Performance Metrics</summary>
+          
+          - **Analysis speed**: Ultra-fast PR scanning
+          - **Scope**: Only changed files analyzed
+          - **Duration**: ${{ steps.turbo-scan.outputs.duration }}s
+          - **Mode**: Optimized for CI/CD
+          
+          </details>
+          
+          ---
+          *Powered by CodeGuardian Turbo Mode* ⚡
+          `;
+          
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: comment
+          });
+    
+    - name: 🚨 Fail on Critical Issues
+      if: steps.results.outputs.critical_findings > 0
+      run: |
+        echo "🚨 CRITICAL SECURITY ISSUES DETECTED"
+        echo "====================================="
+        echo "Critical issues found: ${{ steps.results.outputs.critical_findings }}"
+        echo ""
+        echo "Please review and fix these critical security issues before merging:"
+        echo ""
+        cat critical_high_findings.txt || echo "See PR analysis report for details"
+        echo ""
+        echo "💡 Tip: Run 'codeguardian turbo . --aggressive' locally to see all issues"
+        exit 1
+    
+    - name: 📄 Upload PR Analysis Report
+      if: steps.changed-files.outputs.changed_count > 0
+      uses: actions/upload-artifact@v3
+      with:
+        name: pr-analysis-${{ github.event.number }}
+        path: |
+          pr-analysis.json
+          critical_high_findings.txt
+          analyzable_files.txt
+        retention-days: 30
+
+  security-trend-analysis:
+    name: 📈 Security Trend Analysis
+    runs-on: ubuntu-latest
+    needs: quick-turbo-scan
+    if: always()
+    
+    steps:
+    - name: 📥 Checkout repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 50  # Get recent history for trend analysis
+    
+    - name: 🦀 Setup Rust
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: stable
+        profile: minimal
+        override: true
+    
+    - name: 🔨 Build CodeGuardian
+      run: cargo build --release --quiet
+    
+    - name: 📊 Historical Analysis
+      run: |
+        echo "📊 Security Trend Analysis"
+        echo "========================="
+        
+        # Analyze last 5 commits for trends
+        COMMITS=$(git log --oneline -5 --format="%H")
+        
+        echo "Analyzing recent commits for security trends..."
+        echo ""
+        
+        for commit in $COMMITS; do
+          echo "🔍 Analyzing commit: $commit"
+          git checkout $commit 2>/dev/null || continue
+          
+          # Quick turbo scan of this commit
+          timeout 30s ./target/release/codeguardian turbo . \
+            --max-parallel 2 \
+            --memory-limit 256 \
+            --format json \
+            --output "trend-$commit.json" 2>/dev/null || {
+            echo "  ⏭️  Skipped (timeout or error)"
+            continue
+          }
+          
+          if [ -f "trend-$commit.json" ]; then
+            FINDINGS=$(jq '.summary.total_findings' "trend-$commit.json")
+            CRITICAL=$(jq '[.findings[] | select(.severity == "Critical")] | length' "trend-$commit.json")
+            HIGH=$(jq '[.findings[] | select(.severity == "High")] | length' "trend-$commit.json")
+            
+            echo "  📊 Findings: $FINDINGS (Critical: $CRITICAL, High: $HIGH)"
+          fi
+        done
+        
+        # Return to PR head
+        git checkout ${{ github.event.pull_request.head.sha }} 2>/dev/null || git checkout HEAD
+        
+        echo ""
+        echo "✅ Trend analysis complete"
+        echo "💡 Use this data to track security improvements over time"
