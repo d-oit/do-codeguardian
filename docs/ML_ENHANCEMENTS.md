@@ -325,5 +325,4 @@ The enhanced ML model represents a significant leap forward in CodeGuardian's fa
 These improvements make CodeGuardian's ML system production-ready for enterprise environments while maintaining the lightweight, fast inference required for CI/CD integration.
 
 ---
-
 *For technical support or questions about the ML enhancements, please refer to the main documentation or create an issue in the repository.*
