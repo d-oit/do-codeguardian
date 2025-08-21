@@ -40,6 +40,7 @@ pub enum GuardianError {
 
     /// Cryptographic errors
     #[error("Cryptographic operation failed: {message}")]
+    #[allow(dead_code)]
     Crypto {
         message: String,
         algorithm: String,
@@ -47,6 +48,7 @@ pub enum GuardianError {
 
     /// Memory allocation errors
     #[error("Memory allocation failed: {message}")]
+    #[allow(dead_code)]
     Memory {
         message: String,
         requested_size: Option<usize>,
@@ -62,6 +64,7 @@ pub enum GuardianError {
 
     /// Permission errors
     #[error("Permission denied: {message}")]
+    #[allow(dead_code)]
     Permission {
         message: String,
         path: PathBuf,
@@ -69,6 +72,7 @@ pub enum GuardianError {
 
     /// Validation errors
     #[error("Validation failed: {message}")]
+    #[allow(dead_code)]
     Validation {
         message: String,
         field: Option<String>,

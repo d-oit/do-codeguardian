@@ -50,6 +50,7 @@ impl PerformanceEngine {
         self
     }
 
+    #[allow(dead_code)]
     pub fn with_progress_callback<F>(mut self, callback: F) -> Self 
     where
         F: Fn(usize, usize) + Send + Sync + 'static,

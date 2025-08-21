@@ -50,6 +50,7 @@ impl FileCache {
         }
     }
 
+    #[allow(dead_code)]
     pub async fn save(&self) -> Result<()> {
         let content = serde_json::to_string_pretty(self)?;
         fs::write(Self::CACHE_FILE, content).await?;
@@ -115,6 +116,7 @@ impl FileCache {
         format!("{:x}", hasher.finalize())[..16].to_string()
     }
 
+    #[allow(dead_code)]
     pub fn cleanup_stale_entries(&mut self, max_age_days: u64) {
         let cutoff = SystemTime::now()
             .duration_since(SystemTime::UNIX_EPOCH)
@@ -136,6 +138,7 @@ impl FileCache {
     }
 
     /// Cleanup cache based on size limit
+    #[allow(dead_code)]
     pub fn cleanup_by_size(&mut self, max_size_mb: usize) {
         let max_size_bytes = max_size_mb * 1024 * 1024;
         let current_size = self.estimate_size();
@@ -170,6 +173,7 @@ impl FileCache {
     }
 
     /// Perform comprehensive cache maintenance
+    #[allow(dead_code)]
     pub async fn perform_maintenance(&mut self, max_age_days: u64, max_size_mb: usize) -> Result<()> {
         // Clean up stale entries
         self.cleanup_stale_entries(max_age_days);
@@ -183,6 +187,7 @@ impl FileCache {
         Ok(())
     }
 
+    #[allow(dead_code)]
     pub fn stats(&self) -> CacheStats {
         CacheStats {
             total_entries: self.entries.len(),
@@ -190,6 +195,7 @@ impl FileCache {
         }
     }
 
+    #[allow(dead_code)]
     fn estimate_size(&self) -> usize {
         // Rough estimation of cache size in memory
         self.entries.len() * 1024 // Approximate 1KB per entry
@@ -197,6 +203,7 @@ impl FileCache {
 }
 
 #[derive(Debug)]
+#[allow(dead_code)]
 pub struct CacheStats {
     pub total_entries: usize,
     pub cache_size_bytes: usize,

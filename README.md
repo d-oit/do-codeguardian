@@ -33,10 +33,10 @@ A security-first code analysis CLI with GitHub integration, built with best-prac
 
 ```bash
 # Install from source
-cargo install --git https://github.com/your-org/codeguardian
+cargo install --git https://github.com/d-oit/codeguardian
 
 # Or download binary from releases
-curl -L https://github.com/your-org/codeguardian/releases/latest/download/codeguardian-linux-x64.tar.gz | tar xz
+curl -L https://github.com/d-oit/codeguardian/releases/latest/download/codeguardian-linux-x64.tar.gz | tar xz
 ```
 
 ### Basic Usage

@@ -10,6 +10,7 @@ const STREAMING_THRESHOLD: u64 = 5 * 1024 * 1024;
 
 #[derive(Clone)]
 pub struct StreamingAnalyzer {
+    #[allow(dead_code)]
     chunk_size: usize,
 }
 
@@ -33,6 +34,7 @@ impl StreamingAnalyzer {
             .unwrap_or(false)
     }
 
+    #[allow(dead_code)]
     pub async fn analyze_large_file<F>(
         &self,
         file_path: &Path,
@@ -62,6 +64,7 @@ impl StreamingAnalyzer {
         Ok(all_findings)
     }
 
+    #[allow(dead_code)]
     pub async fn analyze_binary_chunks<F>(
         &self,
         file_path: &Path,
@@ -97,6 +100,7 @@ impl StreamingAnalyzer {
     }
 
     /// Memory-efficient line-by-line analysis for text files
+    #[allow(dead_code)]
     pub fn analyze_text_streaming<F>(
         &self,
         file_path: &Path,
@@ -120,6 +124,7 @@ impl StreamingAnalyzer {
 }
 
 /// Adaptive chunk size based on file size and available memory
+#[allow(dead_code)]
 pub struct AdaptiveChunking {
     base_chunk_size: usize,
     max_chunk_size: usize,
@@ -133,6 +138,7 @@ impl Default for AdaptiveChunking {
 }
 
 impl AdaptiveChunking {
+    #[allow(dead_code)]
     pub fn new() -> Self {
         Self {
             base_chunk_size: 64 * 1024,     // 64KB
@@ -141,6 +147,7 @@ impl AdaptiveChunking {
         }
     }
 
+    #[allow(dead_code)]
     pub fn optimal_chunk_size(&self, file_size: u64) -> usize {
         // Adaptive chunking based on file size and available memory
         let memory_based_chunk = self.available_memory / 10; // Use 10% of available memory
@@ -152,6 +159,7 @@ impl AdaptiveChunking {
             .max(self.base_chunk_size)
     }
 
+    #[allow(dead_code)]
     fn estimate_available_memory() -> usize {
         // Simple heuristic - in production, use proper memory detection
         #[cfg(target_os = "linux")]

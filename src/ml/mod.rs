@@ -75,6 +75,7 @@ impl MLClassifier {
     }
 
     /// Update model with user feedback (online learning)
+    #[allow(dead_code)]
     pub fn record_feedback(&mut self, finding: &Finding, is_true_positive: bool) -> Result<()> {
         if !self.enabled {
             return Ok(());
@@ -144,6 +145,7 @@ impl MLClassifier {
     }
 
     /// Record training completion for metrics
+    #[allow(dead_code)]
     pub fn record_training_completion(
         &mut self,
         dataset_size: usize,

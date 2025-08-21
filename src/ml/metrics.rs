@@ -168,10 +168,13 @@ pub struct MetricsCollector {
 #[derive(Debug, Clone)]
 struct InferenceRecord {
     timestamp: Instant,
+    #[allow(dead_code)]
     inference_time: Duration,
+    #[allow(dead_code)]
     confidence: f32,
     predicted_positive: bool,
     actual_positive: Option<bool>,
+    #[allow(dead_code)]
     finding: Finding,
 }
 
@@ -232,6 +235,7 @@ impl MetricsCollector {
     }
 
     /// Record training completion
+    #[allow(dead_code)]
     pub fn record_training(
         &mut self,
         dataset_size: usize,
@@ -526,6 +530,7 @@ impl MetricsCollector {
         self.metrics.temporal_metrics.performance_alerts.push(alert);
     }
 
+    #[allow(dead_code)]
     fn calculate_parameters(&self, architecture: &[usize]) -> usize {
         let mut params = 0;
         for i in 0..architecture.len()-1 {
@@ -572,6 +577,7 @@ impl MetricsCollector {
     }
 
     /// Analyze confidence calibration using stored predictions
+    #[allow(dead_code)]
     pub fn analyze_confidence_calibration(&self) -> f32 {
         if self.predictions.is_empty() {
             return 0.0;
@@ -600,6 +606,7 @@ impl MetricsCollector {
     }
 
     /// Get recent inference statistics from the sliding window
+    #[allow(dead_code)]
     pub fn get_recent_inference_stats(&self) -> (f32, f32, usize) {
         if self.current_window.is_empty() {
             return (0.0, 0.0, 0);
@@ -619,6 +626,7 @@ impl MetricsCollector {
     }
 
     /// Get findings by severity from recent window
+    #[allow(dead_code)]
     pub fn get_findings_by_severity(&self) -> std::collections::HashMap<Severity, usize> {
         let mut severity_counts = std::collections::HashMap::new();
         

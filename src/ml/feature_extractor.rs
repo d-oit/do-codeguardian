@@ -135,6 +135,7 @@ impl FeatureExtractor {
     }
 
     /// Update file type scores based on feedback
+    #[allow(dead_code)]
     pub fn update_file_type_score(&mut self, extension: &str, is_reliable: bool) {
         let current_score = self.file_type_scores.get(extension).copied().unwrap_or(0.5);
         let adjustment = if is_reliable { 0.05 } else { -0.05 };
@@ -143,6 +144,7 @@ impl FeatureExtractor {
     }
 
     /// Update analyzer confidence based on feedback
+    #[allow(dead_code)]
     pub fn update_analyzer_confidence(&mut self, analyzer: &str, is_reliable: bool) {
         let current_score = self.analyzer_confidence.get(analyzer).copied().unwrap_or(0.5);
         let adjustment = if is_reliable { 0.02 } else { -0.02 };
