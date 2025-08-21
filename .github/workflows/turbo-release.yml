@@ -37,12 +37,11 @@ jobs:
       uses: actions/checkout@v4
     
     - name: 🦀 Setup Rust
-      uses: actions-rs/toolchain@v1
+      uses: actions-rust-lang/setup-rust-toolchain@v1
       with:
         toolchain: stable
-        profile: minimal
-        override: true
         target: ${{ matrix.target }}
+        cache: true
     
     - name: 🔨 Build Release Binary
       run: |
@@ -192,7 +191,7 @@ jobs:
         echo "✅ Results generation working"
     
     - name: 📤 Upload Release Artifacts
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: release-validation-${{ matrix.target }}
         path: |
@@ -207,7 +206,7 @@ jobs:
     
     steps:
     - name: 📥 Download validation results
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
       with:
         pattern: release-validation-*
         merge-multiple: true
@@ -290,7 +289,7 @@ jobs:
         echo "📝 Release performance summary created"
     
     - name: 📤 Upload Performance Summary
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: release-performance-summary
         path: RELEASE_PERFORMANCE.md

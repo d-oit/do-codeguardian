@@ -21,14 +21,13 @@ jobs:
         fetch-depth: 0
     
     - name: 🦀 Setup Rust
-      uses: actions-rs/toolchain@v1
+      uses: actions-rust-lang/setup-rust-toolchain@v1
       with:
         toolchain: stable
-        profile: minimal
-        override: true
+        cache: true
     
     - name: 📦 Cache dependencies
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: |
           ~/.cargo/registry
@@ -137,7 +136,7 @@ jobs:
     
     - name: 💬 Comment on PR
       if: steps.changed-files.outputs.changed_count > 0
-      uses: actions/github-script@v6
+      uses: actions/github-script@v7
       with:
         script: |
           const fs = require('fs');
@@ -219,7 +218,7 @@ jobs:
     
     - name: 📄 Upload PR Analysis Report
       if: steps.changed-files.outputs.changed_count > 0
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: pr-analysis-${{ github.event.number }}
         path: |
@@ -241,11 +240,10 @@ jobs:
         fetch-depth: 50  # Get recent history for trend analysis
     
     - name: 🦀 Setup Rust
-      uses: actions-rs/toolchain@v1
+      uses: actions-rust-lang/setup-rust-toolchain@v1
       with:
         toolchain: stable
-        profile: minimal
-        override: true
+        cache: true
     
     - name: 🔨 Build CodeGuardian
       run: cargo build --release --quiet
