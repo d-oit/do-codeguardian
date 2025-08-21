@@ -112,6 +112,7 @@ impl AnalysisResults {
         !self.findings.is_empty()
     }
 
+    #[allow(dead_code)]
     pub fn has_high_severity_issues(&self) -> bool {
         self.findings.iter().any(|f| matches!(f.severity, Severity::Critical | Severity::High))
     }
@@ -143,6 +144,7 @@ impl Finding {
         }
     }
 
+    #[allow(dead_code)]
     pub fn with_column(mut self, column: u32) -> Self {
         self.column = Some(column);
         self

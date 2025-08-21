@@ -151,6 +151,7 @@ impl PerformanceConfig {
     }
 
     /// Validate configuration values
+    #[allow(dead_code)]
     pub fn validate(&self) -> Result<(), String> {
         if self.max_parallel_workers == 0 {
             return Err("max_parallel_workers must be greater than 0".to_string());
@@ -176,6 +177,7 @@ impl PerformanceConfig {
     }
 
     /// Get effective parallel workers based on system capabilities
+    #[allow(dead_code)]
     pub fn effective_parallel_workers(&self) -> usize {
         let system_cores = num_cpus::get();
         let configured = self.max_parallel_workers;
@@ -185,17 +187,20 @@ impl PerformanceConfig {
     }
 
     /// Check if a file should be skipped based on size limits
+    #[allow(dead_code)]
     pub fn should_skip_file(&self, file_size: u64) -> bool {
         self.early_termination.enabled && 
         file_size > self.early_termination.skip_large_files_bytes
     }
 
     /// Check if streaming analysis should be used for a file
+    #[allow(dead_code)]
     pub fn should_use_streaming(&self, file_size: u64) -> bool {
         file_size > self.max_memory_file_size
     }
 
     /// Get timeout for file analysis
+    #[allow(dead_code)]
     pub fn get_analysis_timeout(&self) -> std::time::Duration {
         std::time::Duration::from_secs(self.early_termination.max_analysis_time_seconds)
     }

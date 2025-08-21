@@ -105,6 +105,7 @@ pub struct QualityPatterns {
     pub magic_numbers_fast: Regex,
     pub complex_conditions_fast: Regex,
     pub commented_code_fast: Regex,
+    #[allow(dead_code)]
     pub function_signatures_fast: Regex,
     pub naming_violations_fast: Regex,
 }
@@ -141,7 +142,9 @@ impl QualityPatterns {
 }
 
 pub struct DependencyPatterns {
+    #[allow(dead_code)]
     pub package_json_deps: Regex,
+    #[allow(dead_code)]
     pub cargo_toml_deps: Regex,
     pub version_ranges: Regex,
     pub git_deps: Regex,

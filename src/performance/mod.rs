@@ -11,6 +11,7 @@ use tokio::sync::Semaphore;
 pub struct PerformanceEngine {
     max_parallel_files: usize,
     memory_limit_mb: usize,
+    #[allow(dead_code)]
     enable_streaming: bool,
     file_size_threshold: u64,
     progress_callback: Option<Box<dyn Fn(usize, usize) + Send + Sync>>,
@@ -356,7 +357,7 @@ mod tests {
             .await
             .unwrap();
 
-        assert_eq!(results.summary.files_analyzed, 10);
+        assert_eq!(results.summary.total_files_scanned, 10);
         assert!(results.summary.scan_duration_ms > 0);
     }
 }

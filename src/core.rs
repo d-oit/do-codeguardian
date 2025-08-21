@@ -337,6 +337,7 @@ impl AnalysisStats {
         Self::default()
     }
     
+    #[allow(dead_code)]
     pub fn cache_hit_rate(&self) -> f64 {
         let total = self.cache_hits + self.cache_misses;
         if total == 0 {

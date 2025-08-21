@@ -14,6 +14,7 @@ use anyhow::Result;
 use std::path::Path;
 
 pub trait Analyzer {
+    #[allow(dead_code)]
     fn name(&self) -> &str;
     fn analyze(&self, file_path: &Path, content: &[u8]) -> Result<Vec<Finding>>;
     fn supports_file(&self, file_path: &Path) -> bool;

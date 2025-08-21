@@ -348,6 +348,7 @@ impl Config {
     }
 
     /// Save configuration to file
+    #[allow(dead_code)]
     pub fn save(&self, path: &Path) -> Result<()> {
         let content = toml::to_string_pretty(self)?;
         std::fs::write(path, content)
@@ -356,6 +357,7 @@ impl Config {
     }
 
     /// Create default configuration file
+    #[allow(dead_code)]
     pub fn create_default_config() -> Result<()> {
         let config = Self::default();
         config.save(Path::new("codeguardian.toml"))?;

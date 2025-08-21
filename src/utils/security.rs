@@ -3,6 +3,7 @@ use std::collections::HashSet;
 use once_cell::sync::Lazy;
 
 /// Security-by-default: redact common secret patterns
+#[allow(dead_code)]
 pub fn redact_secrets(text: &str) -> String {
     static SECRET_PATTERNS: Lazy<Vec<Regex>> = Lazy::new(|| vec![
         Regex::new(r#"(?i)(token|secret|password|bearer|api[_-]?key)\s*[:=]\s*["']?([a-zA-Z0-9_\-]{8,})["']?"#).unwrap(),

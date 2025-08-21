@@ -19,11 +19,13 @@ impl OptimizedAnalyzer {
         }
     }
 
+    #[allow(dead_code)]
     pub fn with_cache_size(mut self, cache_size: usize) -> Self {
         self.pattern_cache = PatternCache::new(cache_size);
         self
     }
 
+    #[allow(dead_code)]
     pub fn with_max_findings(mut self, max_findings: usize) -> Self {
         self.max_findings_per_file = max_findings;
         self

@@ -2,6 +2,7 @@ use thiserror::Error;
 use std::path::PathBuf;
 
 /// Result type alias for CodeGuardian operations
+#[allow(dead_code)]
 pub type Result<T> = std::result::Result<T, GuardianError>;
 
 /// Comprehensive error types for CodeGuardian
@@ -74,6 +75,7 @@ pub enum GuardianError {
     },
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum SecuritySeverity {
     Low,
@@ -111,6 +113,7 @@ impl GuardianError {
     }
 
     /// Create a security error
+    #[allow(dead_code)]
     pub fn security(message: impl Into<String>, severity: SecuritySeverity) -> Self {
         Self::Security {
             message: message.into(),
@@ -119,6 +122,7 @@ impl GuardianError {
     }
 
     /// Create an analysis error
+    #[allow(dead_code)]
     pub fn analysis(
         message: impl Into<String>,
         analyzer: impl Into<String>,
@@ -132,6 +136,7 @@ impl GuardianError {
     }
 
     /// Get the exit code for this error
+    #[allow(dead_code)]
     pub fn exit_code(&self) -> i32 {
         match self {
             GuardianError::Io { .. } => 3,
@@ -152,6 +157,7 @@ impl GuardianError {
     }
 
     /// Check if this error is recoverable
+    #[allow(dead_code)]
     pub fn is_recoverable(&self) -> bool {
         match self {
             GuardianError::Io { .. } => true,

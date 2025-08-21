@@ -38,7 +38,8 @@ pub fn get_staged_files() -> Result<Vec<PathBuf>> {
     Ok(files)
 }
 
-pub fn get_current_commit_hash() -> Result<String> {
+#[allow(dead_code)]
+ pub fn get_current_commit_hash() -> Result<String> {
     let output = Command::new("git")
         .args(["rev-parse", "--short", "HEAD"])
         .output()?;
