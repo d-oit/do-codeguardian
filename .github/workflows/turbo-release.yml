@@ -1,6 +1,6 @@
 name: 🚀 Turbo Release Validation
 
-on:
+"on":
   release:
     types: [published]
   workflow_dispatch:

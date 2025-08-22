@@ -1,6 +1,6 @@
 name: CodeGuardian CI
 
-on:
+"on":
   pull_request:
     branches: [main, develop]
   push:

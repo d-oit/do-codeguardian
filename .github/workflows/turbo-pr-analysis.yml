@@ -1,6 +1,6 @@
 name: 🔍 Turbo PR Analysis
 
-on:
+"on":
   pull_request:
     types: [opened, synchronize, reopened]
     branches: [main, develop]
