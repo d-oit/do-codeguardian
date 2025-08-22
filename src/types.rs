@@ -1,8 +1,8 @@
+use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::collections::HashMap;
 use std::path::PathBuf;
-use chrono::{DateTime, Utc};
 
 /// Schema version for results format
 pub const RESULTS_SCHEMA_VERSION: &str = "1.0.0";
@@ -93,8 +93,16 @@ impl AnalysisResults {
     }
 
     pub fn add_finding(&mut self, finding: Finding) {
-        *self.summary.findings_by_severity.entry(finding.severity.clone()).or_insert(0) += 1;
-        *self.summary.findings_by_analyzer.entry(finding.analyzer.clone()).or_insert(0) += 1;
+        *self
+            .summary
+            .findings_by_severity
+            .entry(finding.severity.clone())
+            .or_insert(0) += 1;
+        *self
+            .summary
+            .findings_by_analyzer
+            .entry(finding.analyzer.clone())
+            .or_insert(0) += 1;
         self.summary.total_findings += 1;
         self.findings.push(finding);
     }
@@ -102,7 +110,8 @@ impl AnalysisResults {
     pub fn sort_findings(&mut self) {
         // Deterministic ordering: severity → file → line
         self.findings.sort_by(|a, b| {
-            a.severity.cmp(&b.severity)
+            a.severity
+                .cmp(&b.severity)
                 .then_with(|| a.file.cmp(&b.file))
                 .then_with(|| a.line.cmp(&b.line))
         });
@@ -114,7 +123,9 @@ impl AnalysisResults {
 
     #[allow(dead_code)]
     pub fn has_high_severity_issues(&self) -> bool {
-        self.findings.iter().any(|f| matches!(f.severity, Severity::Critical | Severity::High))
+        self.findings
+            .iter()
+            .any(|f| matches!(f.severity, Severity::Critical | Severity::High))
     }
 }
 
@@ -128,7 +139,7 @@ impl Finding {
         message: String,
     ) -> Self {
         let id = generate_finding_id(analyzer, rule, &file.to_string_lossy(), line, &message);
-        
+
         Self {
             id,
             analyzer: analyzer.to_string(),

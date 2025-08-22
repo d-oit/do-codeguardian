@@ -1,9 +1,19 @@
+use crate::error::GuardianError;
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use std::path::Path;
-use crate::error::GuardianError;
 
 pub mod performance;
+
+// Constants for default configuration values
+const KB: u64 = 1024;
+const MB: u64 = KB * 1024;
+const GB: u64 = MB * 1024;
+
+const DEFAULT_MAX_FILE_SIZE: u64 = 5 * MB; // 5MB
+const DEFAULT_MAX_MEMORY_MB: u64 = 256;
+const DEFAULT_PARALLEL_WORKERS: usize = 2;
+const DEFAULT_TIMEOUT_SECONDS: u64 = 120;
 pub use performance::PerformanceConfig as OptimizationConfig;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -19,7 +29,7 @@ pub struct GeneralConfig {
 impl Default for GeneralConfig {
     fn default() -> Self {
         Self {
-            max_file_size: 10 * 1024 * 1024, // 10MB
+            max_file_size: 10 * MB, // 10MB
             max_memory_mb: 512,
             parallel_workers: num_cpus::get(),
             timeout_seconds: 300,
@@ -35,16 +45,11 @@ impl Default for GeneralConfig {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub enum HashAlgorithm {
+    #[default]
     Blake3,
     Sha256,
-}
-
-impl Default for HashAlgorithm {
-    fn default() -> Self {
-        HashAlgorithm::Blake3
-    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -337,11 +342,12 @@ impl Config {
         let content = std::fs::read_to_string(path)
             .map_err(|e| anyhow::Error::from(GuardianError::io("Failed to read config file", e)))?;
 
-        let config: Config = toml::from_str(&content)
-            .map_err(|e| anyhow::Error::from(GuardianError::config(
+        let config: Config = toml::from_str(&content).map_err(|e| {
+            anyhow::Error::from(GuardianError::config(
                 format!("Failed to parse config file: {}", e),
                 Some(path.to_path_buf()),
-            )))?;
+            ))
+        })?;
 
         config.validate()?;
         Ok(config)
@@ -351,8 +357,9 @@ impl Config {
     #[allow(dead_code)]
     pub fn save(&self, path: &Path) -> Result<()> {
         let content = toml::to_string_pretty(self)?;
-        std::fs::write(path, content)
-            .map_err(|e| anyhow::Error::from(GuardianError::io("Failed to write config file", e)))?;
+        std::fs::write(path, content).map_err(|e| {
+            anyhow::Error::from(GuardianError::io("Failed to write config file", e))
+        })?;
         Ok(())
     }
 
@@ -398,14 +405,11 @@ impl Config {
     pub fn minimal() -> Self {
         Self {
             general: GeneralConfig {
-                max_file_size: 5 * 1024 * 1024, // 5MB
-                max_memory_mb: 256,
-                parallel_workers: 2,
-                timeout_seconds: 120,
-                exclude_patterns: vec![
-                    "target/**".to_string(),
-                    ".git/**".to_string(),
-                ],
+                max_file_size: DEFAULT_MAX_FILE_SIZE,
+                max_memory_mb: DEFAULT_MAX_MEMORY_MB,
+                parallel_workers: DEFAULT_PARALLEL_WORKERS,
+                timeout_seconds: DEFAULT_TIMEOUT_SECONDS,
+                exclude_patterns: vec!["target/**".to_string(), ".git/**".to_string()],
                 include_patterns: vec!["**/*.rs".to_string()],
             },
             integrity: IntegrityConfig {
@@ -424,13 +428,11 @@ impl Config {
             },
             non_production: NonProductionConfig {
                 enabled: true,
-                patterns: vec![
-                    NonProdPattern {
-                        pattern: r"(?i)\b(todo|fixme|hack|xxx)\b".to_string(),
-                        description: "Non-production code markers".to_string(),
-                        severity: "medium".to_string(),
-                    },
-                ],
+                patterns: vec![NonProdPattern {
+                    pattern: r"(?i)\b(todo|fixme|hack|xxx)\b".to_string(),
+                    description: "Non-production code markers".to_string(),
+                    severity: "medium".to_string(),
+                }],
                 exclude_test_files: true,
                 exclude_example_files: true,
             },

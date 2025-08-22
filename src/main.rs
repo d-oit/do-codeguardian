@@ -1,23 +1,23 @@
 use anyhow::Result;
 use clap::Parser;
 
+mod analyzers;
+mod cache;
 mod cli;
 mod config;
 mod core;
-mod types;
-mod analyzers;
+mod error;
 mod github;
 mod github_api;
-mod utils;
-mod report;
-mod cache;
-mod error;
 mod ml;
-mod streaming;
 mod performance;
+mod report;
+mod streaming;
+mod types;
+mod utils;
 
-use cli::*;
 use cli::turbo::TurboArgs;
+use cli::*;
 
 #[derive(Parser)]
 #[command(name = "codeguardian")]
@@ -61,6 +61,6 @@ async fn main() -> Result<()> {
             let config = config::Config::load(&std::path::PathBuf::from("codeguardian.toml"))
                 .unwrap_or_else(|_| config::Config::minimal());
             cli::turbo::run_turbo_analysis(args, config).await
-        },
+        }
     }
 }

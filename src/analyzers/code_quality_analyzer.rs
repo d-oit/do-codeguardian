@@ -1,42 +1,93 @@
 use crate::analyzers::Analyzer;
 use crate::types::{Finding, Severity};
 use anyhow::Result;
+use once_cell::sync::Lazy;
 use regex::Regex;
-use std::path::Path;
 use std::collections::HashMap;
+use std::path::Path;
+
+// Lazy static regex patterns for optimal performance
+// Constants for code quality thresholds
+const LONG_PARAMETER_THRESHOLD: usize = 100;
+const DUPLICATE_CODE_MIN_LENGTH: usize = 50;
+const MAGIC_NUMBER_MIN_DIGITS: usize = 2;
+const MAX_LINE_LENGTH: usize = 120;
+const MAX_INDENT_LEVEL: usize = 24; // 6 levels of 4-space indentation
+const ESTIMATED_FINDINGS_PER_FILE: usize = 10;
+const MAX_FILE_LINES: usize = 500;
+const MIN_DUPLICATE_LINE_LENGTH: usize = 20;
+const MAX_CYCLOMATIC_COMPLEXITY: usize = 10;
+const MAX_FUNCTION_LINES: usize = 50;
+const ESTIMATED_FUNCTIONS_PER_FILE: usize = 20;
+
+static LONG_PARAMETER_LIST_PATTERN: Lazy<Regex> = Lazy::new(|| {
+    Regex::new(&format!(
+        r"(?:fn|function|def|public|private|protected)\s+\w+\s*\([^)]{{{LONG_PARAMETER_THRESHOLD},}})"
+    )).unwrap()
+});
+
+static DUPLICATE_CODE_PATTERN: Lazy<Regex> = Lazy::new(|| {
+    Regex::new(&format!(
+        r"(.{{{DUPLICATE_CODE_MIN_LENGTH},}})\n.*(.{{{DUPLICATE_CODE_MIN_LENGTH},}})"
+    )).unwrap()
+});
+
+static MAGIC_NUMBER_PATTERN: Lazy<Regex> = Lazy::new(|| {
+    Regex::new(&format!(r"\b\d{{{MAGIC_NUMBER_MIN_DIGITS},}}\b")).unwrap()
+});
+
+static DEAD_CODE_PATTERN: Lazy<Regex> =
+    Lazy::new(|| Regex::new(r"(?i)(unreachable|dead|unused|deprecated)").unwrap());
+
+static COMPLEX_CONDITION_PATTERN: Lazy<Regex> = Lazy::new(|| {
+    Regex::new(r"if\s*\([^)]*&&[^)]*&&[^)]*\)|if\s*\([^)]*\|\|[^)]*\|\|[^)]*\)").unwrap()
+});
 
 /// Analyzer for code quality issues, maintainability problems, and code smells
 pub struct CodeQualityAnalyzer {
-    // Patterns for detecting code smells
+    // Use static references to avoid recompilation overhead
     #[allow(dead_code)]
-    long_parameter_list_pattern: Regex,
+    long_parameter_list_pattern: &'static Regex,
     #[allow(dead_code)]
-    duplicate_code_pattern: Regex,
-    magic_number_pattern: Regex,
+    duplicate_code_pattern: &'static Regex,
+    magic_number_pattern: &'static Regex,
     #[allow(dead_code)]
-    dead_code_pattern: Regex,
-    complex_condition_pattern: Regex,
+    dead_code_pattern: &'static Regex,
+    complex_condition_pattern: &'static Regex,
     // Complexity tracking
     complexity_keywords: Vec<String>,
+}
+
+impl Default for CodeQualityAnalyzer {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl CodeQualityAnalyzer {
     pub fn new() -> Self {
         Self {
-            long_parameter_list_pattern: Regex::new(r"(?:fn|function|def|public|private|protected)\s+\w+\s*\([^)]{100,}\)").unwrap(),
-            duplicate_code_pattern: Regex::new(r"(.{50,})\n.*(.{50,})").unwrap(),
-            magic_number_pattern: Regex::new(r"\b\d{2,}\b").unwrap(),
-            dead_code_pattern: Regex::new(r"(?i)(unreachable|dead|unused|deprecated)").unwrap(),
-            complex_condition_pattern: Regex::new(r"if\s*\([^)]*&&[^)]*&&[^)]*\)|if\s*\([^)]*\|\|[^)]*\|\|[^)]*\)").unwrap(),
+            long_parameter_list_pattern: &LONG_PARAMETER_LIST_PATTERN,
+            duplicate_code_pattern: &DUPLICATE_CODE_PATTERN,
+            magic_number_pattern: &MAGIC_NUMBER_PATTERN,
+            dead_code_pattern: &DEAD_CODE_PATTERN,
+            complex_condition_pattern: &COMPLEX_CONDITION_PATTERN,
             complexity_keywords: vec![
-                "if".to_string(), "else".to_string(), "while".to_string(), "for".to_string(),
-                "switch".to_string(), "case".to_string(), "catch".to_string(), "&&".to_string(), "||".to_string()
+                "if".to_string(),
+                "else".to_string(),
+                "while".to_string(),
+                "for".to_string(),
+                "switch".to_string(),
+                "case".to_string(),
+                "catch".to_string(),
+                "&&".to_string(),
+                "||".to_string(),
             ],
         }
     }
 
     fn analyze_code_quality(&self, file_path: &Path, content: &[u8]) -> Result<Vec<Finding>> {
-        let mut findings = Vec::new();
+        let mut findings = Vec::with_capacity(ESTIMATED_FINDINGS_PER_FILE); // Estimate typical findings per file
         let content_str = String::from_utf8_lossy(content);
         let lines: Vec<&str> = content_str.lines().collect();
 
@@ -54,11 +105,32 @@ impl CodeQualityAnalyzer {
         Ok(findings)
     }
 
-    fn analyze_line(&self, file_path: &Path, line: &str, line_number: u32, _all_lines: &[&str]) -> Result<Vec<Finding>> {
+    fn analyze_line(
+        &self,
+        file_path: &Path,
+        line: &str,
+        line_number: u32,
+        _all_lines: &[&str],
+    ) -> Result<Vec<Finding>> {
         let mut findings = Vec::new();
 
-        // Check for magic numbers
-        if self.magic_number_pattern.is_match(line) && !self.is_acceptable_magic_number_context(line) {
+        // Check for various code quality issues
+        findings.extend(self.check_magic_numbers(file_path, line, line_number)?);
+        findings.extend(self.check_complex_conditions(file_path, line, line_number)?);
+        findings.extend(self.check_line_length(file_path, line, line_number)?);
+        findings.extend(self.check_nesting_depth(file_path, line, line_number)?);
+        findings.extend(self.check_commented_code(file_path, line, line_number)?);
+        findings.extend(self.check_language_specific_quality(file_path, line, line_number)?);
+
+        Ok(findings)
+    }
+
+    fn check_magic_numbers(&self, file_path: &Path, line: &str, line_number: u32) -> Result<Vec<Finding>> {
+        let mut findings = Vec::new();
+
+        if self.magic_number_pattern.is_match(line)
+            && !self.is_acceptable_magic_number_context(line)
+        {
             findings.push(
                 Finding::new(
                     "code_quality",
@@ -68,12 +140,19 @@ impl CodeQualityAnalyzer {
                     line_number,
                     "Magic number detected".to_string(),
                 )
-                .with_description("Magic numbers make code harder to understand and maintain".to_string())
-                .with_suggestion("Replace magic numbers with named constants".to_string())
+                .with_description(
+                    "Magic numbers make code harder to understand and maintain".to_string(),
+                )
+                .with_suggestion("Replace magic numbers with named constants".to_string()),
             );
         }
 
-        // Check for complex conditions
+        Ok(findings)
+    }
+
+    fn check_complex_conditions(&self, file_path: &Path, line: &str, line_number: u32) -> Result<Vec<Finding>> {
+        let mut findings = Vec::new();
+
         if self.complex_condition_pattern.is_match(line) {
             findings.push(
                 Finding::new(
@@ -84,13 +163,23 @@ impl CodeQualityAnalyzer {
                     line_number,
                     "Complex conditional expression".to_string(),
                 )
-                .with_description("Complex conditions with multiple logical operators are hard to read and test".to_string())
-                .with_suggestion("Break complex conditions into smaller, named boolean variables".to_string())
+                .with_description(
+                    "Complex conditions with multiple logical operators are hard to read and test"
+                        .to_string(),
+                )
+                .with_suggestion(
+                    "Break complex conditions into smaller, named boolean variables".to_string(),
+                ),
             );
         }
 
-        // Check for long lines
-        if line.len() > 120 {
+        Ok(findings)
+    }
+
+    fn check_line_length(&self, file_path: &Path, line: &str, line_number: u32) -> Result<Vec<Finding>> {
+        let mut findings = Vec::new();
+
+        if line.len() > MAX_LINE_LENGTH {
             findings.push(
                 Finding::new(
                     "code_quality",
@@ -100,14 +189,24 @@ impl CodeQualityAnalyzer {
                     line_number,
                     format!("Long line ({} characters)", line.len()),
                 )
-                .with_description("Long lines reduce readability and can indicate complex logic".to_string())
-                .with_suggestion("Break long lines into multiple lines or simplify the expression".to_string())
+                .with_description(
+                    "Long lines reduce readability and can indicate complex logic".to_string(),
+                )
+                .with_suggestion(
+                    "Break long lines into multiple lines or simplify the expression".to_string(),
+                ),
             );
         }
 
-        // Check for deep nesting (count leading whitespace)
+        Ok(findings)
+    }
+
+    fn check_nesting_depth(&self, file_path: &Path, line: &str, line_number: u32) -> Result<Vec<Finding>> {
+        let mut findings = Vec::new();
+
         let indent_level = line.len() - line.trim_start().len();
-        if indent_level > 24 { // More than 6 levels of 4-space indentation
+        if indent_level > MAX_INDENT_LEVEL {
+            // More than 6 levels of 4-space indentation
             findings.push(
                 Finding::new(
                     "code_quality",
@@ -117,12 +216,21 @@ impl CodeQualityAnalyzer {
                     line_number,
                     "Deep nesting detected".to_string(),
                 )
-                .with_description("Deep nesting makes code harder to understand and test".to_string())
-                .with_suggestion("Consider extracting nested logic into separate functions".to_string())
+                .with_description(
+                    "Deep nesting makes code harder to understand and test".to_string(),
+                )
+                .with_suggestion(
+                    "Consider extracting nested logic into separate functions".to_string(),
+                ),
             );
         }
 
-        // Check for commented-out code
+        Ok(findings)
+    }
+
+    fn check_commented_code(&self, file_path: &Path, line: &str, line_number: u32) -> Result<Vec<Finding>> {
+        let mut findings = Vec::new();
+
         if self.is_commented_code(line) {
             findings.push(
                 Finding::new(
@@ -133,13 +241,14 @@ impl CodeQualityAnalyzer {
                     line_number,
                     "Commented-out code detected".to_string(),
                 )
-                .with_description("Commented-out code clutters the codebase and should be removed".to_string())
-                .with_suggestion("Remove commented-out code; use version control to track changes".to_string())
+                .with_description(
+                    "Commented-out code clutters the codebase and should be removed".to_string(),
+                )
+                .with_suggestion(
+                    "Remove commented-out code; use version control to track changes".to_string(),
+                ),
             );
         }
-
-        // Language-specific checks
-        findings.extend(self.check_language_specific_quality(file_path, line, line_number)?);
 
         Ok(findings)
     }
@@ -148,7 +257,7 @@ impl CodeQualityAnalyzer {
         let mut findings = Vec::new();
 
         // Check file length
-        if lines.len() > 500 {
+        if lines.len() > MAX_FILE_LINES {
             findings.push(
                 Finding::new(
                     "code_quality",
@@ -159,7 +268,9 @@ impl CodeQualityAnalyzer {
                     format!("Large file ({} lines)", lines.len()),
                 )
                 .with_description("Large files are harder to understand and maintain".to_string())
-                .with_suggestion("Consider breaking this file into smaller, more focused modules".to_string())
+                .with_suggestion(
+                    "Consider breaking this file into smaller, more focused modules".to_string(),
+                ),
             );
         }
 
@@ -167,8 +278,11 @@ impl CodeQualityAnalyzer {
         let mut line_counts: HashMap<String, Vec<usize>> = HashMap::new();
         for (i, line) in lines.iter().enumerate() {
             let trimmed = line.trim();
-            if trimmed.len() > 20 && !trimmed.starts_with("//") && !trimmed.starts_with("#") {
-                line_counts.entry(trimmed.to_string()).or_default().push(i + 1);
+            if trimmed.len() > MIN_DUPLICATE_LINE_LENGTH && !trimmed.starts_with("//") && !trimmed.starts_with("#") {
+                line_counts
+                    .entry(trimmed.to_string())
+                    .or_default()
+                    .push(i + 1);
             }
         }
 
@@ -183,8 +297,12 @@ impl CodeQualityAnalyzer {
                         occurrences[0] as u32,
                         format!("Duplicate line found {} times", occurrences.len()),
                     )
-                    .with_description("Duplicate lines indicate potential code duplication".to_string())
-                    .with_suggestion("Consider extracting common logic into a shared function".to_string())
+                    .with_description(
+                        "Duplicate lines indicate potential code duplication".to_string(),
+                    )
+                    .with_suggestion(
+                        "Consider extracting common logic into a shared function".to_string(),
+                    ),
                 );
             }
         }
@@ -200,13 +318,13 @@ impl CodeQualityAnalyzer {
 
         // Simple function extraction and complexity analysis
         let functions = self.extract_functions(content);
-        
+
         for (func_name, func_content, start_line) in functions {
             let complexity = self.calculate_cyclomatic_complexity(&func_content);
             let line_count = func_content.lines().count();
 
             // Check cyclomatic complexity
-            if complexity > 10 {
+            if complexity > MAX_CYCLOMATIC_COMPLEXITY {
                 findings.push(
                     Finding::new(
                         "code_quality",
@@ -214,10 +332,18 @@ impl CodeQualityAnalyzer {
                         Severity::High,
                         file_path.to_path_buf(),
                         start_line,
-                        format!("Function '{}' has high cyclomatic complexity ({})", func_name, complexity),
+                        format!(
+                            "Function '{}' has high cyclomatic complexity ({})",
+                            func_name, complexity
+                        ),
                     )
-                    .with_description("High complexity functions are harder to understand, test, and maintain".to_string())
-                    .with_suggestion("Break this function into smaller, more focused functions".to_string())
+                    .with_description(
+                        "High complexity functions are harder to understand, test, and maintain"
+                            .to_string(),
+                    )
+                    .with_suggestion(
+                        "Break this function into smaller, more focused functions".to_string(),
+                    ),
                 );
             } else if complexity > 7 {
                 findings.push(
@@ -227,15 +353,20 @@ impl CodeQualityAnalyzer {
                         Severity::Medium,
                         file_path.to_path_buf(),
                         start_line,
-                        format!("Function '{}' has moderate complexity ({})", func_name, complexity),
+                        format!(
+                            "Function '{}' has moderate complexity ({})",
+                            func_name, complexity
+                        ),
                     )
                     .with_description("Consider simplifying this function".to_string())
-                    .with_suggestion("Look for opportunities to extract helper functions".to_string())
+                    .with_suggestion(
+                        "Look for opportunities to extract helper functions".to_string(),
+                    ),
                 );
             }
 
             // Check function length
-            if line_count > 50 {
+            if line_count > MAX_FUNCTION_LINES {
                 findings.push(
                     Finding::new(
                         "code_quality",
@@ -243,10 +374,17 @@ impl CodeQualityAnalyzer {
                         Severity::Medium,
                         file_path.to_path_buf(),
                         start_line,
-                        format!("Function '{}' is too long ({} lines)", func_name, line_count),
+                        format!(
+                            "Function '{}' is too long ({} lines)",
+                            func_name, line_count
+                        ),
                     )
-                    .with_description("Long functions are harder to understand and maintain".to_string())
-                    .with_suggestion("Break this function into smaller, more focused functions".to_string())
+                    .with_description(
+                        "Long functions are harder to understand and maintain".to_string(),
+                    )
+                    .with_suggestion(
+                        "Break this function into smaller, more focused functions".to_string(),
+                    ),
                 );
             }
 
@@ -260,10 +398,17 @@ impl CodeQualityAnalyzer {
                         Severity::Medium,
                         file_path.to_path_buf(),
                         start_line,
-                        format!("Function '{}' has too many parameters ({})", func_name, param_count),
+                        format!(
+                            "Function '{}' has too many parameters ({})",
+                            func_name, param_count
+                        ),
                     )
-                    .with_description("Functions with many parameters are hard to use and test".to_string())
-                    .with_suggestion("Consider using a struct/object to group related parameters".to_string())
+                    .with_description(
+                        "Functions with many parameters are hard to use and test".to_string(),
+                    )
+                    .with_suggestion(
+                        "Consider using a struct/object to group related parameters".to_string(),
+                    ),
                 );
             }
         }
@@ -279,7 +424,12 @@ impl CodeQualityAnalyzer {
 
             // Check for single-letter variable names (except common ones)
             if let Some(ext) = file_path.extension().and_then(|e| e.to_str()) {
-                findings.extend(self.check_naming_for_language(file_path, line, line_number, ext)?);
+                findings.extend(self.check_naming_for_language(
+                    file_path,
+                    line,
+                    line_number,
+                    ext,
+                )?);
             }
         }
 
@@ -307,11 +457,19 @@ impl CodeQualityAnalyzer {
                                         (line_num + 1) as u32,
                                         "Import statement after non-import code".to_string(),
                                     )
-                                    .with_description("Imports should be grouped at the top of the file".to_string())
-                                    .with_suggestion("Move all imports to the top of the file".to_string())
+                                    .with_description(
+                                        "Imports should be grouped at the top of the file"
+                                            .to_string(),
+                                    )
+                                    .with_suggestion(
+                                        "Move all imports to the top of the file".to_string(),
+                                    ),
                                 );
                             }
-                        } else if !trimmed.is_empty() && !trimmed.starts_with("//") && !trimmed.starts_with("#") {
+                        } else if !trimmed.is_empty()
+                            && !trimmed.starts_with("//")
+                            && !trimmed.starts_with("#")
+                        {
                             found_non_import = true;
                         }
                     }
@@ -332,11 +490,18 @@ impl CodeQualityAnalyzer {
                                         (line_num + 1) as u32,
                                         "Import statement after non-import code".to_string(),
                                     )
-                                    .with_description("Imports should be at the top of the file".to_string())
-                                    .with_suggestion("Follow PEP 8: group imports at the top".to_string())
+                                    .with_description(
+                                        "Imports should be at the top of the file".to_string(),
+                                    )
+                                    .with_suggestion(
+                                        "Follow PEP 8: group imports at the top".to_string(),
+                                    ),
                                 );
                             }
-                        } else if !trimmed.is_empty() && !trimmed.starts_with("#") && !trimmed.starts_with("\"\"\"") {
+                        } else if !trimmed.is_empty()
+                            && !trimmed.starts_with("#")
+                            && !trimmed.starts_with("\"\"\"")
+                        {
                             found_non_import = true;
                         }
                     }
@@ -369,32 +534,35 @@ impl CodeQualityAnalyzer {
         }
 
         // Remove comment markers
-        let content = trimmed.trim_start_matches("//").trim_start_matches("#").trim();
-        
+        let content = trimmed
+            .trim_start_matches("//")
+            .trim_start_matches("#")
+            .trim();
+
         // Look for code patterns
-        content.contains("=") && (
-            content.contains("(") || 
-            content.contains("{") || 
-            content.contains(";") ||
-            content.contains("function") ||
-            content.contains("def ") ||
-            content.contains("class ") ||
-            content.contains("if ") ||
-            content.contains("for ") ||
-            content.contains("while ")
-        )
+        content.contains("=")
+            && (content.contains("(")
+                || content.contains("{")
+                || content.contains(";")
+                || content.contains("function")
+                || content.contains("def ")
+                || content.contains("class ")
+                || content.contains("if ")
+                || content.contains("for ")
+                || content.contains("while "))
     }
 
     fn extract_functions(&self, content: &str) -> Vec<(String, String, u32)> {
-        let mut functions = Vec::new();
+        let mut functions = Vec::with_capacity(ESTIMATED_FUNCTIONS_PER_FILE); // Estimate functions per file
         let lines: Vec<&str> = content.lines().collect();
-        
+
         // Simple function extraction (this could be more sophisticated)
         let function_patterns = [
             Regex::new(r"(?m)^(?:pub\s+)?fn\s+(\w+)").unwrap(), // Rust
             Regex::new(r"(?m)^(?:async\s+)?function\s+(\w+)").unwrap(), // JavaScript
-            Regex::new(r"(?m)^def\s+(\w+)").unwrap(), // Python
-            Regex::new(r"(?m)^(?:public|private|protected)?\s*(?:static\s+)?(?:\w+\s+)*(\w+)\s*\(").unwrap(), // Java/C#
+            Regex::new(r"(?m)^def\s+(\w+)").unwrap(),           // Python
+            Regex::new(r"(?m)^(?:public|private|protected)?\s*(?:static\s+)?(?:\w+\s+)*(\w+)\s*\(")
+                .unwrap(), // Java/C#
         ];
 
         for (line_num, line) in lines.iter().enumerate() {
@@ -441,7 +609,11 @@ impl CodeQualityAnalyzer {
             if !in_function && line.trim().is_empty() {
                 continue;
             }
-            if in_function && !line.starts_with(' ') && !line.starts_with('\t') && !line.trim().is_empty() {
+            if in_function
+                && !line.starts_with(' ')
+                && !line.starts_with('\t')
+                && !line.trim().is_empty()
+            {
                 return body;
             }
         }
@@ -452,11 +624,27 @@ impl CodeQualityAnalyzer {
     fn calculate_cyclomatic_complexity(&self, content: &str) -> usize {
         let mut complexity = 1; // Base complexity
 
+        // Use more efficient counting for common keywords
         for keyword in &self.complexity_keywords {
             complexity += content.matches(keyword).count();
         }
 
-        complexity
+        // Add complexity for additional control structures
+        complexity += content.matches("match").count(); // Rust match
+        complexity += content.matches("try").count(); // Exception handling
+        complexity += content.matches("catch").count(); // Exception handling
+        complexity += content.matches("finally").count(); // Exception handling
+        complexity += content.matches("?").count(); // Rust try operator
+        complexity += content.matches("break").count(); // Loop control
+        complexity += content.matches("continue").count(); // Loop control
+
+        // Subtract 1 for each function/method to avoid double counting
+        // This is a simplified approach - a full implementation would need proper AST parsing
+        complexity = complexity.saturating_sub(content.matches("fn ").count());
+        complexity = complexity.saturating_sub(content.matches("function ").count());
+        complexity = complexity.saturating_sub(content.matches("def ").count());
+
+        complexity.max(1) // Ensure minimum complexity of 1
     }
 
     fn count_parameters(&self, func_content: &str) -> usize {
@@ -473,13 +661,20 @@ impl CodeQualityAnalyzer {
         0
     }
 
-    fn check_language_specific_quality(&self, file_path: &Path, line: &str, line_number: u32) -> Result<Vec<Finding>> {
+    fn check_language_specific_quality(
+        &self,
+        file_path: &Path,
+        line: &str,
+        line_number: u32,
+    ) -> Result<Vec<Finding>> {
         let mut findings = Vec::new();
 
         if let Some(ext) = file_path.extension().and_then(|e| e.to_str()) {
             match ext {
                 "rs" => findings.extend(self.check_rust_quality(file_path, line, line_number)?),
-                "js" | "ts" => findings.extend(self.check_javascript_quality(file_path, line, line_number)?),
+                "js" | "ts" => {
+                    findings.extend(self.check_javascript_quality(file_path, line, line_number)?)
+                }
                 "py" => findings.extend(self.check_python_quality(file_path, line, line_number)?),
                 _ => {}
             }
@@ -488,7 +683,12 @@ impl CodeQualityAnalyzer {
         Ok(findings)
     }
 
-    fn check_rust_quality(&self, file_path: &Path, line: &str, line_number: u32) -> Result<Vec<Finding>> {
+    fn check_rust_quality(
+        &self,
+        file_path: &Path,
+        line: &str,
+        line_number: u32,
+    ) -> Result<Vec<Finding>> {
         let mut findings = Vec::new();
 
         // Check for unwrap() usage
@@ -502,8 +702,12 @@ impl CodeQualityAnalyzer {
                     line_number,
                     "unwrap() usage detected".to_string(),
                 )
-                .with_description("unwrap() can panic; consider using proper error handling".to_string())
-                .with_suggestion("Use expect(), match, or the ? operator for better error handling".to_string())
+                .with_description(
+                    "unwrap() can panic; consider using proper error handling".to_string(),
+                )
+                .with_suggestion(
+                    "Use expect(), match, or the ? operator for better error handling".to_string(),
+                ),
             );
         }
 
@@ -518,15 +722,23 @@ impl CodeQualityAnalyzer {
                     line_number,
                     "Generic expect message".to_string(),
                 )
-                .with_description("Generic expect messages don't provide useful debugging information".to_string())
-                .with_suggestion("Use specific, descriptive expect messages".to_string())
+                .with_description(
+                    "Generic expect messages don't provide useful debugging information"
+                        .to_string(),
+                )
+                .with_suggestion("Use specific, descriptive expect messages".to_string()),
             );
         }
 
         Ok(findings)
     }
 
-    fn check_javascript_quality(&self, file_path: &Path, line: &str, line_number: u32) -> Result<Vec<Finding>> {
+    fn check_javascript_quality(
+        &self,
+        file_path: &Path,
+        line: &str,
+        line_number: u32,
+    ) -> Result<Vec<Finding>> {
         let mut findings = Vec::new();
 
         // Check for var usage
@@ -540,8 +752,10 @@ impl CodeQualityAnalyzer {
                     line_number,
                     "var keyword usage".to_string(),
                 )
-                .with_description("var has function scope and can lead to unexpected behavior".to_string())
-                .with_suggestion("Use let or const instead of var".to_string())
+                .with_description(
+                    "var has function scope and can lead to unexpected behavior".to_string(),
+                )
+                .with_suggestion("Use let or const instead of var".to_string()),
             );
         }
 
@@ -557,14 +771,19 @@ impl CodeQualityAnalyzer {
                     "Loose equality operator".to_string(),
                 )
                 .with_description("== performs type coercion which can be unexpected".to_string())
-                .with_suggestion("Use === for strict equality comparison".to_string())
+                .with_suggestion("Use === for strict equality comparison".to_string()),
             );
         }
 
         Ok(findings)
     }
 
-    fn check_python_quality(&self, file_path: &Path, line: &str, line_number: u32) -> Result<Vec<Finding>> {
+    fn check_python_quality(
+        &self,
+        file_path: &Path,
+        line: &str,
+        line_number: u32,
+    ) -> Result<Vec<Finding>> {
         let mut findings = Vec::new();
 
         // Check for bare except
@@ -578,8 +797,12 @@ impl CodeQualityAnalyzer {
                     line_number,
                     "Bare except clause".to_string(),
                 )
-                .with_description("Bare except catches all exceptions, including system exits".to_string())
-                .with_suggestion("Catch specific exceptions or use 'except Exception:'".to_string())
+                .with_description(
+                    "Bare except catches all exceptions, including system exits".to_string(),
+                )
+                .with_suggestion(
+                    "Catch specific exceptions or use 'except Exception:'".to_string(),
+                ),
             );
         }
 
@@ -594,15 +817,26 @@ impl CodeQualityAnalyzer {
                     line_number,
                     "Mutable default argument".to_string(),
                 )
-                .with_description("Mutable default arguments can cause unexpected behavior".to_string())
-                .with_suggestion("Use None as default and create the mutable object inside the function".to_string())
+                .with_description(
+                    "Mutable default arguments can cause unexpected behavior".to_string(),
+                )
+                .with_suggestion(
+                    "Use None as default and create the mutable object inside the function"
+                        .to_string(),
+                ),
             );
         }
 
         Ok(findings)
     }
 
-    fn check_naming_for_language(&self, file_path: &Path, line: &str, line_number: u32, ext: &str) -> Result<Vec<Finding>> {
+    fn check_naming_for_language(
+        &self,
+        file_path: &Path,
+        line: &str,
+        line_number: u32,
+        ext: &str,
+    ) -> Result<Vec<Finding>> {
         let mut findings = Vec::new();
 
         // Check for single-letter variables (except common ones like i, j, x, y)
@@ -618,7 +852,7 @@ impl CodeQualityAnalyzer {
                     "Single-letter variable name".to_string(),
                 )
                 .with_description("Single-letter variables reduce code readability".to_string())
-                .with_suggestion("Use descriptive variable names".to_string())
+                .with_suggestion("Use descriptive variable names".to_string()),
             );
         }
 
@@ -637,8 +871,11 @@ impl CodeQualityAnalyzer {
                                 line_number,
                                 "Function name should use snake_case".to_string(),
                             )
-                            .with_description("Rust convention is to use snake_case for function names".to_string())
-                            .with_suggestion("Convert function name to snake_case".to_string())
+                            .with_description(
+                                "Rust convention is to use snake_case for function names"
+                                    .to_string(),
+                            )
+                            .with_suggestion("Convert function name to snake_case".to_string()),
                         );
                     }
                 }
@@ -646,7 +883,8 @@ impl CodeQualityAnalyzer {
             "js" | "ts" => {
                 // Check JavaScript naming conventions
                 if line.contains("function ") {
-                    let camel_case_pattern = Regex::new(r"function\s+([a-z][a-zA-Z0-9_]*_[a-zA-Z0-9_]*)").unwrap();
+                    let camel_case_pattern =
+                        Regex::new(r"function\s+([a-z][a-zA-Z0-9_]*_[a-zA-Z0-9_]*)").unwrap();
                     if camel_case_pattern.is_match(line) {
                         findings.push(
                             Finding::new(
@@ -657,8 +895,11 @@ impl CodeQualityAnalyzer {
                                 line_number,
                                 "Function name should use camelCase".to_string(),
                             )
-                            .with_description("JavaScript convention is to use camelCase for function names".to_string())
-                            .with_suggestion("Convert function name to camelCase".to_string())
+                            .with_description(
+                                "JavaScript convention is to use camelCase for function names"
+                                    .to_string(),
+                            )
+                            .with_suggestion("Convert function name to camelCase".to_string()),
                         );
                     }
                 }
@@ -681,10 +922,27 @@ impl Analyzer for CodeQualityAnalyzer {
 
     fn supports_file(&self, file_path: &Path) -> bool {
         if let Some(ext) = file_path.extension().and_then(|e| e.to_str()) {
-            matches!(ext, 
-                "rs" | "js" | "ts" | "jsx" | "tsx" | "py" | "java" | 
-                "cpp" | "c" | "h" | "hpp" | "go" | "rb" | "php" |
-                "cs" | "swift" | "kt" | "scala" | "clj" | "hs"
+            matches!(
+                ext,
+                "rs" | "js"
+                    | "ts"
+                    | "jsx"
+                    | "tsx"
+                    | "py"
+                    | "java"
+                    | "cpp"
+                    | "c"
+                    | "h"
+                    | "hpp"
+                    | "go"
+                    | "rb"
+                    | "php"
+                    | "cs"
+                    | "swift"
+                    | "kt"
+                    | "scala"
+                    | "clj"
+                    | "hs"
             )
         } else {
             false
@@ -701,8 +959,10 @@ mod tests {
     fn test_magic_number_detection() {
         let analyzer = CodeQualityAnalyzer::new();
         let code = "let timeout = 5000;";
-        
-        let findings = analyzer.analyze(&PathBuf::from("test.js"), code.as_bytes()).unwrap();
+
+        let findings = analyzer
+            .analyze(&PathBuf::from("test.js"), code.as_bytes())
+            .unwrap();
         assert!(findings.iter().any(|f| f.rule == "magic_number"));
     }
 
@@ -710,8 +970,10 @@ mod tests {
     fn test_complex_condition_detection() {
         let analyzer = CodeQualityAnalyzer::new();
         let code = "if (a && b && c || d && e && f) {";
-        
-        let findings = analyzer.analyze(&PathBuf::from("test.js"), code.as_bytes()).unwrap();
+
+        let findings = analyzer
+            .analyze(&PathBuf::from("test.js"), code.as_bytes())
+            .unwrap();
         assert!(findings.iter().any(|f| f.rule == "complex_condition"));
     }
 
@@ -719,8 +981,10 @@ mod tests {
     fn test_unwrap_detection() {
         let analyzer = CodeQualityAnalyzer::new();
         let code = "let value = result.unwrap();";
-        
-        let findings = analyzer.analyze(&PathBuf::from("test.rs"), code.as_bytes()).unwrap();
+
+        let findings = analyzer
+            .analyze(&PathBuf::from("test.rs"), code.as_bytes())
+            .unwrap();
         assert!(findings.iter().any(|f| f.rule == "unwrap_usage"));
     }
 }

@@ -1,12 +1,12 @@
 pub mod fann_classifier;
 pub mod feature_extractor;
-pub mod training_data;
 pub mod metrics;
+pub mod training_data;
 
 use crate::types::Finding;
 use anyhow::Result;
-use std::time::Instant;
 pub use metrics::{MetricsCollector, ModelMetrics};
+use std::time::Instant;
 
 /// Lightweight ML classifier using RUV-FANN for false positive reduction
 pub struct MLClassifier {
@@ -18,18 +18,17 @@ pub struct MLClassifier {
 
 impl MLClassifier {
     pub fn new(model_path: Option<&str>) -> Self {
-        let classifier = model_path
-            .and_then(|path| {
-                // Only try to load if the file exists
-                if std::path::Path::new(path).exists() {
-                    fann_classifier::FannClassifier::load(path).ok()
-                } else {
-                    None
-                }
-            });
-        
+        let classifier = model_path.and_then(|path| {
+            // Only try to load if the file exists
+            if std::path::Path::new(path).exists() {
+                fann_classifier::FannClassifier::load(path).ok()
+            } else {
+                None
+            }
+        });
+
         let enabled = classifier.is_some();
-        
+
         let metrics_collector = if enabled {
             Some(MetricsCollector::new(
                 "codeguardian-model".to_string(),
@@ -55,7 +54,7 @@ impl MLClassifier {
 
         let start_time = Instant::now();
         let features = self.feature_extractor.extract_features(finding)?;
-        
+
         let confidence = if let Some(classifier) = &self.classifier {
             classifier.predict(&features)?
         } else {
@@ -98,20 +97,29 @@ impl MLClassifier {
             } else {
                 0.5
             };
-            metrics_collector.record_inference(finding, confidence, inference_time, Some(is_true_positive));
+            metrics_collector.record_inference(
+                finding,
+                confidence,
+                inference_time,
+                Some(is_true_positive),
+            );
         }
 
         Ok(())
     }
 
     /// Filter findings based on confidence threshold
-    pub fn filter_findings(&mut self, findings: Vec<Finding>, threshold: f32) -> Result<Vec<Finding>> {
+    pub fn filter_findings(
+        &mut self,
+        findings: Vec<Finding>,
+        threshold: f32,
+    ) -> Result<Vec<Finding>> {
         if !self.enabled {
             return Ok(findings);
         }
 
         let mut filtered = Vec::new();
-        
+
         for finding in findings {
             let relevance = self.predict_relevance(&finding)?;
             if relevance >= threshold {
@@ -124,7 +132,9 @@ impl MLClassifier {
 
     /// Get current model performance metrics
     pub fn get_metrics(&mut self) -> Option<&ModelMetrics> {
-        self.metrics_collector.as_mut().map(|collector| collector.calculate_metrics())
+        self.metrics_collector
+            .as_mut()
+            .map(|collector| collector.calculate_metrics())
     }
 
     /// Export metrics to JSON file
@@ -146,6 +156,7 @@ impl MLClassifier {
 
     /// Record training completion for metrics
     #[allow(dead_code)]
+    #[allow(clippy::too_many_arguments)]
     pub fn record_training_completion(
         &mut self,
         dataset_size: usize,

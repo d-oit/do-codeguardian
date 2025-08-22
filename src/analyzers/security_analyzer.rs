@@ -1,10 +1,10 @@
-use crate::analyzers::Analyzer;
-use crate::analyzers::optimized_patterns::{SECURITY_PATTERNS, AnalysisOptimizer, PatternCache};
+use crate::analyzers::optimized_patterns::{AnalysisOptimizer, PatternCache, SECURITY_PATTERNS};
 use crate::analyzers::security_checks::SecurityChecks;
+use crate::analyzers::Analyzer;
 use crate::types::{Finding, Severity};
 use anyhow::Result;
-use std::path::Path;
 use std::collections::HashSet;
+use std::path::Path;
 
 /// Context in which a secret is found
 #[derive(Debug, Clone, PartialEq)]
@@ -58,10 +58,14 @@ impl SecurityAnalyzer {
         }
     }
 
-    fn analyze_security_issues(&mut self, file_path: &Path, content: &[u8]) -> Result<Vec<Finding>> {
-        let mut findings = Vec::new();
+    fn analyze_security_issues(
+        &mut self,
+        file_path: &Path,
+        content: &[u8],
+    ) -> Result<Vec<Finding>> {
+        let mut findings = Vec::with_capacity(20); // Estimate typical findings per file
         let content_str = String::from_utf8_lossy(content);
-        
+
         // Early exit for non-security files
         let file_type = AnalysisOptimizer::get_file_type(file_path);
         if let Some(ft) = file_type {
@@ -83,22 +87,42 @@ impl SecurityAnalyzer {
         if let Some(ext) = file_path.extension().and_then(|e| e.to_str()) {
             for (line_num, line) in content_str.lines().enumerate() {
                 let line_number = (line_num + 1) as u32;
-                
+
                 match ext {
                     "js" | "ts" | "jsx" | "tsx" => {
-                        findings.extend(self.security_checks.javascript.check(file_path, line, line_number)?);
+                        findings.extend(self.security_checks.javascript.check(
+                            file_path,
+                            line,
+                            line_number,
+                        )?);
                     }
                     "py" => {
-                        findings.extend(self.security_checks.python.check(file_path, line, line_number)?);
+                        findings.extend(self.security_checks.python.check(
+                            file_path,
+                            line,
+                            line_number,
+                        )?);
                     }
                     "php" => {
-                        findings.extend(self.security_checks.php.check(file_path, line, line_number)?);
+                        findings.extend(self.security_checks.php.check(
+                            file_path,
+                            line,
+                            line_number,
+                        )?);
                     }
                     "java" => {
-                        findings.extend(self.security_checks.java.check(file_path, line, line_number)?);
+                        findings.extend(self.security_checks.java.check(
+                            file_path,
+                            line,
+                            line_number,
+                        )?);
                     }
                     "rs" => {
-                        findings.extend(self.security_checks.rust.check(file_path, line, line_number)?);
+                        findings.extend(self.security_checks.rust.check(
+                            file_path,
+                            line,
+                            line_number,
+                        )?);
                     }
                     _ => {}
                 }
@@ -108,249 +132,326 @@ impl SecurityAnalyzer {
         Ok(findings)
     }
 
-    fn analyze_line_security(&mut self, file_path: &Path, line: &str, line_number: u32) -> Vec<Finding> {
-        let mut findings = Vec::new();
-        
+    fn analyze_line_security(
+        &mut self,
+        file_path: &Path,
+        line: &str,
+        line_number: u32,
+    ) -> Vec<Finding> {
+        let mut findings = Vec::with_capacity(2); // Most lines have 0-2 findings
+
         // Check for hardcoded secrets first (most critical)
-        if self.pattern_cache.check_pattern(&SECURITY_PATTERNS.secrets_combined, line) {
+        if self
+            .pattern_cache
+            .check_pattern(&SECURITY_PATTERNS.secrets_combined, line)
+        {
             // Check if this is in a test or non-production context
             let context = self.analyze_secret_context(file_path, line, line_number);
             let (severity, message, description) = match context {
                 SecretContext::Test => (
                     Severity::Low,
                     "Hardcoded secret in test code".to_string(),
-                    "Test secrets should use mock values or be clearly marked as test data".to_string()
+                    "Test secrets should use mock values or be clearly marked as test data"
+                        .to_string(),
                 ),
                 SecretContext::NonProduction => (
                     Severity::Medium,
                     "Hardcoded secret in non-production code".to_string(),
-                    "Non-production secrets should be externalized or clearly documented".to_string()
+                    "Non-production secrets should be externalized or clearly documented"
+                        .to_string(),
                 ),
                 SecretContext::Production => (
                     Severity::Critical,
                     "Potential hardcoded secret detected".to_string(),
-                    "Hardcoded secrets in source code pose a security risk".to_string()
+                    "Hardcoded secrets in source code pose a security risk".to_string(),
                 ),
             };
-            
-            findings.push(Finding::new(
-                "security",
-                "hardcoded_secret",
-                severity,
-                file_path.to_path_buf(),
-                line_number,
-                message,
-            )
-            .with_description(description)
-            .with_suggestion("Move secrets to environment variables or secure configuration".to_string())
-            .with_metadata("context".to_string(), serde_json::Value::String(context.to_string())));
-        }
-        
-        // Check for SQL injection vulnerabilities
-        if self.pattern_cache.check_pattern(&SECURITY_PATTERNS.sql_injection_fast, line) {
-            findings.push(Finding::new(
-                "security",
-                "sql_injection",
-                Severity::High,
-                file_path.to_path_buf(),
-                line_number,
-                "Potential SQL injection vulnerability".to_string(),
-            )
-            .with_description("SQL injection vulnerabilities can allow attackers to access or modify data".to_string())
-            .with_suggestion("Use parameterized queries or prepared statements".to_string()));
-        }
-        
-        // Check for XSS vulnerabilities
-        if self.pattern_cache.check_pattern(&SECURITY_PATTERNS.xss_fast, line) {
-            findings.push(Finding::new(
-                "security",
-                "xss_vulnerability",
-                Severity::High,
-                file_path.to_path_buf(),
-                line_number,
-                "Potential XSS vulnerability".to_string(),
-            )
-            .with_description("XSS vulnerabilities can allow attackers to execute malicious scripts".to_string())
-            .with_suggestion("Sanitize user input and use safe DOM manipulation methods".to_string()));
-        }
-        
-        // Check for command injection
-        if self.pattern_cache.check_pattern(&SECURITY_PATTERNS.command_injection_fast, line) {
-            findings.push(Finding::new(
-                "security",
-                "command_injection",
-                Severity::High,
-                file_path.to_path_buf(),
-                line_number,
-                "Potential command injection vulnerability".to_string(),
-            )
-            .with_description("Command injection can allow attackers to execute arbitrary system commands".to_string())
-            .with_suggestion("Validate and sanitize all user input before using in system commands".to_string()));
-        }
-        
-        // Check for weak cryptography
-        if self.pattern_cache.check_pattern(&SECURITY_PATTERNS.weak_crypto_fast, line) {
-            findings.push(Finding::new(
-                "security",
-                "weak_crypto",
-                Severity::Medium,
-                file_path.to_path_buf(),
-                line_number,
-                "Weak cryptographic algorithm detected".to_string(),
-            )
-            .with_description("Weak cryptographic algorithms are vulnerable to attacks".to_string())
-            .with_suggestion("Use strong, modern cryptographic algorithms like AES-256, SHA-256, or better".to_string()));
-        }
-        
-        // Check for dangerous functions
-        for func in &self.dangerous_functions {
-            if line.contains(func) && !line.trim_start().starts_with("//") && !line.trim_start().starts_with("#") {
-                findings.push(Finding::new(
+
+            findings.push(
+                Finding::new(
                     "security",
-                    "dangerous_function",
+                    "hardcoded_secret",
+                    severity,
+                    file_path.to_path_buf(),
+                    line_number,
+                    message,
+                )
+                .with_description(description)
+                .with_suggestion(
+                    "Move secrets to environment variables or secure configuration".to_string(),
+                )
+                .with_metadata(
+                    "context".to_string(),
+                    serde_json::Value::String(context.to_string()),
+                ),
+            );
+        }
+
+        // Check for SQL injection vulnerabilities
+        if self
+            .pattern_cache
+            .check_pattern(&SECURITY_PATTERNS.sql_injection_fast, line)
+        {
+            findings.push(
+                Finding::new(
+                    "security",
+                    "sql_injection",
                     Severity::High,
                     file_path.to_path_buf(),
                     line_number,
-                    format!("Dangerous function '{}' detected", func),
+                    "Potential SQL injection vulnerability".to_string(),
                 )
-                .with_description("Dangerous functions can lead to security vulnerabilities".to_string())
-                .with_suggestion("Avoid using dangerous functions or ensure proper input validation".to_string()));
+                .with_description(
+                    "SQL injection vulnerabilities can allow attackers to access or modify data"
+                        .to_string(),
+                )
+                .with_suggestion("Use parameterized queries or prepared statements".to_string()),
+            );
+        }
+
+        // Check for XSS vulnerabilities
+        if self
+            .pattern_cache
+            .check_pattern(&SECURITY_PATTERNS.xss_fast, line)
+        {
+            findings.push(
+                Finding::new(
+                    "security",
+                    "xss_vulnerability",
+                    Severity::High,
+                    file_path.to_path_buf(),
+                    line_number,
+                    "Potential XSS vulnerability".to_string(),
+                )
+                .with_description(
+                    "XSS vulnerabilities can allow attackers to execute malicious scripts"
+                        .to_string(),
+                )
+                .with_suggestion(
+                    "Sanitize user input and use safe DOM manipulation methods".to_string(),
+                ),
+            );
+        }
+
+        // Check for command injection
+        if self
+            .pattern_cache
+            .check_pattern(&SECURITY_PATTERNS.command_injection_fast, line)
+        {
+            findings.push(
+                Finding::new(
+                    "security",
+                    "command_injection",
+                    Severity::High,
+                    file_path.to_path_buf(),
+                    line_number,
+                    "Potential command injection vulnerability".to_string(),
+                )
+                .with_description(
+                    "Command injection can allow attackers to execute arbitrary system commands"
+                        .to_string(),
+                )
+                .with_suggestion(
+                    "Validate and sanitize all user input before using in system commands"
+                        .to_string(),
+                ),
+            );
+        }
+
+        // Check for weak cryptography
+        if self
+            .pattern_cache
+            .check_pattern(&SECURITY_PATTERNS.weak_crypto_fast, line)
+        {
+            findings.push(
+                Finding::new(
+                    "security",
+                    "weak_crypto",
+                    Severity::Medium,
+                    file_path.to_path_buf(),
+                    line_number,
+                    "Weak cryptographic algorithm detected".to_string(),
+                )
+                .with_description(
+                    "Weak cryptographic algorithms are vulnerable to attacks".to_string(),
+                )
+                .with_suggestion(
+                    "Use strong, modern cryptographic algorithms like AES-256, SHA-256, or better"
+                        .to_string(),
+                ),
+            );
+        }
+
+        // Check for dangerous functions
+        for func in &self.dangerous_functions {
+            if line.contains(func)
+                && !line.trim_start().starts_with("//")
+                && !line.trim_start().starts_with("#")
+            {
+                findings.push(
+                    Finding::new(
+                        "security",
+                        "dangerous_function",
+                        Severity::High,
+                        file_path.to_path_buf(),
+                        line_number,
+                        format!("Dangerous function '{}' detected", func),
+                    )
+                    .with_description(
+                        "Dangerous functions can lead to security vulnerabilities".to_string(),
+                    )
+                    .with_suggestion(
+                        "Avoid using dangerous functions or ensure proper input validation"
+                            .to_string(),
+                    ),
+                );
             }
         }
-        
+
         findings
     }
-    
+
     /// Analyze the context of a potential secret to determine if it's in test/non-production code
-    fn analyze_secret_context(&self, file_path: &Path, line: &str, _line_number: u32) -> SecretContext {
+    fn analyze_secret_context(
+        &self,
+        file_path: &Path,
+        line: &str,
+        _line_number: u32,
+    ) -> SecretContext {
         // Check file path indicators
         let file_path_str = file_path.to_string_lossy().to_lowercase();
-        
+
         // Test file indicators
-        if file_path_str.contains("test") || 
-           file_path_str.contains("spec") || 
-           file_path_str.contains("__tests__") ||
-           file_path_str.contains("tests/") ||
-           file_path_str.contains("/test/") ||
-           file_path_str.ends_with("_test.rs") ||
-           file_path_str.ends_with(".test.js") ||
-           file_path_str.ends_with(".test.ts") ||
-           file_path_str.ends_with("_spec.rb") {
+        if file_path_str.contains("test")
+            || file_path_str.contains("spec")
+            || file_path_str.contains("__tests__")
+            || file_path_str.contains("tests/")
+            || file_path_str.contains("/test/")
+            || file_path_str.ends_with("_test.rs")
+            || file_path_str.ends_with(".test.js")
+            || file_path_str.ends_with(".test.ts")
+            || file_path_str.ends_with("_spec.rb")
+        {
             return SecretContext::Test;
         }
-        
+
         // Non-production file indicators
-        if file_path_str.contains("example") ||
-           file_path_str.contains("demo") ||
-           file_path_str.contains("sample") ||
-           file_path_str.contains("mock") ||
-           file_path_str.contains("fixture") ||
-           file_path_str.contains("dev") ||
-           file_path_str.contains("development") ||
-           file_path_str.contains("staging") {
+        if file_path_str.contains("example")
+            || file_path_str.contains("demo")
+            || file_path_str.contains("sample")
+            || file_path_str.contains("mock")
+            || file_path_str.contains("fixture")
+            || file_path_str.contains("dev")
+            || file_path_str.contains("development")
+            || file_path_str.contains("staging")
+        {
             return SecretContext::NonProduction;
         }
-        
+
         // Check line content for test/non-production indicators
         let line_lower = line.to_lowercase();
-        
+
         // Test function/method indicators
-        if line_lower.contains("#[test]") ||
-           line_lower.contains("fn test_") ||
-           line_lower.contains("function test") ||
-           line_lower.contains("it(") ||
-           line_lower.contains("describe(") ||
-           line_lower.contains("test(") ||
-           line_lower.contains("@test") ||
-           line_lower.contains("def test_") ||
-           line_lower.contains("class test") {
+        if line_lower.contains("#[test]")
+            || line_lower.contains("fn test_")
+            || line_lower.contains("function test")
+            || line_lower.contains("it(")
+            || line_lower.contains("describe(")
+            || line_lower.contains("test(")
+            || line_lower.contains("@test")
+            || line_lower.contains("def test_")
+            || line_lower.contains("class test")
+        {
             return SecretContext::Test;
         }
-        
+
         // Non-production indicators in code
-        if line_lower.contains("example") ||
-           line_lower.contains("demo") ||
-           line_lower.contains("sample") ||
-           line_lower.contains("mock") ||
-           line_lower.contains("fake") ||
-           line_lower.contains("dummy") ||
-           line_lower.contains("placeholder") ||
-           line_lower.contains("test_") ||
-           line_lower.contains("_test") ||
-           line_lower.contains("dev_") ||
-           line_lower.contains("development") {
+        if line_lower.contains("example")
+            || line_lower.contains("demo")
+            || line_lower.contains("sample")
+            || line_lower.contains("mock")
+            || line_lower.contains("fake")
+            || line_lower.contains("dummy")
+            || line_lower.contains("placeholder")
+            || line_lower.contains("test_")
+            || line_lower.contains("_test")
+            || line_lower.contains("dev_")
+            || line_lower.contains("development")
+        {
             return SecretContext::NonProduction;
         }
-        
+
         // Check for obvious test/example values (but not if already in test context)
-        if line_lower.contains("your_") ||
-           line_lower.contains("replace_") ||
-           line_lower.contains("insert_") ||
-           line_lower.contains("placeholder") ||
-           line_lower.contains("example") ||
-           line_lower.contains("demo") ||
-           line_lower.contains("mock") ||
-           line_lower.contains("fake") ||
-           line_lower.contains("dummy") {
+        if line_lower.contains("your_")
+            || line_lower.contains("replace_")
+            || line_lower.contains("insert_")
+            || line_lower.contains("placeholder")
+            || line_lower.contains("example")
+            || line_lower.contains("demo")
+            || line_lower.contains("mock")
+            || line_lower.contains("fake")
+            || line_lower.contains("dummy")
+        {
             return SecretContext::NonProduction;
         }
-        
+
         // Check for obvious placeholder patterns (but be more specific)
-        if line_lower.contains("xxxx") ||
-           line_lower.contains("abcd") ||
-           (line_lower.contains("1234") && (
-               line_lower.contains("example") ||
-               line_lower.contains("demo") ||
-               line_lower.contains("test") ||
-               line_lower.contains("placeholder") ||
-               line_lower.contains("your_")
-           )) {
+        if line_lower.contains("xxxx")
+            || line_lower.contains("abcd")
+            || (line_lower.contains("1234")
+                && (line_lower.contains("example")
+                    || line_lower.contains("demo")
+                    || line_lower.contains("test")
+                    || line_lower.contains("placeholder")
+                    || line_lower.contains("your_")))
+        {
             return SecretContext::NonProduction;
         }
-        
+
         // Default to production context for safety
         SecretContext::Production
     }
-    
-    fn check_file_level_security_fast(&self, file_path: &Path, content: &str) -> Result<Vec<Finding>> {
+
+    fn check_file_level_security_fast(
+        &self,
+        file_path: &Path,
+        content: &str,
+    ) -> Result<Vec<Finding>> {
         let mut findings = Vec::new();
-        
+
         // Check for sensitive files
         if let Some(filename) = file_path.file_name().and_then(|n| n.to_str()) {
             let sensitive_files = [".env", "config.json", "secrets.json", "private.key"];
             if sensitive_files.iter().any(|&sf| filename.contains(sf)) {
-                findings.push(
-                    Finding::new(
-                        "security",
-                        "sensitive_file",
-                        Severity::High,
-                        file_path.to_path_buf(),
-                        1,
-                        "Potentially sensitive file detected".to_string(),
-                    )
-                );
+                findings.push(Finding::new(
+                    "security",
+                    "sensitive_file",
+                    Severity::High,
+                    file_path.to_path_buf(),
+                    1,
+                    "Potentially sensitive file detected".to_string(),
+                ));
             }
         }
-        
+
         // Fast high-entropy string detection
-        for (line_num, line) in content.lines().enumerate().take(100) { // Limit for performance
+        for (line_num, line) in content.lines().enumerate().take(100) {
+            // Limit for performance
             if SECURITY_PATTERNS.high_entropy_check.is_match(line) {
                 let entropy = AnalysisOptimizer::calculate_entropy_fast(line);
                 if entropy > 4.0 {
-                    findings.push(
-                        Finding::new(
-                            "security",
-                            "high_entropy_string",
-                            Severity::Medium,
-                            file_path.to_path_buf(),
-                            (line_num + 1) as u32,
-                            "High entropy string detected (possible secret)".to_string(),
-                        )
-                    );
+                    findings.push(Finding::new(
+                        "security",
+                        "high_entropy_string",
+                        Severity::Medium,
+                        file_path.to_path_buf(),
+                        (line_num + 1) as u32,
+                        "High entropy string detected (possible secret)".to_string(),
+                    ));
                 }
             }
         }
-        
+
         Ok(findings)
     }
 
@@ -359,7 +460,7 @@ impl SecurityAnalyzer {
         // Simple entropy check - look for strings with good character distribution
         let mut char_counts = std::collections::HashMap::new();
         let chars: Vec<char> = s.chars().filter(|c| c.is_alphanumeric()).collect();
-        
+
         if chars.len() < 20 {
             return false;
         }
@@ -370,7 +471,8 @@ impl SecurityAnalyzer {
 
         // Calculate entropy
         let len = chars.len() as f64;
-        let entropy: f64 = char_counts.values()
+        let entropy: f64 = char_counts
+            .values()
             .map(|&count| {
                 let p = count as f64 / len;
                 -p * p.log2()
@@ -395,16 +497,39 @@ impl Analyzer for SecurityAnalyzer {
 
     fn supports_file(&self, file_path: &Path) -> bool {
         if let Some(ext) = file_path.extension().and_then(|e| e.to_str()) {
-            matches!(ext, 
-                "rs" | "js" | "ts" | "jsx" | "tsx" | "py" | "java" | 
-                "cpp" | "c" | "h" | "hpp" | "go" | "rb" | "php" |
-                "cs" | "swift" | "kt" | "scala" | "clj" | "hs" |
-                "json" | "xml" | "yml" | "yaml" | "env"
+            matches!(
+                ext,
+                "rs" | "js"
+                    | "ts"
+                    | "jsx"
+                    | "tsx"
+                    | "py"
+                    | "java"
+                    | "cpp"
+                    | "c"
+                    | "h"
+                    | "hpp"
+                    | "go"
+                    | "rb"
+                    | "php"
+                    | "cs"
+                    | "swift"
+                    | "kt"
+                    | "scala"
+                    | "clj"
+                    | "hs"
+                    | "json"
+                    | "xml"
+                    | "yml"
+                    | "yaml"
+                    | "env"
             )
         } else {
             // Check for sensitive filenames without extensions
             if let Some(filename) = file_path.file_name().and_then(|n| n.to_str()) {
-                filename.contains("secret") || filename.contains("key") || filename.contains("password")
+                filename.contains("secret")
+                    || filename.contains("key")
+                    || filename.contains("password")
             } else {
                 false
             }
@@ -421,8 +546,10 @@ mod tests {
     fn test_sql_injection_detection() {
         let analyzer = SecurityAnalyzer::new();
         let code = r#"query("SELECT * FROM users WHERE id = " + userId)"#;
-        
-        let findings = analyzer.analyze(&PathBuf::from("test.js"), code.as_bytes()).unwrap();
+
+        let findings = analyzer
+            .analyze(&PathBuf::from("test.js"), code.as_bytes())
+            .unwrap();
         assert!(findings.iter().any(|f| f.rule == "sql_injection"));
     }
 
@@ -430,8 +557,10 @@ mod tests {
     fn test_hardcoded_secret_detection() {
         let analyzer = SecurityAnalyzer::new();
         let code = r#"const apiKey = "sk-1234567890abcdef1234567890abcdef";"#;
-        
-        let findings = analyzer.analyze(&PathBuf::from("test.js"), code.as_bytes()).unwrap();
+
+        let findings = analyzer
+            .analyze(&PathBuf::from("test.js"), code.as_bytes())
+            .unwrap();
         assert!(findings.iter().any(|f| f.rule == "hardcoded_secret"));
     }
 
@@ -439,8 +568,10 @@ mod tests {
     fn test_xss_detection() {
         let analyzer = SecurityAnalyzer::new();
         let code = r#"element.innerHTML = userInput + "<div>content</div>";"#;
-        
-        let findings = analyzer.analyze(&PathBuf::from("test.js"), code.as_bytes()).unwrap();
+
+        let findings = analyzer
+            .analyze(&PathBuf::from("test.js"), code.as_bytes())
+            .unwrap();
         assert!(findings.iter().any(|f| f.rule == "xss_vulnerability"));
     }
 }

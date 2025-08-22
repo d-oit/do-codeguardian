@@ -1,4 +1,4 @@
-use crate::types::{Finding, AnalysisResults};
+use crate::types::{AnalysisResults, Finding};
 use anyhow::Result;
 // Rayon import removed for now
 use std::path::Path;
@@ -28,7 +28,7 @@ impl PerformanceEngine {
         let cpu_count = num_cpus::get();
         Self {
             max_parallel_files: (cpu_count * 2).min(16), // Cap at 16 for memory reasons
-            memory_limit_mb: 512, // 512MB memory limit
+            memory_limit_mb: 512,                        // 512MB memory limit
             enable_streaming: true,
             file_size_threshold: 5 * 1024 * 1024, // 5MB threshold for streaming
             progress_callback: None,
@@ -51,7 +51,7 @@ impl PerformanceEngine {
     }
 
     #[allow(dead_code)]
-    pub fn with_progress_callback<F>(mut self, callback: F) -> Self 
+    pub fn with_progress_callback<F>(mut self, callback: F) -> Self
     where
         F: Fn(usize, usize) + Send + Sync + 'static,
     {
@@ -71,43 +71,45 @@ impl PerformanceEngine {
         let start_time = Instant::now();
         let total_files = files.len();
         let processed_count = Arc::new(AtomicUsize::new(0));
-        
+
         // Create semaphore to limit concurrent file operations
         let semaphore = Arc::new(Semaphore::new(self.max_parallel_files));
-        
+
         // Split files into small and large categories
-        let (small_files, large_files): (Vec<_>, Vec<_>) = files
-            .into_iter()
-            .partition(|path| {
-                path.metadata()
-                    .map(|m| m.len() < self.file_size_threshold)
-                    .unwrap_or(true)
-            });
+        let (small_files, large_files): (Vec<_>, Vec<_>) = files.into_iter().partition(|path| {
+            path.metadata()
+                .map(|m| m.len() < self.file_size_threshold)
+                .unwrap_or(true)
+        });
 
         // Process small files in parallel batches
-        let small_findings = self.process_small_files_parallel(
-            small_files,
-            analyzer_fn.clone(),
-            semaphore.clone(),
-            processed_count.clone(),
-            total_files,
-        ).await?;
+        let small_findings = self
+            .process_small_files_parallel(
+                small_files,
+                analyzer_fn.clone(),
+                semaphore.clone(),
+                processed_count.clone(),
+                total_files,
+            )
+            .await?;
 
         // Process large files with streaming
-        let large_findings = self.process_large_files_streaming(
-            large_files,
-            analyzer_fn,
-            semaphore,
-            processed_count.clone(),
-            total_files,
-        ).await?;
+        let large_findings = self
+            .process_large_files_streaming(
+                large_files,
+                analyzer_fn,
+                semaphore,
+                processed_count.clone(),
+                total_files,
+            )
+            .await?;
 
         // Combine results
         let mut all_findings = small_findings;
         all_findings.extend(large_findings);
 
         let duration = start_time.elapsed();
-        
+
         let mut results = AnalysisResults::new("turbo".to_string());
         for finding in all_findings {
             results.add_finding(finding);
@@ -134,14 +136,16 @@ impl PerformanceEngine {
 
         for chunk in files.chunks(chunk_size) {
             let chunk_paths: Vec<_> = chunk.iter().map(|&p| p.to_path_buf()).collect();
-            let chunk_findings = self.process_file_chunk(
-                chunk_paths,
-                analyzer_fn.clone(),
-                semaphore.clone(),
-                processed_count.clone(),
-                total_files,
-            ).await?;
-            
+            let chunk_findings = self
+                .process_file_chunk(
+                    chunk_paths,
+                    analyzer_fn.clone(),
+                    semaphore.clone(),
+                    processed_count.clone(),
+                    total_files,
+                )
+                .await?;
+
             all_findings.extend(chunk_findings);
         }
 
@@ -160,17 +164,18 @@ impl PerformanceEngine {
         F: Fn(&Path, &[u8]) -> Result<Vec<Finding>> + Send + Sync + Clone + 'static,
     {
         let mut all_findings = Vec::new();
-        
+
         for path in files {
             let _permit = semaphore.acquire().await?;
             let analyzer = analyzer_fn.clone();
             let counter = processed_count.clone();
-            
+
             let result = tokio::task::spawn_blocking(move || {
                 let content = std::fs::read(&path)?;
                 analyzer(&path, &content)
-            }).await??;
-            
+            })
+            .await??;
+
             all_findings.extend(result);
             counter.fetch_add(1, Ordering::Relaxed);
         }
@@ -190,14 +195,16 @@ impl PerformanceEngine {
         F: Fn(&Path, &[u8]) -> Result<Vec<Finding>> + Send + Sync + Clone + 'static,
     {
         let mut all_findings = Vec::new();
-        
+
         for path in files {
             let _permit = semaphore.acquire().await?;
-            
+
             // Use streaming analysis for large files
-            let findings = self.analyze_large_file_streaming(&path, analyzer_fn.clone()).await?;
+            let findings = self
+                .analyze_large_file_streaming(path, analyzer_fn.clone())
+                .await?;
             all_findings.extend(findings);
-            
+
             let count = processed_count.fetch_add(1, Ordering::Relaxed) + 1;
             if let Some(callback) = &self.progress_callback {
                 callback(count, total_files);
@@ -215,8 +222,8 @@ impl PerformanceEngine {
     where
         F: Fn(&Path, &[u8]) -> Result<Vec<Finding>> + Send + Sync,
     {
-        use tokio::io::{AsyncReadExt, BufReader};
         use tokio::fs::File;
+        use tokio::io::{AsyncReadExt, BufReader};
 
         let file = File::open(path).await?;
         let mut reader = BufReader::new(file);
@@ -244,7 +251,7 @@ impl PerformanceEngine {
         // Balance between memory usage and parallelism
         let memory_per_file = (self.memory_limit_mb * 1024 * 1024) / self.max_parallel_files;
         let files_per_chunk = (memory_per_file / (1024 * 1024)).max(1); // At least 1MB per file
-        
+
         files_per_chunk.min(total_files / self.max_parallel_files + 1)
     }
 
@@ -284,7 +291,7 @@ impl LargeCodebaseIterator {
 
     pub fn collect_files(mut self) -> Result<Vec<std::path::PathBuf>> {
         let mut files = Vec::new();
-        
+
         for entry in self.ignore_walker {
             if let Some(max) = self.max_files {
                 if self.processed >= max {
@@ -294,7 +301,7 @@ impl LargeCodebaseIterator {
 
             let entry = entry?;
             let path = entry.path();
-            
+
             if path.is_file() {
                 // Check file size
                 if let Ok(metadata) = path.metadata() {
@@ -313,13 +320,13 @@ impl LargeCodebaseIterator {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use tempfile::TempDir;
     use std::fs;
+    use tempfile::TempDir;
 
     #[tokio::test]
     async fn test_performance_engine() {
         let temp_dir = TempDir::new().unwrap();
-        
+
         // Create test files
         for i in 0..10 {
             let file_path = temp_dir.path().join(format!("test_{}.rs", i));

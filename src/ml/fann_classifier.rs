@@ -1,7 +1,7 @@
 use anyhow::{anyhow, Result};
+use rand::seq::SliceRandom;
 use serde::{Deserialize, Serialize};
 use std::path::Path;
-use rand::seq::SliceRandom;
 
 /// Enhanced neural network classifier using FANN with adaptive learning
 pub struct FannClassifier {
@@ -75,7 +75,8 @@ impl FannClassifier {
 
     /// Save the trained model to file
     pub fn save<P: AsRef<Path>>(&self, path: P) -> Result<()> {
-        self.network.save(path.as_ref())
+        self.network
+            .save(path.as_ref())
             .map_err(|e| anyhow!("Failed to save FANN network: {:?}", e))
     }
 
@@ -89,7 +90,9 @@ impl FannClassifier {
             ));
         }
 
-        let output = self.network.run(features)
+        let output = self
+            .network
+            .run(features)
             .map_err(|e| anyhow!("FANN prediction failed: {:?}", e))?;
 
         Ok(output[0]) // Single output for binary classification
@@ -106,8 +109,9 @@ impl FannClassifier {
         }
 
         let target_output = vec![target];
-        
-        self.network.train(features, &target_output)
+
+        self.network
+            .train(features, &target_output)
             .map_err(|e| anyhow!("FANN training failed: {:?}", e))?;
 
         Ok(())
@@ -122,26 +126,26 @@ impl FannClassifier {
 
         for epoch in 0..epochs {
             let mut epoch_error = 0.0;
-            
+
             // Shuffle training data for better convergence
             let mut shuffled_data = training_data.to_vec();
             let mut rng = rand::thread_rng();
             shuffled_data.shuffle(&mut rng);
-            
+
             for (features, target) in &shuffled_data {
                 self.train_incremental(features, *target)?;
-                
+
                 // Calculate error for this example
                 let prediction = self.predict(features)?;
                 epoch_error += (prediction - target).powi(2);
             }
-            
+
             total_error = epoch_error / training_data.len() as f32;
             self.training_history.push(total_error);
-            
+
             // Adaptive learning rate adjustment
             self.adjust_learning_rate(total_error);
-            
+
             // Early stopping check
             if total_error < self.best_error {
                 self.best_error = total_error;
@@ -149,14 +153,23 @@ impl FannClassifier {
             } else {
                 self.patience_counter += 1;
                 if self.patience_counter >= self.early_stopping_patience {
-                    println!("Early stopping at epoch {} (error: {:.6})", epoch + 1, total_error);
+                    println!(
+                        "Early stopping at epoch {} (error: {:.6})",
+                        epoch + 1,
+                        total_error
+                    );
                     break;
                 }
             }
-            
+
             // Progress reporting every 10 epochs
             if (epoch + 1) % 10 == 0 {
-                println!("Epoch {}: Error = {:.6}, LR = {:.6}", epoch + 1, total_error, self.learning_rate);
+                println!(
+                    "Epoch {}: Error = {:.6}, LR = {:.6}",
+                    epoch + 1,
+                    total_error,
+                    self.learning_rate
+                );
             }
         }
 
@@ -168,11 +181,13 @@ impl FannClassifier {
         if self.training_history.len() < 3 {
             return; // Need at least 3 epochs to determine trend
         }
-        
-        let recent_errors = &self.training_history[self.training_history.len()-3..];
+
+        let recent_errors = &self.training_history[self.training_history.len() - 3..];
         let is_improving = recent_errors.windows(2).all(|w| w[1] < w[0]);
-        let is_stagnating = recent_errors.windows(2).all(|w| (w[1] - w[0]).abs() < 0.0001);
-        
+        let is_stagnating = recent_errors
+            .windows(2)
+            .all(|w| (w[1] - w[0]).abs() < 0.0001);
+
         if is_stagnating {
             // Increase learning rate if stagnating
             self.learning_rate = (self.learning_rate * 1.1).min(self.initial_learning_rate * 2.0);
@@ -180,7 +195,7 @@ impl FannClassifier {
             // Decrease learning rate if not improving
             self.learning_rate = (self.learning_rate * 0.9).max(self.initial_learning_rate * 0.1);
         }
-        
+
         // Update network learning rate (if FANN API supports it)
         // self.network.set_learning_rate(self.learning_rate);
     }
@@ -244,10 +259,10 @@ impl std::fmt::Display for NetworkStats {
 impl Default for NetworkConfig {
     fn default() -> Self {
         Self {
-            input_size: 12,  // Enhanced feature vector size
-            hidden_layers: vec![16, 12, 8],  // Three hidden layers for better learning
-            output_size: 1,  // Single relevance score
-            learning_rate: 0.05,  // More conservative learning rate
+            input_size: 12,                 // Enhanced feature vector size
+            hidden_layers: vec![16, 12, 8], // Three hidden layers for better learning
+            output_size: 1,                 // Single relevance score
+            learning_rate: 0.05,            // More conservative learning rate
             activation_function: "sigmoid".to_string(),
         }
     }

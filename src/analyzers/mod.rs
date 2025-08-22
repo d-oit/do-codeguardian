@@ -1,13 +1,13 @@
+pub mod code_quality_analyzer;
+pub mod dependency_analyzer;
 pub mod integrity;
 pub mod lint_drift;
 pub mod non_production;
-pub mod dependency_analyzer;
+pub mod optimized_analyzer;
+pub mod optimized_patterns;
 pub mod performance_analyzer;
 pub mod security_analyzer;
 pub mod security_checks;
-pub mod code_quality_analyzer;
-pub mod optimized_patterns;
-pub mod optimized_analyzer;
 
 use crate::types::Finding;
 use anyhow::Result;
@@ -24,43 +24,49 @@ pub struct AnalyzerRegistry {
     analyzers: Vec<Box<dyn Analyzer + Send + Sync>>,
 }
 
+impl Default for AnalyzerRegistry {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl AnalyzerRegistry {
     pub fn new() -> Self {
         let mut registry = Self {
             analyzers: Vec::new(),
         };
-        
+
         // Register default analyzers
         registry.register(Box::new(integrity::IntegrityAnalyzer::new()));
         registry.register(Box::new(lint_drift::LintDriftAnalyzer::new()));
         registry.register(Box::new(non_production::NonProductionAnalyzer::new()));
-        
+
         // Register enhanced analyzers
         registry.register(Box::new(dependency_analyzer::DependencyAnalyzer::new()));
         registry.register(Box::new(performance_analyzer::PerformanceAnalyzer::new()));
         registry.register(Box::new(security_analyzer::SecurityAnalyzer::new()));
         registry.register(Box::new(code_quality_analyzer::CodeQualityAnalyzer::new()));
-        
+
         // Register optimized analyzer for high-performance analysis
         registry.register(Box::new(optimized_analyzer::OptimizedAnalyzer::new()));
-        
+
         registry
     }
-    
+
     pub fn register(&mut self, analyzer: Box<dyn Analyzer + Send + Sync>) {
         self.analyzers.push(analyzer);
     }
-    
+
     pub fn analyze_file(&self, file_path: &Path, content: &[u8]) -> Result<Vec<Finding>> {
         let mut all_findings = Vec::new();
-        
+
         for analyzer in &self.analyzers {
             if analyzer.supports_file(file_path) {
                 let findings = analyzer.analyze(file_path, content)?;
                 all_findings.extend(findings);
             }
         }
-        
+
         Ok(all_findings)
     }
 }

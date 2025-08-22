@@ -4,7 +4,7 @@ use crate::types::{Finding, Severity};
 use crate::utils::progress::ProgressReporter;
 use anyhow::Result;
 use clap::Args;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Arc;
 use std::time::Instant;
@@ -54,7 +54,7 @@ pub struct TurboArgs {
 
 pub async fn run_turbo_analysis(args: TurboArgs, _config: Config) -> Result<()> {
     let start_time = Instant::now();
-    
+
     // Initialize progress reporter
     let mut progress = ProgressReporter::new(true); // Always show progress for turbo mode
     progress.start_scan(1000); // Placeholder for total files
@@ -76,14 +76,14 @@ pub async fn run_turbo_analysis(args: TurboArgs, _config: Config) -> Result<()> 
     let _progress_counter = Arc::new(AtomicUsize::new(0));
     let progress_total = Arc::new(AtomicUsize::new(0));
     // Note: Progress callback simplified for now
-    
+
     // Progress callback simplified for initial implementation
 
     // Collect files efficiently
     progress.update("🔍 Discovering files...");
     let files = collect_files_optimized(&args).await?;
     let total_files = files.len();
-    
+
     progress_total.store(total_files, Ordering::Relaxed);
     progress.update(&format!("📁 Found {} files to analyze", total_files));
 
@@ -98,14 +98,14 @@ pub async fn run_turbo_analysis(args: TurboArgs, _config: Config) -> Result<()> 
     // Run high-performance batch analysis
     progress.update("⚡ Starting turbo analysis...");
     let file_refs: Vec<_> = files.iter().map(|p| p.as_path()).collect();
-    
+
     let results = engine.analyze_batch(file_refs, analyzer_fn).await?;
-    
+
     let total_duration = start_time.elapsed();
-    
+
     // Display results
     display_turbo_results(&results, &args, total_duration, total_files).await?;
-    
+
     progress.finish(&format!(
         "🎉 Turbo analysis complete! Processed {} files in {:.2}s",
         total_files,
@@ -117,9 +117,9 @@ pub async fn run_turbo_analysis(args: TurboArgs, _config: Config) -> Result<()> 
 
 async fn collect_files_optimized(args: &TurboArgs) -> Result<Vec<PathBuf>> {
     use crate::performance::LargeCodebaseIterator;
-    
+
     let mut all_files = Vec::new();
-    
+
     for path in &args.paths {
         if path.is_file() {
             // Check file size limit
@@ -130,13 +130,13 @@ async fn collect_files_optimized(args: &TurboArgs) -> Result<Vec<PathBuf>> {
                 }
             }
         } else if path.is_dir() {
-            let mut iterator = LargeCodebaseIterator::new(path)
-                .with_size_limit(args.max_file_size * 1024 * 1024);
-            
+            let mut iterator =
+                LargeCodebaseIterator::new(path).with_size_limit(args.max_file_size * 1024 * 1024);
+
             if args.max_files > 0 {
                 iterator = iterator.with_file_limit(args.max_files);
             }
-            
+
             let mut dir_files = iterator.collect_files()?;
             all_files.append(&mut dir_files);
         }
@@ -144,57 +144,75 @@ async fn collect_files_optimized(args: &TurboArgs) -> Result<Vec<PathBuf>> {
 
     // Filter for supported file types
     all_files.retain(|path| is_analyzable_file(path));
-    
+
     Ok(all_files)
 }
 
-fn is_analyzable_file(path: &PathBuf) -> bool {
+fn is_analyzable_file(path: &Path) -> bool {
     if let Some(ext) = path.extension().and_then(|e| e.to_str()) {
-        matches!(ext, 
-            "rs" | "js" | "jsx" | "ts" | "tsx" | "py" | "java" | 
-            "cpp" | "cc" | "cxx" | "c" | "go" | "php" | "rb" |
-            "json" | "toml" | "yaml" | "yml" | "md" | "txt"
+        matches!(
+            ext,
+            "rs" | "js"
+                | "jsx"
+                | "ts"
+                | "tsx"
+                | "py"
+                | "java"
+                | "cpp"
+                | "cc"
+                | "cxx"
+                | "c"
+                | "go"
+                | "php"
+                | "rb"
+                | "json"
+                | "toml"
+                | "yaml"
+                | "yml"
+                | "md"
+                | "txt"
         )
     } else {
         false
     }
 }
 
-fn create_turbo_analyzer(aggressive: bool) -> impl Fn(&std::path::Path, &[u8]) -> Result<Vec<Finding>> + Send + Sync + Clone {
+fn create_turbo_analyzer(
+    aggressive: bool,
+) -> impl Fn(&std::path::Path, &[u8]) -> Result<Vec<Finding>> + Send + Sync + Clone {
     move |path: &std::path::Path, content: &[u8]| -> Result<Vec<Finding>> {
         let mut findings = Vec::new();
         let content_str = String::from_utf8_lossy(content);
-        
+
         // High-speed pattern matching for common issues
         findings.extend(scan_security_patterns(&content_str, path, aggressive));
         findings.extend(scan_quality_patterns(&content_str, path, aggressive));
         findings.extend(scan_performance_patterns(&content_str, path, aggressive));
-        
+
         Ok(findings)
     }
 }
 
 fn scan_security_patterns(content: &str, path: &std::path::Path, aggressive: bool) -> Vec<Finding> {
     let mut findings = Vec::new();
-    
+
     // Fast regex-free pattern matching for performance
     for (line_num, line) in content.lines().enumerate() {
         let line_lower = line.to_lowercase();
-        
+
         // API keys and secrets (high-confidence patterns)
-        if line.contains("api_key") || line.contains("secret_key") || line.contains("password") {
-            if line.contains("=") && (line.contains("\"") || line.contains("'")) {
-                findings.push(Finding::new(
-                    "turbo-security",
-                    "POTENTIAL_SECRET",
-                    Severity::High,
-                    path.to_path_buf(),
-                    line_num as u32 + 1,
-                    "Potential secret or API key detected".to_string(),
-                ));
-            }
+        if (line.contains("api_key") || line.contains("secret_key") || line.contains("password"))
+            && line.contains("=") && (line.contains("\"") || line.contains("'")) {
+            findings.push(Finding::new(
+                "turbo-security",
+                "POTENTIAL_SECRET",
+                Severity::High,
+                path.to_path_buf(),
+                line_num as u32 + 1,
+                "Potential secret or API key detected".to_string(),
+            ));
         }
-        
+
         // SQL injection patterns
         if line_lower.contains("select") && line_lower.contains("from") && line.contains("+") {
             findings.push(Finding::new(
@@ -206,34 +224,33 @@ fn scan_security_patterns(content: &str, path: &std::path::Path, aggressive: boo
                 "Potential SQL injection vulnerability".to_string(),
             ));
         }
-        
+
         // Aggressive mode: additional patterns with higher false positive risk
-        if aggressive {
-            if line_lower.contains("eval(") || line_lower.contains("exec(") {
-                findings.push(Finding::new(
-                    "turbo-security",
-                    "DANGEROUS_FUNCTION",
-                    Severity::Medium,
-                    path.to_path_buf(),
-                    line_num as u32 + 1,
-                    "Use of potentially dangerous function".to_string(),
-                ));
-            }
+        if aggressive
+            && (line_lower.contains("eval(") || line_lower.contains("exec(")) {
+            findings.push(Finding::new(
+                "turbo-security",
+                "DANGEROUS_FUNCTION",
+                Severity::Medium,
+                path.to_path_buf(),
+                line_num as u32 + 1,
+                "Use of potentially dangerous function".to_string(),
+            ));
         }
     }
-    
+
     findings
 }
 
 fn scan_quality_patterns(content: &str, path: &std::path::Path, aggressive: bool) -> Vec<Finding> {
     let mut findings = Vec::new();
-    
+
     // Count complexity indicators
-    let complexity_indicators = content.matches("if ").count() + 
-                               content.matches("while ").count() + 
-                               content.matches("for ").count() + 
-                               content.matches("switch ").count();
-    
+    let complexity_indicators = content.matches("if ").count()
+        + content.matches("while ").count()
+        + content.matches("for ").count()
+        + content.matches("switch ").count();
+
     if complexity_indicators > 20 {
         findings.push(Finding::new(
             "turbo-quality",
@@ -241,20 +258,26 @@ fn scan_quality_patterns(content: &str, path: &std::path::Path, aggressive: bool
             Severity::Medium,
             path.to_path_buf(),
             1,
-            format!("High cyclomatic complexity detected ({} decision points)", complexity_indicators),
+            format!(
+                "High cyclomatic complexity detected ({} decision points)",
+                complexity_indicators
+            ),
         ));
     }
-    
+
     // TODO/FIXME patterns
     for (line_num, line) in content.lines().enumerate() {
         let line_upper = line.to_uppercase();
-        if line_upper.contains("TODO") || line_upper.contains("FIXME") || line_upper.contains("HACK") {
+        if line_upper.contains("TODO")
+            || line_upper.contains("FIXME")
+            || line_upper.contains("HACK")
+        {
             let severity = if line_upper.contains("FIXME") || line_upper.contains("HACK") {
                 Severity::Medium
             } else {
                 Severity::Low
             };
-            
+
             findings.push(Finding::new(
                 "turbo-quality",
                 "TODO_COMMENT",
@@ -264,14 +287,15 @@ fn scan_quality_patterns(content: &str, path: &std::path::Path, aggressive: bool
                 "TODO/FIXME comment found".to_string(),
             ));
         }
-        
+
         // Aggressive mode: magic numbers
         if aggressive && line.chars().any(|c| c.is_ascii_digit()) {
-            let numbers: Vec<&str> = line.split_whitespace()
+            let numbers: Vec<&str> = line
+                .split_whitespace()
                 .filter(|word| word.chars().all(|c| c.is_ascii_digit()))
                 .filter(|&num| num != "0" && num != "1" && num.len() > 2)
                 .collect();
-            
+
             if !numbers.is_empty() {
                 findings.push(Finding::new(
                     "turbo-quality",
@@ -284,20 +308,24 @@ fn scan_quality_patterns(content: &str, path: &std::path::Path, aggressive: bool
             }
         }
     }
-    
+
     findings
 }
 
-fn scan_performance_patterns(content: &str, path: &std::path::Path, _aggressive: bool) -> Vec<Finding> {
+fn scan_performance_patterns(
+    content: &str,
+    path: &std::path::Path,
+    _aggressive: bool,
+) -> Vec<Finding> {
     let mut findings = Vec::new();
-    
+
     // Nested loops detection
     let mut in_loop = false;
     let mut loop_depth: i32 = 0;
-    
+
     for (line_num, line) in content.lines().enumerate() {
         let line_trimmed = line.trim();
-        
+
         // Simple nested loop detection
         if line_trimmed.contains("for ") || line_trimmed.contains("while ") {
             if in_loop {
@@ -317,10 +345,12 @@ fn scan_performance_patterns(content: &str, path: &std::path::Path, _aggressive:
                 loop_depth = 1;
             }
         }
-        
+
         // String concatenation in loops
-        if in_loop && (line.contains(" + ") || line.contains("+=")) && 
-           (line.contains("String") || line.contains("str")) {
+        if in_loop
+            && (line.contains(" + ") || line.contains("+="))
+            && (line.contains("String") || line.contains("str"))
+        {
             findings.push(Finding::new(
                 "turbo-performance",
                 "STRING_CONCAT_LOOP",
@@ -330,7 +360,7 @@ fn scan_performance_patterns(content: &str, path: &std::path::Path, _aggressive:
                 "String concatenation in loop - consider using StringBuilder".to_string(),
             ));
         }
-        
+
         // Reset loop tracking on closing braces
         if line_trimmed.contains("}") && in_loop {
             loop_depth = loop_depth.saturating_sub(1);
@@ -339,7 +369,7 @@ fn scan_performance_patterns(content: &str, path: &std::path::Path, _aggressive:
             }
         }
     }
-    
+
     findings
 }
 
@@ -350,9 +380,9 @@ async fn display_turbo_results(
     total_files: usize,
 ) -> Result<()> {
     // Report generation simplified
-    
+
     let files_per_second = total_files as f64 / duration.as_secs_f64();
-    
+
     if args.metrics {
         println!("\n🚀 Turbo Analysis Metrics:");
         println!("  📁 Files analyzed: {}", total_files);
@@ -361,19 +391,19 @@ async fn display_turbo_results(
         println!("  ⚡ Speed: {:.1} files/second", files_per_second);
         println!("  🧠 Memory limit: {} MB", args.memory_limit);
         println!("  🔄 Max parallel: {}", args.max_parallel);
-        
+
         // Findings by severity
         let mut severity_counts = std::collections::HashMap::new();
         for finding in &results.findings {
             *severity_counts.entry(&finding.severity).or_insert(0) += 1;
         }
-        
+
         println!("\n📊 Findings by severity:");
         for (severity, count) in severity_counts {
             println!("  {:?}: {}", severity, count);
         }
     }
-    
+
     // Generate report
     match args.format.as_str() {
         "json" => {
@@ -385,7 +415,7 @@ async fn display_turbo_results(
                 println!("{}", json_output);
             }
         }
-        "human" | _ => {
+        _ => {
             let human_output = format!("Turbo Analysis Results\n======================\nFiles: {}\nFindings: {}\nDuration: {:.2}s", 
                 total_files, results.findings.len(), duration.as_secs_f64());
             if let Some(output_path) = &args.output {
@@ -396,6 +426,6 @@ async fn display_turbo_results(
             }
         }
     }
-    
+
     Ok(())
 }

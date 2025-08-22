@@ -49,27 +49,37 @@ pub async fn run(args: MetricsArgs) -> Result<()> {
 fn print_metrics_summary(metrics: &crate::ml::ModelMetrics) {
     println!("📊 ML Model Metrics Summary");
     println!("===========================");
-    
+
     // Training info
     let tm = &metrics.training_metrics;
-    println!("🎯 Training: {} examples, {:.6} error, {}ms", 
-        tm.dataset_size, tm.final_training_error, tm.training_duration_ms);
-    
+    println!(
+        "🎯 Training: {} examples, {:.6} error, {}ms",
+        tm.dataset_size, tm.final_training_error, tm.training_duration_ms
+    );
+
     // Inference performance
     let im = &metrics.inference_metrics;
     if im.total_predictions > 0 {
-        println!("⚡ Inference: {} predictions, {:.1}ms avg, {:.1}/sec", 
-            im.total_predictions, im.avg_inference_time_ms, im.predictions_per_second);
+        println!(
+            "⚡ Inference: {} predictions, {:.1}ms avg, {:.1}/sec",
+            im.total_predictions, im.avg_inference_time_ms, im.predictions_per_second
+        );
     }
-    
+
     // Classification accuracy
     let cm = &metrics.classification_metrics;
-    let total_classified = cm.true_positives + cm.false_positives + cm.true_negatives + cm.false_negatives;
+    let total_classified =
+        cm.true_positives + cm.false_positives + cm.true_negatives + cm.false_negatives;
     if total_classified > 0 {
-        println!("🎯 Accuracy: {:.1}% (P: {:.1}%, R: {:.1}%, F1: {:.1}%)", 
-            cm.accuracy * 100.0, cm.precision * 100.0, cm.recall * 100.0, cm.f1_score * 100.0);
+        println!(
+            "🎯 Accuracy: {:.1}% (P: {:.1}%, R: {:.1}%, F1: {:.1}%)",
+            cm.accuracy * 100.0,
+            cm.precision * 100.0,
+            cm.recall * 100.0,
+            cm.f1_score * 100.0
+        );
     }
-    
+
     // Alerts
     let alerts = &metrics.temporal_metrics.performance_alerts;
     if !alerts.is_empty() {

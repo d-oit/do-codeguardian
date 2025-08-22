@@ -17,25 +17,25 @@ impl Default for FeatureExtractor {
 impl FeatureExtractor {
     pub fn new() -> Self {
         let mut file_type_scores = HashMap::new();
-        
+
         // Higher scores = more likely to have real issues
-        file_type_scores.insert("rs".to_string(), 0.9);   // Rust - high confidence
-        file_type_scores.insert("js".to_string(), 0.7);   // JavaScript - medium-high
-        file_type_scores.insert("ts".to_string(), 0.8);   // TypeScript - high
-        file_type_scores.insert("py".to_string(), 0.8);   // Python - high
+        file_type_scores.insert("rs".to_string(), 0.9); // Rust - high confidence
+        file_type_scores.insert("js".to_string(), 0.7); // JavaScript - medium-high
+        file_type_scores.insert("ts".to_string(), 0.8); // TypeScript - high
+        file_type_scores.insert("py".to_string(), 0.8); // Python - high
         file_type_scores.insert("java".to_string(), 0.8); // Java - high
-        file_type_scores.insert("cpp".to_string(), 0.9);  // C++ - very high
-        file_type_scores.insert("c".to_string(), 0.9);    // C - very high
-        file_type_scores.insert("go".to_string(), 0.8);   // Go - high
+        file_type_scores.insert("cpp".to_string(), 0.9); // C++ - very high
+        file_type_scores.insert("c".to_string(), 0.9); // C - very high
+        file_type_scores.insert("go".to_string(), 0.8); // Go - high
         file_type_scores.insert("json".to_string(), 0.6); // Config files - medium
         file_type_scores.insert("yaml".to_string(), 0.6); // Config files - medium
         file_type_scores.insert("toml".to_string(), 0.6); // Config files - medium
-        file_type_scores.insert("md".to_string(), 0.3);   // Markdown - low
-        file_type_scores.insert("txt".to_string(), 0.2);  // Text - very low
+        file_type_scores.insert("md".to_string(), 0.3); // Markdown - low
+        file_type_scores.insert("txt".to_string(), 0.2); // Text - very low
 
         let mut analyzer_confidence = HashMap::new();
-        analyzer_confidence.insert("integrity".to_string(), 0.95);      // Very reliable
-        analyzer_confidence.insert("lint_drift".to_string(), 0.85);     // Reliable
+        analyzer_confidence.insert("integrity".to_string(), 0.95); // Very reliable
+        analyzer_confidence.insert("lint_drift".to_string(), 0.85); // Reliable
         analyzer_confidence.insert("non_production".to_string(), 0.75); // Good but some FPs
 
         Self {
@@ -64,10 +64,18 @@ impl FeatureExtractor {
         features.push(self.normalize_line_number(finding.line));
 
         // Feature 6: Has description (0.0 or 1.0)
-        features.push(if finding.description.is_some() { 1.0 } else { 0.0 });
+        features.push(if finding.description.is_some() {
+            1.0
+        } else {
+            0.0
+        });
 
         // Feature 7: Has suggestion (0.0 or 1.0)
-        features.push(if finding.suggestion.is_some() { 1.0 } else { 0.0 });
+        features.push(if finding.suggestion.is_some() {
+            1.0
+        } else {
+            0.0
+        });
 
         // Feature 8: Rule specificity (based on rule name length/complexity)
         features.push(self.rule_specificity_score(&finding.rule));
@@ -106,7 +114,10 @@ impl FeatureExtractor {
     }
 
     fn analyzer_confidence_score(&self, analyzer: &str) -> f32 {
-        self.analyzer_confidence.get(analyzer).copied().unwrap_or(0.5)
+        self.analyzer_confidence
+            .get(analyzer)
+            .copied()
+            .unwrap_or(0.5)
     }
 
     fn normalize_message_length(&self, message: &str) -> f32 {
@@ -130,7 +141,7 @@ impl FeatureExtractor {
         } else {
             0.5 // Generic rule names
         };
-        
+
         (length_score + specificity_score) / 2.0
     }
 
@@ -140,16 +151,22 @@ impl FeatureExtractor {
         let current_score = self.file_type_scores.get(extension).copied().unwrap_or(0.5);
         let adjustment = if is_reliable { 0.05 } else { -0.05 };
         let new_score = (current_score + adjustment).clamp(0.1, 0.9);
-        self.file_type_scores.insert(extension.to_string(), new_score);
+        self.file_type_scores
+            .insert(extension.to_string(), new_score);
     }
 
     /// Update analyzer confidence based on feedback
     #[allow(dead_code)]
     pub fn update_analyzer_confidence(&mut self, analyzer: &str, is_reliable: bool) {
-        let current_score = self.analyzer_confidence.get(analyzer).copied().unwrap_or(0.5);
+        let current_score = self
+            .analyzer_confidence
+            .get(analyzer)
+            .copied()
+            .unwrap_or(0.5);
         let adjustment = if is_reliable { 0.02 } else { -0.02 };
         let new_score = (current_score + adjustment).clamp(0.1, 0.95);
-        self.analyzer_confidence.insert(analyzer.to_string(), new_score);
+        self.analyzer_confidence
+            .insert(analyzer.to_string(), new_score);
     }
 
     /// Calculate message complexity using entropy
@@ -160,16 +177,21 @@ impl FeatureExtractor {
 
         let mut char_counts = std::collections::HashMap::new();
         let chars: Vec<char> = message.chars().collect();
-        
+
         for &ch in &chars {
             *char_counts.entry(ch).or_insert(0) += 1;
         }
 
         let len = chars.len() as f32;
-        let entropy: f32 = char_counts.values()
+        let entropy: f32 = char_counts
+            .values()
             .map(|&count| {
                 let p = count as f32 / len;
-                if p > 0.0 { -p * p.log2() } else { 0.0 }
+                if p > 0.0 {
+                    -p * p.log2()
+                } else {
+                    0.0
+                }
             })
             .sum();
 
@@ -195,11 +217,20 @@ impl FeatureExtractor {
         let rule_lower = rule.to_lowercase();
         let analyzer_lower = analyzer.to_lowercase();
 
-        if security_patterns.iter().any(|&p| rule_lower.contains(p) || analyzer_lower.contains(p)) {
+        if security_patterns
+            .iter()
+            .any(|&p| rule_lower.contains(p) || analyzer_lower.contains(p))
+        {
             0.9 // High confidence for security issues
-        } else if performance_patterns.iter().any(|&p| rule_lower.contains(p) || analyzer_lower.contains(p)) {
+        } else if performance_patterns
+            .iter()
+            .any(|&p| rule_lower.contains(p) || analyzer_lower.contains(p))
+        {
             0.7 // Medium-high confidence for performance issues
-        } else if quality_patterns.iter().any(|&p| rule_lower.contains(p) || analyzer_lower.contains(p)) {
+        } else if quality_patterns
+            .iter()
+            .any(|&p| rule_lower.contains(p) || analyzer_lower.contains(p))
+        {
             0.6 // Medium confidence for quality issues
         } else {
             0.5 // Default confidence
@@ -218,7 +249,10 @@ impl FeatureExtractor {
                 richness += 0.2;
             }
             // Bonus for technical terms
-            if desc.contains("vulnerability") || desc.contains("security") || desc.contains("performance") {
+            if desc.contains("vulnerability")
+                || desc.contains("security")
+                || desc.contains("performance")
+            {
                 richness += 0.1;
             }
         }
@@ -245,7 +279,7 @@ mod tests {
     #[test]
     fn test_feature_extraction() {
         let extractor = FeatureExtractor::new();
-        
+
         let finding = Finding::new(
             "integrity",
             "corrupted_binary",
@@ -258,7 +292,7 @@ mod tests {
         .with_suggestion("Verify file integrity".to_string());
 
         let features = extractor.extract_features(&finding).unwrap();
-        
+
         assert_eq!(features.len(), 12);
         assert!(features[0] > 0.7); // High severity
         assert!(features[1] > 0.8); // Rust file
@@ -274,7 +308,7 @@ mod tests {
     #[test]
     fn test_severity_scoring() {
         let extractor = FeatureExtractor::new();
-        
+
         assert_eq!(extractor.severity_to_score(&Severity::Critical), 1.0);
         assert_eq!(extractor.severity_to_score(&Severity::High), 0.8);
         assert_eq!(extractor.severity_to_score(&Severity::Medium), 0.6);

@@ -5,14 +5,14 @@ use tokio::fs;
 
 pub async fn run(args: InitArgs) -> Result<()> {
     let config_path = "codeguardian.toml";
-    
+
     // Check if config already exists
     if fs::metadata(config_path).await.is_ok() {
         println!("Configuration file already exists at {}", config_path);
         println!("Use --force to overwrite (not implemented yet)");
         return Ok(());
     }
-    
+
     // Create default configuration
     let config = if args.default {
         Config::default()
@@ -21,17 +21,17 @@ pub async fn run(args: InitArgs) -> Result<()> {
     } else {
         create_interactive_config().await?
     };
-    
+
     // Save configuration
     let toml_content = toml::to_string_pretty(&config)?;
     fs::write(config_path, toml_content).await?;
-    
+
     println!("✅ Created configuration file: {}", config_path);
     println!("\nNext steps:");
     println!("1. Review and customize the configuration");
     println!("2. Run: codeguardian check .");
     println!("3. Set up CI integration with GitHub Actions");
-    
+
     Ok(())
 }
 
@@ -51,34 +51,34 @@ fn create_from_template(template: &str) -> Result<Config> {
 async fn create_interactive_config() -> Result<Config> {
     println!("🚀 CodeGuardian Configuration Setup");
     println!("===================================\n");
-    
+
     use std::io::{self, Write};
-    
+
     // Helper function to read user input
     fn read_input(prompt: &str, default: &str) -> Result<String> {
         print!("{} [{}]: ", prompt, default);
         io::stdout().flush()?;
-        
+
         let mut input = String::new();
         io::stdin().read_line(&mut input)?;
         let input = input.trim();
-        
+
         if input.is_empty() {
             Ok(default.to_string())
         } else {
             Ok(input.to_string())
         }
     }
-    
+
     // Helper function to read yes/no input
     fn read_bool(prompt: &str, default: bool) -> Result<bool> {
         let default_str = if default { "y" } else { "n" };
         let input = read_input(&format!("{} (y/n)", prompt), default_str)?;
         Ok(input.to_lowercase().starts_with('y'))
     }
-    
+
     println!("This wizard will help you create a customized CodeGuardian configuration.\n");
-    
+
     // Project type selection
     println!("1. What type of project are you analyzing?");
     println!("   1) Rust project");
@@ -86,27 +86,27 @@ async fn create_interactive_config() -> Result<Config> {
     println!("   3) JavaScript/TypeScript project");
     println!("   4) Multi-language project");
     println!("   5) Other");
-    
+
     let project_type = read_input("Select project type", "4")?;
-    
+
     // Security focus
     let security_focused = read_bool("Is this a security-critical project?", false)?;
-    
+
     // CI usage
     let ci_usage = read_bool("Will this be used in CI/CD pipelines?", true)?;
-    
+
     // Performance preferences
     let max_file_size_mb = read_input("Maximum file size to analyze (MB)", "50")?
         .parse::<u64>()
         .unwrap_or(50);
-    
+
     let _max_depth = read_input("Maximum directory depth to scan", "15")?
         .parse::<u32>()
         .unwrap_or(15);
-    
+
     // Build configuration based on answers
     let mut config = Config::default();
-    
+
     // Adjust based on project type
     match project_type.as_str() {
         "1" => {
@@ -121,7 +121,7 @@ async fn create_interactive_config() -> Result<Config> {
                 ".rustfmt.toml".to_string(),
                 "rustfmt.toml".to_string(),
             ];
-        },
+        }
         "2" => {
             // Python project
             config.general.include_patterns = vec![
@@ -135,7 +135,7 @@ async fn create_interactive_config() -> Result<Config> {
                 "pyproject.toml".to_string(),
                 "setup.cfg".to_string(),
             ];
-        },
+        }
         "3" => {
             // JavaScript/TypeScript project
             config.general.include_patterns = vec![
@@ -151,19 +151,19 @@ async fn create_interactive_config() -> Result<Config> {
                 "tsconfig.json".to_string(),
                 ".prettierrc*".to_string(),
             ];
-        },
+        }
         _ => {
             // Multi-language or other - keep defaults
         }
     }
-    
+
     // Adjust for security focus
     if security_focused {
         // Security config is now properly structured
         config.security.check_secrets = true;
         config.security.check_unsafe_code = true;
         config.integrity.baseline_file = "security-baseline.json".to_string();
-        
+
         // Add security-focused patterns
         config.non_production.patterns.extend(vec![
             crate::config::NonProdPattern {
@@ -178,19 +178,19 @@ async fn create_interactive_config() -> Result<Config> {
             },
         ]);
     }
-    
+
     // Adjust for CI usage
     if ci_usage {
         config.performance.max_complexity = 15; // More lenient for CI
         config.performance.max_function_length = 200;
         config.lint_drift.baseline_file = "ci-baseline.json".to_string();
     }
-    
+
     // Apply user preferences
     config.general.max_file_size = max_file_size_mb * 1024 * 1024;
-    
+
     println!("\n✅ Configuration created successfully!");
     println!("📝 Review the generated codeguardian.toml file and customize as needed.");
-    
+
     Ok(config)
 }

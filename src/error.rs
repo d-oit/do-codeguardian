@@ -1,5 +1,5 @@
-use thiserror::Error;
 use std::path::PathBuf;
+use thiserror::Error;
 
 /// Result type alias for CodeGuardian operations
 #[allow(dead_code)]
@@ -41,10 +41,7 @@ pub enum GuardianError {
     /// Cryptographic errors
     #[error("Cryptographic operation failed: {message}")]
     #[allow(dead_code)]
-    Crypto {
-        message: String,
-        algorithm: String,
-    },
+    Crypto { message: String, algorithm: String },
 
     /// Memory allocation errors
     #[error("Memory allocation failed: {message}")]
@@ -65,10 +62,7 @@ pub enum GuardianError {
     /// Permission errors
     #[error("Permission denied: {message}")]
     #[allow(dead_code)]
-    Permission {
-        message: String,
-        path: PathBuf,
-    },
+    Permission { message: String, path: PathBuf },
 
     /// Validation errors
     #[error("Validation failed: {message}")]

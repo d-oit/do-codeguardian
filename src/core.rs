@@ -4,12 +4,18 @@ use crate::config::Config;
 use crate::ml::MLClassifier;
 use crate::streaming::StreamingAnalyzer;
 use crate::types::{AnalysisResults, Finding};
+use crate::utils::adaptive_parallelism::{AdaptiveParallelismController, SystemLoadMonitor};
 use crate::utils::progress::ProgressReporter;
-use crate::utils::security::{should_follow_path, canonicalize_path_safe};
+use crate::utils::security::{canonicalize_path_safe, should_follow_path};
 use anyhow::Result;
+use std::fmt::Write;
 use std::path::{Path, PathBuf};
-use std::sync::{Arc, Mutex};
+use std::sync::{
+    atomic::{AtomicUsize, Ordering},
+    Arc, Mutex,
+};
 use std::time::Instant;
+use tokio::fs;
 use walkdir::WalkDir;
 
 pub struct GuardianEngine {
@@ -20,6 +26,8 @@ pub struct GuardianEngine {
     streaming_analyzer: StreamingAnalyzer,
     ml_classifier: MLClassifier,
     stats: AnalysisStats,
+    parallelism_controller: Arc<AdaptiveParallelismController>,
+    load_monitor: Option<SystemLoadMonitor>,
 }
 
 impl GuardianEngine {
@@ -27,12 +35,29 @@ impl GuardianEngine {
         Self::new_with_ml(config, progress, None).await
     }
 
-    pub async fn new_with_ml(config: Config, progress: ProgressReporter, ml_model_path: Option<&str>) -> Result<Self> {
+    pub async fn new_with_ml(
+        config: Config,
+        progress: ProgressReporter,
+        ml_model_path: Option<&str>,
+    ) -> Result<Self> {
         let cache = Arc::new(Mutex::new(FileCache::load().await?));
-        
+
         // Initialize ML classifier with provided model path or default
         let ml_classifier = MLClassifier::new(ml_model_path.or(Some("codeguardian-model.fann")));
-        
+
+        // Initialize adaptive parallelism controller
+        let min_workers = 1;
+        let max_workers = config.general.parallel_workers;
+        let initial_workers = (max_workers / 2).max(1);
+        let parallelism_controller = Arc::new(AdaptiveParallelismController::new(
+            min_workers,
+            max_workers,
+            initial_workers,
+        ));
+
+        // Initialize load monitor
+        let load_monitor = Some(SystemLoadMonitor::new(Arc::clone(&parallelism_controller)));
+
         Ok(Self {
             config,
             analyzer_registry: AnalyzerRegistry::new(),
@@ -41,12 +66,14 @@ impl GuardianEngine {
             streaming_analyzer: StreamingAnalyzer::new(),
             ml_classifier,
             stats: AnalysisStats::new(),
+            parallelism_controller,
+            load_monitor,
         })
     }
 
     pub async fn get_all_files(&self, paths: &[PathBuf]) -> Result<Vec<PathBuf>> {
-        let mut all_files = Vec::new();
-        
+        let mut all_files = Vec::with_capacity(paths.len() * 2); // Estimate capacity
+
         for path in paths {
             if path.is_file() {
                 all_files.push(canonicalize_path_safe(path));
@@ -55,7 +82,7 @@ impl GuardianEngine {
                 all_files.extend(files);
             }
         }
-        
+
         Ok(all_files)
     }
 
@@ -68,8 +95,8 @@ impl GuardianEngine {
     }
 
     async fn scan_directory(&self, dir_path: &Path) -> Result<Vec<PathBuf>> {
-        let mut files = Vec::new();
-        
+        let mut files = Vec::with_capacity(100); // Estimate typical directory size
+
         for entry in WalkDir::new(dir_path)
             .follow_links(false) // Security: don't follow symlinks by default
             .into_iter()
@@ -77,12 +104,12 @@ impl GuardianEngine {
         {
             let entry = entry?;
             let path = entry.path();
-            
+
             if path.is_file() && self.should_analyze_file(path) {
                 files.push(canonicalize_path_safe(path));
             }
         }
-        
+
         Ok(files)
     }
 
@@ -94,212 +121,301 @@ impl GuardianEngine {
                 return false;
             }
         }
-        
+
         // Check file size limits (security: prevent processing huge files)
         if let Ok(metadata) = path.metadata() {
-            if metadata.len() > 10 * 1024 * 1024 { // 10MB limit
+            if metadata.len() > 10 * 1024 * 1024 { // TODO: Use shared constant
+                // 10MB limit
                 return false;
             }
         }
-        
+
         true
     }
 
-    pub async fn analyze_files(&mut self, files: &[PathBuf], parallel: usize) -> Result<AnalysisResults> {
+    pub async fn analyze_files(
+        &mut self,
+        files: &[PathBuf],
+        parallel: usize,
+    ) -> Result<AnalysisResults> {
         let start_time = Instant::now();
         let config_hash = self.compute_config_hash();
         let mut results = AnalysisResults::new(config_hash.clone());
-        
+
+        // Start load monitoring if available
+        if let Some(ref monitor) = self.load_monitor {
+            monitor.start_monitoring().await?;
+        }
+
         // Start progress reporting
         self.progress.start_scan(files.len());
-        
-        // Check cache for each file first
-        let (cached_files, uncached_files) = self.partition_cached_files(files, &config_hash).await?;
-        
-        // Add cached findings
-        for (file_path, cached_findings) in cached_files {
-            for finding in cached_findings {
-                results.add_finding(finding);
-            }
-            self.stats.cache_hits += 1;
-            self.progress.update(&format!("Cached: {}", file_path.display()));
-        }
-        
+
+        // Pre-allocate string buffer for progress messages
+        let mut progress_buffer = String::with_capacity(256);
+
+        // Handle cached files
+        self.process_cached_files(&mut results, files, &config_hash)
+            .await?;
+
+        // Process uncached files with adaptive parallelism
+        let uncached_files = self.get_uncached_files(files, &config_hash).await?;
         if !uncached_files.is_empty() {
-            // Determine parallelism
-            let num_workers = if parallel == 0 {
-                num_cpus::get().min(8) // Cap at 8 workers for memory efficiency
-            } else {
-                parallel.min(16) // Cap at 16 workers maximum
-            };
-            
-            // Process uncached files in parallel using rayon
-            let cache = Arc::clone(&self.cache);
-            let stats = Arc::new(std::sync::Mutex::new((0usize, 0usize))); // (cache_misses, errors)
-            
-            // Use controlled parallel processing with tokio tasks
-            // Split work into chunks to avoid thread safety issues with FANN
-            let chunk_size = (uncached_files.len() / num_workers).max(1);
-            let mut all_findings = Vec::new();
-            
-            for chunk in uncached_files.chunks(chunk_size) {
-                let chunk_findings: Vec<Finding> = chunk
-                    .iter()
-                    .map(|file_path| {
-                        self.progress.update(&format!("Analyzing: {}", file_path.display()));
-                        
-                        match self.analyze_single_file_optimized(
-                            file_path, 
-                            &self.analyzer_registry, 
-                            &self.streaming_analyzer,
-                            &config_hash
-                        ) {
-                            Ok(file_findings) => {
-                                // Cache the results (using blocking approach for simplicity)
-                                if let Ok(mut cache_guard) = cache.lock() {
-                                    let _ = tokio::task::block_in_place(|| {
-                                        tokio::runtime::Handle::current().block_on(
-                                            cache_guard.cache_findings(file_path, file_findings.clone(), &config_hash)
-                                        )
-                                    });
-                                }
-                                
-                                // Update stats thread-safely
-                                if let Ok(mut stats_guard) = stats.lock() {
-                                    stats_guard.0 += 1; // cache_misses
-                                }
-                                
-                                file_findings
-                            }
-                            Err(e) => {
-                                eprintln!("Error analyzing {}: {}", file_path.display(), e);
-                                
-                                // Update stats thread-safely
-                                if let Ok(mut stats_guard) = stats.lock() {
-                                    stats_guard.1 += 1; // errors
-                                }
-                                
-                                Vec::new()
-                            }
-                        }
-                    })
-                    .flatten()
-                    .collect();
-                
-                all_findings.extend(chunk_findings);
-            }
-            
-            // Update self.stats with the accumulated values
-            if let Ok(stats_guard) = stats.lock() {
-                self.stats.cache_misses += stats_guard.0;
-                self.stats.errors += stats_guard.1;
-            }
-            
-            // Apply ML filtering to collected findings
-            // (all_findings already contains the findings from the loop above)
-            
-            // Apply ML-based false positive reduction if enabled
-            let filtered_findings = self.ml_classifier.filter_findings(all_findings, 0.3)?; // 30% confidence threshold
-            
+            let filtered_findings = self
+                .process_uncached_files_adaptive(&uncached_files, parallel, &config_hash)
+                .await?;
+
+            // Add findings to results
             for finding in filtered_findings {
                 results.add_finding(finding);
             }
         }
-        
-        // Update summary
+
+        // Update summary and finalize
         results.summary.total_files_scanned = files.len();
         self.stats.total_duration = start_time.elapsed();
-        
-        // Save cache
-        if let Ok(cache_guard) = self.cache.lock() {
-            drop(cache_guard); // Release lock before await
-            // Note: Cache saving would need to be restructured for async
+
+        // Stop load monitoring
+        if let Some(ref monitor) = self.load_monitor {
+            monitor.stop_monitoring();
         }
-        
+
+        // Save cache with enhanced features
+        {
+            // Perform async operation and get stats in separate lock operations
+            {
+                #[allow(clippy::await_holding_lock, unused_mut)]
+                let mut cache_guard = self.cache.lock().unwrap();
+                cache_guard.auto_save().await?;
+            }
+
+            let stats = self.cache.lock().unwrap().performance_stats();
+            self.progress.update(&format!(
+                "Cache: {} entries, {} findings, {:.1}MB cached",
+                stats.total_entries,
+                stats.total_findings,
+                stats.total_cached_size as f64 / 1024.0 / 1024.0
+            ));
+        }
+
+        // Log adaptive parallelism metrics
+        let parallelism_metrics = self.parallelism_controller.metrics();
+        progress_buffer.clear();
+        write!(
+            progress_buffer,
+            "Adaptive parallelism: {} workers (load: {:.2})",
+            parallelism_metrics.current_workers, parallelism_metrics.current_load_score
+        )
+        .unwrap();
+        self.progress.update(&progress_buffer);
+
         // Finish progress reporting
-        self.progress.finish(&format!(
-            "Analyzed {} files ({} cached, {} new) in {:.2}s", 
+        progress_buffer.clear();
+        write!(
+            progress_buffer,
+            "Analyzed {} files ({} cached, {} new) in {:.2}s",
             files.len(),
-            self.stats.cache_hits,
-            self.stats.cache_misses,
+            self.stats.cache_hits.load(Ordering::Relaxed),
+            self.stats.cache_misses.load(Ordering::Relaxed),
             self.stats.total_duration.as_secs_f64()
-        ));
-        
+        )
+        .unwrap();
+        self.progress.finish(&progress_buffer);
+
         Ok(results)
     }
 
-    fn analyze_single_file_optimized(
-        &self, 
-        file_path: &Path, 
+    async fn process_cached_files(
+        &mut self,
+        results: &mut AnalysisResults,
+        files: &[PathBuf],
+        config_hash: &str,
+    ) -> Result<()> {
+        let (cached_files, _) = self.partition_cached_files(files, config_hash).await?;
+
+        for (file_path, cached_findings) in cached_files {
+            for finding in cached_findings {
+                results.add_finding(finding);
+            }
+            self.stats.cache_hits.fetch_add(1, Ordering::Relaxed);
+            self.progress
+                .update(&format!("Cached: {}", file_path.display()));
+        }
+        Ok(())
+    }
+
+    async fn get_uncached_files(
+        &self,
+        files: &[PathBuf],
+        config_hash: &str,
+    ) -> Result<Vec<PathBuf>> {
+        let (_, uncached_files) = self.partition_cached_files(files, config_hash).await?;
+        Ok(uncached_files)
+    }
+
+    async fn process_uncached_files_adaptive(
+        &mut self,
+        uncached_files: &[PathBuf],
+        _parallel: usize,
+        config_hash: &str,
+    ) -> Result<Vec<Finding>> {
+        let mut all_findings = Vec::with_capacity(uncached_files.len() * 5); // Estimate findings per file
+        let total_files = uncached_files.len();
+        let mut processed = 0;
+
+        // Process files with adaptive parallelism
+        while processed < total_files {
+            // Get current recommended worker count from adaptive controller
+            let current_workers = self.parallelism_controller.current_workers();
+            let batch_size = current_workers.min(total_files - processed);
+
+            // Process a batch of files
+            let batch_end = (processed + batch_size).min(total_files);
+            let batch = &uncached_files[processed..batch_end];
+
+            // Process batch concurrently
+            let batch_findings = self.process_file_batch(batch, config_hash).await?;
+            all_findings.extend(batch_findings);
+
+            processed = batch_end;
+
+            // Update progress
+            self.progress.update(&format!(
+                "Processed {}/{} files ({} workers active)",
+                processed, total_files, current_workers
+            ));
+
+            // Small delay to allow load monitoring to adjust
+            tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
+        }
+
+        // Apply ML-based false positive reduction if enabled
+        let filtered_findings = self.ml_classifier.filter_findings(all_findings, 0.3)?;
+
+        Ok(filtered_findings)
+    }
+
+    async fn process_file_batch(
+        &self,
+        files: &[PathBuf],
+        config_hash: &str,
+    ) -> Result<Vec<Finding>> {
+        let mut batch_findings = Vec::with_capacity(files.len() * 5); // Estimate findings per file
+
+        for file_path in files {
+            self.progress
+                .update(&format!("Analyzing: {}", file_path.display()));
+
+            match self
+                .analyze_single_file_optimized(
+                    file_path,
+                    &self.analyzer_registry,
+                    &self.streaming_analyzer,
+                    config_hash,
+                )
+                .await
+            {
+                Ok(findings) => {
+                    // Cache the results
+                    {
+                        // Perform async operation in a separate scope
+                        {
+                            #[allow(clippy::await_holding_lock, unused_mut)]
+                            let mut cache_guard = self.cache.lock().unwrap();
+                            cache_guard
+                                .cache_findings(file_path, findings.clone(), config_hash)
+                                .await?;
+                        }
+                    }
+
+                    self.stats.cache_misses.fetch_add(1, Ordering::Relaxed);
+                    batch_findings.extend(findings);
+                }
+                Err(e) => {
+                    eprintln!("Error analyzing {}: {}", file_path.display(), e);
+                    self.stats.errors.fetch_add(1, Ordering::Relaxed);
+                }
+            }
+        }
+
+        Ok(batch_findings)
+    }
+
+    async fn analyze_single_file_optimized(
+        &self,
+        file_path: &Path,
         analyzer_registry: &AnalyzerRegistry,
         streaming_analyzer: &StreamingAnalyzer,
-        _config_hash: &str
+        _config_hash: &str,
     ) -> Result<Vec<Finding>> {
         // Update progress
-        self.progress.update(&format!("Analyzing {}", file_path.display()));
-        
+        self.progress
+            .update(&format!("Analyzing {}", file_path.display()));
+
         // Check if we should use streaming analysis
         if StreamingAnalyzer::should_use_streaming(file_path) {
             // Use streaming analysis for large files
-            self.analyze_large_file_streaming(file_path, analyzer_registry, streaming_analyzer)
+            self.analyze_large_file_streaming_async(
+                file_path,
+                analyzer_registry,
+                streaming_analyzer,
+            )
+            .await
         } else {
             // Standard in-memory analysis for smaller files
-            let content = std::fs::read(file_path)?;
+            let content = fs::read(file_path).await?;
             analyzer_registry.analyze_file(file_path, &content)
         }
     }
-    
-    fn analyze_large_file_streaming(
+
+    async fn analyze_large_file_streaming_async(
         &self,
         file_path: &Path,
         analyzer_registry: &AnalyzerRegistry,
         _streaming_analyzer: &StreamingAnalyzer,
     ) -> Result<Vec<Finding>> {
-        // For now, fall back to chunked reading for large files
-        // In a full implementation, this would use the streaming analyzer
-        // with line-by-line or chunk-by-chunk processing
-        
-        use std::io::{BufRead, BufReader};
-        let file = std::fs::File::open(file_path)?;
+        // Use async streaming for large files to avoid blocking
+        use tokio::io::{AsyncBufReadExt, BufReader};
+        let file = fs::File::open(file_path).await?;
         let reader = BufReader::new(file);
+        let mut lines = reader.lines();
         let mut all_findings = Vec::new();
-        
+
         // Process file line by line to save memory
-        let mut line_buffer = String::new();
         let mut line_number = 1u32;
-        
-        for line_result in reader.lines() {
-            let line = line_result?;
-            line_buffer.clear();
-            line_buffer.push_str(&line);
-            line_buffer.push('\n');
-            
+
+        while let Some(line_result) = lines.next_line().await? {
+            let line = line_result;
+            let line_content = format!("{}\n", line);
+
             // Analyze this line
-            let line_findings = analyzer_registry.analyze_file(file_path, line_buffer.as_bytes())?;
+            let line_findings =
+                analyzer_registry.analyze_file(file_path, line_content.as_bytes())?;
             all_findings.extend(line_findings);
-            
+
             line_number += 1;
-            
-            // Yield occasionally for very large files
+
+            // Yield occasionally for very large files to prevent blocking
             if line_number % 10000 == 0 {
-                std::thread::yield_now();
+                tokio::task::yield_now().await;
             }
         }
-        
+
         Ok(all_findings)
     }
-    
+
     async fn partition_cached_files(
         &self,
         files: &[PathBuf],
         config_hash: &str,
     ) -> Result<(Vec<(PathBuf, Vec<Finding>)>, Vec<PathBuf>)> {
-        let mut cached_files = Vec::new();
-        let mut uncached_files = Vec::new();
-        
+        let mut cached_files = Vec::with_capacity(files.len() / 2); // Estimate half cached
+        let mut uncached_files = Vec::with_capacity(files.len() / 2); // Estimate half uncached
+
         if let Ok(cache_guard) = self.cache.lock() {
             for file_path in files {
-                if let Some(cached_findings) = cache_guard.get_cached_findings(file_path, config_hash) {
+                if let Some(cached_findings) =
+                    cache_guard.get_cached_findings(file_path, config_hash)
+                {
                     cached_files.push((file_path.clone(), cached_findings));
                 } else {
                     uncached_files.push(file_path.clone());
@@ -309,41 +425,56 @@ impl GuardianEngine {
             // If cache is locked, treat all files as uncached
             uncached_files.extend_from_slice(files);
         }
-        
+
         Ok((cached_files, uncached_files))
     }
 
     fn compute_config_hash(&self) -> String {
         use sha2::{Digest, Sha256};
-        
+
         // Serialize config and hash it
         let config_str = toml::to_string(&self.config).unwrap_or_default();
         let mut hasher = Sha256::new();
         hasher.update(config_str.as_bytes());
         format!("{:x}", hasher.finalize())[..16].to_string()
     }
+
+
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug)]
 pub struct AnalysisStats {
-    pub cache_hits: usize,
-    pub cache_misses: usize,
-    pub errors: usize,
+    pub cache_hits: AtomicUsize,
+    pub cache_misses: AtomicUsize,
+    pub errors: AtomicUsize,
     pub total_duration: std::time::Duration,
+}
+
+impl Default for AnalysisStats {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl AnalysisStats {
     pub fn new() -> Self {
-        Self::default()
+        Self {
+            cache_hits: AtomicUsize::new(0),
+            cache_misses: AtomicUsize::new(0),
+            errors: AtomicUsize::new(0),
+            total_duration: std::time::Duration::default(),
+        }
     }
-    
+
     #[allow(dead_code)]
     pub fn cache_hit_rate(&self) -> f64 {
-        let total = self.cache_hits + self.cache_misses;
+        let cache_hits = self.cache_hits.load(Ordering::Relaxed);
+        let cache_misses = self.cache_misses.load(Ordering::Relaxed);
+        let total = cache_hits + cache_misses;
         if total == 0 {
             0.0
         } else {
-            self.cache_hits as f64 / total as f64
+            cache_hits as f64 / total as f64
         }
     }
 }

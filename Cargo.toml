@@ -45,8 +45,8 @@ rayon = "1.10"
 # Time and date
 chrono = { version = "0.4", features = ["serde"] }
 
-# Regex
-regex = "1.11"
+# Regex with performance optimizations
+regex = { version = "1.11", features = ["perf", "std"] }
 
 # YAML parsing
 serde_yaml = "0.9"
@@ -69,6 +69,9 @@ fann = "0.1.8"
 
 # Random number generation for ML training
 rand = "0.8"
+
+# Compression for cache optimization
+flate2 = "1.0"
 
 [dev-dependencies]
 tempfile = "3.13"

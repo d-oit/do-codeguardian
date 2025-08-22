@@ -21,9 +21,9 @@ pub struct TrainingExample {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum FeedbackSource {
-    UserFeedback,      // Manual user classification
+    UserFeedback,       // Manual user classification
     AutomaticHeuristic, // Rule-based classification
-    ExpertReview,      // Security expert review
+    ExpertReview,       // Security expert review
 }
 
 impl Default for TrainingDataset {
@@ -71,7 +71,7 @@ impl TrainingDataset {
             feedback_source: source,
             timestamp: chrono::Utc::now(),
         };
-        
+
         self.add_example(example);
     }
 
@@ -102,17 +102,17 @@ impl TrainingDataset {
         // Balance the dataset
         let min_count = true_positives.len().min(false_positives.len());
         let mut balanced = Vec::new();
-        
+
         balanced.extend(true_positives.into_iter().take(min_count));
         balanced.extend(false_positives.into_iter().take(min_count));
-        
+
         balanced
     }
 
     /// Generate synthetic training data for cold start
     pub fn generate_synthetic_data(&mut self) -> Result<()> {
         // Generate examples based on common patterns
-        
+
         // High-confidence true positives
         self.add_synthetic_example(
             "integrity_critical_corruption",
@@ -157,7 +157,7 @@ impl TrainingDataset {
             feedback_source: FeedbackSource::AutomaticHeuristic,
             timestamp: chrono::Utc::now(),
         };
-        
+
         self.add_example(example);
     }
 
@@ -169,7 +169,9 @@ impl TrainingDataset {
 
         let mut source_counts = std::collections::HashMap::new();
         for example in &self.examples {
-            *source_counts.entry(format!("{:?}", example.feedback_source)).or_insert(0) += 1;
+            *source_counts
+                .entry(format!("{:?}", example.feedback_source))
+                .or_insert(0) += 1;
         }
 
         DatasetStats {
@@ -237,7 +239,7 @@ impl TrainingDataCollector {
     ) -> Result<()> {
         for (finding, is_true_positive) in findings {
             let features = self.feature_extractor.extract_features(finding)?;
-            
+
             self.dataset.add_feedback(
                 finding,
                 features,
@@ -245,7 +247,7 @@ impl TrainingDataCollector {
                 FeedbackSource::ExpertReview,
             );
         }
-        
+
         Ok(())
     }
 
@@ -254,7 +256,7 @@ impl TrainingDataCollector {
         for finding in findings {
             let features = self.feature_extractor.extract_features(finding)?;
             let is_true_positive = self.heuristic_classification(finding);
-            
+
             self.dataset.add_feedback(
                 finding,
                 features,
@@ -262,7 +264,7 @@ impl TrainingDataCollector {
                 FeedbackSource::AutomaticHeuristic,
             );
         }
-        
+
         Ok(())
     }
 
@@ -270,19 +272,22 @@ impl TrainingDataCollector {
     pub fn heuristic_classification(&self, finding: &Finding) -> bool {
         // High confidence true positives
         if matches!(finding.severity, Severity::Critical | Severity::High)
-            && (finding.analyzer == "integrity" || 
-               (finding.analyzer == "non_production" && finding.message.contains("secret"))) {
-                return true;
-            }
+            && (finding.analyzer == "integrity"
+                || (finding.analyzer == "non_production" && finding.message.contains("secret")))
+        {
+            return true;
+        }
 
         // High confidence false positives
-        if finding.message.to_lowercase().contains("todo") && 
-           finding.file.to_string_lossy().contains("test") {
+        if finding.message.to_lowercase().contains("todo")
+            && finding.file.to_string_lossy().contains("test")
+        {
             return false;
         }
 
-        if finding.message.to_lowercase().contains("debug") &&
-           finding.file.to_string_lossy().contains("dev") {
+        if finding.message.to_lowercase().contains("debug")
+            && finding.file.to_string_lossy().contains("dev")
+        {
             return false;
         }
 
@@ -302,11 +307,11 @@ mod tests {
     #[test]
     fn test_training_dataset() {
         let mut dataset = TrainingDataset::new();
-        
+
         // Add some examples
         dataset.add_synthetic_example("test1", vec![1.0, 0.8, 0.9], true);
         dataset.add_synthetic_example("test2", vec![0.2, 0.3, 0.1], false);
-        
+
         let pairs = dataset.get_training_pairs();
         assert_eq!(pairs.len(), 2);
         assert_eq!(pairs[0].1, 1.0); // True positive
@@ -316,7 +321,7 @@ mod tests {
     #[test]
     fn test_balanced_dataset() {
         let mut dataset = TrainingDataset::new();
-        
+
         // Add unbalanced data
         for i in 0..10 {
             dataset.add_synthetic_example(&format!("tp_{}", i), vec![0.8; 3], true);
@@ -324,10 +329,10 @@ mod tests {
         for i in 0..3 {
             dataset.add_synthetic_example(&format!("fp_{}", i), vec![0.2; 3], false);
         }
-        
+
         let balanced = dataset.get_balanced_training_pairs();
         assert_eq!(balanced.len(), 6); // 3 true + 3 false
-        
+
         let true_count = balanced.iter().filter(|(_, label)| *label > 0.5).count();
         let false_count = balanced.len() - true_count;
         assert_eq!(true_count, false_count);

@@ -21,18 +21,14 @@ pub mod error;
 pub mod github;
 pub mod github_api;
 pub mod ml;
+pub mod performance;
 pub mod report;
 pub mod streaming;
-pub mod performance;
 pub mod types;
 pub mod utils;
 
 // Re-export commonly used types
-pub use crate::{
-    config::Config,
-    core::GuardianEngine,
-    types::*,
-};
+pub use crate::{config::Config, core::GuardianEngine, types::*};
 
 /// Version information
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");

@@ -2,11 +2,11 @@ use clap::{Parser, Subcommand, ValueEnum};
 use std::path::PathBuf;
 
 pub mod check;
-pub mod report;
 pub mod gh_issue;
 pub mod init;
-pub mod train;
 pub mod metrics;
+pub mod report;
+pub mod train;
 pub mod turbo;
 
 #[derive(Parser)]
@@ -41,16 +41,16 @@ pub struct Cli {
 pub enum Commands {
     /// Run code analysis (primary command)
     Check(CheckArgs),
-    
+
     /// Convert results to different formats
     Report(ReportArgs),
-    
+
     /// Create or update GitHub issues
     GhIssue(GhIssueArgs),
-    
+
     /// Initialize configuration
     Init(InitArgs),
-    
+
     /// High-performance analysis for large codebases
     Turbo(turbo::TurboArgs),
 }

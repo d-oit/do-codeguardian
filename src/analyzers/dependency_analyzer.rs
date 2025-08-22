@@ -1,19 +1,27 @@
 use crate::analyzers::Analyzer;
 use crate::types::{Finding, Severity};
 use anyhow::Result;
+use once_cell::sync::Lazy;
 use regex::Regex;
-use std::path::Path;
 use std::collections::HashMap;
+use std::path::Path;
+
+// Lazy static regex patterns for optimal performance
+static OUTDATED_PATTERN: Lazy<Regex> =
+    Lazy::new(|| Regex::new(r#""([^"]+)":\s*"([^"]+)""#).unwrap());
+
+static DEV_DEPENDENCY_PATTERN: Lazy<Regex> =
+    Lazy::new(|| Regex::new(r"devDependencies|dev-dependencies").unwrap());
 
 /// Analyzer for dependency-related issues and security vulnerabilities
 pub struct DependencyAnalyzer {
     // Known vulnerable package patterns
     vulnerable_packages: HashMap<String, VulnerabilityInfo>,
-    // Patterns for detecting dependency issues
+    // Use static references to avoid recompilation overhead
     #[allow(dead_code)]
-    outdated_pattern: Regex,
+    outdated_pattern: &'static Regex,
     #[allow(dead_code)]
-    dev_dependency_pattern: Regex,
+    dev_dependency_pattern: &'static Regex,
 }
 
 #[derive(Debug, Clone)]
@@ -32,7 +40,7 @@ impl Default for DependencyAnalyzer {
 impl DependencyAnalyzer {
     pub fn new() -> Self {
         let mut vulnerable_packages = HashMap::new();
-        
+
         // Add some known vulnerable packages (this would typically be loaded from a database)
         vulnerable_packages.insert(
             "lodash".to_string(),
@@ -40,22 +48,22 @@ impl DependencyAnalyzer {
                 severity: Severity::High,
                 description: "Prototype pollution vulnerability in older versions".to_string(),
                 fixed_version: Some("4.17.21".to_string()),
-            }
+            },
         );
-        
+
         vulnerable_packages.insert(
             "serialize-javascript".to_string(),
             VulnerabilityInfo {
                 severity: Severity::Critical,
                 description: "XSS vulnerability in serialize-javascript".to_string(),
                 fixed_version: Some("3.1.0".to_string()),
-            }
+            },
         );
 
         Self {
             vulnerable_packages,
-            outdated_pattern: Regex::new(r#""([^"]+)":\s*"([^"]+)""#).unwrap(),
-            dev_dependency_pattern: Regex::new(r"devDependencies|dev-dependencies").unwrap(),
+            outdated_pattern: &OUTDATED_PATTERN,
+            dev_dependency_pattern: &DEV_DEPENDENCY_PATTERN,
         }
     }
 
@@ -70,7 +78,10 @@ impl DependencyAnalyzer {
             }
 
             // Check devDependencies
-            if let Some(dev_deps) = package_json.get("devDependencies").and_then(|d| d.as_object()) {
+            if let Some(dev_deps) = package_json
+                .get("devDependencies")
+                .and_then(|d| d.as_object())
+            {
                 findings.extend(self.check_dependencies(file_path, dev_deps, true)?);
             }
 
@@ -123,11 +134,14 @@ impl DependencyAnalyzer {
                     1,
                     format!("Vulnerable package detected: {}", package_name),
                 )
-                .with_description(format!("Package '{}' has known security vulnerabilities: {}", 
-                    package_name, vuln_info.description));
+                .with_description(format!(
+                    "Package '{}' has known security vulnerabilities: {}",
+                    package_name, vuln_info.description
+                ));
 
                 if let Some(fixed_version) = &vuln_info.fixed_version {
-                    finding = finding.with_suggestion(format!("Update to version {} or later", fixed_version));
+                    finding = finding
+                        .with_suggestion(format!("Update to version {} or later", fixed_version));
                 }
 
                 findings.push(finding);
@@ -151,7 +165,11 @@ impl DependencyAnalyzer {
                 }
 
                 // Check for pre-release versions in production dependencies
-                if !is_dev && (version_str.contains("alpha") || version_str.contains("beta") || version_str.contains("rc")) {
+                if !is_dev
+                    && (version_str.contains("alpha")
+                        || version_str.contains("beta")
+                        || version_str.contains("rc"))
+                {
                     findings.push(
                         Finding::new(
                             "dependency",
@@ -161,8 +179,13 @@ impl DependencyAnalyzer {
                             1,
                             format!("Pre-release dependency in production: {}", package_name),
                         )
-                        .with_description("Pre-release versions may be unstable for production use".to_string())
-                        .with_suggestion("Consider using stable releases for production dependencies".to_string())
+                        .with_description(
+                            "Pre-release versions may be unstable for production use".to_string(),
+                        )
+                        .with_suggestion(
+                            "Consider using stable releases for production dependencies"
+                                .to_string(),
+                        ),
                     );
                 }
             }
@@ -171,13 +194,20 @@ impl DependencyAnalyzer {
         Ok(findings)
     }
 
-    fn check_rust_dependencies(&self, file_path: &Path, deps: &toml::map::Map<String, toml::Value>) -> Result<Vec<Finding>> {
+    fn check_rust_dependencies(
+        &self,
+        file_path: &Path,
+        deps: &toml::map::Map<String, toml::Value>,
+    ) -> Result<Vec<Finding>> {
         let mut findings = Vec::new();
 
         for (package_name, version_spec) in deps {
             // Check for git dependencies without specific commits
             if let Some(table) = version_spec.as_table() {
-                if table.contains_key("git") && !table.contains_key("rev") && !table.contains_key("tag") {
+                if table.contains_key("git")
+                    && !table.contains_key("rev")
+                    && !table.contains_key("tag")
+                {
                     findings.push(
                         Finding::new(
                             "dependency",
@@ -187,8 +217,14 @@ impl DependencyAnalyzer {
                             1,
                             format!("Git dependency without pinned revision: {}", package_name),
                         )
-                        .with_description("Git dependencies should be pinned to specific commits or tags".to_string())
-                        .with_suggestion("Add 'rev' or 'tag' field to pin the dependency to a specific version".to_string())
+                        .with_description(
+                            "Git dependencies should be pinned to specific commits or tags"
+                                .to_string(),
+                        )
+                        .with_suggestion(
+                            "Add 'rev' or 'tag' field to pin the dependency to a specific version"
+                                .to_string(),
+                        ),
                     );
                 }
 
@@ -203,8 +239,13 @@ impl DependencyAnalyzer {
                             1,
                             format!("Path dependency detected: {}", package_name),
                         )
-                        .with_description("Path dependencies may not be available in all environments".to_string())
-                        .with_suggestion("Consider publishing to crates.io or use git dependencies".to_string())
+                        .with_description(
+                            "Path dependencies may not be available in all environments"
+                                .to_string(),
+                        )
+                        .with_suggestion(
+                            "Consider publishing to crates.io or use git dependencies".to_string(),
+                        ),
                     );
                 }
             }
@@ -213,7 +254,11 @@ impl DependencyAnalyzer {
         Ok(findings)
     }
 
-    fn check_security_fields(&self, file_path: &Path, package_json: &serde_json::Value) -> Result<Vec<Finding>> {
+    fn check_security_fields(
+        &self,
+        file_path: &Path,
+        package_json: &serde_json::Value,
+    ) -> Result<Vec<Finding>> {
         let mut findings = Vec::new();
 
         // Check for missing repository field
@@ -227,8 +272,12 @@ impl DependencyAnalyzer {
                     1,
                     "Missing repository field in package.json".to_string(),
                 )
-                .with_description("Repository field helps with security auditing and transparency".to_string())
-                .with_suggestion("Add repository field with your project's source code location".to_string())
+                .with_description(
+                    "Repository field helps with security auditing and transparency".to_string(),
+                )
+                .with_suggestion(
+                    "Add repository field with your project's source code location".to_string(),
+                ),
             );
         }
 
@@ -244,14 +293,18 @@ impl DependencyAnalyzer {
                     "Missing license field in package.json".to_string(),
                 )
                 .with_description("License field is important for legal compliance".to_string())
-                .with_suggestion("Add license field specifying your project's license".to_string())
+                .with_suggestion("Add license field specifying your project's license".to_string()),
             );
         }
 
         Ok(findings)
     }
 
-    fn check_rust_security_practices(&self, file_path: &Path, cargo_toml: &toml::Value) -> Result<Vec<Finding>> {
+    fn check_rust_security_practices(
+        &self,
+        file_path: &Path,
+        cargo_toml: &toml::Value,
+    ) -> Result<Vec<Finding>> {
         let mut findings = Vec::new();
 
         // Check for missing metadata
@@ -266,8 +319,12 @@ impl DependencyAnalyzer {
                         1,
                         "Missing license field in Cargo.toml".to_string(),
                     )
-                    .with_description("License field is required for publishing and legal compliance".to_string())
-                    .with_suggestion("Add license field or license-file to [package] section".to_string())
+                    .with_description(
+                        "License field is required for publishing and legal compliance".to_string(),
+                    )
+                    .with_suggestion(
+                        "Add license field or license-file to [package] section".to_string(),
+                    ),
                 );
             }
 
@@ -281,8 +338,11 @@ impl DependencyAnalyzer {
                         1,
                         "Missing repository field in Cargo.toml".to_string(),
                     )
-                    .with_description("Repository field helps with transparency and security auditing".to_string())
-                    .with_suggestion("Add repository field to [package] section".to_string())
+                    .with_description(
+                        "Repository field helps with transparency and security auditing"
+                            .to_string(),
+                    )
+                    .with_suggestion("Add repository field to [package] section".to_string()),
                 );
             }
         }
@@ -338,10 +398,9 @@ mod tests {
         }
         "#;
 
-        let findings = analyzer.analyze_package_json(
-            &PathBuf::from("package.json"),
-            package_json
-        ).unwrap();
+        let findings = analyzer
+            .analyze_package_json(&PathBuf::from("package.json"), package_json)
+            .unwrap();
 
         assert!(!findings.is_empty());
         assert!(findings.iter().any(|f| f.message.contains("lodash")));
@@ -359,10 +418,9 @@ mod tests {
         }
         "#;
 
-        let findings = analyzer.analyze_package_json(
-            &PathBuf::from("package.json"),
-            package_json
-        ).unwrap();
+        let findings = analyzer
+            .analyze_package_json(&PathBuf::from("package.json"), package_json)
+            .unwrap();
 
         assert!(findings.len() >= 2);
         assert!(findings.iter().any(|f| f.rule == "permissive_version"));

@@ -11,7 +11,7 @@ use tokio::fs;
 
 pub async fn run(args: CheckArgs) -> Result<()> {
     let start_time = Instant::now();
-    
+
     // Load configuration
     let config = Config::load(Path::new("codeguardian.toml")).unwrap_or_else(|_| {
         eprintln!("Warning: No configuration file found, using defaults");
@@ -22,7 +22,8 @@ pub async fn run(args: CheckArgs) -> Result<()> {
     let progress = ProgressReporter::new(!args.quiet && std::io::stdout().is_terminal());
 
     // Initialize the Guardian engine with optional ML model
-    let mut engine = GuardianEngine::new_with_ml(config, progress, args.ml_model.as_deref()).await?;
+    let mut engine =
+        GuardianEngine::new_with_ml(config, progress, args.ml_model.as_deref()).await?;
 
     // Determine files to scan
     let files_to_scan = if let Some(diff_spec) = &args.diff {
@@ -40,17 +41,17 @@ pub async fn run(args: CheckArgs) -> Result<()> {
 
     // Run analysis
     let mut results = engine.analyze_files(&files_to_scan, args.parallel).await?;
-    
+
     // Sort findings deterministically
     results.sort_findings();
-    
+
     // Update timing
     results.summary.scan_duration_ms = start_time.elapsed().as_millis() as u64;
 
     // Save JSON results (source of truth)
     let json_output = serde_json::to_string_pretty(&results)?;
     fs::write(&args.out, json_output).await?;
-    
+
     if !args.quiet {
         println!("Results saved to: {}", args.out.display());
     }
@@ -59,7 +60,7 @@ pub async fn run(args: CheckArgs) -> Result<()> {
     if let Some(md_path) = &args.emit_md {
         let markdown = crate::report::generate_markdown(&results)?;
         fs::write(md_path, markdown).await?;
-        
+
         if !args.quiet {
             println!("Markdown report saved to: {}", md_path.display());
         }
@@ -74,7 +75,8 @@ pub async fn run(args: CheckArgs) -> Result<()> {
                 &args.gh_mode,
                 &args.labels,
                 false, // dry_run
-            ).await?;
+            )
+            .await?;
         } else {
             eprintln!("Warning: --emit-gh specified but no --repo provided");
         }
@@ -99,13 +101,13 @@ fn print_summary(results: &AnalysisResults) {
     println!("Files scanned: {}", results.summary.total_files_scanned);
     println!("Total findings: {}", results.summary.total_findings);
     println!("Duration: {}ms", results.summary.scan_duration_ms);
-    
+
     if !results.summary.findings_by_severity.is_empty() {
         println!("\nFindings by severity:");
         for (severity, count) in &results.summary.findings_by_severity {
             let emoji = match severity {
                 crate::types::Severity::Critical => "🔴",
-                crate::types::Severity::High => "🟠", 
+                crate::types::Severity::High => "🟠",
                 crate::types::Severity::Medium => "🟡",
                 crate::types::Severity::Low => "🔵",
                 crate::types::Severity::Info => "ℹ️",

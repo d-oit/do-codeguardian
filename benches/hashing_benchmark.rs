@@ -2,7 +2,7 @@ use criterion::{black_box, criterion_group, criterion_main, Criterion};
 
 fn hash_benchmark(c: &mut Criterion) {
     let data = b"hello world";
-    
+
     c.bench_function("blake3 hash", |b| {
         b.iter(|| {
             let mut hasher = blake3::Hasher::new();
@@ -13,7 +13,7 @@ fn hash_benchmark(c: &mut Criterion) {
 
     c.bench_function("sha256 hash", |b| {
         b.iter(|| {
-            use sha2::{Sha256, Digest};
+            use sha2::{Digest, Sha256};
             let mut hasher = Sha256::new();
             hasher.update(black_box(data));
             hasher.finalize()
