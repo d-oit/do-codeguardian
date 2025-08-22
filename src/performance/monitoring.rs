@@ -1,12 +1,19 @@
-use std::time::{Duration, Instant};
+//! Performance monitoring and metrics collection
+//!
+//! This module provides comprehensive performance monitoring capabilities
+//! including metrics collection, alerting, and real-time dashboard functionality.
+
+#![allow(dead_code)]
+
 use std::sync::{Arc, Mutex};
-use std::collections::HashMap;
+use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
+
 use serde::{Deserialize, Serialize};
 
 /// Performance metrics for monitoring optimization effectiveness
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PerformanceMetrics {
-    pub timestamp: Instant,
+    pub timestamp_ms: u64,
     pub scan_duration: Duration,
     pub files_processed: usize,
     pub total_findings: usize,
@@ -20,7 +27,7 @@ pub struct PerformanceMetrics {
     pub adaptive_parallelism_stats: AdaptiveParallelismStats,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct MemoryPoolStats {
     pub string_buffers_active: usize,
     pub findings_vectors_active: usize,
@@ -34,17 +41,6 @@ pub struct AdaptiveParallelismStats {
     pub load_score: f64,
     pub adjustments_made: usize,
     pub avg_load_score: f64,
-}
-
-impl Default for MemoryPoolStats {
-    fn default() -> Self {
-        Self {
-            string_buffers_active: 0,
-            findings_vectors_active: 0,
-            total_allocations: 0,
-            total_deallocations: 0,
-        }
-    }
 }
 
 impl Default for AdaptiveParallelismStats {
@@ -68,7 +64,7 @@ pub struct PerformanceMonitor {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PerformanceAlert {
-    pub timestamp: Instant,
+    pub timestamp_ms: u64,
     pub alert_type: AlertType,
     pub message: String,
     pub severity: AlertSeverity,
@@ -106,8 +102,14 @@ impl PerformanceMonitor {
     }
 
     /// Record performance metrics
-    pub fn record_metrics(&self, metrics: PerformanceMetrics) {
+    pub fn record_metrics(&self, mut metrics: PerformanceMetrics) {
         let mut history = self.metrics_history.lock().unwrap();
+
+        // Set timestamp
+        metrics.timestamp_ms = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap_or_default()
+            .as_millis() as u64;
 
         // Add new metrics
         history.push(metrics);
@@ -129,10 +131,9 @@ impl PerformanceMonitor {
             return PerformanceSummary::default();
         }
 
-        let latest = &history[history.len() - 1];
-        let avg_scan_duration = history.iter()
-            .map(|m| m.scan_duration)
-            .sum::<Duration>() / history.len() as u32;
+        let _latest = &history[history.len() - 1];
+        let avg_scan_duration =
+            history.iter().map(|m| m.scan_duration).sum::<Duration>() / history.len() as u32;
 
         let avg_files_per_second = if !history.is_empty() {
             let total_files: usize = history.iter().map(|m| m.files_processed).sum();
@@ -159,8 +160,16 @@ impl PerformanceMonitor {
             average_scan_duration: avg_scan_duration,
             average_files_per_second: avg_files_per_second,
             average_cache_hit_rate: avg_cache_hit_rate,
-            peak_memory_usage: history.iter().map(|m| m.memory_usage_mb).max_by(|a, b| a.partial_cmp(b).unwrap()).unwrap_or(0.0),
-            peak_cpu_usage: history.iter().map(|m| m.cpu_usage_percent).max_by(|a, b| a.partial_cmp(b).unwrap()).unwrap_or(0.0),
+            peak_memory_usage: history
+                .iter()
+                .map(|m| m.memory_usage_mb)
+                .max_by(|a, b| a.partial_cmp(b).unwrap())
+                .unwrap_or(0.0),
+            peak_cpu_usage: history
+                .iter()
+                .map(|m| m.cpu_usage_percent)
+                .max_by(|a, b| a.partial_cmp(b).unwrap())
+                .unwrap_or(0.0),
             total_findings: history.iter().map(|m| m.total_findings).sum(),
             uptime: self.start_time.elapsed(),
         }
@@ -169,11 +178,7 @@ impl PerformanceMonitor {
     /// Get recent alerts
     pub fn get_recent_alerts(&self, limit: usize) -> Vec<PerformanceAlert> {
         let alerts = self.alerts.lock().unwrap();
-        alerts.iter()
-            .rev()
-            .take(limit)
-            .cloned()
-            .collect()
+        alerts.iter().rev().take(limit).cloned().collect()
     }
 
     /// Export metrics to JSON
@@ -186,7 +191,10 @@ impl PerformanceMonitor {
             summary,
             metrics: history.clone(),
             alerts: alerts.clone(),
-            export_timestamp: Instant::now(),
+            export_timestamp_ms: SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap_or_default()
+                .as_millis() as u64,
         };
 
         serde_json::to_string_pretty(&export_data)
@@ -201,9 +209,13 @@ impl PerformanceMonitor {
         let latest = &history[history.len() - 1];
 
         // Memory usage alert
-        if latest.memory_usage_mb > 1000.0 { // 1GB threshold
+        if latest.memory_usage_mb > 1000.0 {
+            // 1GB threshold
             self.add_alert(PerformanceAlert {
-                timestamp: Instant::now(),
+                timestamp_ms: SystemTime::now()
+                    .duration_since(UNIX_EPOCH)
+                    .unwrap_or_default()
+                    .as_millis() as u64,
                 alert_type: AlertType::HighMemoryUsage,
                 message: format!("High memory usage: {:.1}MB", latest.memory_usage_mb),
                 severity: AlertSeverity::High,
@@ -215,7 +227,10 @@ impl PerformanceMonitor {
         // CPU usage alert
         if latest.cpu_usage_percent > 90.0 {
             self.add_alert(PerformanceAlert {
-                timestamp: Instant::now(),
+                timestamp_ms: SystemTime::now()
+                    .duration_since(UNIX_EPOCH)
+                    .unwrap_or_default()
+                    .as_millis() as u64,
                 alert_type: AlertType::HighCpuUsage,
                 message: format!("High CPU usage: {:.1}%", latest.cpu_usage_percent),
                 severity: AlertSeverity::Medium,
@@ -227,7 +242,10 @@ impl PerformanceMonitor {
         // Slow scan performance alert
         if latest.scan_duration > Duration::from_secs(60) {
             self.add_alert(PerformanceAlert {
-                timestamp: Instant::now(),
+                timestamp_ms: SystemTime::now()
+                    .duration_since(UNIX_EPOCH)
+                    .unwrap_or_default()
+                    .as_millis() as u64,
                 alert_type: AlertType::SlowScanPerformance,
                 message: format!("Slow scan performance: {:?}", latest.scan_duration),
                 severity: AlertSeverity::Medium,
@@ -245,7 +263,10 @@ impl PerformanceMonitor {
 
         if cache_hit_rate < 0.5 && latest.files_processed > 10 {
             self.add_alert(PerformanceAlert {
-                timestamp: Instant::now(),
+                timestamp_ms: SystemTime::now()
+                    .duration_since(UNIX_EPOCH)
+                    .unwrap_or_default()
+                    .as_millis() as u64,
                 alert_type: AlertType::LowCacheHitRate,
                 message: format!("Low cache hit rate: {:.1}%", cache_hit_rate * 100.0),
                 severity: AlertSeverity::Low,
@@ -298,7 +319,7 @@ pub struct PerformanceExport {
     pub summary: PerformanceSummary,
     pub metrics: Vec<PerformanceMetrics>,
     pub alerts: Vec<PerformanceAlert>,
-    pub export_timestamp: Instant,
+    pub export_timestamp_ms: u64,
 }
 
 /// Performance dashboard for real-time monitoring
@@ -352,7 +373,10 @@ impl PerformanceDashboard {
         println!("Total Scans: {}", summary.total_scans);
         println!("Avg Scan Duration: {:?}", summary.average_scan_duration);
         println!("Avg Files/Second: {:.1}", summary.average_files_per_second);
-        println!("Avg Cache Hit Rate: {:.1}%", summary.average_cache_hit_rate * 100.0);
+        println!(
+            "Avg Cache Hit Rate: {:.1}%",
+            summary.average_cache_hit_rate * 100.0
+        );
         println!("Peak Memory Usage: {:.1}MB", summary.peak_memory_usage);
         println!("Peak CPU Usage: {:.1}%", summary.peak_cpu_usage);
         println!("Total Findings: {}", summary.total_findings);
@@ -381,4 +405,81 @@ pub fn create_performance_monitor() -> Arc<PerformanceMonitor> {
 /// Helper function to create a performance dashboard
 pub fn create_performance_dashboard(monitor: Arc<PerformanceMonitor>) -> PerformanceDashboard {
     PerformanceDashboard::new(monitor)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_performance_monitor() {
+        let monitor = PerformanceMonitor::new(10);
+
+        let metrics = PerformanceMetrics {
+            timestamp_ms: SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap_or_default()
+                .as_millis() as u64,
+            scan_duration: Duration::from_secs(5),
+            files_processed: 100,
+            total_findings: 50,
+            cache_hits: 80,
+            cache_misses: 20,
+            memory_usage_mb: 256.0,
+            cpu_usage_percent: 45.0,
+            parallel_workers: 4,
+            streaming_operations: 10,
+            memory_pool_stats: MemoryPoolStats::default(),
+            adaptive_parallelism_stats: AdaptiveParallelismStats::default(),
+        };
+
+        monitor.record_metrics(metrics);
+
+        let summary = monitor.get_performance_summary();
+        assert_eq!(summary.total_scans, 1);
+        assert_eq!(summary.total_findings, 50);
+        assert_eq!(summary.average_files_per_second, 20.0);
+    }
+
+    #[test]
+    fn test_performance_alerts() {
+        let monitor = PerformanceMonitor::new(10);
+
+        let metrics = PerformanceMetrics {
+            timestamp_ms: SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap_or_default()
+                .as_millis() as u64,
+            scan_duration: Duration::from_secs(120), // Over threshold
+            files_processed: 100,
+            total_findings: 50,
+            cache_hits: 80,
+            cache_misses: 20,
+            memory_usage_mb: 256.0,
+            cpu_usage_percent: 45.0,
+            parallel_workers: 4,
+            streaming_operations: 10,
+            memory_pool_stats: MemoryPoolStats::default(),
+            adaptive_parallelism_stats: AdaptiveParallelismStats::default(),
+        };
+
+        monitor.record_metrics(metrics);
+
+        let alerts = monitor.get_recent_alerts(10);
+        assert!(!alerts.is_empty());
+        assert!(matches!(
+            alerts[0].alert_type,
+            AlertType::SlowScanPerformance
+        ));
+    }
+
+    #[test]
+    fn test_performance_dashboard() {
+        let monitor = Arc::new(PerformanceMonitor::new(10));
+        let dashboard = PerformanceDashboard::new(monitor);
+
+        // Test that dashboard can be created and stopped
+        dashboard.stop();
+        assert!(!*dashboard.enabled.lock().unwrap());
+    }
 }

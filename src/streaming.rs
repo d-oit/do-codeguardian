@@ -137,15 +137,17 @@ impl StreamingAnalyzer {
         &self,
         file_path: &Path,
         mut analyzer_fn: F,
-        _config: StreamingConfig,
+        config: StreamingConfig,
     ) -> Result<Vec<Finding>>
     where
         F: FnMut(&str, usize) -> Result<Vec<Finding>>,
     {
         let file = File::open(file_path).await?;
-        let reader = AsyncBufReader::new(file);
+        let reader = AsyncBufReader::with_capacity(config.chunk_size, file);
         let mut lines = reader.lines();
-        let mut all_findings = Vec::with_capacity(1000); // Pre-allocate
+        // Use adaptive capacity based on file size estimate
+        let estimated_findings = (config.file_size / 100).min(10000) as usize;
+        let mut all_findings = Vec::with_capacity(estimated_findings);
         let mut line_number = 1;
         let mut processed_lines = 0;
 

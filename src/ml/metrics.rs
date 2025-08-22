@@ -1,8 +1,35 @@
+#![allow(dead_code)]
+
 use crate::types::{Finding, Severity};
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::collections::{HashMap, VecDeque};
 use std::time::{Duration, Instant};
+
+// Constants for ML convergence detection and thresholds
+const CONVERGENCE_LOSS_THRESHOLD: f64 = 1e-4; // Minimum loss improvement to consider convergence
+const CONVERGENCE_WINDOW_SIZE: usize = 5; // Number of epochs to check for stability
+const DEFAULT_CONFIDENCE_THRESHOLD: f32 = 0.3; // Default threshold for filtering findings
+const SLIDING_WINDOW_SIZE: usize = 1000; // Size of sliding window for real-time metrics
+const MIN_SAMPLES_FOR_P95: usize = 20; // Minimum samples needed for P95 calculation
+const P95_PERCENTILE: f32 = 0.95; // P95 percentile value
+const MIN_WINDOW_SIZE_TEMPORAL: usize = 10; // Minimum window size for temporal analysis
+const MAX_RECENT_RECORDS: usize = 100; // Maximum recent records for analysis
+const MIN_LABELED_RECORDS: usize = 5; // Minimum labeled records for accuracy calculation
+const MAX_DAILY_ACCURACY_DAYS: usize = 30; // Days to keep daily accuracy data
+const MAX_WEEKLY_THROUGHPUT_WEEKS: usize = 12; // Weeks to keep throughput data
+const ACCURACY_ALERT_THRESHOLD: f32 = 0.8; // Threshold for accuracy drop alerts
+const MIN_CLASSIFIED_SAMPLES: u64 = 100; // Minimum samples for accuracy alerts
+const LATENCY_ALERT_THRESHOLD_MS: f32 = 50.0; // Threshold for latency increase alerts
+const CONFIDENCE_CALIBRATION_RANGE: std::ops::RangeInclusive<f32> = 0.3..=0.9; // Acceptable confidence range
+const CONFIDENCE_CALIBRATION_TARGET: f32 = 0.5; // Target confidence for calibration
+const RECOMMENDATION_ACCURACY_THRESHOLD: f32 = 0.85; // Threshold for accuracy recommendations
+const RECOMMENDATION_FPR_THRESHOLD: f32 = 0.1; // Threshold for false positive rate recommendations
+const RECOMMENDATION_INFERENCE_TIME_THRESHOLD_MS: f32 = 20.0; // Threshold for inference time recommendations
+const BALANCE_RATIO_LOWER_THRESHOLD: f32 = 0.5; // Lower threshold for balance ratio
+const BALANCE_RATIO_UPPER_THRESHOLD: f32 = 2.0; // Upper threshold for balance ratio
+const RECOMMENDATION_CONFIDENCE_THRESHOLD: f32 = 0.6; // Threshold for confidence recommendations
+const CALIBRATION_BINS: usize = 10; // Number of bins for confidence calibration analysis
 
 /// Comprehensive ML model performance metrics
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -153,6 +180,78 @@ pub enum AlertSeverity {
     Critical,
 }
 
+/// Checks if the model has converged based on loss history.
+/// Returns `Ok(true)` if converged, `Ok(false)` if not, or an error if data is insufficient.
+pub fn check_convergence(loss_history: &VecDeque<f64>) -> Result<bool> {
+    if loss_history.len() < CONVERGENCE_WINDOW_SIZE {
+        return Err(anyhow::anyhow!(
+            "Insufficient loss history for convergence check. Need at least {} values, got {}",
+            CONVERGENCE_WINDOW_SIZE,
+            loss_history.len()
+        ));
+    }
+
+    // Calculate average loss change over the recent window
+    let recent_losses: Vec<f64> = loss_history
+        .iter()
+        .rev()
+        .take(CONVERGENCE_WINDOW_SIZE)
+        .cloned()
+        .collect();
+
+    let avg_change = recent_losses
+        .windows(2)
+        .map(|w| (w[1] - w[0]).abs()) // Absolute change between consecutive losses
+        .sum::<f64>()
+        / (CONVERGENCE_WINDOW_SIZE - 1) as f64;
+
+    // Check if change is below threshold
+    Ok(avg_change < CONVERGENCE_LOSS_THRESHOLD)
+}
+
+/// Advanced convergence detection using multiple criteria
+pub fn check_advanced_convergence(
+    loss_history: &VecDeque<f64>,
+    validation_history: &VecDeque<f64>,
+    patience: usize,
+) -> Result<bool> {
+    // Basic loss-based convergence
+    if !check_convergence(loss_history)? {
+        return Ok(false);
+    }
+
+    // Check if validation loss is also stable (if available)
+    if !validation_history.is_empty()
+        && validation_history.len() >= CONVERGENCE_WINDOW_SIZE
+        && !check_convergence(validation_history)?
+    {
+        return Ok(false);
+    }
+
+    // Check for early stopping patience
+    if loss_history.len() > patience {
+        let recent_losses: Vec<f64> = loss_history.iter().rev().take(patience).cloned().collect();
+        let min_recent_loss = recent_losses
+            .iter()
+            .cloned()
+            .min_by(|a, b| a.partial_cmp(b).unwrap())
+            .unwrap_or(f64::INFINITY);
+
+        let overall_min_loss = loss_history
+            .iter()
+            .cloned()
+            .min_by(|a, b| a.partial_cmp(b).unwrap())
+            .unwrap_or(f64::INFINITY);
+
+        // If no improvement in patience window, consider converged
+        if (overall_min_loss - min_recent_loss).abs() < CONVERGENCE_LOSS_THRESHOLD {
+            return Ok(true);
+        }
+    }
+
+    Ok(false)
+}
+
 /// Real-time metrics collector for ML model performance
 pub struct MetricsCollector {
     metrics: ModelMetrics,
@@ -161,7 +260,6 @@ pub struct MetricsCollector {
     start_time: Instant,
 
     // Sliding window for real-time metrics
-    window_size: usize,
     current_window: Vec<InferenceRecord>,
 }
 
@@ -193,7 +291,6 @@ impl MetricsCollector {
             inference_times: Vec::new(),
             predictions: Vec::new(),
             start_time: Instant::now(),
-            window_size: 1000,
             current_window: Vec::new(),
         }
     }
@@ -206,7 +303,7 @@ impl MetricsCollector {
         inference_time: Duration,
         actual_label: Option<bool>,
     ) {
-        let predicted_positive = confidence >= 0.5;
+        let predicted_positive = confidence >= CONFIDENCE_CALIBRATION_TARGET;
 
         // Add to sliding window
         let record = InferenceRecord {
@@ -221,7 +318,7 @@ impl MetricsCollector {
         self.current_window.push(record);
 
         // Maintain window size
-        if self.current_window.len() > self.window_size {
+        if self.current_window.len() > SLIDING_WINDOW_SIZE {
             self.current_window.remove(0);
         }
 
@@ -256,12 +353,51 @@ impl MetricsCollector {
             epochs_trained: epochs,
             final_training_error: final_error,
             training_duration_ms: duration.as_millis() as u64,
-            convergence_epoch: None, // TODO: Implement convergence detection
+            convergence_epoch: Some(epochs), // Assume convergence at final epoch if not specified
             input_features: architecture[0],
             hidden_layers: architecture[1..architecture.len() - 1].to_vec(),
             total_parameters: self.calculate_parameters(architecture),
             learning_rate,
         };
+    }
+
+    /// Record training completion with convergence detection
+    #[allow(dead_code)]
+    #[allow(clippy::too_many_arguments)]
+    pub fn record_training_with_convergence(
+        &mut self,
+        dataset_size: usize,
+        true_positives: usize,
+        false_positives: usize,
+        epochs: u32,
+        final_error: f32,
+        duration: Duration,
+        architecture: &[usize],
+        learning_rate: f32,
+        loss_history: &VecDeque<f64>,
+    ) -> Result<()> {
+        let convergence_epoch = if check_convergence(loss_history)? {
+            Some(epochs.saturating_sub(CONVERGENCE_WINDOW_SIZE as u32))
+        } else {
+            None
+        };
+
+        self.metrics.training_metrics = TrainingMetrics {
+            dataset_size,
+            true_positives,
+            false_positives,
+            balance_ratio: true_positives as f32 / false_positives.max(1) as f32,
+            epochs_trained: epochs,
+            final_training_error: final_error,
+            training_duration_ms: duration.as_millis() as u64,
+            convergence_epoch,
+            input_features: architecture[0],
+            hidden_layers: architecture[1..architecture.len() - 1].to_vec(),
+            total_parameters: self.calculate_parameters(architecture),
+            learning_rate,
+        };
+
+        Ok(())
     }
 
     /// Calculate model performance metrics
@@ -378,14 +514,14 @@ impl MetricsCollector {
         };
 
         // Calculate P95
-        if self.inference_times.len() >= 20 {
+        if self.inference_times.len() >= MIN_SAMPLES_FOR_P95 {
             let mut sorted_times: Vec<f32> = self
                 .inference_times
                 .iter()
                 .map(|d| d.as_secs_f32() * 1000.0)
                 .collect();
             sorted_times.sort_by(|a, b| a.partial_cmp(b).unwrap());
-            let p95_index = (sorted_times.len() as f32 * 0.95) as usize;
+            let p95_index = (sorted_times.len() as f32 * P95_PERCENTILE) as usize;
             im.p95_inference_time_ms = sorted_times[p95_index.min(sorted_times.len() - 1)];
         }
 
@@ -465,8 +601,7 @@ impl MetricsCollector {
             });
 
         severity_metrics.total_findings += 1;
-        if confidence < 0.3 {
-            // Assuming 0.3 is the filter threshold
+        if confidence < DEFAULT_CONFIDENCE_THRESHOLD {
             severity_metrics.filtered_findings += 1;
         }
         severity_metrics.filter_rate =
@@ -492,7 +627,7 @@ impl MetricsCollector {
             });
 
         analyzer_metrics.total_findings += 1;
-        if confidence < 0.3 {
+        if confidence < DEFAULT_CONFIDENCE_THRESHOLD {
             analyzer_metrics.filtered_findings += 1;
         }
         analyzer_metrics.filter_rate =
@@ -505,9 +640,9 @@ impl MetricsCollector {
 
     fn update_temporal_metrics(&mut self) {
         // Analyze recent inference records for temporal trends
-        if self.current_window.len() > 10 {
-            let recent_records =
-                &self.current_window[self.current_window.len().saturating_sub(100)..];
+        if self.current_window.len() > MIN_WINDOW_SIZE_TEMPORAL {
+            let recent_records = &self.current_window
+                [self.current_window.len().saturating_sub(MAX_RECENT_RECORDS)..];
 
             // Calculate recent accuracy if we have labeled data
             let labeled_records: Vec<_> = recent_records
@@ -515,7 +650,7 @@ impl MetricsCollector {
                 .filter(|r| r.actual_positive.is_some())
                 .collect();
 
-            if labeled_records.len() > 5 {
+            if labeled_records.len() > MIN_LABELED_RECORDS {
                 let correct_predictions = labeled_records
                     .iter()
                     .filter(|r| r.predicted_positive == r.actual_positive.unwrap())
@@ -529,8 +664,8 @@ impl MetricsCollector {
                     .daily_accuracy
                     .push((date_str, recent_accuracy));
 
-                // Keep only last 30 days
-                if self.metrics.temporal_metrics.daily_accuracy.len() > 30 {
+                // Keep only last configured days
+                if self.metrics.temporal_metrics.daily_accuracy.len() > MAX_DAILY_ACCURACY_DAYS {
                     self.metrics.temporal_metrics.daily_accuracy.remove(0);
                 }
             }
@@ -549,8 +684,10 @@ impl MetricsCollector {
                     .weekly_throughput
                     .push((week_str, throughput as u64));
 
-                // Keep only last 12 weeks
-                if self.metrics.temporal_metrics.weekly_throughput.len() > 12 {
+                // Keep only last configured weeks
+                if self.metrics.temporal_metrics.weekly_throughput.len()
+                    > MAX_WEEKLY_THROUGHPUT_WEEKS
+                {
                     self.metrics.temporal_metrics.weekly_throughput.remove(0);
                 }
             }
@@ -567,18 +704,18 @@ impl MetricsCollector {
         let avg_confidence = self.metrics.classification_metrics.avg_confidence;
 
         // Check for accuracy drops
-        if accuracy < 0.8 && total_classified > 100 {
+        if accuracy < ACCURACY_ALERT_THRESHOLD && total_classified > MIN_CLASSIFIED_SAMPLES {
             self.add_alert(
                 AlertType::AccuracyDrop,
                 AlertSeverity::Warning,
                 format!("Model accuracy dropped to {:.1}%", accuracy * 100.0),
                 accuracy,
-                0.8,
+                ACCURACY_ALERT_THRESHOLD,
             );
         }
 
         // Check for latency increases
-        if avg_inference_time > 50.0 {
+        if avg_inference_time > LATENCY_ALERT_THRESHOLD_MS {
             self.add_alert(
                 AlertType::LatencyIncrease,
                 AlertSeverity::Warning,
@@ -587,12 +724,12 @@ impl MetricsCollector {
                     avg_inference_time
                 ),
                 avg_inference_time,
-                50.0,
+                LATENCY_ALERT_THRESHOLD_MS,
             );
         }
 
         // Check for poor confidence calibration
-        if !(0.3..=0.9).contains(&avg_confidence) {
+        if !CONFIDENCE_CALIBRATION_RANGE.contains(&avg_confidence) {
             self.add_alert(
                 AlertType::ConfidenceCalibrationPoor,
                 AlertSeverity::Info,
@@ -601,7 +738,7 @@ impl MetricsCollector {
                     avg_confidence
                 ),
                 avg_confidence,
-                0.5,
+                CONFIDENCE_CALIBRATION_TARGET,
             );
         }
     }
@@ -641,23 +778,25 @@ impl MetricsCollector {
         let im = &self.metrics.inference_metrics;
         let tm = &self.metrics.training_metrics;
 
-        if cm.accuracy < 0.85 {
+        if cm.accuracy < RECOMMENDATION_ACCURACY_THRESHOLD {
             recommendations.push_str(
                 "  • Consider collecting more training data or rebalancing the dataset\n",
             );
         }
 
-        if cm.false_positive_rate > 0.1 {
+        if cm.false_positive_rate > RECOMMENDATION_FPR_THRESHOLD {
             recommendations
                 .push_str("  • Adjust confidence threshold to reduce false positive rate\n");
         }
 
-        if im.avg_inference_time_ms > 20.0 {
+        if im.avg_inference_time_ms > RECOMMENDATION_INFERENCE_TIME_THRESHOLD_MS {
             recommendations
                 .push_str("  • Consider model optimization or quantization for faster inference\n");
         }
 
-        if tm.balance_ratio < 0.5 || tm.balance_ratio > 2.0 {
+        if tm.balance_ratio < BALANCE_RATIO_LOWER_THRESHOLD
+            || tm.balance_ratio > BALANCE_RATIO_UPPER_THRESHOLD
+        {
             recommendations
                 .push_str("  • Rebalance training dataset for better model performance\n");
         }
@@ -666,7 +805,7 @@ impl MetricsCollector {
         if !self.predictions.is_empty() {
             let avg_confidence = self.predictions.iter().map(|(conf, _)| conf).sum::<f32>()
                 / self.predictions.len() as f32;
-            if avg_confidence < 0.6 {
+            if avg_confidence < RECOMMENDATION_CONFIDENCE_THRESHOLD {
                 recommendations.push_str(
                     "  • Model shows low confidence - consider retraining with more diverse data\n",
                 );
@@ -691,7 +830,7 @@ impl MetricsCollector {
 
         // Simple calibration analysis: how well do confidence scores match actual accuracy
         let mut calibration_error = 0.0;
-        let bins = 10;
+        let bins = CALIBRATION_BINS;
 
         for bin in 0..bins {
             let bin_start = bin as f32 / bins as f32;

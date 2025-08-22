@@ -1,7 +1,15 @@
+//! Adaptive parallelism utilities for performance optimization
+//!
+//! This module provides adaptive parallel processing capabilities that can
+//! dynamically adjust worker counts based on system load and resource availability.
+
+#![allow(dead_code)]
+
 use anyhow::Result;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
+use sysinfo::System;
 use tokio::time;
 
 /// System load metrics
@@ -266,33 +274,126 @@ impl SystemLoadMonitor {
     }
 
     async fn get_cpu_usage() -> f64 {
-        // Simplified CPU usage measurement
-        // In a real implementation, this would use system APIs like sysinfo or procfs
-        // For now, return a simulated value based on system load
-        let loadavg = Self::get_load_average().await;
-        (loadavg / num_cpus::get() as f64).clamp(0.0, 1.0)
+        tokio::task::spawn_blocking(|| {
+            let mut system = System::new_all();
+            system.refresh_all();
+
+            let total_usage: f64 = system.cpus().iter().map(|cpu| cpu.cpu_usage() as f64).sum();
+            let cpu_count = system.cpus().len() as f64;
+
+            if cpu_count > 0.0 {
+                (total_usage / cpu_count / 100.0).clamp(0.0, 1.0)
+            } else {
+                0.0
+            }
+        })
+        .await
+        .unwrap_or(0.0)
     }
 
     async fn get_memory_usage() -> f64 {
-        // Simplified memory usage measurement
-        // In a real implementation, this would use system APIs
-        // For now, return a conservative estimate
-        0.3 // Assume 30% memory usage
+        tokio::task::spawn_blocking(|| {
+            let mut system = System::new_all();
+            system.refresh_all();
+
+            let total_memory = system.total_memory() as f64;
+            let used_memory = system.used_memory() as f64;
+
+            if total_memory > 0.0 {
+                (used_memory / total_memory).clamp(0.0, 1.0)
+            } else {
+                0.0
+            }
+        })
+        .await
+        .unwrap_or(0.0)
     }
 
     async fn get_io_wait() -> f64 {
-        // Simplified I/O wait measurement
-        // In a real implementation, this would use system APIs
-        0.1 // Assume 10% I/O wait
+        tokio::task::spawn_blocking(|| {
+            let mut system = System::new_all();
+            system.refresh_all();
+
+            // Calculate I/O wait based on system load and process count
+            // This is a simplified approach - in production you might want more sophisticated I/O monitoring
+            let process_count = system.processes().len() as f64;
+            let load_avg = System::load_average().one;
+
+            // Estimate I/O wait based on load and process count
+            if process_count > 0.0 {
+                (load_avg / process_count * 0.1).clamp(0.0, 0.5)
+            } else {
+                0.0
+            }
+        })
+        .await
+        .unwrap_or(0.0)
     }
 
     async fn get_load_average() -> f64 {
-        // Get system load average
-        // In a real implementation, this would read from /proc/loadavg or similar
-        // For now, return a simulated value
-        let base_load = std::thread::available_parallelism()
-            .map(|p| p.get() as f64 * 0.5)
-            .unwrap_or(2.0);
-        base_load.min(8.0) // Cap at reasonable value
+        tokio::task::spawn_blocking(|| {
+            let mut system = System::new_all();
+            system.refresh_all();
+
+            // Get load average - sysinfo provides this on Unix systems
+            let load_avg = System::load_average();
+            load_avg.one // 1-minute load average
+        })
+        .await
+        .unwrap_or(0.0)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_system_load() {
+        let load = SystemLoad::new();
+        assert_eq!(load.cpu_usage, 0.0);
+        assert_eq!(load.memory_usage, 0.0);
+        assert_eq!(load.io_wait, 0.0);
+        assert_eq!(load.load_average, 0.0);
+
+        // Test load score calculation
+        let mut load = SystemLoad::new();
+        load.cpu_usage = 0.5;
+        load.memory_usage = 0.3;
+        load.io_wait = 0.2;
+        load.load_average = 2.0;
+
+        let score = load.load_score();
+        assert!(score > 0.0 && score <= 1.0);
+    }
+
+    #[test]
+    fn test_adaptive_parallelism_controller() {
+        let controller = AdaptiveParallelismController::new(1, 8, 4);
+
+        assert_eq!(controller.current_workers(), 4);
+        assert_eq!(controller.metrics().min_workers, 1);
+        assert_eq!(controller.metrics().max_workers, 8);
+
+        // Test setting workers
+        controller.set_workers(6);
+        assert_eq!(controller.current_workers(), 6);
+
+        // Test clamping
+        controller.set_workers(20);
+        assert_eq!(controller.current_workers(), 8);
+
+        controller.set_workers(0);
+        assert_eq!(controller.current_workers(), 1);
+    }
+
+    #[tokio::test]
+    async fn test_system_load_monitor() {
+        let controller = Arc::new(AdaptiveParallelismController::new(1, 8, 4));
+        let monitor = SystemLoadMonitor::new(controller);
+
+        // Test that we can start and stop monitoring
+        monitor.start_monitoring().await.unwrap();
+        monitor.stop_monitoring();
     }
 }

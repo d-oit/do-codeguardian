@@ -1,0 +1,46 @@
+{
+  "project": {
+    "name": "CodeGuardian",
+    "description": "A security-focused static analysis tool for Rust codebases",
+    "type": "rust",
+    "mainLanguage": "rust",
+    "features": [
+      "Security analysis",
+      "Performance monitoring",
+      "Code quality checks",
+      "Dependency analysis",
+      "ML-based false positive filtering"
+    ]
+  },
+  "documentation": {
+    "autoUpdate": true,
+    "includeApiDocs": true,
+    "includePerformanceDocs": true,
+    "includeSecurityDocs": true,
+    "outputFormat": "markdown"
+  },
+  "analysis": {
+    "focusAreas": [
+      "Security vulnerabilities",
+      "Performance bottlenecks",
+      "Code quality issues",
+      "Dependency risks"
+    ],
+    "excludePatterns": [
+      "target/",
+      ".git/",
+      "node_modules/",
+      "*.lock"
+    ]
+  },
+  "agents": {
+    "documentation": {
+      "enabled": true,
+      "auto_activate": true
+    },
+    "development": {
+      "enabled": true,
+      "auto_activate": false
+    }
+  }
+}

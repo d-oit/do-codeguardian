@@ -202,7 +202,9 @@ fn scan_security_patterns(content: &str, path: &std::path::Path, aggressive: boo
 
         // API keys and secrets (high-confidence patterns)
         if (line.contains("api_key") || line.contains("secret_key") || line.contains("password"))
-            && line.contains("=") && (line.contains("\"") || line.contains("'")) {
+            && line.contains("=")
+            && (line.contains("\"") || line.contains("'"))
+        {
             findings.push(Finding::new(
                 "turbo-security",
                 "POTENTIAL_SECRET",
@@ -226,8 +228,7 @@ fn scan_security_patterns(content: &str, path: &std::path::Path, aggressive: boo
         }
 
         // Aggressive mode: additional patterns with higher false positive risk
-        if aggressive
-            && (line_lower.contains("eval(") || line_lower.contains("exec(")) {
+        if aggressive && (line_lower.contains("eval(") || line_lower.contains("exec(")) {
             findings.push(Finding::new(
                 "turbo-security",
                 "DANGEROUS_FUNCTION",

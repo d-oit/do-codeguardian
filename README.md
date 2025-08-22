@@ -27,6 +27,12 @@ A security-first code analysis CLI with GitHub integration, built with best-prac
 - **Online learning** - improves from user feedback automatically
 - **Zero-config ML** - works out of the box, no setup required
 
+### 📚 **Automatic Documentation** (NEW!)
+- **AI-powered docs** - Uses [opencode](https://opencode.ai) for intelligent documentation updates
+- **Pre-commit automation** - Documentation updates automatically before each commit
+- **Comprehensive coverage** - README, API docs, performance docs, and security docs
+- **Zero-config setup** - Works out of the box with simple installation
+
 ## Quick Start
 
 ### Installation
@@ -78,6 +84,51 @@ codeguardian check . \
   --repo $GITHUB_REPOSITORY \
   --fail-on-issues
 ```
+
+## Automatic Documentation
+
+CodeGuardian includes automatic documentation updates using [opencode](https://opencode.ai), an AI coding agent that keeps your project documentation current.
+
+### Setup
+
+1. **Install opencode**:
+   ```bash
+   curl -fsSL https://opencode.ai/install | bash
+   ```
+
+2. **Configure authentication**:
+   ```bash
+   opencode auth login
+   ```
+   Select your preferred LLM provider (Anthropic recommended).
+
+3. **Initialize for your project**:
+   ```bash
+   bash scripts/setup-opencode.sh
+   ```
+
+### How It Works
+
+- **Pre-commit hook**: Automatically runs before each git commit
+- **Smart analysis**: Uses AI to understand your codebase and update documentation
+- **Multiple doc types**: Updates README, API docs, performance docs, and security docs
+- **Review changes**: You can see and modify documentation updates before committing
+
+### Manual Usage
+
+You can also update documentation manually:
+
+```bash
+# Update all documentation
+bash scripts/update-docs.sh
+
+# Setup or reconfigure opencode
+bash scripts/setup-opencode.sh
+```
+
+### Documentation
+
+For detailed information about the automatic documentation system, see [docs/AUTOMATIC_DOCUMENTATION.md](docs/AUTOMATIC_DOCUMENTATION.md).
 
 ## Commands
 

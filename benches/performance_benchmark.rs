@@ -232,22 +232,9 @@ fn bench_configuration_operations(c: &mut Criterion) {
             black_box(PerformanceConfig::default());
         });
     });
-
-    c.bench_function("performance_config_validation", |b| {
-        let config = PerformanceConfig::default();
-        b.iter(|| {
-            black_box(config.validate().unwrap());
-        });
-    });
-
-    c.bench_function("performance_config_adaptive", |b| {
-        b.iter(|| {
-            black_box(PerformanceConfig::adaptive(1000, 500));
-        });
-    });
 }
 
-/// Benchmark full engine operations
+/// Benchmark full engine operations with baselines and regression detection
 fn bench_full_engine_operations(c: &mut Criterion) {
     let rt = Runtime::new().unwrap();
     let test_files = generate_test_files();
@@ -267,7 +254,7 @@ fn bench_full_engine_operations(c: &mut Criterion) {
 
     c.bench_function("guardian_engine_analyze_small_files", |b| {
         let config = Config::minimal();
-        let engine = rt.block_on(async {
+        let mut engine = rt.block_on(async {
             GuardianEngine::new_with_ml(config, Default::default(), None)
                 .await
                 .unwrap()
@@ -286,6 +273,102 @@ fn bench_full_engine_operations(c: &mut Criterion) {
             });
         });
     });
+
+    // Baseline comparison: Sequential vs Parallel analysis
+    let mut group = c.benchmark_group("analysis_performance_comparison");
+    group.bench_function("baseline_sequential_analysis", |b| {
+        let config = Config::minimal();
+        let mut engine = rt.block_on(async {
+            GuardianEngine::new_with_ml(config, Default::default(), None)
+                .await
+                .unwrap()
+        });
+
+        let file_paths: Vec<PathBuf> = test_files
+            .iter()
+            .take(3)
+            .map(|(file, _, _)| file.path().to_path_buf())
+            .collect();
+
+        b.iter(|| {
+            rt.block_on(async {
+                // Force sequential processing by setting parallelism to 1
+                let result = engine.analyze_files(&file_paths, 1).await;
+                black_box(result.unwrap());
+            });
+        });
+    });
+
+    group.bench_function("optimized_parallel_analysis", |b| {
+        let config = Config::minimal();
+        let mut engine = rt.block_on(async {
+            GuardianEngine::new_with_ml(config, Default::default(), None)
+                .await
+                .unwrap()
+        });
+
+        let file_paths: Vec<PathBuf> = test_files
+            .iter()
+            .take(3)
+            .map(|(file, _, _)| file.path().to_path_buf())
+            .collect();
+
+        b.iter(|| {
+            rt.block_on(async {
+                // Use adaptive parallelism (should be 2x+ faster)
+                let result = engine.analyze_files(&file_paths, 4).await;
+                black_box(result.unwrap());
+            });
+        });
+    });
+    group.finish();
+
+    // Memory usage benchmark with regression detection
+    c.bench_function("memory_usage_during_analysis", |b| {
+        let config = Config::minimal();
+        let mut engine = rt.block_on(async {
+            GuardianEngine::new_with_ml(config, Default::default(), None)
+                .await
+                .unwrap()
+        });
+
+        let file_paths: Vec<PathBuf> = test_files
+            .iter()
+            .take(4) // Include larger files for memory stress
+            .map(|(file, _, _)| file.path().to_path_buf())
+            .collect();
+
+        b.iter(|| {
+            rt.block_on(async {
+                // Measure peak memory usage during analysis
+                let start_mem = get_current_memory_usage().unwrap_or(0);
+                let result = engine.analyze_files(&file_paths, 4).await;
+                let end_mem = get_current_memory_usage().unwrap_or(0);
+
+                // Ensure we don't exceed reasonable memory limits (regression test)
+                assert!(
+                    end_mem - start_mem < 100 * 1024 * 1024, // 100MB limit
+                    "Memory usage regression detected: {} bytes",
+                    end_mem - start_mem
+                );
+
+                black_box(result.unwrap());
+            });
+        });
+    });
+}
+
+/// Helper function to get current memory usage (approximate)
+fn get_current_memory_usage() -> anyhow::Result<u64> {
+    // Use sysinfo for memory tracking (already in dependencies)
+    let mut system = sysinfo::System::new_all();
+    system.refresh_all();
+
+    let process = system
+        .process(sysinfo::Pid::from(std::process::id() as usize))
+        .ok_or_else(|| anyhow::anyhow!("Could not find current process"))?;
+
+    Ok(process.memory())
 }
 
 criterion_group!(

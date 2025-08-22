@@ -72,6 +72,7 @@ rand = "0.8"
 
 # Compression for cache optimization
 flate2 = "1.0"
+sysinfo = "0.37.0"
 
 [dev-dependencies]
 tempfile = "3.13"
@@ -85,4 +86,8 @@ harness = false
 
 [[bench]]
 name = "scanning_benchmark"
+harness = false
+
+[[bench]]
+name = "optimization_benchmarks"
 harness = false

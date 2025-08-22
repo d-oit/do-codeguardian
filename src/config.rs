@@ -8,6 +8,7 @@ pub mod performance;
 // Constants for default configuration values
 const KB: u64 = 1024;
 const MB: u64 = KB * 1024;
+#[allow(dead_code)]
 const GB: u64 = MB * 1024;
 
 const DEFAULT_MAX_FILE_SIZE: u64 = 5 * MB; // 5MB

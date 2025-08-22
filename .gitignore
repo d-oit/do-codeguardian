@@ -42,3 +42,5 @@ examples/codeguardian.toml
 
 # Ignore notebooks (if any)
 *.ipynb
+test_performance/
+.codeguardian-cache.json.gz

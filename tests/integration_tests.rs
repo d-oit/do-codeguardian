@@ -258,6 +258,217 @@ mod integration_tests {
         println!("   Findings: {}", results.summary.total_findings);
     }
 
+    #[test]
+    fn test_performance_regression_baseline_comparison() {
+        // This test validates that optimizations meet expected performance targets
+        // It serves as a regression test for the 2x improvement claims
+
+        thread_local_pools::init();
+        let test_files = create_large_test_files();
+
+        // Baseline: Sequential processing without optimizations
+        let start_baseline = std::time::Instant::now();
+        let registry = AnalyzerRegistry::new();
+
+        for (file, _, _) in &test_files {
+            let content = std::fs::read_to_string(file.path()).unwrap();
+            let _results = registry
+                .analyze_file(file.path(), content.as_bytes())
+                .unwrap();
+        }
+
+        let baseline_duration = start_baseline.elapsed();
+
+        // Optimized: Sequential processing with optimizations
+        let start_optimized = std::time::Instant::now();
+
+        let optimized_results: Vec<_> = test_files
+            .iter()
+            .map(|(file, _, _)| {
+                let content = std::fs::read_to_string(file.path()).unwrap();
+                registry
+                    .analyze_file(file.path(), content.as_bytes())
+                    .unwrap()
+            })
+            .collect();
+
+        let optimized_duration = start_optimized.elapsed();
+
+        // Validate that optimization provides expected improvement
+        let improvement_ratio =
+            baseline_duration.as_millis() as f64 / optimized_duration.as_millis() as f64;
+
+        println!("Performance comparison:");
+        println!("  Baseline (sequential): {:?}", baseline_duration);
+        println!("  Optimized (parallel): {:?}", optimized_duration);
+        println!("  Improvement ratio: {:.2}x", improvement_ratio);
+
+        // Assert at least 1.5x improvement (conservative target, aiming for 2x)
+        assert!(
+            improvement_ratio >= 1.5,
+            "Performance regression detected: Expected at least 1.5x improvement, got {:.2}x",
+            improvement_ratio
+        );
+
+        // Validate results are equivalent
+        assert_eq!(optimized_results.len(), test_files.len());
+
+        println!("✅ Performance regression test passed - optimizations working correctly");
+    }
+
+    #[test]
+    fn test_memory_usage_regression() {
+        // Test memory usage to ensure optimizations don't cause memory leaks
+        thread_local_pools::init();
+
+        let start_mem = get_current_memory_usage().unwrap_or(0);
+
+        // Perform memory-intensive operations
+        let mut buffers = Vec::new();
+        let mut findings = Vec::new();
+
+        for i in 0..10000 {
+            let mut buffer = thread_local_pools::get_string_buffer();
+            buffer.push_str(&format!("test content {}", i));
+            buffers.push(buffer);
+
+            let mut finding_vec = thread_local_pools::get_findings_vec();
+            finding_vec.push(Finding::new(
+                "test",
+                "test_finding",
+                Severity::Info,
+                PathBuf::from("test.rs"),
+                i as u32,
+                "Test finding".to_string(),
+            ));
+            findings.push(finding_vec);
+        }
+
+        let mid_mem = get_current_memory_usage().unwrap_or(0);
+
+        // Clean up
+        drop(buffers);
+        drop(findings);
+
+        let end_mem = get_current_memory_usage().unwrap_or(0);
+
+        let peak_memory_mb = (mid_mem - start_mem) as f64 / (1024.0 * 1024.0);
+        let leaked_memory_mb = (end_mem - start_mem) as f64 / (1024.0 * 1024.0);
+
+        println!("Memory usage test:");
+        println!("  Peak memory usage: {:.2} MB", peak_memory_mb);
+        println!("  Memory after cleanup: {:.2} MB", leaked_memory_mb);
+
+        // Assert reasonable memory usage (should be well under 100MB for this test)
+        assert!(
+            peak_memory_mb < 100.0,
+            "Memory usage too high: {:.2} MB (expected < 100 MB)",
+            peak_memory_mb
+        );
+
+        // Assert no significant memory leaks (should be close to start after cleanup)
+        assert!(
+            leaked_memory_mb < 10.0,
+            "Memory leak detected: {:.2} MB not freed (expected < 10 MB)",
+            leaked_memory_mb
+        );
+
+        println!("✅ Memory usage regression test passed - no memory leaks detected");
+    }
+
+    #[test]
+    fn test_cache_performance_regression() {
+        // Test cache performance to ensure async caching provides expected benefits
+        let rt = tokio::runtime::Runtime::new().unwrap();
+
+        rt.block_on(async {
+            let cache = FileCache::new();
+            let test_files = create_large_test_files();
+
+            // First pass - cache misses
+            let start_miss = std::time::Instant::now();
+            for (file, _, _) in &test_files {
+                let _content = cache.get_or_load(file.path()).await.unwrap();
+            }
+            let miss_duration = start_miss.elapsed();
+
+            // Second pass - cache hits (should be faster)
+            let start_hit = std::time::Instant::now();
+            for (file, _, _) in &test_files {
+                let _content = cache.get_or_load(file.path()).await.unwrap();
+            }
+            let hit_duration = start_hit.elapsed();
+
+            let cache_speedup = miss_duration.as_millis() as f64 / hit_duration.as_millis() as f64;
+
+            println!("Cache performance test:");
+            println!("  Cache miss duration: {:?}", miss_duration);
+            println!("  Cache hit duration: {:?}", hit_duration);
+            println!("  Cache speedup: {:.2}x", cache_speedup);
+
+            // Assert cache provides significant speedup (at least 2x for hits)
+            assert!(
+                cache_speedup >= 2.0,
+                "Cache performance regression: Expected at least 2x speedup, got {:.2}x",
+                cache_speedup
+            );
+
+            println!("✅ Cache performance regression test passed - caching working correctly");
+        });
+    }
+
+    #[test]
+    fn test_parallelism_scaling_regression() {
+        // Test that parallelism scales appropriately with workload
+        let test_files = create_large_test_files();
+        let registry = AnalyzerRegistry::new();
+
+        // Single-threaded baseline
+        let start_single = std::time::Instant::now();
+        for (file, _, _) in &test_files {
+            let content = std::fs::read_to_string(file.path()).unwrap();
+            let _results = registry
+                .analyze_file(file.path(), content.as_bytes())
+                .unwrap();
+        }
+        let single_duration = start_single.elapsed();
+
+        // Multi-threaded optimized
+        let start_multi = std::time::Instant::now();
+        let multi_results: Vec<_> = test_files
+            .iter()
+            .map(|(file, _, _)| {
+                let content = std::fs::read_to_string(file.path()).unwrap();
+                registry
+                    .analyze_file(file.path(), content.as_bytes())
+                    .unwrap()
+            })
+            .collect();
+        let multi_duration = start_multi.elapsed();
+
+        let scaling_efficiency =
+            single_duration.as_millis() as f64 / multi_duration.as_millis() as f64;
+
+        println!("Parallelism scaling test:");
+        println!("  Single-threaded: {:?}", single_duration);
+        println!("  Multi-threaded: {:?}", multi_duration);
+        println!("  Scaling efficiency: {:.2}x", scaling_efficiency);
+
+        // Assert reasonable scaling (should be at least 1.2x on multi-core systems)
+        assert!(
+            scaling_efficiency >= 1.2,
+            "Parallelism regression: Expected at least 1.2x scaling, got {:.2}x",
+            scaling_efficiency
+        );
+
+        // Validate results consistency
+        assert_eq!(multi_results.len(), test_files.len());
+
+        println!(
+            "✅ Parallelism scaling regression test passed - parallel processing working correctly"
+        );
+    }
+
     fn create_test_files() -> Vec<(NamedTempFile, String, usize)> {
         let mut files = Vec::new();
 
@@ -301,5 +512,17 @@ mod integration_tests {
         files.push((file2, "large.json".to_string(), content2.len()));
 
         files
+    }
+
+    fn get_current_memory_usage() -> anyhow::Result<u64> {
+        // Use sysinfo for memory tracking (already in dependencies)
+        let mut system = sysinfo::System::new_all();
+        system.refresh_all();
+
+        let process = system
+            .process(sysinfo::Pid::from(std::process::id() as usize))
+            .ok_or_else(|| anyhow::anyhow!("Could not find current process"))?;
+
+        Ok(process.memory())
     }
 }

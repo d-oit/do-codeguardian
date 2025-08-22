@@ -8,7 +8,9 @@ use std::path::Path;
 
 // Lazy static regex patterns for optimal performance
 // Constants for code quality thresholds
+#[allow(dead_code)]
 const LONG_PARAMETER_THRESHOLD: usize = 100;
+#[allow(dead_code)]
 const DUPLICATE_CODE_MIN_LENGTH: usize = 50;
 const MAGIC_NUMBER_MIN_DIGITS: usize = 2;
 const MAX_LINE_LENGTH: usize = 120;
@@ -20,16 +22,14 @@ const MAX_CYCLOMATIC_COMPLEXITY: usize = 10;
 const MAX_FUNCTION_LINES: usize = 50;
 const ESTIMATED_FUNCTIONS_PER_FILE: usize = 20;
 
-static LONG_PARAMETER_LIST_PATTERN: Lazy<Regex> = Lazy::new(|| {
-    Regex::new(r"fn\s+\w+\([^)]{100,}").expect("Invalid regex pattern")
-});
+static LONG_PARAMETER_LIST_PATTERN: Lazy<Regex> =
+    Lazy::new(|| Regex::new(r"fn\s+\w+\([^)]{100,}").expect("Invalid regex pattern"));
 
 static DUPLICATE_CODE_PATTERN: Lazy<Regex> =
     Lazy::new(|| Regex::new(r"(.{50,})\n.*(.{50,})").unwrap());
 
-static MAGIC_NUMBER_PATTERN: Lazy<Regex> = Lazy::new(|| {
-    Regex::new(&format!(r"\b\d{{{MAGIC_NUMBER_MIN_DIGITS},}}\b")).unwrap()
-});
+static MAGIC_NUMBER_PATTERN: Lazy<Regex> =
+    Lazy::new(|| Regex::new(&format!(r"\b\d{{{MAGIC_NUMBER_MIN_DIGITS},}}\b")).unwrap());
 
 static DEAD_CODE_PATTERN: Lazy<Regex> =
     Lazy::new(|| Regex::new(r"(?i)(unreachable|dead|unused|deprecated)").unwrap());
@@ -120,7 +120,12 @@ impl CodeQualityAnalyzer {
         Ok(findings)
     }
 
-    fn check_magic_numbers(&self, file_path: &Path, line: &str, line_number: u32) -> Result<Vec<Finding>> {
+    fn check_magic_numbers(
+        &self,
+        file_path: &Path,
+        line: &str,
+        line_number: u32,
+    ) -> Result<Vec<Finding>> {
         let mut findings = Vec::new();
 
         if self.magic_number_pattern.is_match(line)
@@ -145,7 +150,12 @@ impl CodeQualityAnalyzer {
         Ok(findings)
     }
 
-    fn check_complex_conditions(&self, file_path: &Path, line: &str, line_number: u32) -> Result<Vec<Finding>> {
+    fn check_complex_conditions(
+        &self,
+        file_path: &Path,
+        line: &str,
+        line_number: u32,
+    ) -> Result<Vec<Finding>> {
         let mut findings = Vec::new();
 
         if self.complex_condition_pattern.is_match(line) {
@@ -171,7 +181,12 @@ impl CodeQualityAnalyzer {
         Ok(findings)
     }
 
-    fn check_line_length(&self, file_path: &Path, line: &str, line_number: u32) -> Result<Vec<Finding>> {
+    fn check_line_length(
+        &self,
+        file_path: &Path,
+        line: &str,
+        line_number: u32,
+    ) -> Result<Vec<Finding>> {
         let mut findings = Vec::new();
 
         if line.len() > MAX_LINE_LENGTH {
@@ -196,7 +211,12 @@ impl CodeQualityAnalyzer {
         Ok(findings)
     }
 
-    fn check_nesting_depth(&self, file_path: &Path, line: &str, line_number: u32) -> Result<Vec<Finding>> {
+    fn check_nesting_depth(
+        &self,
+        file_path: &Path,
+        line: &str,
+        line_number: u32,
+    ) -> Result<Vec<Finding>> {
         let mut findings = Vec::new();
 
         let indent_level = line.len() - line.trim_start().len();
@@ -223,7 +243,12 @@ impl CodeQualityAnalyzer {
         Ok(findings)
     }
 
-    fn check_commented_code(&self, file_path: &Path, line: &str, line_number: u32) -> Result<Vec<Finding>> {
+    fn check_commented_code(
+        &self,
+        file_path: &Path,
+        line: &str,
+        line_number: u32,
+    ) -> Result<Vec<Finding>> {
         let mut findings = Vec::new();
 
         if self.is_commented_code(line) {
@@ -273,7 +298,10 @@ impl CodeQualityAnalyzer {
         let mut line_counts: HashMap<String, Vec<usize>> = HashMap::new();
         for (i, line) in lines.iter().enumerate() {
             let trimmed = line.trim();
-            if trimmed.len() > MIN_DUPLICATE_LINE_LENGTH && !trimmed.starts_with("//") && !trimmed.starts_with("#") {
+            if trimmed.len() > MIN_DUPLICATE_LINE_LENGTH
+                && !trimmed.starts_with("//")
+                && !trimmed.starts_with("#")
+            {
                 line_counts
                     .entry(trimmed.to_string())
                     .or_default()

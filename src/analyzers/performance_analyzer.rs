@@ -67,8 +67,16 @@ impl PerformanceAnalyzer {
         let content_str = String::from_utf8_lossy(content);
         let lines: Vec<&str> = content_str.lines().collect();
 
+        // Pre-allocate findings vector with estimated capacity to reduce reallocations
+        findings.reserve(lines.len() / 10); // Estimate ~10% of lines have issues
+
         for (line_num, line) in lines.iter().enumerate() {
             let line_number = (line_num + 1) as u32;
+
+            // Early exit for empty lines to reduce processing
+            if line.trim().is_empty() {
+                continue;
+            }
 
             // Check for nested loops (O(n²) complexity warning)
             if self.nested_loop_pattern.is_match(line) || self.detect_nested_loops(&lines, line_num)

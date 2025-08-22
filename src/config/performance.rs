@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use serde::{Deserialize, Serialize};
 
 /// Performance configuration for CodeGuardian
@@ -108,7 +110,7 @@ impl PerformanceConfig {
             max_parallel_workers: num_cpus::get().min(12), // Optimized for CI
             max_memory_file_size: 3 * 1024 * 1024,         // 3MB - more conservative
             streaming_chunk_size: 64 * 1024,               // 64KB - larger chunks for speed
-            max_findings_per_file: 20,                     // Reduced for faster processing
+            max_findings_per_file: 25,                     // Reduced for faster processing
             pattern_cache_size: 1000,                      // Increased cache size
             cache_cleanup: CacheCleanupConfig {
                 enabled: true,
@@ -201,7 +203,7 @@ impl PerformanceConfig {
             enable_optimized_analyzers: true,
             enable_file_caching: true,
             max_parallel_workers: num_cpus::get().min(4), // Reduced parallelism
-            max_memory_file_size: 1024 * 1024,        // 1MB - very conservative
+            max_memory_file_size: 1024 * 1024,            // 1MB - very conservative
             streaming_chunk_size: 32 * 1024,              // 32KB - smaller chunks
             max_findings_per_file: 30,
             pattern_cache_size: 500, // Reduced cache size
