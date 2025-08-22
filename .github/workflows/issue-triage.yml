@@ -43,8 +43,14 @@ jobs:
               return;
             }
 
-            const prompt = `Classify this GitHub issue into labels from the following:
-              ["bug","feature","documentation","question","discussion","security","priority: high","priority: medium","priority: low","status: needs triage","status: in progress","status: needs review","status: duplicate","status: wontfix"]
+            const labels = ["bug","feature","documentation","question",
+                           "discussion","security","priority: high",
+                           "priority: medium","priority: low",
+                           "status: needs triage","status: in progress",
+                           "status: needs review","status: duplicate",
+                           "status: wontfix"];
+            
+            const prompt = `Classify this GitHub issue into labels from: ${labels.join(', ')}
               Title: "${issue.title}"
               Body: "${issue.body}"
               Return only a JSON array of labels.`;
@@ -61,22 +67,22 @@ jobs:
               return;
             }
 
-            let labels = [];
+            let parsedLabels = [];
             try {
-              labels = JSON.parse(response.result);
+              parsedLabels = JSON.parse(response.result);
             } catch (err) {
               console.error("Failed to parse AI output:", err.message);
               return;
             }
 
-            if (labels.length > 0) {
+            if (parsedLabels.length > 0) {
               await github.rest.issues.addLabels({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 issue_number: context.issue.number,
-                labels
+                labels: parsedLabels
               });
-              console.log("AI labels applied:", labels);
+              console.log("AI labels applied:", parsedLabels);
             }
 
       # 3️⃣ Duplicate detection

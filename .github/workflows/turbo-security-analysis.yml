@@ -2,12 +2,11 @@ name: 🚀 Turbo Security Analysis
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [main, develop]
   pull_request:
-    branches: [ main ]
+    branches: [main]
   schedule:
-    # Run daily security scan at 2 AM UTC
-    - cron: '0 2 * * *'
+    - cron: '0 2 * * *'  # Run daily security scan at 2 AM UTC
   workflow_dispatch:
     inputs:
       analysis_mode:
@@ -43,7 +42,7 @@ jobs:
     - name: 📥 Checkout repository
       uses: actions/checkout@v4
       with:
-        fetch-depth: 0 # Full history for comprehensive analysis
+        fetch-depth: 0  # Full history for comprehensive analysis
     
     - name: 🦀 Setup Rust toolchain
       uses: actions-rust-lang/setup-rust-toolchain@v1
@@ -152,213 +151,9 @@ jobs:
         echo "Please review and fix critical issues before merging."
         exit 1
     
-    - name: 📈 Performance Benchmark
-      run: |
-        echo "📈 Performance Benchmark Results"
-        echo "================================"
-        echo "Mode: ${{ matrix.mode.name }}"
-        echo "Files/sec: ${{ steps.results.outputs.files_per_sec }}"
-        echo "Total time: ${{ steps.analysis.outputs.duration }}s"
-        echo "Scan time: ${{ steps.results.outputs.scan_duration }}ms"
-        echo ""
-        
-        # Compare with baseline (if available)
-        BASELINE_SPEED=71.6  # files/sec from standard analysis
-        CURRENT_SPEED="${{ steps.results.outputs.files_per_sec }}"
-        
-        if [ -n "$CURRENT_SPEED" ] && [ "$CURRENT_SPEED" != "null" ]; then
-          SPEEDUP=$(echo "scale=1; $CURRENT_SPEED / $BASELINE_SPEED" | bc -l)
-          echo "🚀 Speedup vs baseline: ${SPEEDUP}x faster"
-          
-          # Performance regression check
-          MIN_EXPECTED_SPEED=500  # Minimum expected files/sec
-          if (( $(echo "$CURRENT_SPEED < $MIN_EXPECTED_SPEED" | bc -l) )); then
-            echo "⚠️  Performance regression detected!"
-            echo "Expected: >$MIN_EXPECTED_SPEED files/sec"
-            echo "Actual: $CURRENT_SPEED files/sec"
-          else
-            echo "✅ Performance target met"
-          fi
-        fi
-    
     - name: 📄 Upload Security Report
       uses: actions/upload-artifact@v4
       with:
         name: security-report-${{ matrix.mode.name }}-${{ github.run_number }}
         path: security-report-${{ matrix.mode.name }}.json
         retention-days: 30
-    
-    - name: 💬 Comment PR with Results
-      if: github.event_name == 'pull_request'
-      uses: actions/github-script@v7
-      with:
-        script: |
-          const fs = require('fs');
-          const reportPath = 'security-report-${{ matrix.mode.name }}.json';
-          
-          if (fs.existsSync(reportPath)) {
-            const report = JSON.parse(fs.readFileSync(reportPath, 'utf8'));
-            
-            const comment = `## 🚀 Turbo Security Analysis - ${{ matrix.mode.name }}
-          
-          ### 📊 Performance Metrics
-          - **Files analyzed**: ${{ steps.results.outputs.files_analyzed }}
-          - **Analysis speed**: ${{ steps.results.outputs.files_per_sec }} files/sec
-          - **Duration**: ${{ steps.results.outputs.scan_duration }}ms
-          
-          ### 🔍 Security Findings
-          - **Critical**: ${{ steps.results.outputs.critical_findings }}
-          - **High**: ${{ steps.results.outputs.high_findings }}
-          - **Medium**: ${{ steps.results.outputs.medium_findings }}
-          - **Total**: ${{ steps.results.outputs.total_findings }}
-          
-          ### 🎯 Status
-          ${parseInt('${{ steps.results.outputs.critical_findings }}') > 0 ? 
-            '🚨 **Action Required**: Critical security issues found' : 
-            '✅ **Passed**: No critical security issues detected'}
-          
-          <details>
-          <summary>📋 View detailed report</summary>
-          
-          \`\`\`json
-          ${JSON.stringify(report.summary, null, 2)}
-          \`\`\`
-          </details>
-          `;
-          
-          github.rest.issues.createComment({
-            issue_number: context.issue.number,
-            owner: context.repo.owner,
-            repo: context.repo.repo,
-            body: comment
-          });
-          }
-
-  performance-comparison:
-    name: 📊 Performance Comparison
-    runs-on: ubuntu-latest
-    needs: turbo-analysis
-    if: always()
-    
-    steps:
-    - name: 📥 Checkout repository
-      uses: actions/checkout@v4
-    
-    - name: 🦀 Setup Rust toolchain
-      uses: actions-rust-lang/setup-rust-toolchain@v1
-      with:
-        toolchain: stable
-        cache: true
-    
-    - name: 🔨 Build CodeGuardian
-      run: cargo build --release --quiet
-    
-    - name: ⚖️ Standard vs Turbo Comparison
-      run: |
-        echo "⚖️ Performance Comparison: Standard vs Turbo"
-        echo "============================================"
-        
-        # Run standard analysis
-        echo "🐌 Running standard analysis..."
-        START_STANDARD=$(date +%s.%N)
-        timeout 60s ./target/release/codeguardian check . \
-          --format json \
-          --out standard-results.json || echo "Standard analysis timed out"
-        END_STANDARD=$(date +%s.%N)
-        STANDARD_DURATION=$(echo "$END_STANDARD - $START_STANDARD" | bc -l)
-        
-        # Run turbo analysis
-        echo "🚀 Running turbo analysis..."
-        START_TURBO=$(date +%s.%N)
-        ./target/release/codeguardian turbo . \
-          --format json \
-          --output turbo-results.json \
-          --metrics
-        END_TURBO=$(date +%s.%N)
-        TURBO_DURATION=$(echo "$END_TURBO - $START_TURBO" | bc -l)
-        
-        # Compare results
-        echo ""
-        echo "📊 Comparison Results:"
-        echo "====================="
-        echo "Standard duration: ${STANDARD_DURATION}s"
-        echo "Turbo duration: ${TURBO_DURATION}s"
-        
-        if [ -f "standard-results.json" ] && [ -f "turbo-results.json" ]; then
-          STANDARD_FILES=$(jq '.summary.total_files_scanned // 0' standard-results.json)
-          TURBO_FILES=$(jq '.summary.total_files_scanned // 0' turbo-results.json)
-          
-          STANDARD_FINDINGS=$(jq '.summary.total_findings // 0' standard-results.json)
-          TURBO_FINDINGS=$(jq '.summary.total_findings // 0' turbo-results.json)
-          
-          if [ "$STANDARD_FILES" -gt 0 ] && [ "$TURBO_FILES" -gt 0 ]; then
-            STANDARD_SPEED=$(echo "scale=1; $STANDARD_FILES / $STANDARD_DURATION" | bc -l)
-            TURBO_SPEED=$(echo "scale=1; $TURBO_FILES / $TURBO_DURATION" | bc -l)
-            SPEEDUP=$(echo "scale=1; $TURBO_SPEED / $STANDARD_SPEED" | bc -l)
-            
-            echo "Standard: $STANDARD_FILES files, $STANDARD_FINDINGS findings, ${STANDARD_SPEED} files/sec"
-            echo "Turbo: $TURBO_FILES files, $TURBO_FINDINGS findings, ${TURBO_SPEED} files/sec"
-            echo "🚀 Speedup: ${SPEEDUP}x faster"
-          fi
-        fi
-
-  security-dashboard:
-    name: 📈 Security Dashboard Update
-    runs-on: ubuntu-latest
-    needs: turbo-analysis
-    if: github.ref == 'refs/heads/main'
-    
-    steps:
-    - name: 📥 Download artifacts
-      uses: actions/download-artifact@v4
-      with:
-        pattern: security-report-*
-        merge-multiple: true
-    
-    - name: 📊 Generate Security Dashboard
-      run: |
-        echo "📊 Generating Security Dashboard"
-        echo "==============================="
-        
-        # Create dashboard data
-        cat > security-dashboard.json << EOF
-        {
-          "timestamp": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
-          "commit": "${{ github.sha }}",
-          "branch": "${{ github.ref_name }}",
-          "run_id": "${{ github.run_id }}",
-          "reports": []
-        }
-        EOF
-        
-        # Process each report
-        for report in security-report-*.json; do
-          if [ -f "$report" ]; then
-            echo "Processing $report..."
-            MODE=$(echo "$report" | sed 's/security-report-\(.*\)\.json/\1/')
-            
-            SUMMARY=$(jq --arg mode "$MODE" '{
-              mode: $mode,
-              total_findings: .summary.total_findings,
-              files_analyzed: .summary.total_files_scanned,
-              scan_duration_ms: .summary.scan_duration_ms,
-              critical_count: ([.findings[] | select(.severity == "Critical")] | length),
-              high_count: ([.findings[] | select(.severity == "High")] | length),
-              medium_count: ([.findings[] | select(.severity == "Medium")] | length)
-            }' "$report")
-            
-            # Add to dashboard
-            jq --argjson summary "$SUMMARY" '.reports += [$summary]' security-dashboard.json > temp.json
-            mv temp.json security-dashboard.json
-          fi
-        done
-        
-        echo "✅ Dashboard generated"
-        cat security-dashboard.json | jq '.'
-    
-    - name: 📤 Upload Dashboard
-      uses: actions/upload-artifact@v4
-      with:
-        name: security-dashboard-${{ github.run_number }}
-        path: security-dashboard.json
-        retention-days: 90

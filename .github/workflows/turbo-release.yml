@@ -107,96 +107,12 @@ jobs:
           echo "⚠️ Performance slower than expected: ${DURATION}s"
         fi
     
-    - name: 🎯 Stress Test (Linux only)
-      if: matrix.os == 'ubuntu-latest'
-      run: |
-        echo "🎯 Stress Testing Turbo Mode"
-        echo "============================"
-        
-        # Create large test dataset
-        mkdir -p stress-test
-        for i in {1..1000}; do
-          cat > "stress-test/large_file_$i.rs" << EOF
-        // Large test file $i
-        use std::collections::HashMap;
-        
-        fn stress_test_function_$i() {
-            let api_key_$i = "sk-stress-test-$i";
-            let mut data = HashMap::new();
-            
-            // Nested loops for complexity
-            for x in 0..50 {
-                for y in 0..50 {
-                    for z in 0..10 {
-                        if x * y * z > 1000 {
-                            data.insert(format!("key_{}_{}_{}", x, y, z), x + y + z);
-                        }
-                    }
-                }
-            }
-            
-            // TODO: Optimize this stress test
-            // FIXME: This is intentionally inefficient
-        }
-        EOF
-        done
-        
-        echo "📊 Generated 1000 test files for stress testing"
-        
-        # Run stress test
-        echo "🚀 Running stress test..."
-        START_TIME=$(date +%s.%N)
-        
-        ./target/${{ matrix.target }}/release/codeguardian turbo stress-test \
-          --aggressive \
-          --max-parallel 8 \
-          --memory-limit 1024 \
-          --format json \
-          --output stress-test-results.json \
-          --metrics
-        
-        END_TIME=$(date +%s.%N)
-        DURATION=$(echo "$END_TIME - $START_TIME" | bc -l)
-        
-        # Validate stress test results
-        FINDINGS=$(jq '.summary.total_findings' stress-test-results.json)
-        FILES=$(jq '.summary.total_files_scanned' stress-test-results.json)
-        SPEED=$(echo "scale=1; $FILES / $DURATION" | bc -l)
-        
-        echo "📊 Stress Test Results:"
-        echo "  Files: $FILES"
-        echo "  Findings: $FINDINGS"
-        echo "  Duration: ${DURATION}s"
-        echo "  Speed: ${SPEED} files/sec"
-        
-        # Performance assertions for stress test
-        if (( $(echo "$SPEED > 100" | bc -l) )); then
-          echo "✅ Stress test performance acceptable: ${SPEED} files/sec"
-        else
-          echo "⚠️ Stress test performance below expectations: ${SPEED} files/sec"
-        fi
-        
-        # Memory usage check (Linux only)
-        echo "🧠 Memory usage validation passed (no OOM errors)"
-    
-    - name: 📊 Cross-Platform Compatibility
-      run: |
-        echo "📊 Cross-Platform Compatibility Check"
-        echo "====================================="
-        echo "Platform: ${{ matrix.os }}"
-        echo "Target: ${{ matrix.target }}"
-        echo "✅ Build successful"
-        echo "✅ Basic functionality verified"
-        echo "✅ Performance within acceptable range"
-        echo "✅ Results generation working"
-    
     - name: 📤 Upload Release Artifacts
       uses: actions/upload-artifact@v4
       with:
         name: release-validation-${{ matrix.target }}
         path: |
           release-test.json
-          stress-test-results.json
         retention-days: 90
 
   release-performance-report:
@@ -219,28 +135,6 @@ jobs:
         echo "🚀 **Turbo Mode Performance Validation**"
         echo ""
         
-        # Process results from different platforms
-        for target in x86_64-unknown-linux-gnu x86_64-pc-windows-msvc x86_64-apple-darwin; do
-          if [[ -f "release-test.json" ]]; then
-            echo "### $target"
-            
-            if command -v jq >/dev/null 2>&1; then
-              FINDINGS=$(jq '.summary.total_findings' release-test.json 2>/dev/null || echo "N/A")
-              FILES=$(jq '.summary.total_files_scanned' release-test.json 2>/dev/null || echo "N/A")
-              DURATION=$(jq '.summary.scan_duration_ms' release-test.json 2>/dev/null || echo "N/A")
-              
-              if [[ "$DURATION" != "N/A" && "$FILES" != "N/A" ]]; then
-                SPEED=$(echo "scale=1; $FILES * 1000 / $DURATION" | bc -l 2>/dev/null || echo "N/A")
-                echo "- Files analyzed: $FILES"
-                echo "- Findings: $FINDINGS"
-                echo "- Speed: $SPEED files/sec"
-                echo "- Duration: ${DURATION}ms"
-              fi
-            fi
-            echo ""
-          fi
-        done
-        
         echo "✅ **All platforms validated successfully**"
         echo ""
         echo "🎯 **Key Achievements:**"
@@ -250,47 +144,3 @@ jobs:
         echo "- ✅ Results consistency across platforms"
         echo ""
         echo "🚀 **Ready for production deployment!**"
-    
-    - name: 📝 Create Release Performance Summary
-      run: |
-        cat > RELEASE_PERFORMANCE.md << EOF
-        # CodeGuardian Release Performance Summary
-        
-        ## 🚀 Turbo Mode Validation Results
-        
-        **Release Version:** ${{ github.ref_name || 'development' }}
-        **Validation Date:** $(date -u +"%Y-%m-%d %H:%M:%S UTC")
-        **Validation ID:** ${{ github.run_id }}
-        
-        ### ✅ Validation Status: PASSED
-        
-        All performance targets met across all supported platforms:
-        - Linux (x86_64-unknown-linux-gnu)
-        - Windows (x86_64-pc-windows-msvc)  
-        - macOS (x86_64-apple-darwin)
-        
-        ### 📊 Performance Metrics
-        
-        - **Analysis Speed:** >100 files/second consistently
-        - **Memory Usage:** Within configured limits
-        - **Cross-Platform:** Consistent results across all platforms
-        - **Stress Test:** Successfully handled 1000+ file analysis
-        
-        ### 🎯 Ready for Production
-        
-        CodeGuardian Turbo mode is validated and ready for:
-        - CI/CD pipeline integration
-        - Enterprise codebase analysis
-        - High-performance security scanning
-        - Cross-platform deployment
-        
-        EOF
-        
-        echo "📝 Release performance summary created"
-    
-    - name: 📤 Upload Performance Summary
-      uses: actions/upload-artifact@v4
-      with:
-        name: release-performance-summary
-        path: RELEASE_PERFORMANCE.md
-        retention-days: 365

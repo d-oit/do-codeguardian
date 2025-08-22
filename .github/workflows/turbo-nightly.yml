@@ -30,7 +30,7 @@ jobs:
     - name: 🚀 Full Turbo Analysis
       run: |
         echo "🚀 Running comprehensive nightly analysis..."
-        
+
         ./target/release/codeguardian turbo . \
           --aggressive \
           --max-parallel 16 \
@@ -44,26 +44,31 @@ jobs:
         echo "📊 Nightly Analysis Report - $(date)" > nightly-report.md
         echo "=================================" >> nightly-report.md
         echo "" >> nightly-report.md
-        
+
         if [ -f "nightly-analysis.json" ]; then
           FINDINGS=$(jq '.summary.total_findings' nightly-analysis.json)
           FILES=$(jq '.summary.total_files_scanned' nightly-analysis.json)
           DURATION=$(jq '.summary.scan_duration_ms' nightly-analysis.json)
-          
+
           echo "## 📈 Summary" >> nightly-report.md
           echo "- **Files analyzed:** $FILES" >> nightly-report.md
           echo "- **Total findings:** $FINDINGS" >> nightly-report.md
           echo "- **Analysis duration:** ${DURATION}ms" >> nightly-report.md
           echo "" >> nightly-report.md
-          
+
           # Findings by severity
           echo "## 🎯 Findings by Severity" >> nightly-report.md
-          jq -r '.findings | group_by(.severity) | .[] | "- **\(.[0].severity):** \(length) findings"' nightly-analysis.json >> nightly-report.md
+          jq -r '.findings | group_by(.severity) | .[] |
+            "- **\(.[0].severity):** \(length) findings"' \
+            nightly-analysis.json >> nightly-report.md
           echo "" >> nightly-report.md
-          
+
           # Top issues
           echo "## 🔍 Top Security Issues" >> nightly-report.md
-          jq -r '.findings[] | select(.severity == "Critical" or .severity == "High") | "- \(.severity): \(.message) (\(.file | split("/") | last):\(.line))"' nightly-analysis.json | head -10 >> nightly-report.md
+          jq -r '.findings[] |
+            select(.severity == "Critical" or .severity == "High") |
+            "- \(.severity): \(.message) (\(.file | split("/") | last):\(.line))"' \
+            nightly-analysis.json | head -10 >> nightly-report.md
         fi
     
     - name: 📤 Upload Nightly Results
