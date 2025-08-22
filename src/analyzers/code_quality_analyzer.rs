@@ -21,16 +21,11 @@ const MAX_FUNCTION_LINES: usize = 50;
 const ESTIMATED_FUNCTIONS_PER_FILE: usize = 20;
 
 static LONG_PARAMETER_LIST_PATTERN: Lazy<Regex> = Lazy::new(|| {
-    Regex::new(&format!(
-        r"(?:fn|function|def|public|private|protected)\s+\w+\s*\([^)]{{{LONG_PARAMETER_THRESHOLD},}})"
-    )).unwrap()
+    Regex::new(r"fn\s+\w+\([^)]{100,}").expect("Invalid regex pattern")
 });
 
-static DUPLICATE_CODE_PATTERN: Lazy<Regex> = Lazy::new(|| {
-    Regex::new(&format!(
-        r"(.{{{DUPLICATE_CODE_MIN_LENGTH},}})\n.*(.{{{DUPLICATE_CODE_MIN_LENGTH},}})"
-    )).unwrap()
-});
+static DUPLICATE_CODE_PATTERN: Lazy<Regex> =
+    Lazy::new(|| Regex::new(r"(.{50,})\n.*(.{50,})").unwrap());
 
 static MAGIC_NUMBER_PATTERN: Lazy<Regex> = Lazy::new(|| {
     Regex::new(&format!(r"\b\d{{{MAGIC_NUMBER_MIN_DIGITS},}}\b")).unwrap()
