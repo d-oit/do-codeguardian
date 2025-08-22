@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use crate::types::Finding;
 use anyhow::Result;
 use std::collections::HashMap;
