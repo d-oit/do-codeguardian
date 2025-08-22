@@ -55,7 +55,7 @@ impl LintDriftAnalyzer {
     
     fn is_json_config(&self, file_path: &Path) -> bool {
         file_path.extension().and_then(|e| e.to_str()) == Some("json") ||
-        file_path.file_name().and_then(|n| n.to_str()).map_or(false, |n| n.contains(".json"))
+        file_path.file_name().and_then(|n| n.to_str()).is_some_and(|n| n.contains(".json"))
     }
     
     fn is_yaml_config(&self, file_path: &Path) -> bool {

@@ -34,6 +34,12 @@ pub struct SecurityAnalyzer {
     security_checks: SecurityChecks,
 }
 
+impl Default for SecurityAnalyzer {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl SecurityAnalyzer {
     pub fn new() -> Self {
         let mut dangerous_functions = HashSet::with_capacity(8);

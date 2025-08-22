@@ -3,84 +3,275 @@
   "tool_metadata": {
     "name": "codeguardian",
     "version": "0.1.0",
-    "config_hash": "063df732c3ec1222",
-    "timestamp": "2025-08-19T07:09:18.878751482Z"
+    "config_hash": "d359ab53f4992ce4",
+    "timestamp": "2025-08-22T07:11:09.005922039Z"
   },
   "findings": [
     {
-      "id": "a2af9bd293002f40",
-      "analyzer": "security",
-      "rule": "hardcoded_secret",
-      "severity": "Medium",
-      "file": "/workspaces/do-codeguardian/tmp_rovodev_debug_context.js",
-      "line": 3,
+      "id": "887762d002bcd57e",
+      "analyzer": "optimized-security",
+      "rule": "SEC-OPT",
+      "severity": "High",
+      "file": "/workspaces/do-codeguardian/src/test_security_sample.rs",
+      "line": 8,
       "column": null,
-      "message": "Hardcoded secret in non-production code",
-      "description": "Non-production secrets should be externalized or clearly documented",
-      "suggestion": "Move secrets to environment variables or secure configuration",
+      "message": "Potential secret detected:     let api_key = \"sk-test-1234567890abcdef\"; // T",
+      "description": null,
+      "suggestion": null,
+      "metadata": {}
+    },
+    {
+      "id": "5b29ed57a506f66f",
+      "analyzer": "non_production",
+      "rule": "todo_comment",
+      "severity": "High",
+      "file": "/workspaces/do-codeguardian/src/test_security_sample.rs",
+      "line": 21,
+      "column": null,
+      "message": "BUG comment found",
+      "description": "Line contains a bug comment that should be resolved before production",
+      "suggestion": "Resolve the issue or create a proper issue tracker entry",
       "metadata": {
-        "context": "non_production"
+        "comment_type": "bug"
       }
     },
     {
-      "id": "241d7d100616e49c",
-      "analyzer": "security",
-      "rule": "hardcoded_secret",
-      "severity": "Medium",
-      "file": "/workspaces/do-codeguardian/tmp_rovodev_debug_context.js",
-      "line": 4,
+      "id": "948b8193a2c01daa",
+      "analyzer": "non_production",
+      "rule": "todo_comment",
+      "severity": "High",
+      "file": "/workspaces/do-codeguardian/src/test_security_sample.rs",
+      "line": 22,
       "column": null,
-      "message": "Hardcoded secret in non-production code",
-      "description": "Non-production secrets should be externalized or clearly documented",
-      "suggestion": "Move secrets to environment variables or secure configuration",
+      "message": "BUG comment found",
+      "description": "Line contains a bug comment that should be resolved before production",
+      "suggestion": "Resolve the issue or create a proper issue tracker entry",
       "metadata": {
-        "context": "non_production"
+        "comment_type": "bug"
       }
     },
     {
-      "id": "0e3a0538f468838d",
-      "analyzer": "security",
-      "rule": "hardcoded_secret",
-      "severity": "Medium",
-      "file": "/workspaces/do-codeguardian/tmp_rovodev_debug_context.js",
-      "line": 7,
+      "id": "6631678cb22a0e6d",
+      "analyzer": "non_production",
+      "rule": "todo_comment",
+      "severity": "High",
+      "file": "/workspaces/do-codeguardian/src/test_security_sample.rs",
+      "line": 23,
       "column": null,
-      "message": "Hardcoded secret in non-production code",
-      "description": "Non-production secrets should be externalized or clearly documented",
-      "suggestion": "Move secrets to environment variables or secure configuration",
+      "message": "BUG comment found",
+      "description": "Line contains a bug comment that should be resolved before production",
+      "suggestion": "Resolve the issue or create a proper issue tracker entry",
       "metadata": {
-        "context": "non_production"
+        "comment_type": "bug"
       }
     },
     {
-      "id": "2b73b3982c175acf",
+      "id": "ae27a5c5566e2555",
+      "analyzer": "non_production",
+      "rule": "debug_statement",
+      "severity": "Medium",
+      "file": "/workspaces/do-codeguardian/src/test_security_sample.rs",
+      "line": 21,
+      "column": null,
+      "message": "Debug statement found",
+      "description": "Debug statements should not be present in production code",
+      "suggestion": "Remove debug statements or replace with proper logging",
+      "metadata": {}
+    },
+    {
+      "id": "dc18a9dfac4bed55",
+      "analyzer": "non_production",
+      "rule": "debug_statement",
+      "severity": "Medium",
+      "file": "/workspaces/do-codeguardian/src/test_security_sample.rs",
+      "line": 22,
+      "column": null,
+      "message": "Debug statement found",
+      "description": "Debug statements should not be present in production code",
+      "suggestion": "Remove debug statements or replace with proper logging",
+      "metadata": {}
+    },
+    {
+      "id": "1eeee3d60ac3ccb5",
+      "analyzer": "non_production",
+      "rule": "debug_statement",
+      "severity": "Medium",
+      "file": "/workspaces/do-codeguardian/src/test_security_sample.rs",
+      "line": 23,
+      "column": null,
+      "message": "Debug statement found",
+      "description": "Debug statements should not be present in production code",
+      "suggestion": "Remove debug statements or replace with proper logging",
+      "metadata": {}
+    },
+    {
+      "id": "5567e4ceb62007fd",
+      "analyzer": "performance",
+      "rule": "nested_loops",
+      "severity": "Medium",
+      "file": "/workspaces/do-codeguardian/src/test_security_sample.rs",
+      "line": 28,
+      "column": null,
+      "message": "Nested loops detected - potential O(n²) complexity",
+      "description": "Nested loops can lead to quadratic time complexity and poor performance with large datasets",
+      "suggestion": "Consider using more efficient algorithms, hash maps, or breaking early when possible",
+      "metadata": {}
+    },
+    {
+      "id": "3e7eb995e8f536a3",
+      "analyzer": "non_production",
+      "rule": "debug_statement",
+      "severity": "Medium",
+      "file": "/workspaces/do-codeguardian/src/test_security_sample.rs",
+      "line": 35,
+      "column": null,
+      "message": "Debug statement found",
+      "description": "Debug statements should not be present in production code",
+      "suggestion": "Remove debug statements or replace with proper logging",
+      "metadata": {}
+    },
+    {
+      "id": "a2a973c8640baa16",
+      "analyzer": "non_production",
+      "rule": "todo_comment",
+      "severity": "Low",
+      "file": "/workspaces/do-codeguardian/src/test_security_sample.rs",
+      "line": 8,
+      "column": null,
+      "message": "TODO comment found",
+      "description": "Line contains a TODO comment that should be resolved before production",
+      "suggestion": "Resolve the issue or create a proper issue tracker entry",
+      "metadata": {
+        "comment_type": "TODO"
+      }
+    },
+    {
+      "id": "569690bd04fb7eb3",
+      "analyzer": "security",
+      "rule": "hardcoded_secret",
+      "severity": "Low",
+      "file": "/workspaces/do-codeguardian/src/test_security_sample.rs",
+      "line": 8,
+      "column": null,
+      "message": "Hardcoded secret in test code",
+      "description": "Test secrets should use mock values or be clearly marked as test data",
+      "suggestion": "Move secrets to environment variables or secure configuration",
+      "metadata": {
+        "context": "test"
+      }
+    },
+    {
+      "id": "b87a570ee167301b",
+      "analyzer": "code_quality",
+      "rule": "misplaced_import",
+      "severity": "Low",
+      "file": "/workspaces/do-codeguardian/src/test_security_sample.rs",
+      "line": 15,
+      "column": null,
+      "message": "Import statement after non-import code",
+      "description": "Imports should be grouped at the top of the file",
+      "suggestion": "Move all imports to the top of the file",
+      "metadata": {}
+    },
+    {
+      "id": "a467c1d0842916f9",
+      "analyzer": "code_quality",
+      "rule": "misplaced_import",
+      "severity": "Low",
+      "file": "/workspaces/do-codeguardian/src/test_security_sample.rs",
+      "line": 16,
+      "column": null,
+      "message": "Import statement after non-import code",
+      "description": "Imports should be grouped at the top of the file",
+      "suggestion": "Move all imports to the top of the file",
+      "metadata": {}
+    },
+    {
+      "id": "6d3ac783b517eb8d",
+      "analyzer": "code_quality",
+      "rule": "magic_number",
+      "severity": "Low",
+      "file": "/workspaces/do-codeguardian/src/test_security_sample.rs",
+      "line": 27,
+      "column": null,
+      "message": "Magic number detected",
+      "description": "Magic numbers make code harder to understand and maintain",
+      "suggestion": "Replace magic numbers with named constants",
+      "metadata": {}
+    },
+    {
+      "id": "92bacba1f7e64346",
+      "analyzer": "code_quality",
+      "rule": "magic_number",
+      "severity": "Low",
+      "file": "/workspaces/do-codeguardian/src/test_security_sample.rs",
+      "line": 28,
+      "column": null,
+      "message": "Magic number detected",
+      "description": "Magic numbers make code harder to understand and maintain",
+      "suggestion": "Replace magic numbers with named constants",
+      "metadata": {}
+    },
+    {
+      "id": "567eda0a13ddae3f",
+      "analyzer": "code_quality",
+      "rule": "magic_number",
+      "severity": "Low",
+      "file": "/workspaces/do-codeguardian/src/test_security_sample.rs",
+      "line": 29,
+      "column": null,
+      "message": "Magic number detected",
+      "description": "Magic numbers make code harder to understand and maintain",
+      "suggestion": "Replace magic numbers with named constants",
+      "metadata": {}
+    },
+    {
+      "id": "7089fe9fb5a222c5",
+      "analyzer": "code_quality",
+      "rule": "misplaced_import",
+      "severity": "Low",
+      "file": "/workspaces/do-codeguardian/src/test_security_sample.rs",
+      "line": 40,
+      "column": null,
+      "message": "Import statement after non-import code",
+      "description": "Imports should be grouped at the top of the file",
+      "suggestion": "Move all imports to the top of the file",
+      "metadata": {}
+    },
+    {
+      "id": "007d3670957bae93",
       "analyzer": "non_production",
       "rule": "potential_secret",
-      "severity": "Low",
-      "file": "/workspaces/do-codeguardian/tmp_rovodev_debug_context.js",
-      "line": 7,
+      "severity": "Info",
+      "file": "/workspaces/do-codeguardian/src/test_security_sample.rs",
+      "line": 8,
       "column": null,
-      "message": "Hardcoded secret in non-production code",
-      "description": "Non-production secrets should be externalized or clearly documented",
+      "message": "Hardcoded secret in test code",
+      "description": "Test secrets should use mock values or be clearly marked as test data",
       "suggestion": "Move secrets to environment variables or secure configuration",
       "metadata": {
-        "context": "non_production"
+        "context": "test"
       }
     }
   ],
   "summary": {
     "total_files_scanned": 1,
-    "total_findings": 4,
+    "total_findings": 18,
     "findings_by_severity": {
-      "Low": 1,
-      "Medium": 3
+      "Medium": 5,
+      "Low": 8,
+      "Info": 1,
+      "High": 4
     },
     "findings_by_analyzer": {
-      "security": 3,
-      "non_production": 1
+      "code_quality": 6,
+      "optimized-security": 1,
+      "performance": 1,
+      "security": 1,
+      "non_production": 9
     },
-    "scan_duration_ms": 104
+    "scan_duration_ms": 66
   },
-  "config_hash": "063df732c3ec1222",
-  "timestamp": "2025-08-19T07:09:18.878756270Z"
+  "config_hash": "d359ab53f4992ce4",
+  "timestamp": "2025-08-22T07:11:09.005922826Z"
 }

@@ -15,6 +15,12 @@ pub struct PerformanceAnalyzer {
     inefficient_regex_pattern: Regex,
 }
 
+impl Default for PerformanceAnalyzer {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl PerformanceAnalyzer {
     pub fn new() -> Self {
         Self {
@@ -166,8 +172,8 @@ impl PerformanceAnalyzer {
     fn is_in_loop_context(&self, lines: &[&str], current_line: usize) -> bool {
         // Look backwards up to 10 lines to see if we're in a loop
         let start = current_line.saturating_sub(10);
-        for i in start..current_line {
-            let line = lines[i].trim();
+        for line in lines.iter().take(current_line).skip(start) {
+            let line = line.trim();
             if line.contains("for ") || line.contains("while ") || line.contains(".forEach") || 
                line.contains("for(") || line.contains("while(") {
                 return true;
@@ -179,8 +185,8 @@ impl PerformanceAnalyzer {
     fn is_in_async_context(&self, lines: &[&str], current_line: usize) -> bool {
         // Look backwards to see if we're in an async function
         let start = current_line.saturating_sub(20);
-        for i in start..current_line {
-            let line = lines[i].trim();
+        for line in lines.iter().take(current_line).skip(start) {
+            let line = line.trim();
             if line.contains("async fn") || line.contains("async function") || 
                line.contains("await ") || line.contains(".await") {
                 return true;
@@ -271,21 +277,20 @@ impl PerformanceAnalyzer {
         let mut findings = Vec::new();
 
         // Check for inefficient DOM queries
-        if line.contains("document.getElementById") || line.contains("document.querySelector") {
-            if line.contains("for") || line.contains("while") {
-                findings.push(
-                    Finding::new(
-                        "performance",
-                        "dom_query_in_loop",
-                        Severity::Medium,
-                        file_path.to_path_buf(),
-                        line_number,
-                        "DOM query in loop detected".to_string(),
-                    )
-                    .with_description("DOM queries are expensive and should be cached when used repeatedly".to_string())
-                    .with_suggestion("Cache DOM elements outside the loop".to_string())
-                );
-            }
+        if (line.contains("document.getElementById") || line.contains("document.querySelector")) &&
+           (line.contains("for") || line.contains("while")) {
+            findings.push(
+                Finding::new(
+                    "performance",
+                    "dom_query_in_loop",
+                    Severity::Medium,
+                    file_path.to_path_buf(),
+                    line_number,
+                    "DOM query in loop detected".to_string(),
+                )
+                .with_description("DOM queries are expensive and should be cached when used repeatedly".to_string())
+                .with_suggestion("Cache DOM elements outside the loop".to_string())
+            );
         }
 
         // Check for inefficient array operations

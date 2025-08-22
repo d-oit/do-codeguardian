@@ -15,7 +15,7 @@ use codeguardian::{
     ml::{
         fann_classifier::{FannClassifier, NetworkConfig},
         feature_extractor::FeatureExtractor,
-        training_data::{TrainingDataset, TrainingExample},
+        // training_data::{TrainingDataset, TrainingExample},
     },
     types::{Finding, Severity},
 };

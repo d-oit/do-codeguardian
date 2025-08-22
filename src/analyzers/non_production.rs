@@ -29,6 +29,12 @@ pub struct NonProductionAnalyzer {
     console_pattern: Regex,
 }
 
+impl Default for NonProductionAnalyzer {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl NonProductionAnalyzer {
     pub fn new() -> Self {
         Self {

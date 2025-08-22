@@ -12,8 +12,8 @@
 //! ```
 
 use codeguardian::ml::{
-    MLClassifier,
-    training_data::{TrainingDataset, TrainingDataCollector, FeedbackSource},
+    // MLClassifier,
+    training_data::{TrainingDataset, TrainingDataCollector}, // FeedbackSource},
     fann_classifier::{FannClassifier, NetworkConfig},
 };
 use codeguardian::types::{Finding, Severity};
@@ -39,7 +39,7 @@ async fn main() -> anyhow::Result<()> {
     
     // Apply heuristic classification to historical findings
     collector.apply_heuristics(&historical_findings)?;
-    let mut dataset = collector.get_dataset();
+    let dataset = collector.get_dataset();
     
     println!("   Added {} historical examples", dataset.examples.len());
     println!("   Dataset stats:\n{}", dataset.get_stats());

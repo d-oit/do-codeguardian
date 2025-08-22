@@ -23,6 +23,12 @@ struct VulnerabilityInfo {
     fixed_version: Option<String>,
 }
 
+impl Default for DependencyAnalyzer {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl DependencyAnalyzer {
     pub fn new() -> Self {
         let mut vulnerable_packages = HashMap::new();
