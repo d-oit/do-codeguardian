@@ -1,22 +1,25 @@
 use assert_cmd::prelude::*;
 use predicates::prelude::*;
-use std::process::Command;
-use tempfile::TempDir;
 use std::fs;
+use std::process::Command;
 use std::time::Instant;
+use tempfile::TempDir;
 
 /// Performance-focused end-to-end tests
 
 #[test]
 fn test_large_codebase_performance() {
     let temp_dir = TempDir::new().unwrap();
-    
+
     // Create a larger codebase (50 files)
     for i in 0..50 {
         let dir = temp_dir.path().join(format!("module_{}", i));
         fs::create_dir_all(&dir).unwrap();
-        
-        fs::write(dir.join("lib.rs"), format!(r#"
+
+        fs::write(
+            dir.join("lib.rs"),
+            format!(
+                r#"
 pub fn function_{}() -> i32 {{
     let value = {};
     // TODO: Optimize this function
@@ -35,17 +38,25 @@ mod tests {{
         assert_eq!(function_{}(), {});
     }}
 }}
-"#, i, i * 10, i, i, i * 10)).unwrap();
+"#,
+                i,
+                i * 10,
+                i,
+                i,
+                i * 10
+            ),
+        )
+        .unwrap();
     }
-    
+
     let start = Instant::now();
-    
+
     let mut cmd = Command::cargo_bin("codeguardian").unwrap();
-    cmd.arg("turbo")  // Use turbo mode for performance
+    cmd.arg("turbo") // Use turbo mode for performance
         .arg(temp_dir.path())
         .arg("--format")
         .arg("json");
-    
+
     cmd.assert()
         .success()
         .stdout(predicate::str::contains("total_files_scanned"))
@@ -57,19 +68,24 @@ mod tests {{
             }
             false
         }));
-    
+
     let duration = start.elapsed();
     // Should complete within 60 seconds for 50 files
-    assert!(duration.as_secs() < 60, "Analysis took too long: {:?}", duration);
+    assert!(
+        duration.as_secs() < 60,
+        "Analysis took too long: {:?}",
+        duration
+    );
 }
 
 #[test]
 fn test_memory_usage_large_files() {
     let temp_dir = TempDir::new().unwrap();
-    
+
     // Create files with substantial content
     for i in 0..10 {
-        let content = format!(r#"
+        let content = format!(
+            r#"
 // Large file {} with many functions
 {}
 
@@ -80,24 +96,43 @@ pub struct LargeStruct_{} {{
 impl LargeStruct_{} {{
     {}
 }}
-"#, 
+"#,
             i,
-            (0..100).map(|j| format!("pub fn function_{}_{j}() {{ println!(\"Function {j}\"); }}", i)).collect::<Vec<_>>().join("\n"),
+            (0..100)
+                .map(|j| format!(
+                    "pub fn function_{}_{j}() {{ println!(\"Function {j}\"); }}",
+                    i
+                ))
+                .collect::<Vec<_>>()
+                .join("\n"),
             i,
-            (0..50).map(|j| format!("    field_{}: i32,", j)).collect::<Vec<_>>().join("\n"),
+            (0..50)
+                .map(|j| format!("    field_{}: i32,", j))
+                .collect::<Vec<_>>()
+                .join("\n"),
             i,
-            (0..50).map(|j| format!("    pub fn method_{}(&self) -> i32 {{ self.field_{} }}", j, j)).collect::<Vec<_>>().join("\n")
+            (0..50)
+                .map(|j| format!(
+                    "    pub fn method_{}(&self) -> i32 {{ self.field_{} }}",
+                    j, j
+                ))
+                .collect::<Vec<_>>()
+                .join("\n")
         );
-        
-        fs::write(temp_dir.path().join(format!("large_file_{}.rs", i)), content).unwrap();
+
+        fs::write(
+            temp_dir.path().join(format!("large_file_{}.rs", i)),
+            content,
+        )
+        .unwrap();
     }
-    
+
     let mut cmd = Command::cargo_bin("codeguardian").unwrap();
     cmd.arg("check")
         .arg(temp_dir.path())
         .arg("--format")
         .arg("json");
-    
+
     cmd.assert()
         .success()
         .stdout(predicate::str::contains("total_files_scanned"));
@@ -106,10 +141,13 @@ impl LargeStruct_{} {{
 #[test]
 fn test_concurrent_analysis_performance() {
     let temp_dir = TempDir::new().unwrap();
-    
+
     // Create files that can be analyzed in parallel
     for i in 0..20 {
-        fs::write(temp_dir.path().join(format!("concurrent_{}.rs", i)), format!(r#"
+        fs::write(
+            temp_dir.path().join(format!("concurrent_{}.rs", i)),
+            format!(
+                r#"
 // File {} for concurrent analysis
 pub fn process_data_{}() {{
     let secret = "key-{}-secret"; // Each file has a finding
@@ -121,19 +159,23 @@ pub fn process_data_{}() {{
         println!("Result: {{}}", result);
     }}
 }}
-"#, i, i, i, i)).unwrap();
+"#,
+                i, i, i, i
+            ),
+        )
+        .unwrap();
     }
-    
+
     let start = Instant::now();
-    
+
     let mut cmd = Command::cargo_bin("codeguardian").unwrap();
     cmd.arg("check")
         .arg(temp_dir.path())
         .arg("--parallel")
-        .arg("4")  // Use 4 workers
+        .arg("4") // Use 4 workers
         .arg("--format")
         .arg("json");
-    
+
     cmd.assert()
         .success()
         .stdout(predicate::function(|output: &str| {
@@ -145,8 +187,12 @@ pub fn process_data_{}() {{
             }
             false
         }));
-    
+
     let duration = start.elapsed();
     // Parallel processing should be reasonably fast
-    assert!(duration.as_secs() < 30, "Parallel analysis took too long: {:?}", duration);
+    assert!(
+        duration.as_secs() < 30,
+        "Parallel analysis took too long: {:?}",
+        duration
+    );
 }

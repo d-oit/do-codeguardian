@@ -358,10 +358,28 @@ mod tests {
 
     #[test]
     fn test_finding_id_generation() {
-        let id1 = generate_finding_id("security", "hardcoded_secret", "src/main.rs", 42, "test message");
-        let id2 = generate_finding_id("security", "hardcoded_secret", "src/main.rs", 42, "test message");
-        let id3 = generate_finding_id("security", "hardcoded_secret", "src/main.rs", 43, "test message");
-        
+        let id1 = generate_finding_id(
+            "security",
+            "hardcoded_secret",
+            "src/main.rs",
+            42,
+            "test message",
+        );
+        let id2 = generate_finding_id(
+            "security",
+            "hardcoded_secret",
+            "src/main.rs",
+            42,
+            "test message",
+        );
+        let id3 = generate_finding_id(
+            "security",
+            "hardcoded_secret",
+            "src/main.rs",
+            43,
+            "test message",
+        );
+
         // Same inputs should generate same ID
         assert_eq!(id1, id2);
         // Different inputs should generate different IDs
@@ -405,12 +423,18 @@ mod tests {
         )
         .with_description("Test description".to_string())
         .with_suggestion("Test suggestion".to_string())
-        .with_metadata("key".to_string(), serde_json::Value::String("value".to_string()));
+        .with_metadata(
+            "key".to_string(),
+            serde_json::Value::String("value".to_string()),
+        );
 
         assert_eq!(finding.description, Some("Test description".to_string()));
         assert_eq!(finding.suggestion, Some("Test suggestion".to_string()));
         assert_eq!(finding.metadata.len(), 1);
-        assert_eq!(finding.metadata.get("key"), Some(&serde_json::Value::String("value".to_string())));
+        assert_eq!(
+            finding.metadata.get("key"),
+            Some(&serde_json::Value::String("value".to_string()))
+        );
     }
 
     #[test]
@@ -447,7 +471,7 @@ mod tests {
     #[test]
     fn test_analysis_results_add_finding() {
         let mut results = AnalysisResults::new("test_hash".to_string());
-        
+
         let finding = Finding::new(
             "security",
             "hardcoded_secret",
@@ -461,23 +485,44 @@ mod tests {
 
         assert_eq!(results.summary.total_findings, 1);
         assert_eq!(results.findings.len(), 1);
-        assert_eq!(results.summary.findings_by_severity.get(&Severity::High), Some(&1));
-        assert_eq!(results.summary.findings_by_analyzer.get("security"), Some(&1));
+        assert_eq!(
+            results.summary.findings_by_severity.get(&Severity::High),
+            Some(&1)
+        );
+        assert_eq!(
+            results.summary.findings_by_analyzer.get("security"),
+            Some(&1)
+        );
     }
 
     #[test]
     fn test_analysis_results_sorting() {
         let mut results = AnalysisResults::new("test_hash".to_string());
-        
+
         // Add findings in non-sorted order
         results.add_finding(Finding::new(
-            "security", "rule1", Severity::Low, PathBuf::from("z.rs"), 20, "msg".to_string()
+            "security",
+            "rule1",
+            Severity::Low,
+            PathBuf::from("z.rs"),
+            20,
+            "msg".to_string(),
         ));
         results.add_finding(Finding::new(
-            "security", "rule2", Severity::Critical, PathBuf::from("a.rs"), 10, "msg".to_string()
+            "security",
+            "rule2",
+            Severity::Critical,
+            PathBuf::from("a.rs"),
+            10,
+            "msg".to_string(),
         ));
         results.add_finding(Finding::new(
-            "security", "rule3", Severity::High, PathBuf::from("b.rs"), 5, "msg".to_string()
+            "security",
+            "rule3",
+            Severity::High,
+            PathBuf::from("b.rs"),
+            5,
+            "msg".to_string(),
         ));
 
         results.sort_findings();
@@ -494,7 +539,12 @@ mod tests {
         assert!(!results.has_issues());
 
         results.add_finding(Finding::new(
-            "security", "rule1", Severity::Info, PathBuf::from("test.rs"), 1, "msg".to_string()
+            "security",
+            "rule1",
+            Severity::Info,
+            PathBuf::from("test.rs"),
+            1,
+            "msg".to_string(),
         ));
         assert!(results.has_issues());
     }
@@ -506,13 +556,23 @@ mod tests {
 
         // Add low severity finding
         results.add_finding(Finding::new(
-            "security", "rule1", Severity::Info, PathBuf::from("test.rs"), 1, "msg".to_string()
+            "security",
+            "rule1",
+            Severity::Info,
+            PathBuf::from("test.rs"),
+            1,
+            "msg".to_string(),
         ));
         assert!(!results.has_high_severity_issues());
 
         // Add high severity finding
         results.add_finding(Finding::new(
-            "security", "rule2", Severity::High, PathBuf::from("test.rs"), 2, "msg".to_string()
+            "security",
+            "rule2",
+            Severity::High,
+            PathBuf::from("test.rs"),
+            2,
+            "msg".to_string(),
         ));
         assert!(results.has_high_severity_issues());
     }
@@ -520,22 +580,49 @@ mod tests {
     #[test]
     fn test_results_summary_aggregation() {
         let mut results = AnalysisResults::new("test_hash".to_string());
-        
+
         // Add multiple findings with different severities and analyzers
         results.add_finding(Finding::new(
-            "security", "rule1", Severity::High, PathBuf::from("test.rs"), 1, "msg".to_string()
+            "security",
+            "rule1",
+            Severity::High,
+            PathBuf::from("test.rs"),
+            1,
+            "msg".to_string(),
         ));
         results.add_finding(Finding::new(
-            "security", "rule2", Severity::High, PathBuf::from("test.rs"), 2, "msg".to_string()
+            "security",
+            "rule2",
+            Severity::High,
+            PathBuf::from("test.rs"),
+            2,
+            "msg".to_string(),
         ));
         results.add_finding(Finding::new(
-            "quality", "rule3", Severity::Medium, PathBuf::from("test.rs"), 3, "msg".to_string()
+            "quality",
+            "rule3",
+            Severity::Medium,
+            PathBuf::from("test.rs"),
+            3,
+            "msg".to_string(),
         ));
 
         assert_eq!(results.summary.total_findings, 3);
-        assert_eq!(results.summary.findings_by_severity.get(&Severity::High), Some(&2));
-        assert_eq!(results.summary.findings_by_severity.get(&Severity::Medium), Some(&1));
-        assert_eq!(results.summary.findings_by_analyzer.get("security"), Some(&2));
-        assert_eq!(results.summary.findings_by_analyzer.get("quality"), Some(&1));
+        assert_eq!(
+            results.summary.findings_by_severity.get(&Severity::High),
+            Some(&2)
+        );
+        assert_eq!(
+            results.summary.findings_by_severity.get(&Severity::Medium),
+            Some(&1)
+        );
+        assert_eq!(
+            results.summary.findings_by_analyzer.get("security"),
+            Some(&2)
+        );
+        assert_eq!(
+            results.summary.findings_by_analyzer.get("quality"),
+            Some(&1)
+        );
     }
 }

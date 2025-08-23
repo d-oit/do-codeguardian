@@ -170,12 +170,14 @@ async fn create_interactive_config() -> Result<Config> {
                 r#"(?i)(password|secret|key|token)\s*=\s*["'][^"']+["']"#.to_string(),
                 "Hardcoded credentials".to_string(),
                 "critical".to_string(),
-            ).unwrap_or_else(|_| panic!("Invalid security pattern")),
+            )
+            .unwrap_or_else(|_| panic!("Invalid security pattern")),
             crate::config::NonProdPattern::new(
                 r#"(?i)api[_-]?key\s*[:=]\s*["'][^"']+["']"#.to_string(),
                 "Hardcoded API key".to_string(),
                 "critical".to_string(),
-            ).unwrap_or_else(|_| panic!("Invalid security pattern")),
+            )
+            .unwrap_or_else(|_| panic!("Invalid security pattern")),
         ]);
     }
 

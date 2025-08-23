@@ -13,26 +13,32 @@ mod tests {
 
     fn create_test_results() -> AnalysisResults {
         let mut results = AnalysisResults::new("test_config_hash".to_string());
-        
-        // Add some test findings
-        results.add_finding(Finding::new(
-            "security",
-            "hardcoded_secret",
-            Severity::Critical,
-            PathBuf::from("src/main.rs"),
-            42,
-            "Hardcoded API key detected".to_string(),
-        ).with_description("This appears to be a hardcoded API key".to_string())
-         .with_suggestion("Move the API key to environment variables".to_string()));
 
-        results.add_finding(Finding::new(
-            "quality",
-            "complex_function",
-            Severity::Medium,
-            PathBuf::from("src/utils.rs"),
-            15,
-            "Function has high complexity".to_string(),
-        ).with_description("Function complexity exceeds recommended threshold".to_string()));
+        // Add some test findings
+        results.add_finding(
+            Finding::new(
+                "security",
+                "hardcoded_secret",
+                Severity::Critical,
+                PathBuf::from("src/main.rs"),
+                42,
+                "Hardcoded API key detected".to_string(),
+            )
+            .with_description("This appears to be a hardcoded API key".to_string())
+            .with_suggestion("Move the API key to environment variables".to_string()),
+        );
+
+        results.add_finding(
+            Finding::new(
+                "quality",
+                "complex_function",
+                Severity::Medium,
+                PathBuf::from("src/utils.rs"),
+                15,
+                "Function has high complexity".to_string(),
+            )
+            .with_description("Function complexity exceeds recommended threshold".to_string()),
+        );
 
         results.add_finding(Finding::new(
             "performance",
@@ -45,7 +51,7 @@ mod tests {
 
         results.summary.total_files_scanned = 25;
         results.summary.scan_duration_ms = 1500;
-        
+
         results
     }
 
@@ -53,11 +59,11 @@ mod tests {
     fn test_generate_markdown_basic() {
         let results = create_test_results();
         let markdown = generate_markdown(&results);
-        
+
         // Should generate markdown without errors
         assert!(markdown.is_ok());
         let content = markdown.unwrap();
-        
+
         // Should contain basic structure
         assert!(content.contains("# CodeGuardian Analysis Report"));
         assert!(content.contains("## 📊 Summary"));
@@ -80,7 +86,7 @@ mod tests {
     fn test_generate_markdown_contains_summary() {
         let results = create_test_results();
         let markdown = generate_markdown(&results).unwrap();
-        
+
         // Should contain summary information
         assert!(markdown.contains("25")); // total files scanned
         assert!(markdown.contains("3")); // total findings
@@ -91,7 +97,7 @@ mod tests {
     fn test_generate_markdown_severity_grouping() {
         let results = create_test_results();
         let markdown = generate_markdown(&results).unwrap();
-        
+
         // Should group by severity
         assert!(markdown.contains("| critical |"));
         assert!(markdown.contains("| medium |"));
@@ -102,7 +108,7 @@ mod tests {
     fn test_generate_markdown_empty_results() {
         let results = AnalysisResults::new("test_hash".to_string());
         let markdown = generate_markdown(&results);
-        
+
         // Should handle empty results gracefully
         assert!(markdown.is_ok());
         let content = markdown.unwrap();
@@ -112,7 +118,7 @@ mod tests {
     #[test]
     fn test_generate_markdown_with_metadata() {
         let mut results = create_test_results();
-        
+
         // Add finding with metadata
         let finding_with_metadata = Finding::new(
             "security",
@@ -121,12 +127,16 @@ mod tests {
             PathBuf::from("src/db.rs"),
             123,
             "Potential SQL injection".to_string(),
-        ).with_metadata("confidence".to_string(), serde_json::Value::Number(serde_json::Number::from(95)));
-        
+        )
+        .with_metadata(
+            "confidence".to_string(),
+            serde_json::Value::Number(serde_json::Number::from(95)),
+        );
+
         results.add_finding(finding_with_metadata);
-        
+
         let markdown = generate_markdown(&results).unwrap();
-        
+
         // Should include metadata information
         assert!(markdown.contains("sql_injection"));
         assert!(markdown.contains("src/db.rs"));
@@ -136,7 +146,7 @@ mod tests {
     fn test_generate_markdown_performance() {
         // Test with a larger number of findings to ensure performance
         let mut results = AnalysisResults::new("test_hash".to_string());
-        
+
         for i in 0..100 {
             results.add_finding(Finding::new(
                 "test",
@@ -147,11 +157,11 @@ mod tests {
                 format!("Test finding {}", i),
             ));
         }
-        
+
         let start = std::time::Instant::now();
         let markdown = generate_markdown(&results);
         let duration = start.elapsed();
-        
+
         assert!(markdown.is_ok());
         // Should complete within reasonable time (1 second)
         assert!(duration.as_secs() < 1);

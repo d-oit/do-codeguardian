@@ -182,3 +182,252 @@ When adding new E2E tests:
 4. Include both positive and negative test cases
 5. Document complex test scenarios
 6. Ensure tests are deterministic and fast
+
+### Test Development Guidelines
+
+#### Writing Effective Tests
+- **Single Responsibility**: Each test should focus on one specific scenario
+- **Clear Naming**: Use descriptive names that explain what the test validates
+- **Comprehensive Assertions**: Check both success and failure conditions
+- **Resource Cleanup**: Always clean up temporary files and directories
+- **Error Handling**: Test error conditions and edge cases
+
+#### Test Structure Best Practices
+```rust
+#[tokio::test]
+async fn test_specific_feature_scenario() {
+    // Arrange - Set up test environment
+    let temp_dir = tempfile::tempdir().unwrap();
+    let test_file = create_test_file(&temp_dir, "test.rs", TEST_CODE);
+
+    // Act - Execute the functionality being tested
+    let result = run_codeguardian(&["check", temp_dir.path().to_str().unwrap()]);
+
+    // Assert - Verify expected outcomes
+    assert!(result.is_ok());
+    let output = result.unwrap();
+    assert!(output.contains("expected finding"));
+}
+```
+
+#### Performance Testing
+- **Timeout Limits**: Tests should complete within reasonable time limits
+- **Resource Bounds**: Monitor memory and CPU usage during tests
+- **Scalability**: Ensure tests work with different codebase sizes
+- **Parallel Safety**: Tests should be safe to run in parallel
+
+### Test Categories
+
+#### Unit Tests
+Located in individual module files (e.g., `src/analyzers/security_analyzer.rs`):
+- Test individual functions and methods
+- Mock external dependencies
+- Focus on business logic
+
+#### Integration Tests
+Located in `tests/integration_tests.rs`:
+- Test component interactions
+- Use real dependencies where possible
+- Validate data flow between components
+
+#### End-to-End Tests
+Located in `tests/e2e_*_tests.rs` files:
+- Test complete user workflows
+- Use temporary directories and files
+- Validate CLI behavior and output
+
+### Testing Tools and Dependencies
+
+#### Development Dependencies
+```toml
+[dev-dependencies]
+# Testing frameworks
+assert_cmd = "2.0"        # CLI testing
+predicates = "3.0"        # Output validation
+tempfile = "3.13"         # Temporary file management
+
+# Async testing
+tokio-test = "0.4"        # Async test utilities
+
+# Mocking
+mockito = "1.0"           # HTTP mocking
+mockall = "0.11"          # Mock generation
+
+# Property testing
+proptest = "1.0"          # Property-based testing
+```
+
+#### Testing Commands
+```bash
+# Run all tests
+cargo test
+
+# Run specific test
+cargo test test_function_name
+
+# Run tests with output
+cargo test -- --nocapture
+
+# Run benchmarks
+cargo bench
+
+# Run tests with coverage
+cargo tarpaulin --out Html
+```
+
+### CI/CD Testing
+
+#### GitHub Actions Testing
+```yaml
+- name: Run Tests
+  run: |
+    cargo test --verbose
+    cargo test --doc
+    cargo test --test e2e_*
+
+- name: Run Benchmarks
+  run: |
+    cargo bench
+    # Compare against baseline if available
+
+- name: Test Coverage
+  run: |
+    cargo tarpaulin --out Xml
+    # Upload coverage reports
+```
+
+#### Performance Regression Testing
+- **Baseline Comparison**: Compare performance against known good baselines
+- **Memory Profiling**: Monitor memory usage during test execution
+- **Load Testing**: Test with various codebase sizes and complexities
+- **Resource Monitoring**: Track CPU, memory, and I/O during tests
+
+### Debugging Test Failures
+
+#### Common Issues
+1. **Flaky Tests**: Tests that pass/fail intermittently
+2. **Resource Leaks**: Tests that don't clean up properly
+3. **Timing Issues**: Tests that depend on specific timing
+4. **Environment Dependencies**: Tests that require specific environments
+
+#### Debugging Techniques
+```rust
+// Enable debug logging in tests
+std::env::set_var("RUST_LOG", "debug");
+
+// Add debug output to tests
+println!("Debug: {:?}", debug_info);
+
+// Use temporary directories for isolation
+let temp_dir = tempfile::tempdir().unwrap();
+println!("Test directory: {:?}", temp_dir.path());
+```
+
+#### Test Isolation
+- **Unique Names**: Use unique identifiers for test resources
+- **Port Management**: Use dynamic ports for network tests
+- **File System Isolation**: Use separate directories for each test
+- **Database Isolation**: Use separate databases or in-memory instances
+
+### Test Data Management
+
+#### Test Data Sources
+- **Static Test Files**: Fixed test cases in `tests/data/`
+- **Generated Content**: Dynamically generated test files
+- **Real-world Examples**: Sanitized examples from real projects
+- **Edge Cases**: Minimal examples that trigger specific conditions
+
+#### Test Data Best Practices
+- **Deterministic**: Test data should produce consistent results
+- **Minimal**: Use smallest possible test cases
+- **Representative**: Reflect real-world usage patterns
+- **Versioned**: Keep test data in version control
+
+### Continuous Testing
+
+#### Pre-commit Hooks
+```bash
+# Install pre-commit hooks
+cargo install cargo-husky
+
+# Run tests before commits
+cargo test --lib
+```
+
+#### Automated Testing
+- **Pull Request Testing**: Run full test suite on PRs
+- **Nightly Testing**: Run extended tests nightly
+- **Release Testing**: Comprehensive testing before releases
+- **Performance Monitoring**: Track performance over time
+
+### Test Metrics and Reporting
+
+#### Key Metrics
+- **Test Coverage**: Line and branch coverage percentages
+- **Test Duration**: Time taken to run test suites
+- **Flakiness Rate**: Percentage of tests that are flaky
+- **Success Rate**: Overall test pass/fail rates
+
+#### Reporting
+- **JUnit XML**: For CI/CD integration
+- **HTML Reports**: Human-readable test reports
+- **Coverage Reports**: Detailed coverage analysis
+- **Performance Reports**: Test execution performance metrics
+
+### Advanced Testing Topics
+
+#### Fuzz Testing
+```rust
+use proptest::prelude::*;
+
+proptest! {
+    #[test]
+    fn test_with_random_input(input in any::<String>()) {
+        // Test with random input
+        let result = process_input(&input);
+        // Assert invariants
+        assert!(result.is_valid());
+    }
+}
+```
+
+#### Load Testing
+```rust
+#[tokio::test]
+async fn test_concurrent_analysis() {
+    let mut handles = vec![];
+
+    for _ in 0..100 {
+        let handle = tokio::spawn(async {
+            // Simulate concurrent analysis
+            run_analysis().await
+        });
+        handles.push(handle);
+    }
+
+    for handle in handles {
+        let result = handle.await.unwrap();
+        assert!(result.is_ok());
+    }
+}
+```
+
+#### Integration Testing with External Services
+```rust
+#[tokio::test]
+async fn test_github_integration() {
+    // Mock GitHub API
+    let mut server = mockito::Server::new();
+
+    let _mock = server.mock("GET", "/repos/owner/repo/issues")
+        .with_status(200)
+        .with_body(r#"[]"#)
+        .create();
+
+    // Test GitHub integration
+    let result = create_github_issue(&server.url()).await;
+    assert!(result.is_ok());
+}
+```
+
+This comprehensive testing approach ensures CodeGuardian maintains high quality and reliability across all features and use cases.

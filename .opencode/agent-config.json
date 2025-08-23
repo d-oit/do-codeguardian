@@ -1,0 +1,41 @@
+{
+  "repository": {
+    "name": "CodeGuardian",
+    "description": "Security-focused code analysis CLI tool",
+    "primary_remote": "origin",
+    "get_remote_url": "git remote get-url origin",
+    "github_url": "https://github.com/d-oit/do-codeguardian",
+    "issues_url": "https://github.com/d-oit/do-codeguardian/issues",
+    "documentation_url": "https://github.com/d-oit/do-codeguardian/blob/main/docs/",
+    "badges": {
+      "ci_status": "https://github.com/d-oit/do-codeguardian/workflows/CI/badge.svg",
+      "ci_actions": "https://github.com/d-oit/do-codeguardian/actions",
+      "codecov": "https://codecov.io/gh/d-oit/do-codeguardian/branch/main/graph/badge.svg",
+      "downloads": "https://img.shields.io/github/downloads/d-oit/do-codeguardian/total.svg",
+      "contributors": "https://img.shields.io/github/contributors/d-oit/do-codeguardian.svg",
+      "last_commit": "https://img.shields.io/github/last-commit/d-oit/do-codeguardian.svg"
+    },
+    "dynamic_badge_commands": {
+      "ci_badge": "./.opencode/get-repo-info.sh ci-badge",
+      "actions_url": "./.opencode/get-repo-info.sh actions",
+      "codecov_badge": "./.opencode/get-repo-info.sh codecov-badge",
+      "downloads_badge": "./.opencode/get-repo-info.sh downloads-badge",
+      "contributors_badge": "./.opencode/get-repo-info.sh contributors-badge",
+      "last_commit_badge": "./.opencode/get-repo-info.sh last-commit-badge"
+    }
+  },
+  "project": {
+    "type": "rust",
+    "language": "Rust",
+    "edition": "2021",
+    "main_binary": "codeguardian",
+    "configuration_file": "codeguardian.toml"
+  },
+  "agent_instructions": {
+    "security_focused": true,
+    "validate_inputs": true,
+    "use_secure_defaults": true,
+    "error_handling": "anyhow::Result<T> for applications, thiserror::Error for libraries",
+    "testing_framework": "built-in Rust testing with tempfile for temporary directories"
+  }
+}

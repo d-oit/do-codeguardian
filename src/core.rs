@@ -239,10 +239,12 @@ impl GuardianEngine {
         self.initialize_analysis(files.len()).await?;
 
         // Process files using cache and adaptive parallelism
-        self.process_files_with_caching(&mut results, files, &config_hash, parallel).await?;
+        self.process_files_with_caching(&mut results, files, &config_hash, parallel)
+            .await?;
 
         // Finalize analysis
-        self.finalize_analysis(&mut results, files.len(), start_time).await?;
+        self.finalize_analysis(&mut results, files.len(), start_time)
+            .await?;
 
         Ok(results)
     }
@@ -269,7 +271,8 @@ impl GuardianEngine {
         parallel: usize,
     ) -> Result<()> {
         // Handle cached files
-        self.process_cached_files(results, files, config_hash).await?;
+        self.process_cached_files(results, files, config_hash)
+            .await?;
 
         // Process uncached files with adaptive parallelism
         let uncached_files = self.get_uncached_files(files, config_hash).await?;
@@ -670,7 +673,9 @@ mod tests {
     async fn test_analyze_single_file() {
         let temp_dir = TempDir::new().unwrap();
         let test_file = temp_dir.path().join("test.rs");
-        fs::write(&test_file, "fn main() { println!(\"Hello, world!\"); }").await.unwrap();
+        fs::write(&test_file, "fn main() { println!(\"Hello, world!\"); }")
+            .await
+            .unwrap();
 
         let mut engine = create_test_engine().await;
         let paths = vec![temp_dir.path().to_path_buf()];
@@ -683,14 +688,22 @@ mod tests {
     async fn test_analyze_file_with_security_issue() {
         let temp_dir = TempDir::new().unwrap();
         let test_file = temp_dir.path().join("test.js");
-        fs::write(&test_file, r#"const apiKey = "sk-1234567890abcdef1234567890abcdef";"#).await.unwrap();
+        fs::write(
+            &test_file,
+            r#"const apiKey = "sk-1234567890abcdef1234567890abcdef";"#,
+        )
+        .await
+        .unwrap();
 
         let mut engine = create_test_engine().await;
         let paths = vec![temp_dir.path().to_path_buf()];
         let results = engine.scan_paths(&paths).await.unwrap();
 
         // Should detect hardcoded secret
-        assert!(results.findings.iter().any(|f| f.rule == "hardcoded_secret"));
+        assert!(results
+            .findings
+            .iter()
+            .any(|f| f.rule == "hardcoded_secret"));
     }
 
     #[tokio::test]
@@ -757,11 +770,15 @@ mod tests {
     async fn test_ml_classifier_integration() {
         let temp_dir = TempDir::new().unwrap();
         let test_file = temp_dir.path().join("test.js");
-        fs::write(&test_file, r#"const secret = "test_secret_123";"#).await.unwrap();
+        fs::write(&test_file, r#"const secret = "test_secret_123";"#)
+            .await
+            .unwrap();
 
         let config = Config::minimal();
         let progress = ProgressReporter::new(false);
-        let mut engine = GuardianEngine::new_with_ml(config, progress, None).await.unwrap();
+        let mut engine = GuardianEngine::new_with_ml(config, progress, None)
+            .await
+            .unwrap();
         let paths = vec![temp_dir.path().to_path_buf()];
 
         let results = engine.scan_paths(&paths).await.unwrap();
@@ -774,7 +791,7 @@ mod tests {
     async fn test_error_handling_invalid_path() {
         let engine = create_test_engine().await;
         let invalid_path = PathBuf::from("/nonexistent/path/that/does/not/exist");
-        
+
         let result = engine.scan_directory(&invalid_path).await;
         // Should handle gracefully - either return empty results or appropriate error
         assert!(result.is_ok() || result.is_err());
@@ -787,7 +804,9 @@ mod tests {
         // Create multiple test files
         for i in 0..5 {
             let file_path = temp_dir.path().join(format!("test{}.rs", i));
-            fs::write(&file_path, format!("fn test{}() {{}}", i)).await.unwrap();
+            fs::write(&file_path, format!("fn test{}() {{}}", i))
+                .await
+                .unwrap();
         }
 
         let mut engine = create_test_engine().await;
@@ -809,14 +828,14 @@ mod tests {
     #[test]
     fn test_analysis_stats_cache_hit_rate_edge_cases() {
         let stats = AnalysisStats::new();
-        
+
         // No cache operations
         assert_eq!(stats.cache_hit_rate(), 0.0);
-        
+
         // Only hits
         stats.cache_hits.store(5, Ordering::Relaxed);
         assert_eq!(stats.cache_hit_rate(), 1.0);
-        
+
         // Only misses
         stats.cache_hits.store(0, Ordering::Relaxed);
         stats.cache_misses.store(3, Ordering::Relaxed);

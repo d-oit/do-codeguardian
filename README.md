@@ -1,456 +1,232 @@
 # 🚀 CodeGuardian
 
-A security-first code analysis CLI with GitHub integration, built with best-practice defaults for CI/CD workflows.
+> **Security-first code analysis CLI with GitHub integration, built with best-practice defaults for CI/CD workflows.**
 
-## Features
+[![Rust](https://img.shields.io/badge/rust-1.70%2B-orange.svg)](https://www.rust-lang.org/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![CI Status](https://github.com/d-oit/do-codeguardian/workflows/CI/badge.svg)](https://github.com/d-oit/do-codeguardian/actions)
+[![codecov](https://codecov.io/gh/d-oit/do-codeguardian/branch/main/graph/badge.svg)](https://codecov.io/gh/d-oit/do-codeguardian)
+[![Downloads](https://img.shields.io/github/downloads/d-oit/do-codeguardian/total.svg)](https://github.com/d-oit/do-codeguardian/releases)
+[![Contributors](https://img.shields.io/github/contributors/d-oit/do-codeguardian.svg)](https://github.com/d-oit/do-codeguardian/graphs/contributors)
+[![Last Commit](https://img.shields.io/github/last-commit/d-oit/do-codeguardian.svg)](https://github.com/d-oit/do-codeguardian/commits/main)
 
-### 🔒 Security-by-Default
-- **Deterministic findings** with stable IDs using SHA-256
-- **No secrets in logs** - automatic redaction of common patterns
-- **Sandboxed execution** - no symlink following, resource limits
-- **Canonicalized paths** - prevents path traversal issues
-- **Enhanced path validation** - prevents directory traversal attacks
-- **File size limits** - configurable limits to prevent resource exhaustion
-- **Memory-safe analysis** - streaming for large files to prevent OOM
+**CodeGuardian** is a comprehensive security and code quality analysis tool designed specifically for modern development workflows. It combines deterministic analysis, ML-powered false positive reduction, and seamless CI/CD integration to help teams maintain high code quality and security standards.
 
-### 🚀 CI-First UX
-- **JSON as source of truth** - Markdown and GitHub issues are derived artifacts
-- **Diff-only mode** for PRs - fast, focused feedback
-- **TTY-aware progress bars** - auto-disable in CI environments
-- **Idempotent GitHub integration** - updates existing issues instead of creating duplicates
+Built with Rust for memory safety and performance, CodeGuardian provides enterprise-grade code analysis with advanced features like streaming analysis for large files, intelligent caching, and comprehensive security checks.
 
-### 📊 Comprehensive Analysis
-- **Integrity checking** - cryptographic hashing with BLAKE3
-- **Lint drift detection** - configuration consistency across projects
-- **Non-production code detection** - TODOs, debug statements, potential secrets
-- **Dependency analysis** - security vulnerabilities in dependencies
-- **Performance analysis** - code optimization opportunities with parallel processing
-- **Code quality analysis** - maintainability and best practices with enhanced patterns
-- **Security analysis** - comprehensive security vulnerability detection with ML filtering
-- **Optimized analyzers** - high-performance pattern matching for large codebases
-- **Streaming analysis** - memory-efficient processing of large files
+## ✨ Key Features
 
-### 🧠 **Intelligent ML Filtering** (ENHANCED!)
-- **RUV-FANN neural networks** - 200x faster than BERT, 100x smaller
-- **False positive reduction** - 60-80% noise reduction with 90%+ accuracy
-- **Online learning** - improves from user feedback automatically
-- **Zero-config ML** - works out of the box, no setup required
-- **Enhanced feature extraction** - 12-dimensional feature vectors for better classification
-- **Training data management** - improved data collection and model training
-- **Model performance metrics** - detailed accuracy and performance reporting
+- 🔒 **Security-by-Default**: Deterministic findings with stable IDs, automatic secret redaction, sandboxed execution
+- 🚀 **CI-First UX**: JSON-first output, diff-only mode for PRs, TTY-aware progress bars
+- 📊 **Comprehensive Analysis**: Security, performance, code quality, dependency, integrity, and naming analysis
+- 🧠 **Intelligent ML Filtering**: RUV-FANN neural networks for 60-80% false positive reduction
+- ⚡ **Turbo Mode**: High-performance analysis for large codebases with 18x speedup and streaming support
+- 🔗 **GitHub Integration**: Idempotent issue creation with automatic updates and multiple issue modes
+- 📈 **Advanced Performance**: Adaptive parallelism, memory pooling, intelligent caching, and resource optimization
+- 🛡️ **Enterprise Ready**: Comprehensive security checks, dependency analysis, and integrity verification
+- 🔧 **Extensible Architecture**: Pluggable analyzer system with custom security checks and patterns
 
-### ⚡ **Turbo Mode** (ENHANCED!)
-- **High-performance analysis** - optimized for large codebases with 18x speedup
-- **Parallel processing** - configurable parallel file analysis with semaphore control
-- **Streaming analysis** - handles large files efficiently with adaptive chunking
-- **Memory management** - configurable memory limits with automatic optimization
-- **Aggressive optimization** - optional performance-focused mode with reduced accuracy trade-off
-- **Real-time metrics** - detailed performance monitoring and reporting
-- **Resource-aware scaling** - automatic adjustment based on system capabilities
+## 🚀 Quick Start
 
-## Quick Start
+### Prerequisites
 
-### Installation
+- **Rust 1.70+** (for building from source)
+- **Git** for repository operations
+- **GitHub token** (optional, for GitHub integration)
+- **Docker** (optional, for containerized usage)
+- **Python 3.7+** (optional, for advanced scripting)
 
-```bash
-# Install from source
-cargo install --git https://github.com/d-oit/codeguardian
+### System Requirements
 
-# Or download binary from releases
-curl -L https://github.com/d-oit/codeguardian/releases/latest/download/codeguardian-linux-x64.tar.gz | tar xz
-```
+- **Memory**: Minimum 512MB, Recommended 2GB+ for large codebases
+- **CPU**: Multi-core recommended for parallel analysis
+- **Storage**: 100MB+ for cache and temporary files
+- **Network**: Required for GitHub integration and dependency analysis
 
 ### Basic Usage
 
 ```bash
-# Initialize configuration
-codeguardian init --default
+# 1. Install CodeGuardian
+cargo install codeguardian
 
-# Run analysis (recommended defaults)
-codeguardian check . --format json --out results.json
+# 2. Initialize configuration with security template
+codeguardian init --template security
 
-# Generate markdown report
-codeguardian report --from results.json --md report.md
+# 3. Run analysis with ML filtering
+codeguardian check . --format json --out results.json --ml-model enhanced-model.fann
 
-# Create GitHub issue
-codeguardian gh-issue --from results.json --repo owner/repo
+# 4. Generate comprehensive report
+codeguardian report --from results.json --md report.md --html report.html
 
-# High-performance analysis for large codebases
-codeguardian turbo . --metrics --output turbo-results.json --max-parallel 8
-
-# Train ML model for better accuracy
-codeguardian train --model-path enhanced-model.fann --epochs 2000
-
-# View ML model performance
-codeguardian metrics --model-path enhanced-model.fann --detailed
-
-# Run with enhanced security checks
-codeguardian check . --format json --out results.json --security-enhanced
-
-# Analyze only changed files (Git-aware)
-codeguardian check . --diff origin/main..HEAD --format json --out pr-results.json
+# 5. Create GitHub issues with checklist format
+codeguardian gh-issue --from results.json --repo owner/repo --mode checklist
 ```
 
-### CI Integration
-
-For PRs (diff-only, fast feedback):
-```bash
-codeguardian check . \
-  --diff origin/main..HEAD \
-  --format json \
-  --out results.json \
-  --emit-md report.md \
-  --emit-gh \
-  --repo $GITHUB_REPOSITORY \
-  --max-parallel 4 \
-  --memory-limit 512
-```
-
-For scheduled scans (full repository):
-```bash
-codeguardian check . \
-  --format json \
-  --out results.json \
-  --emit-md report.md \
-  --emit-gh \
-  --repo $GITHUB_REPOSITORY \
-  --fail-on-issues \
-  --aggressive
-```
-
-For large enterprise codebases:
-```bash
-codeguardian turbo . \
-  --max-parallel 16 \
-  --memory-limit 2048 \
-  --format json \
-  --output enterprise-results.json \
-  --metrics \
-  --streaming-threshold 5
-```
-
-## Automatic Documentation
-
-CodeGuardian includes automatic documentation updates using [opencode](https://opencode.ai), an AI coding agent that keeps your project documentation current.
-
-### Setup
-
-1. **Install opencode**:
-   ```bash
-   curl -fsSL https://opencode.ai/install | bash
-   ```
-
-2. **Configure authentication**:
-   ```bash
-   opencode auth login
-   ```
-   Select your preferred LLM provider (Anthropic recommended).
-
-3. **Initialize for your project**:
-   ```bash
-   bash scripts/setup-opencode.sh
-   ```
-
-### How It Works
-
-- **Pre-commit hook**: Automatically runs before each git commit
-- **Smart analysis**: Uses AI to understand your codebase and update documentation
-- **Multiple doc types**: Updates README, API docs, performance docs, and security docs
-- **Code entity documentation**: Adds docstrings to functions, structs, traits, and modules
-- **Inline comments**: Adds explanatory comments for complex logic
-- **Review changes**: You can see and modify documentation updates before committing
-- **Quality validation**: Ensures documentation follows Rust documentation standards
-
-
-### Documentation
-
-For detailed information about the automatic documentation system, see [docs/AUTOMATIC_DOCUMENTATION.md](docs/AUTOMATIC_DOCUMENTATION.md).
-
-## Commands
-
-### `check` (Primary Command)
-
-Run comprehensive code analysis with best-practice defaults:
+### One-Liner Analysis
 
 ```bash
-codeguardian check [OPTIONS] [PATHS]...
+# Quick security scan with GitHub integration
+codeguardian check . --emit-gh --repo owner/repo
+
+# Fast PR analysis with ML filtering
+codeguardian check . --diff origin/main..HEAD --ml-model enhanced-model.fann --emit-gh --repo owner/repo
+
+# High-performance analysis
+codeguardian turbo . --max-parallel 16 --metrics --format json --output results.json
+
+# Security audit with comprehensive reporting
+codeguardian check . --config security-config.toml --format json --out audit.json --emit-md audit-report.md --emit-gh --repo owner/repo --fail-on-issues
 ```
 
-**Key Options:**
-- `--format json` - Output format (JSON is source of truth)
-- `--out results.json` - Output file for results
-- `--emit-md report.md` - Generate markdown report
-- `--emit-gh` - Create/update GitHub issue
-- `--diff origin/main..HEAD` - Analyze only changed files
-- `--only-changed` - Analyze only staged files
-- `--fail-on-issues` - Exit with code 2 if issues found
-- `--max-parallel N` - Maximum parallel workers
-- `--memory-limit MB` - Memory limit for analysis
-- `--aggressive` - Enable aggressive optimizations
-- `--security-enhanced` - Enable enhanced security checks
+## 📚 Documentation
 
-### `report` (Converter)
+- 📦 **[Installation Guide](docs/installation.md)** - Installation instructions and system requirements
+- 🔧 **[Usage Guide](docs/usage.md)** - Commands, patterns, and examples
+- ⚙️ **[Configuration Guide](docs/configuration.md)** - Configuration options and presets
+- 📊 **[API Reference](docs/api.md)** - Output formats, programmatic integration, and webhooks
+- 🤝 **[Contributing Guide](docs/contributing.md)** - Development setup and contribution process
+- 📄 **[License Information](docs/license.md)** - License details and third-party dependencies
 
-Convert results to different formats:
+## 🔗 Integrations
 
-```bash
-codeguardian report --from results.json --md report.md
-```
-
-### `gh-issue` (GitHub Integration)
-
-Create or update GitHub issues with idempotent behavior:
-
-```bash
-codeguardian gh-issue \
-  --from results.json \
-  --repo owner/repo \
-  --mode checklist \
-  --title "CodeGuardian: " \
-  --labels "codeguardian,automated"
-```
-
-**GitHub Issue Modes:**
-- `checklist` - Interactive checklist format (default)
-- `simple` - Standard issue format
-- `children` - Parent issue with child issues for large reports
-
-### `init` (Setup)
-
-Initialize configuration:
-
-```bash
-codeguardian init --default
-```
-
-### `train` (ML Training)
-
-Train the ML model for improved false positive reduction:
-
-```bash
-codeguardian train --model-path enhanced-model.fann --data ml-training-data.json
-```
-
-**Training Options:**
-- `--model-path` - Path to save the trained model
-- `--data` - Training data file (JSON format)
-- `--epochs` - Number of training epochs (default: 1000)
-- `--learning-rate` - Learning rate for training (default: 0.7)
-
-### `metrics` (ML Metrics)
-
-View ML model performance metrics:
-
-```bash
-codeguardian metrics --model-path enhanced-model.fann
-```
-
-**Metrics Options:**
-- `--model-path` - Path to the model file
-- `--export` - Export metrics to JSON file
-- `--detailed` - Show detailed performance breakdown
-
-### `turbo` (High-Performance Analysis)
-
-High-performance analysis for large codebases with optimized parallel processing:
-
-```bash
-codeguardian turbo . \
-  --max-parallel 16 \
-  --memory-limit 2048 \
-  --max-file-size 50 \
-  --aggressive \
-  --metrics
-```
-
-**Turbo Options:**
-- `--max-parallel` - Maximum parallel file processors (default: auto-detect)
-- `--memory-limit` - Memory limit in MB (default: 1024)
-- `--streaming-threshold` - File size threshold for streaming analysis in MB (default: 5)
-- `--max-files` - Maximum number of files to analyze (default: unlimited)
-- `--max-file-size` - Skip files larger than this size in MB (default: 100)
-- `--aggressive` - Enable aggressive optimizations (may reduce accuracy slightly)
-- `--format` - Output format: human or json (default: human)
-- `--output` - Output file for results
-- `--metrics` - Show detailed performance metrics
-- `--max-file-size` - Skip files larger than this size in MB (default: 100)
-- `--fail-on-critical` - Exit with error code if critical issues found
-- `--progress` - Show progress bar during analysis
-
-## Configuration
-
-CodeGuardian uses `codeguardian.toml` for configuration. See [examples/codeguardian.toml](examples/codeguardian.toml) for a complete example.
-
-### ML Training Examples
-
-- **`examples/enhanced-ml-demo.rs`** - Demonstration of enhanced ML capabilities
-- **`examples/ml-training-example.rs`** - Example of training data preparation
-- **`examples/performance-comparison.md`** - Performance comparison between different analysis modes
-
-### CI Usage Example
-
-- **`examples/ci-usage.sh`** - Complete CI/CD integration example
-
-### Key Configuration Sections
-
-```toml
-[general]
-follow_symlinks = false  # Security: don't follow symlinks
-max_file_size = 10485760  # 10MB limit
-parallel_workers = 0      # Auto-detect CPU cores
-memory_limit_mb = 1024   # Memory limit for analysis
-streaming_threshold_mb = 5 # Stream files larger than 5MB
-
-[analyzers.integrity]
-enabled = true
-hash_algorithm = "blake3"  # BLAKE3 by default
-
-[analyzers.lint_drift]
-enabled = true
-canonicalize_configs = true  # Stable JSON/YAML formatting
-
-[analyzers.non_production]
-enabled = true
-todo_escalation_days = 30  # Escalate old TODOs
-
-[analyzers.security]
-enhanced_mode = true       # Enable enhanced security checks
-secret_patterns = ["api_key", "token", "password"]  # Additional patterns
-
-[ml]
-enabled = true
-model_path = "enhanced-model.fann"
-online_learning = true
-feature_extraction = "enhanced"
-
-[performance]
-cache_enabled = true
-cache_max_age_days = 30
-parallel_processing = true
-memory_optimization = true
-
-[github]
-default_labels = ["codeguardian", "automated"]
-title_prefix = "CodeGuardian: "
-max_body_size = 60000  # Auto-switch to children mode
-rate_limit_buffer = 100  # Stay below rate limit
-```
-
-## GitHub Actions Integration
-
-See [.github/workflows/codeguardian-ci.yml](.github/workflows/codeguardian-ci.yml) for a complete CI setup:
+### GitHub Actions
 
 ```yaml
-- name: Run CodeGuardian (PR diff-only)
-  run: |
-    codeguardian check . \
-      --diff origin/main..HEAD \
-      --format json \
-      --out results.json \
-      --emit-md report.md \
-      --emit-gh \
-      --repo ${{ github.repository }}
-  env:
-    GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+- name: Run CodeGuardian
+  uses: d-oit/do-codeguardian-action@v1
+  with:
+      args: |
+        check . \
+          --diff origin/main..HEAD \
+          --format json \
+          --out results.json \
+          --emit-gh \
+          --repo ${{ github.repository }} \
+          --ml-model enhanced-model.fann \
+          --max-parallel 4 \
+          --memory-limit 1024
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 ```
 
-## Best Practices
+### GitLab CI
 
-### 1. Deterministic Results
-- Findings are sorted by severity → file → line
-- Stable IDs ensure consistent tracking across runs
-- Versioned schemas prevent compatibility issues
-
-### 2. Security Hardening
-- No secrets in logs (automatic redaction)
-- Sandboxed file access with size limits
-- No symlink following by default
-
-### 3. CI Optimization
-- Use `--diff` for PRs (fast, focused)
-- Use full scans for scheduled jobs
-- Always upload `results.json` and `report.md` as artifacts
-
-### 4. GitHub Integration
-- Issues are idempotent (updates existing instead of duplicating)
-- Automatic body truncation for large reports
-- Stable checklist format with finding IDs
-
-## Development
-
-### Building
-
-```bash
-cargo build --release
+```yaml
+codeguardian:
+  stage: security
+  image: codeguardian/codeguardian:latest
+  script:
+    - |
+      if [ -n "$CI_MERGE_REQUEST_TARGET_BRANCH_NAME" ]; then
+        codeguardian check . \
+          --diff origin/$CI_MERGE_REQUEST_TARGET_BRANCH_NAME..HEAD \
+          --format json \
+          --out results.json \
+          --emit-md report.md
+      else
+        codeguardian check . \
+          --format json \
+          --out results.json \
+          --emit-md report.md
+      fi
+  artifacts:
+    paths:
+      - results.json
+      - report.md
+    reports:
+      junit: results.json
 ```
 
-### Testing
+### Jenkins Pipeline
+
+```groovy
+pipeline {
+    agent {
+        docker {
+            image 'codeguardian/codeguardian:latest'
+            args '-v $WORKSPACE:/workspace -w /workspace'
+        }
+    }
+    stages {
+        stage('CodeGuardian Analysis') {
+            steps {
+                sh '''
+                    codeguardian check . \
+                      --format json \
+                      --out results.json \
+                      --emit-md report.md \
+                      --max-parallel 4
+                '''
+            }
+        }
+    }
+}
+```
+
+## 🤝 Contributing
+
+We welcome contributions! Please see our [Contributing Guide](docs/contributing/) for details.
+
+### Development Setup
 
 ```bash
+git clone https://github.com/d-oit/do-codeguardian
+cd do-codeguardian
+cargo build
 cargo test
 cargo clippy -- -D warnings
 cargo fmt -- --check
 ```
 
-### Benchmarking
+### Areas for Contribution
 
-```bash
-cargo bench
-```
+- 🔍 **New Analyzers**: Security, performance, code quality, or dependency checks
+- 🌐 **Platform Support**: Additional CI/CD platform integrations and cloud providers
+- 📊 **Output Formats**: New report formats, integrations, and visualization
+- 🧠 **ML Improvements**: Enhanced false positive detection and model training
+- 📚 **Documentation**: Improve guides, examples, and API documentation
+- 🐛 **Bug Fixes**: Help improve stability, performance, and reliability
+- 🛡️ **Security**: Vulnerability research and security enhancement
+- ⚡ **Performance**: Optimization of analysis speed and memory usage
+- 🔧 **DevOps**: CI/CD improvements and deployment automation
 
-### Agent Management
+## 📄 License
 
-CodeGuardian includes AI agent management capabilities:
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-```bash
-# Setup agents
-bash scripts/setup-opencode.sh
+## 📞 Support
 
-# View agent information
-bash scripts/agents-info.sh
+### Getting Help
 
-# Run agent demonstrations
-bash scripts/demo-agents.sh
+- 📖 **[Documentation](docs/)** - Comprehensive user guides and API reference
+- ❓ **[FAQ](docs/troubleshooting/faq.md)** - Frequently asked questions
+- 🐛 **[Issue Tracker](https://github.com/d-oit/do-codeguardian/issues)** - Bug reports and feature requests
+- 💬 **[Discussions](https://github.com/d-oit/do-codeguardian/discussions)** - Community discussions and support
+- 📧 **Email Support** - Enterprise support available for CodeGuardian Pro
 
-# Manage agents
-bash scripts/manage-agents.sh --list
-```
+### Community Resources
 
-## Architecture
+- 🌟 **GitHub Stars** - Show your support by starring the repository
+- 🔄 **Contributing** - Help improve CodeGuardian by contributing code or documentation
+- 📢 **Social Media** - Follow us on [Twitter](https://twitter.com/codeguardian) for updates
+- 🎥 **Videos & Tutorials** - Check out our [YouTube channel](https://youtube.com/@codeguardian) for video guides
 
-CodeGuardian follows a modular architecture with enhanced performance and security:
+### Enterprise Support
 
-- **CLI Layer** - Argument parsing and command dispatch (check, report, gh-issue, init, train, metrics, turbo)
-- **Core Engine** - File discovery, parallel processing, result aggregation with semaphore control
-- **Analyzer Registry** - Pluggable analysis modules (security, performance, quality, dependency, integrity, etc.)
-- **ML Layer** - RUV-FANN neural networks for false positive reduction with enhanced feature extraction
-- **Performance Engine** - High-performance analysis with streaming, caching, and adaptive optimization
-- **Streaming Engine** - Memory-efficient processing of large files with adaptive chunking
-- **GitHub Integration** - Idempotent issue creation/updates with rate limiting and retry logic
-- **Security Layer** - Path validation, secret redaction, resource limits, and sandboxing
-- **Agent System** - AI agent management and automation scripts with enhanced documentation
-- **Caching Layer** - Intelligent file caching with mtime/hash checking for incremental analysis
+For enterprise customers, we offer:
+- 🏢 **Dedicated Support** - Direct access to the development team
+- 🚀 **Priority Features** - Fast-track your feature requests
+- 📊 **Custom Integrations** - Tailored solutions for your workflow
+- 🎯 **Training & Consulting** - Expert guidance for your team
 
-## Contributing
+---
 
-1. Fork the repository
-2. Create a feature branch
-3. Add tests for new functionality
-4. Ensure all tests pass and code is formatted
-5. Submit a pull request
+<div align="center">
 
-## License
+**[⭐ Star us on GitHub](https://github.com/d-oit/do-codeguardian)** | **[📖 Documentation](docs/)** | **[🐛 Report Issues](https://github.com/d-oit/do-codeguardian/issues)** | **[🚀 Releases](https://github.com/d-oit/do-codeguardian/releases)** | **[💬 Discussions](https://github.com/d-oit/do-codeguardian/discussions)**
 
-MIT License - see [LICENSE](LICENSE) for details.
+Made with ❤️ by the CodeGuardian team
 
-## Roadmap
+**CodeGuardian is a security-first code analysis tool that helps teams maintain high code quality and security standards through comprehensive analysis, ML-powered false positive reduction, and seamless CI/CD integration.**
 
-- [x] **Completed**: Turbo mode for high-performance analysis
-- [x] **Completed**: ML model training and metrics commands
-- [x] **Completed**: Agent management system
-- [x] **Completed**: Enhanced analyzer modules (dependency, performance, quality)
-- [ ] SARIF output format support
-- [ ] Additional language-specific analyzers
-- [ ] Baseline drift detection
-- [ ] Custom rule definitions
-- [ ] Plugin system for custom analyzers
+</div>

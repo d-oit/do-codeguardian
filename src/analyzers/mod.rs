@@ -2,6 +2,7 @@ pub mod code_quality_analyzer;
 pub mod dependency_analyzer;
 pub mod integrity;
 pub mod lint_drift;
+pub mod naming_checker;
 pub mod non_production;
 pub mod optimized_analyzer;
 pub mod optimized_patterns;
@@ -81,6 +82,7 @@ impl AnalyzerRegistry {
         registry.register(Box::new(performance_analyzer::PerformanceAnalyzer::new()));
         registry.register(Box::new(security_analyzer::SecurityAnalyzer::new()));
         registry.register(Box::new(code_quality_analyzer::CodeQualityAnalyzer::new()));
+        registry.register(Box::new(naming_checker::NamingChecker::new()));
 
         // Register optimized analyzer for high-performance analysis
         registry.register(Box::new(optimized_analyzer::OptimizedAnalyzer::new()));

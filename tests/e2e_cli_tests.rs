@@ -1,8 +1,8 @@
 use assert_cmd::prelude::*;
 use predicates::prelude::*;
+use std::fs;
 use std::process::Command;
 use tempfile::TempDir;
-use std::fs;
 
 /// End-to-end CLI workflow tests for CodeGuardian
 /// Tests the complete user experience from command line to output
@@ -11,10 +11,12 @@ use std::fs;
 fn test_cli_help_command() {
     let mut cmd = Command::cargo_bin("codeguardian").unwrap();
     cmd.arg("--help");
-    
+
     cmd.assert()
         .success()
-        .stdout(predicate::str::contains("A security-first code analysis CLI"))
+        .stdout(predicate::str::contains(
+            "A security-first code analysis CLI",
+        ))
         .stdout(predicate::str::contains("check"))
         .stdout(predicate::str::contains("report"))
         .stdout(predicate::str::contains("init"));
@@ -24,7 +26,7 @@ fn test_cli_help_command() {
 fn test_cli_version_command() {
     let mut cmd = Command::cargo_bin("codeguardian").unwrap();
     cmd.arg("--version");
-    
+
     cmd.assert()
         .success()
         .stdout(predicate::str::contains("codeguardian"));
@@ -51,7 +53,11 @@ fn test_cli_check_with_security_issues() {
 
     // Create a file with a security issue
     let test_file = temp_dir.path().join("test.js");
-    fs::write(&test_file, r#"const apiKey = "sk-1234567890abcdef1234567890abcdef";"#).unwrap();
+    fs::write(
+        &test_file,
+        r#"const apiKey = "sk-1234567890abcdef1234567890abcdef";"#,
+    )
+    .unwrap();
 
     let mut cmd = Command::cargo_bin("codeguardian").unwrap();
     cmd.arg("check")
@@ -70,9 +76,17 @@ fn test_cli_check_with_multiple_files() {
     let temp_dir = TempDir::new().unwrap();
 
     // Create multiple test files
-    fs::write(temp_dir.path().join("main.rs"), "fn main() { println!(\"Hello\"); }").unwrap();
+    fs::write(
+        temp_dir.path().join("main.rs"),
+        "fn main() { println!(\"Hello\"); }",
+    )
+    .unwrap();
     fs::write(temp_dir.path().join("lib.rs"), "pub fn test() {}").unwrap();
-    fs::write(temp_dir.path().join("config.toml"), "[package]\nname = \"test\"").unwrap();
+    fs::write(
+        temp_dir.path().join("config.toml"),
+        "[package]\nname = \"test\"",
+    )
+    .unwrap();
 
     let mut cmd = Command::cargo_bin("codeguardian").unwrap();
     cmd.arg("check")
@@ -214,18 +228,16 @@ fn test_cli_check_with_include_patterns() {
 #[test]
 fn test_cli_init_command() {
     let temp_dir = TempDir::new().unwrap();
-    
+
     let mut cmd = Command::cargo_bin("codeguardian").unwrap();
-    cmd.arg("init")
-        .current_dir(temp_dir.path());
-    
-    cmd.assert()
-        .success();
-    
+    cmd.arg("init").current_dir(temp_dir.path());
+
+    cmd.assert().success();
+
     // Check that config file was created
     let config_file = temp_dir.path().join("codeguardian.toml");
     assert!(config_file.exists());
-    
+
     // Verify config file content
     let config_content = fs::read_to_string(config_file).unwrap();
     assert!(config_content.contains("[general]"));
@@ -235,7 +247,7 @@ fn test_cli_init_command() {
 #[test]
 fn test_cli_report_conversion() {
     let temp_dir = TempDir::new().unwrap();
-    
+
     // Create a JSON results file
     let results_json = r#"{
         "schema_version": "1.0.0",
@@ -270,17 +282,17 @@ fn test_cli_report_conversion() {
         "config_hash": "test",
         "timestamp": "2024-01-01T00:00:00Z"
     }"#;
-    
+
     let results_file = temp_dir.path().join("results.json");
     fs::write(&results_file, results_json).unwrap();
-    
+
     let mut cmd = Command::cargo_bin("codeguardian").unwrap();
     cmd.arg("report")
         .arg("--from")
         .arg(&results_file)
         .arg("--format")
         .arg("markdown");
-    
+
     cmd.assert()
         .success()
         .stdout(predicate::str::contains("# CodeGuardian Analysis Report"))
@@ -295,8 +307,9 @@ fn test_cli_turbo_mode() {
     for i in 0..5 {
         fs::write(
             temp_dir.path().join(format!("file_{}.rs", i)),
-            format!("fn function_{}() {{}}", i)
-        ).unwrap();
+            format!("fn function_{}() {{}}", i),
+        )
+        .unwrap();
     }
 
     let mut cmd = Command::cargo_bin("codeguardian").unwrap();
@@ -348,22 +361,23 @@ fn test_cli_error_handling_invalid_config() {
 #[test]
 fn test_cli_performance_large_directory() {
     let temp_dir = TempDir::new().unwrap();
-    
+
     // Create a moderate number of files to test performance
     for i in 0..20 {
         let subdir = temp_dir.path().join(format!("dir_{}", i));
         fs::create_dir_all(&subdir).unwrap();
-        
+
         for j in 0..5 {
             fs::write(
                 subdir.join(format!("file_{}.rs", j)),
-                format!("fn function_{}() {{ /* content {} */ }}", i, j)
-            ).unwrap();
+                format!("fn function_{}() {{ /* content {} */ }}", i, j),
+            )
+            .unwrap();
         }
     }
-    
+
     let start = std::time::Instant::now();
-    
+
     let mut cmd = Command::cargo_bin("codeguardian").unwrap();
     cmd.arg("check")
         .arg(temp_dir.path())
@@ -373,10 +387,14 @@ fn test_cli_performance_large_directory() {
     cmd.assert()
         .success()
         .stdout(predicate::str::contains("Files scanned:"));
-    
+
     let duration = start.elapsed();
     // Should complete within reasonable time (30 seconds for 100 files)
-    assert!(duration.as_secs() < 30, "Analysis took too long: {:?}", duration);
+    assert!(
+        duration.as_secs() < 30,
+        "Analysis took too long: {:?}",
+        duration
+    );
 }
 
 #[test]
@@ -394,8 +412,7 @@ fn test_cli_output_file_creation() {
         .arg("--out")
         .arg(&output_file);
 
-    cmd.assert()
-        .success();
+    cmd.assert().success();
 
     // Verify output file was created and contains valid JSON
     assert!(output_file.exists());
@@ -432,22 +449,20 @@ fn test_cli_quiet_mode() {
         .arg("--format")
         .arg("human");
 
-    cmd.assert()
-        .success()
-        .stdout(predicate::str::is_empty());
+    cmd.assert().success().stdout(predicate::str::is_empty());
 }
 
 #[test]
 fn test_cli_diff_mode() {
     let temp_dir = TempDir::new().unwrap();
-    
+
     // Initialize a git repository
     std::process::Command::new("git")
         .args(&["init"])
         .current_dir(temp_dir.path())
         .output()
         .unwrap();
-    
+
     // Create and commit initial file
     fs::write(temp_dir.path().join("test.rs"), "fn original() {}").unwrap();
     std::process::Command::new("git")
@@ -460,10 +475,10 @@ fn test_cli_diff_mode() {
         .current_dir(temp_dir.path())
         .output()
         .unwrap();
-    
+
     // Modify file
     fs::write(temp_dir.path().join("test.rs"), "fn modified() {}").unwrap();
-    
+
     let mut cmd = Command::cargo_bin("codeguardian").unwrap();
     cmd.arg("check")
         .arg(temp_dir.path())

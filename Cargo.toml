@@ -14,12 +14,12 @@ path = "src/main.rs"
 # CLI and argument parsing
 clap = { version = "4.5", features = ["derive", "env"] }
 anyhow = "1.0"
-thiserror = "1.0"
+thiserror = "2.0"
 
 # Serialization
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
-toml = "0.8"
+toml = "0.9"
 
 # Hashing and crypto
 blake3 = "1.5"
@@ -31,11 +31,11 @@ ignore = "0.4"
 globset = "0.4"
 
 # Git integration
-git2 = "0.19"
+git2 = "0.20"
 
 # Progress and terminal
-indicatif = "0.17"
-console = "0.15"
+indicatif = "0.18"
+console = "0.16"
 is-terminal = "0.4"  # Modern replacement for atty
 
 # Async and concurrency
@@ -76,7 +76,7 @@ base64 = "0.22"
 sysinfo = "0.37.0"
 
 [dev-dependencies]
-tempfile = "3.13"
+tempfile = "3.21"
 criterion = "0.5"
 pretty_assertions = "1.4"
 tokio-test = "0.4"

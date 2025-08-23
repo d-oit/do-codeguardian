@@ -196,12 +196,20 @@ impl NonProductionConfig {
     /// Find patterns that match the given text
     #[allow(dead_code)]
     pub fn find_matches(&self, text: &str) -> Vec<&NonProdPattern> {
-        self.patterns.iter().filter(|pattern| pattern.matches(text)).collect()
+        self.patterns
+            .iter()
+            .filter(|pattern| pattern.matches(text))
+            .collect()
     }
 
     /// Add a new pattern with validation
     #[allow(dead_code)]
-    pub fn add_pattern(&mut self, pattern: String, description: String, severity: String) -> Result<(), String> {
+    pub fn add_pattern(
+        &mut self,
+        pattern: String,
+        description: String,
+        severity: String,
+    ) -> Result<(), String> {
         let new_pattern = NonProdPattern::new(pattern, description, severity)?;
         self.patterns.push(new_pattern);
         Ok(())
@@ -210,7 +218,8 @@ impl NonProductionConfig {
     /// Remove patterns containing the given substring
     #[allow(dead_code)]
     pub fn remove_patterns_containing(&mut self, substring: &str) {
-        self.patterns.retain(|pattern| !pattern.pattern.contains(substring));
+        self.patterns
+            .retain(|pattern| !pattern.pattern.contains(substring));
     }
 
     /// Get all pattern strings as a Vec<String>
@@ -229,17 +238,20 @@ impl Default for NonProductionConfig {
                     r"(?i)\b(todo|fixme|hack|xxx)\b".to_string(),
                     "Non-production code markers".to_string(),
                     "medium".to_string(),
-                ).unwrap_or_else(|_| panic!("Invalid default pattern")),
+                )
+                .unwrap_or_else(|_| panic!("Invalid default pattern")),
                 NonProdPattern::new(
                     r"(?i)\bdebug\s*!".to_string(),
                     "Debug print statements".to_string(),
                     "low".to_string(),
-                ).unwrap_or_else(|_| panic!("Invalid default pattern")),
+                )
+                .unwrap_or_else(|_| panic!("Invalid default pattern")),
                 NonProdPattern::new(
                     r"(?i)\bprintln\s*!".to_string(),
                     "Print statements in production code".to_string(),
                     "low".to_string(),
-                ).unwrap_or_else(|_| panic!("Invalid default pattern")),
+                )
+                .unwrap_or_else(|_| panic!("Invalid default pattern")),
             ],
             exclude_test_files: true,
             exclude_example_files: true,
@@ -691,7 +703,8 @@ impl Config {
                     r"(?i)\b(todo|fixme|hack|xxx)\b".to_string(),
                     "Non-production code markers".to_string(),
                     "medium".to_string(),
-                ).unwrap_or_else(|_| panic!("Invalid default pattern"))],
+                )
+                .unwrap_or_else(|_| panic!("Invalid default pattern"))],
                 exclude_test_files: true,
                 exclude_example_files: true,
             },
@@ -843,7 +856,10 @@ mod tests {
         assert_eq!(loaded_config.general.max_file_size, 10 * MB);
         assert_eq!(loaded_config.general.max_memory_mb, 256);
         assert_eq!(loaded_config.general.parallel_workers, 4);
-        assert_eq!(loaded_config.integrity.hash_algorithm, HashAlgorithm::Sha256);
+        assert_eq!(
+            loaded_config.integrity.hash_algorithm,
+            HashAlgorithm::Sha256
+        );
     }
 
     #[tokio::test]
@@ -860,19 +876,19 @@ mod tests {
     #[test]
     fn test_config_validation() {
         let mut config = Config::default();
-        
+
         // Valid config should pass validation
         assert!(config.validate().is_ok());
-        
+
         // Invalid max_file_size should fail
         config.general.max_file_size = 0;
         assert!(config.validate().is_err());
-        
+
         // Reset and test invalid parallel_workers
         config.general.max_file_size = DEFAULT_MAX_FILE_SIZE;
         config.general.parallel_workers = 0;
         assert!(config.validate().is_err());
-        
+
         // Reset and test invalid timeout
         config.general.parallel_workers = DEFAULT_PARALLEL_WORKERS;
         config.general.timeout_seconds = 0;
@@ -922,7 +938,8 @@ mod tests {
             r"(?i)\btest\b".to_string(),
             "Test pattern".to_string(),
             "low".to_string(),
-        ).unwrap();
+        )
+        .unwrap();
 
         assert!(pattern.matches("This is a test"));
         assert!(pattern.matches("TEST"));
@@ -936,7 +953,8 @@ mod tests {
             r"(?i)\btest\b".to_string(),
             "Test pattern".to_string(),
             "low".to_string(),
-        ).unwrap();
+        )
+        .unwrap();
 
         assert_eq!(pattern.as_ref(), r"(?i)\btest\b");
         assert_eq!(pattern.as_str(), r"(?i)\btest\b");
@@ -1018,9 +1036,12 @@ mod tests {
         assert!(serialized.contains("[general]"));
         assert!(serialized.contains("[integrity]"));
         assert!(serialized.contains("[lint_drift]"));
-        
+
         // Should be able to deserialize back
         let deserialized: Config = toml::from_str(&serialized).unwrap();
-        assert_eq!(config.general.max_file_size, deserialized.general.max_file_size);
+        assert_eq!(
+            config.general.max_file_size,
+            deserialized.general.max_file_size
+        );
     }
 }

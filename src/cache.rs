@@ -38,8 +38,6 @@ impl CacheEntry {
     /// assert_eq!(hash.len(), 64); // SHA-256 produces 64 character hex string
     /// ```
     pub fn calculate_content_hash(content: &[u8]) -> String {
-
-
         let mut hasher = Sha256::new();
         hasher.update(content);
         format!("{:x}", hasher.finalize())
@@ -540,7 +538,7 @@ mod tests {
     #[test]
     fn test_cache_basic_operations() {
         let cache = FileCache::new();
-        
+
         // Test basic properties
         assert!(cache.entries.is_empty());
         assert_eq!(cache.cache_version, FileCache::CACHE_VERSION);
@@ -555,7 +553,7 @@ mod tests {
             total_entries: 10,
             cache_size_bytes: 1024,
         };
-        
+
         assert_eq!(stats.total_entries, 10);
         assert_eq!(stats.cache_size_bytes, 1024);
     }
@@ -567,7 +565,7 @@ mod tests {
             cache_size_bytes: 1024 * 5, // 5KB
         };
         let display = stats.to_string();
-        
+
         assert!(display.contains("42 entries"));
         assert!(display.contains("5.0KB"));
     }
@@ -591,7 +589,7 @@ mod tests {
     fn test_cache_compression_flag() {
         let mut cache = FileCache::new();
         assert!(cache.compressed);
-        
+
         cache.compressed = false;
         assert!(!cache.compressed);
     }

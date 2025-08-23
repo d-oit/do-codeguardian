@@ -1,37 +1,53 @@
+use std::fs;
 /// Comprehensive end-to-end test runner and utilities
 use std::process::Command;
 use tempfile::TempDir;
-use std::fs;
 
 /// Helper functions for E2E tests
 pub fn create_sample_rust_project(temp_dir: &TempDir) {
     fs::create_dir_all(temp_dir.path().join("src")).unwrap();
-    
-    fs::write(temp_dir.path().join("Cargo.toml"), r#"
+
+    fs::write(
+        temp_dir.path().join("Cargo.toml"),
+        r#"
 [package]
 name = "sample-project"
 version = "0.1.0"
 edition = "2021"
-"#).unwrap();
-    
-    fs::write(temp_dir.path().join("src/main.rs"), r#"
+"#,
+    )
+    .unwrap();
+
+    fs::write(
+        temp_dir.path().join("src/main.rs"),
+        r#"
 fn main() {
     println!("Hello, world!");
 }
-"#).unwrap();
+"#,
+    )
+    .unwrap();
 }
 
 pub fn create_sample_javascript_project(temp_dir: &TempDir) {
-    fs::write(temp_dir.path().join("package.json"), r#"
+    fs::write(
+        temp_dir.path().join("package.json"),
+        r#"
 {
   "name": "sample-app",
   "version": "1.0.0"
 }
-"#).unwrap();
-    
-    fs::write(temp_dir.path().join("index.js"), r#"
+"#,
+    )
+    .unwrap();
+
+    fs::write(
+        temp_dir.path().join("index.js"),
+        r#"
 console.log("Hello, world!");
-"#).unwrap();
+"#,
+    )
+    .unwrap();
 }
 
 pub fn create_git_repository(temp_dir: &TempDir) {
@@ -40,13 +56,13 @@ pub fn create_git_repository(temp_dir: &TempDir) {
         .current_dir(temp_dir.path())
         .output()
         .unwrap();
-    
+
     Command::new("git")
         .args(&["config", "user.email", "test@example.com"])
         .current_dir(temp_dir.path())
         .output()
         .unwrap();
-    
+
     Command::new("git")
         .args(&["config", "user.name", "Test User"])
         .current_dir(temp_dir.path())
@@ -62,25 +78,25 @@ mod integration_helpers {
     fn test_helper_rust_project_creation() {
         let temp_dir = TempDir::new().unwrap();
         create_sample_rust_project(&temp_dir);
-        
+
         assert!(temp_dir.path().join("Cargo.toml").exists());
         assert!(temp_dir.path().join("src/main.rs").exists());
     }
-    
+
     #[test]
     fn test_helper_javascript_project_creation() {
         let temp_dir = TempDir::new().unwrap();
         create_sample_javascript_project(&temp_dir);
-        
+
         assert!(temp_dir.path().join("package.json").exists());
         assert!(temp_dir.path().join("index.js").exists());
     }
-    
+
     #[test]
     fn test_helper_git_repository_creation() {
         let temp_dir = TempDir::new().unwrap();
         create_git_repository(&temp_dir);
-        
+
         assert!(temp_dir.path().join(".git").exists());
     }
 }
@@ -91,22 +107,24 @@ mod comprehensive_tests {
     use super::*;
     use assert_cmd::prelude::*;
     use predicates::prelude::*;
-    
+
     #[test]
     fn test_full_development_workflow() {
         let temp_dir = TempDir::new().unwrap();
-        
+
         // 1. Create project
         create_sample_rust_project(&temp_dir);
         create_git_repository(&temp_dir);
-        
+
         // 2. Initialize CodeGuardian
         let mut init_cmd = Command::cargo_bin("codeguardian").unwrap();
         init_cmd.arg("init").current_dir(temp_dir.path());
         init_cmd.assert().success();
-        
+
         // 3. Add some code with issues
-        fs::write(temp_dir.path().join("src/lib.rs"), r#"
+        fs::write(
+            temp_dir.path().join("src/lib.rs"),
+            r#"
 pub fn authenticate(password: &str) -> bool {
     let hardcoded_pass = "admin123"; // Security issue
     password == hardcoded_pass
@@ -116,8 +134,10 @@ pub fn process_data() {
     // TODO: Implement this function
     println!("Processing...");
 }
-"#).unwrap();
-        
+"#,
+        )
+        .unwrap();
+
         // 4. Commit initial version
         Command::new("git")
             .args(&["add", "."])
@@ -129,22 +149,26 @@ pub fn process_data() {
             .current_dir(temp_dir.path())
             .output()
             .unwrap();
-        
+
         // 5. Run full analysis
         let mut check_cmd = Command::cargo_bin("codeguardian").unwrap();
-        check_cmd.arg("check")
+        check_cmd
+            .arg("check")
             .arg(temp_dir.path())
             .arg("--format")
             .arg("json")
             .current_dir(temp_dir.path());
-        
-        check_cmd.assert()
+
+        check_cmd
+            .assert()
             .success()
             .stdout(predicate::str::contains("hardcoded_secret"))
             .stdout(predicate::str::contains("non_production"));
-        
+
         // 6. Fix issues and test diff mode
-        fs::write(temp_dir.path().join("src/lib.rs"), r#"
+        fs::write(
+            temp_dir.path().join("src/lib.rs"),
+            r#"
 use std::env;
 
 pub fn authenticate(password: &str) -> bool {
@@ -155,19 +179,23 @@ pub fn authenticate(password: &str) -> bool {
 pub fn process_data() {
     println!("Processing data...");
 }
-"#).unwrap();
-        
+"#,
+        )
+        .unwrap();
+
         // 7. Run diff analysis
         let mut diff_cmd = Command::cargo_bin("codeguardian").unwrap();
-        diff_cmd.arg("check")
+        diff_cmd
+            .arg("check")
             .arg(temp_dir.path())
             .arg("--diff")
             .arg("HEAD")
             .arg("--format")
             .arg("json")
             .current_dir(temp_dir.path());
-        
-        diff_cmd.assert()
+
+        diff_cmd
+            .assert()
             .success()
             .stdout(predicate::function(|output: &str| {
                 // Should have fewer issues after fixes

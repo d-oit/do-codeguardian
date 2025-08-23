@@ -1,21 +1,23 @@
 use assert_cmd::prelude::*;
 use predicates::prelude::*;
+use std::fs;
 use std::process::Command;
 use tempfile::TempDir;
-use std::fs;
 
 /// Integration tests for CLI workflows with real file scenarios
 
 #[test]
 fn test_real_world_rust_project() {
     let temp_dir = TempDir::new().unwrap();
-    
+
     // Create a realistic Rust project structure
     fs::create_dir_all(temp_dir.path().join("src")).unwrap();
     fs::create_dir_all(temp_dir.path().join("tests")).unwrap();
-    
+
     // Cargo.toml
-    fs::write(temp_dir.path().join("Cargo.toml"), r#"
+    fs::write(
+        temp_dir.path().join("Cargo.toml"),
+        r#"
 [package]
 name = "test-project"
 version = "0.1.0"
@@ -23,10 +25,14 @@ edition = "2021"
 
 [dependencies]
 serde = "1.0"
-"#).unwrap();
-    
+"#,
+    )
+    .unwrap();
+
     // Main source file with potential issues
-    fs::write(temp_dir.path().join("src/main.rs"), r#"
+    fs::write(
+        temp_dir.path().join("src/main.rs"),
+        r#"
 use std::env;
 
 fn main() {
@@ -45,10 +51,14 @@ fn main() {
         }
     }
 }
-"#).unwrap();
-    
+"#,
+    )
+    .unwrap();
+
     // Library file
-    fs::write(temp_dir.path().join("src/lib.rs"), r#"
+    fs::write(
+        temp_dir.path().join("src/lib.rs"),
+        r#"
 pub fn calculate(x: i32, y: i32) -> i32 {
     x + y
 }
@@ -62,14 +72,16 @@ mod tests {
         assert_eq!(calculate(2, 2), 4);
     }
 }
-"#).unwrap();
+"#,
+    )
+    .unwrap();
 
     let mut cmd = Command::cargo_bin("codeguardian").unwrap();
     cmd.arg("check")
         .arg(temp_dir.path())
         .arg("--format")
         .arg("json");
-    
+
     cmd.assert()
         .success()
         .stdout(predicate::str::contains("hardcoded_secret"))
@@ -88,9 +100,11 @@ mod tests {
 #[test]
 fn test_javascript_project_analysis() {
     let temp_dir = TempDir::new().unwrap();
-    
+
     // Create JavaScript project with security issues
-    fs::write(temp_dir.path().join("package.json"), r#"
+    fs::write(
+        temp_dir.path().join("package.json"),
+        r#"
 {
   "name": "test-app",
   "version": "1.0.0",
@@ -98,9 +112,13 @@ fn test_javascript_project_analysis() {
     "express": "^4.18.0"
   }
 }
-"#).unwrap();
-    
-    fs::write(temp_dir.path().join("app.js"), r#"
+"#,
+    )
+    .unwrap();
+
+    fs::write(
+        temp_dir.path().join("app.js"),
+        r#"
 const express = require('express');
 const app = express();
 
@@ -117,14 +135,16 @@ app.get('/user/:id', (req, res) => {
 });
 
 app.listen(3000);
-"#).unwrap();
+"#,
+    )
+    .unwrap();
 
     let mut cmd = Command::cargo_bin("codeguardian").unwrap();
     cmd.arg("check")
         .arg(temp_dir.path())
         .arg("--format")
         .arg("json");
-    
+
     cmd.assert()
         .success()
         .stdout(predicate::str::contains("sql_injection"))

@@ -526,3 +526,68 @@ mod integration_tests {
         Ok(process.memory())
     }
 }
+
+#[test]
+fn test_naming_checker_analyzer() {
+    use codeguardian::analyzers::naming_checker::NamingChecker;
+    use codeguardian::analyzers::Analyzer;
+    use std::io::Write;
+    use std::path::PathBuf;
+    use tempfile::NamedTempFile;
+
+    let checker = NamingChecker::new();
+
+    // Test 1: File with spaces in name
+    let mut temp_file1 = NamedTempFile::new().unwrap();
+    let content1 = b"fn main() {}";
+    temp_file1.write_all(content1).unwrap();
+
+    // Rename to have spaces (this is tricky with temp files, so we'll create a path manually)
+    let spaced_path = PathBuf::from("test file.rs");
+    std::fs::write(&spaced_path, content1).unwrap();
+
+    let findings1 = checker.analyze(&spaced_path, content1).unwrap();
+    assert!(findings1.iter().any(|f| f.rule == "spaces_in_name"));
+
+    // Clean up
+    std::fs::remove_file(&spaced_path).unwrap();
+
+    // Test 2: File with incorrect extension
+    let mut temp_file2 = NamedTempFile::new().unwrap();
+    let content2 = b"not python code";
+    temp_file2.write_all(content2).unwrap();
+
+    let py_path = PathBuf::from("test.py");
+    std::fs::write(&py_path, content2).unwrap();
+
+    let findings2 = checker.analyze(&py_path, content2).unwrap();
+    assert!(findings2.iter().any(|f| f.rule == "incorrect_extension"));
+
+    // Clean up
+    std::fs::remove_file(&py_path).unwrap();
+
+    // Test 3: File with mixed naming conventions
+    let mixed_path = PathBuf::from("my-file_name.rs");
+    let content3 = b"fn main() {}";
+    std::fs::write(&mixed_path, content3).unwrap();
+
+    let findings3 = checker.analyze(&mixed_path, content3).unwrap();
+    assert!(findings3.iter().any(|f| f.rule == "mixed_conventions"));
+
+    // Clean up
+    std::fs::remove_file(&mixed_path).unwrap();
+
+    // Test 4: Folder typo detection
+    let typo_path = PathBuf::from("documantation/README.md");
+    let content4 = b"# Documentation";
+    std::fs::write(&typo_path, content4).unwrap();
+
+    let findings4 = checker.analyze(&typo_path, content4).unwrap();
+    assert!(findings4.iter().any(|f| f.rule == "folder_name_typo"));
+
+    // Clean up
+    std::fs::remove_file(&typo_path).unwrap();
+    std::fs::remove_dir("documantation").unwrap_or(());
+
+    println!("✅ Naming checker analyzer test passed - all naming issues detected correctly");
+}

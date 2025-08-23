@@ -117,7 +117,12 @@ impl NonProductionAnalyzer {
     }
 
     /// Check for debug statements
-    fn check_debug_statements(&self, file_path: &Path, line: &str, line_number: u32) -> Vec<Finding> {
+    fn check_debug_statements(
+        &self,
+        file_path: &Path,
+        line: &str,
+        line_number: u32,
+    ) -> Vec<Finding> {
         let mut findings = Vec::new();
 
         if self.debug_pattern.is_match(line) {
@@ -149,7 +154,12 @@ impl NonProductionAnalyzer {
     }
 
     /// Check for console statements in JavaScript/TypeScript
-    fn check_console_statements(&self, file_path: &Path, line: &str, line_number: u32) -> Vec<Finding> {
+    fn check_console_statements(
+        &self,
+        file_path: &Path,
+        line: &str,
+        line_number: u32,
+    ) -> Vec<Finding> {
         let mut findings = Vec::new();
 
         if self.is_js_ts_file(file_path) && self.console_pattern.is_match(line) {
@@ -176,7 +186,12 @@ impl NonProductionAnalyzer {
     }
 
     /// Check for hardcoded credentials or secrets
-    fn check_hardcoded_secrets(&self, file_path: &Path, line: &str, line_number: u32) -> Vec<Finding> {
+    fn check_hardcoded_secrets(
+        &self,
+        file_path: &Path,
+        line: &str,
+        line_number: u32,
+    ) -> Vec<Finding> {
         let mut findings = Vec::new();
 
         if self.contains_potential_secret(line) {
@@ -212,14 +227,12 @@ impl NonProductionAnalyzer {
             SecretContext::Test => (
                 Severity::Info,
                 "Hardcoded secret in test code".to_string(),
-                "Test secrets should use mock values or be clearly marked as test data"
-                    .to_string(),
+                "Test secrets should use mock values or be clearly marked as test data".to_string(),
             ),
             SecretContext::NonProduction => (
                 Severity::Low,
                 "Hardcoded secret in non-production code".to_string(),
-                "Non-production secrets should be externalized or clearly documented"
-                    .to_string(),
+                "Non-production secrets should be externalized or clearly documented".to_string(),
             ),
             SecretContext::Production => (
                 Severity::Critical,
@@ -315,49 +328,89 @@ impl NonProductionAnalyzer {
     fn is_test_file(&self, file_path: &Path) -> bool {
         let file_path_str = file_path.to_string_lossy().to_lowercase();
         let test_indicators = [
-            "test", "spec", "__tests__", "tests/", "/test/",
-            "_test.rs", ".test.js", ".test.ts", "_spec.rb"
+            "test",
+            "spec",
+            "__tests__",
+            "tests/",
+            "/test/",
+            "_test.rs",
+            ".test.js",
+            ".test.ts",
+            "_spec.rb",
         ];
 
-        test_indicators.iter().any(|&indicator| file_path_str.contains(indicator))
+        test_indicators
+            .iter()
+            .any(|&indicator| file_path_str.contains(indicator))
     }
 
     /// Check if file path indicates a non-production file
     fn is_non_production_file(&self, file_path: &Path) -> bool {
         let file_path_str = file_path.to_string_lossy().to_lowercase();
         let non_prod_indicators = [
-            "example", "demo", "sample", "mock", "fixture",
-            "dev", "development", "staging"
+            "example",
+            "demo",
+            "sample",
+            "mock",
+            "fixture",
+            "dev",
+            "development",
+            "staging",
         ];
 
-        non_prod_indicators.iter().any(|&indicator| file_path_str.contains(indicator))
+        non_prod_indicators
+            .iter()
+            .any(|&indicator| file_path_str.contains(indicator))
     }
 
     /// Check if line content indicates test code
     fn is_test_code_line(&self, line_lower: &str) -> bool {
         let test_code_indicators = [
-            "#[test]", "fn test_", "function test", "it(", "describe(",
-            "test(", "@test", "def test_", "class test"
+            "#[test]",
+            "fn test_",
+            "function test",
+            "it(",
+            "describe(",
+            "test(",
+            "@test",
+            "def test_",
+            "class test",
         ];
 
-        test_code_indicators.iter().any(|&indicator| line_lower.contains(indicator))
+        test_code_indicators
+            .iter()
+            .any(|&indicator| line_lower.contains(indicator))
     }
 
     /// Check if line content indicates non-production code
     fn is_non_production_code_line(&self, line_lower: &str) -> bool {
         let non_prod_indicators = [
-            "example", "demo", "sample", "mock", "fake", "dummy",
-            "placeholder", "test_", "_test", "dev_", "development"
+            "example",
+            "demo",
+            "sample",
+            "mock",
+            "fake",
+            "dummy",
+            "placeholder",
+            "test_",
+            "_test",
+            "dev_",
+            "development",
         ];
 
-        non_prod_indicators.iter().any(|&indicator| line_lower.contains(indicator))
+        non_prod_indicators
+            .iter()
+            .any(|&indicator| line_lower.contains(indicator))
     }
 
     /// Check if line contains obvious placeholder values
     fn is_placeholder_value(&self, line_lower: &str) -> bool {
         // Check for obvious placeholder prefixes
-        if line_lower.contains("your_") || line_lower.contains("replace_") ||
-           line_lower.contains("insert_") || line_lower.contains("placeholder") {
+        if line_lower.contains("your_")
+            || line_lower.contains("replace_")
+            || line_lower.contains("insert_")
+            || line_lower.contains("placeholder")
+        {
             return true;
         }
 
