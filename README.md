@@ -12,7 +12,7 @@
 
 **CodeGuardian** is a comprehensive security and code quality analysis tool designed specifically for modern development workflows. It combines deterministic analysis, ML-powered false positive reduction, and seamless CI/CD integration to help teams maintain high code quality and security standards.
 
-Built with Rust for memory safety and performance, CodeGuardian provides enterprise-grade code analysis with advanced features like streaming analysis for large files, intelligent caching, and comprehensive security checks.
+Built with Rust for memory safety and performance, CodeGuardian provides code analysis with advanced features like streaming analysis for large files, intelligent caching, and comprehensive security checks.
 
 ## ✨ Key Features
 
@@ -23,7 +23,6 @@ Built with Rust for memory safety and performance, CodeGuardian provides enterpr
 - ⚡ **Turbo Mode**: High-performance analysis for large codebases with 18x speedup and streaming support
 - 🔗 **GitHub Integration**: Idempotent issue creation with automatic updates and multiple issue modes
 - 📈 **Advanced Performance**: Adaptive parallelism, memory pooling, intelligent caching, and resource optimization
-- 🛡️ **Enterprise Ready**: Comprehensive security checks, dependency analysis, and integrity verification
 - 🔧 **Extensible Architecture**: Pluggable analyzer system with custom security checks and patterns
 
 ## 🚀 Quick Start
@@ -202,22 +201,12 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - ❓ **[FAQ](docs/troubleshooting/faq.md)** - Frequently asked questions
 - 🐛 **[Issue Tracker](https://github.com/d-oit/do-codeguardian/issues)** - Bug reports and feature requests
 - 💬 **[Discussions](https://github.com/d-oit/do-codeguardian/discussions)** - Community discussions and support
-- 📧 **Email Support** - Enterprise support available for CodeGuardian Pro
+
 
 ### Community Resources
 
 - 🌟 **GitHub Stars** - Show your support by starring the repository
 - 🔄 **Contributing** - Help improve CodeGuardian by contributing code or documentation
-- 📢 **Social Media** - Follow us on [Twitter](https://twitter.com/codeguardian) for updates
-- 🎥 **Videos & Tutorials** - Check out our [YouTube channel](https://youtube.com/@codeguardian) for video guides
-
-### Enterprise Support
-
-For enterprise customers, we offer:
-- 🏢 **Dedicated Support** - Direct access to the development team
-- 🚀 **Priority Features** - Fast-track your feature requests
-- 📊 **Custom Integrations** - Tailored solutions for your workflow
-- 🎯 **Training & Consulting** - Expert guidance for your team
 
 ---
 

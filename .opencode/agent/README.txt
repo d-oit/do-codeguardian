@@ -114,6 +114,17 @@ This directory contains specialized OpenCode agents designed specifically for th
   - Dynamic workload distribution
   - Holistic outcome generation
 
+### 📊 GitHub Projects Manager (`github-projects-manager.md`)
+- **Purpose**: Manages GitHub Projects for CodeGuardian development roadmap and project tracking
+- **Specialization**: Project creation, organization, roadmap management, and progress tracking
+- **Key Features**:
+  - Security analysis project management
+  - Performance optimization tracking
+  - ML integration roadmap planning
+  - CI/CD integration project organization
+  - Development roadmap creation and management
+  - Automated project insights and reporting
+
 ## Agent Configuration
 
 All agents are configured in the main `opencode.json` file with the following settings:
@@ -154,7 +165,7 @@ The **Swarm Orchestrator Agent** is the dedicated agent for coordinating multipl
 
 - **When to Use**: Complex analysis requiring multiple perspectives (security + performance + quality)
 - **Benefits**: Parallel execution, comprehensive coverage, unified synthesis of results
-- **Available Agents**: All 7 specialized agents can be orchestrated together
+- **Available Agents**: All 8 specialized agents can be orchestrated together
 - **Coordination**: Handles conflicts and synthesizes findings into unified reports
 
 **Example Usage:**
@@ -184,6 +195,7 @@ The agent system now provides comprehensive CI/CD workflow optimization through 
 - **@github-issue-manager**: Issue tracking and management
 - **@github-label-manager**: Automated labeling and categorization
 - **@github-workflow-manager**: Workflow management and debugging
+- **@github-projects-manager**: Project and roadmap management
 
 ### Quality & Security Gates
 - **@security-auditor**: Security vulnerability scanning
@@ -211,7 +223,7 @@ These consolidated agents are specifically designed to work with CodeGuardian's:
 
 ## Agent Status
 
-- **Active Agents**: 11 consolidated, well-maintained agents
+- **Active Agents**: 12 consolidated, well-maintained agents
 - **Duplicate Agents**: 4 pairs consolidated (marked for archival)
 - **Configuration**: Standardized without model specifications
 - **Maintenance**: All agents follow consistent structure and formatting
@@ -226,6 +238,53 @@ To customize agent behavior:
 2. **Update Configuration**: Modify `opencode.json` to change model, temperature, or tool access
 3. **Add New Agents**: Create new `.md` files following the established format
 4. **Adjust Permissions**: Configure tool access based on agent requirements
+
+### Enterprise Support Configuration
+
+By default, agents are configured to focus on community and open-source usage. To control enterprise support output:
+
+- Set `"enterprise_support": false` in `opencode.json` to disable default enterprise support messaging
+- Set `"enterprise_support": true` to enable enterprise-focused responses when needed
+- Individual agents can be configured with custom enterprise support behavior in their `.md` files
+
+## GitHub Projects Manager Usage Examples
+
+The new GitHub Projects Manager agent provides comprehensive project management for CodeGuardian:
+
+### Security Analysis Projects
+```
+@github-projects-manager create a security analysis enhancement project for Q4
+@github-projects-manager add the latest security findings to the vulnerability tracking project
+@github-projects-manager generate progress report for security analyzer improvements
+```
+
+### Performance Optimization Projects
+```
+@github-projects-manager create a performance optimization roadmap for the next release
+@github-projects-manager organize performance benchmark results in the optimization project
+@github-projects-manager track resource usage improvements across the codebase
+```
+
+### ML Integration Projects
+```
+@github-projects-manager set up ML model accuracy improvement tracking
+@github-projects-manager monitor false positive reduction progress
+@github-projects-manager create roadmap for ML pipeline enhancements
+```
+
+### CI/CD Integration Projects
+```
+@github-projects-manager organize build optimization tasks for the upcoming sprint
+@github-projects-manager track GitHub Actions workflow improvements
+@github-projects-manager manage deployment automation project
+```
+
+### Development Roadmap Projects
+```
+@github-projects-manager create comprehensive development roadmap for next quarter
+@github-projects-manager add new security analyzer features to the roadmap
+@github-projects-manager generate insights from development project data
+```
 
 ## Contributing
 
