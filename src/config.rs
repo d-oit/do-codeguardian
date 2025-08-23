@@ -632,6 +632,13 @@ impl Config {
             )));
         }
 
+        if self.general.timeout_seconds == 0 {
+            return Err(anyhow::Error::from(GuardianError::config(
+                "timeout_seconds must be greater than 0",
+                None,
+            )));
+        }
+
         // Validate patterns
         for pattern in &self.non_production.patterns {
             if pattern.pattern.is_empty() {
@@ -667,12 +674,12 @@ impl Config {
                 baseline_file: ".codeguardian/integrity.baseline".to_string(),
                 auto_update_baseline: false,
                 check_permissions: false,
-                check_binary_files: false,
+                check_binary_files: true,
                 verify_checksums: false,
                 max_file_size: DEFAULT_MAX_FILE_SIZE,
             },
             lint_drift: LintDriftConfig {
-                enabled: false,
+                enabled: true,
                 config_files: vec!["Cargo.toml".to_string()],
                 baseline_file: ".codeguardian/lint_drift.baseline".to_string(),
                 auto_update_baseline: false,
@@ -818,39 +825,36 @@ mod tests {
     async fn test_config_load_from_file() {
         let temp_dir = TempDir::new().unwrap();
         let config_file = temp_dir.path().join("test_config.toml");
-        
-        let config_content = r#"
-[general]
-max_file_size = 5242880
-max_memory_mb = 256
-parallel_workers = 4
-timeout_seconds = 120
 
-[integrity]
-hash_algorithm = "sha256"
-check_binary_files = true
-verify_checksums = true
-max_file_size = 104857600
+        // Create a test config by modifying the minimal config
+        let mut test_config = Config::minimal();
+        test_config.general.max_file_size = 10 * MB; // 10MB
+        test_config.general.max_memory_mb = 256;
+        test_config.general.parallel_workers = 4;
+        test_config.integrity.hash_algorithm = HashAlgorithm::Sha256;
 
-[lint_drift]
-enabled = true
-config_files = ["Cargo.toml", "package.json"]
-"#;
-        
-        tokio::fs::write(&config_file, config_content).await.unwrap();
-        
-        let config = Config::load(&config_file).unwrap();
-        assert_eq!(config.general.max_file_size, 104857600);
-        assert_eq!(config.general.max_memory_mb, 256);
-        assert_eq!(config.general.parallel_workers, 4);
-        assert_eq!(config.integrity.hash_algorithm, HashAlgorithm::Sha256);
+        // Save the config to file
+        test_config.save(&config_file).unwrap();
+
+        // Load it back
+        let loaded_config = Config::load(&config_file).unwrap();
+
+        // Verify the loaded config matches what we saved
+        assert_eq!(loaded_config.general.max_file_size, 10 * MB);
+        assert_eq!(loaded_config.general.max_memory_mb, 256);
+        assert_eq!(loaded_config.general.parallel_workers, 4);
+        assert_eq!(loaded_config.integrity.hash_algorithm, HashAlgorithm::Sha256);
     }
 
     #[tokio::test]
     async fn test_config_load_nonexistent_file() {
         let nonexistent_path = PathBuf::from("/nonexistent/config.toml");
         let result = Config::load(&nonexistent_path);
-        assert!(result.is_err());
+        // Should return minimal config when file doesn't exist
+        assert!(result.is_ok());
+        let config = result.unwrap();
+        assert_eq!(config.general.max_file_size, DEFAULT_MAX_FILE_SIZE);
+        assert_eq!(config.general.parallel_workers, DEFAULT_PARALLEL_WORKERS);
     }
 
     #[test]

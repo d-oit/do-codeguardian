@@ -1,0 +1,7 @@
+# OpenCode Agents Directory
+
+This directory contains specialized OpenCode agents for the CodeGuardian project.
+Each agent is designed for specific aspects of security analysis, performance optimization,
+and code quality management.
+
+Agents are automatically loaded from this directory and configured via opencode.json.

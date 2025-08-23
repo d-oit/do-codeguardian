@@ -63,10 +63,9 @@ mod tests {
     }
 }
 "#).unwrap();
-    
+
     let mut cmd = Command::cargo_bin("codeguardian").unwrap();
     cmd.arg("check")
-        .arg("--path")
         .arg(temp_dir.path())
         .arg("--format")
         .arg("json");
@@ -119,10 +118,9 @@ app.get('/user/:id', (req, res) => {
 
 app.listen(3000);
 "#).unwrap();
-    
+
     let mut cmd = Command::cargo_bin("codeguardian").unwrap();
     cmd.arg("check")
-        .arg("--path")
         .arg(temp_dir.path())
         .arg("--format")
         .arg("json");

@@ -28,7 +28,7 @@ mod integration_tests {
 
         // Test cache integration
         let cache = FileCache::load().await.unwrap();
-        assert!(cache.stats().total_entries >= 0);
+        // Cache may have 0 entries initially, which is fine
 
         // Test streaming analyzer
         let streaming = StreamingAnalyzer::new();
@@ -46,7 +46,7 @@ mod integration_tests {
         let findings = registry
             .analyze_file(PathBuf::from("test.rs").as_path(), test_content)
             .unwrap();
-        assert!(findings.len() >= 0);
+        assert!(!findings.is_empty());
 
         // Test configuration
         let config = Config::minimal();
@@ -64,7 +64,7 @@ mod integration_tests {
             .collect();
 
         let results = engine.analyze_files(&file_paths, 2).await.unwrap();
-        assert!(results.summary.total_files_scanned >= 0);
+        assert!(results.summary.total_files_scanned > 0);
 
         println!("✅ Full optimization pipeline test passed");
     }
@@ -135,7 +135,7 @@ mod integration_tests {
             .await
             .unwrap();
 
-        assert!(findings.len() > 0);
+        assert!(!findings.is_empty());
         assert!(findings.iter().all(|f| f.rule == "function_found"));
 
         // Test streaming configuration
@@ -247,7 +247,7 @@ mod integration_tests {
 
         // Validate results
         assert!(results.summary.total_files_scanned == file_paths.len());
-        assert!(results.summary.total_findings >= 0);
+        // total_findings is always >= 0, so this assertion is just for documentation
         assert!(duration.as_secs() < 30); // Should complete within reasonable time
 
         println!("✅ End-to-end performance test passed in {:?}", duration);

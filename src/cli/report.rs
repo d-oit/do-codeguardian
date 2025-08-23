@@ -43,7 +43,7 @@ pub fn generate_markdown(results: &AnalysisResults) -> Result<String> {
     md.push_str(&format!("**Schema Version:** {}\n", results.schema_version));
     md.push_str(&format!(
         "**Config Hash:** `{}`\n\n",
-        &results.config_hash[..8]
+        results.config_hash.get(0..8).unwrap_or(&results.config_hash)
     ));
 
     // Summary section
@@ -222,7 +222,7 @@ pub fn generate_text(results: &AnalysisResults) -> Result<String> {
         results.tool_metadata.name, results.tool_metadata.version
     ));
     text.push_str(&format!("Schema: {}\n", results.schema_version));
-    text.push_str(&format!("Config Hash: {}\n\n", &results.config_hash[..8]));
+    text.push_str(&format!("Config Hash: {}\n\n", results.config_hash.get(0..8).unwrap_or(&results.config_hash)));
 
     text.push_str("SUMMARY\n");
     text.push_str("-------\n");

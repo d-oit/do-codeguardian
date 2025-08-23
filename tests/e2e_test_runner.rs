@@ -4,7 +4,6 @@ use tempfile::TempDir;
 use std::fs;
 
 /// Helper functions for E2E tests
-
 pub fn create_sample_rust_project(temp_dir: &TempDir) {
     fs::create_dir_all(temp_dir.path().join("src")).unwrap();
     
@@ -58,8 +57,7 @@ pub fn create_git_repository(temp_dir: &TempDir) {
 #[cfg(test)]
 mod integration_helpers {
     use super::*;
-    use assert_cmd::prelude::*;
-    
+
     #[test]
     fn test_helper_rust_project_creation() {
         let temp_dir = TempDir::new().unwrap();
@@ -135,7 +133,6 @@ pub fn process_data() {
         // 5. Run full analysis
         let mut check_cmd = Command::cargo_bin("codeguardian").unwrap();
         check_cmd.arg("check")
-            .arg("--path")
             .arg(temp_dir.path())
             .arg("--format")
             .arg("json")
@@ -163,7 +160,6 @@ pub fn process_data() {
         // 7. Run diff analysis
         let mut diff_cmd = Command::cargo_bin("codeguardian").unwrap();
         diff_cmd.arg("check")
-            .arg("--path")
             .arg(temp_dir.path())
             .arg("--diff")
             .arg("HEAD")

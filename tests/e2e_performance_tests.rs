@@ -42,7 +42,6 @@ mod tests {{
     
     let mut cmd = Command::cargo_bin("codeguardian").unwrap();
     cmd.arg("turbo")  // Use turbo mode for performance
-        .arg("--path")
         .arg(temp_dir.path())
         .arg("--format")
         .arg("json");
@@ -95,7 +94,6 @@ impl LargeStruct_{} {{
     
     let mut cmd = Command::cargo_bin("codeguardian").unwrap();
     cmd.arg("check")
-        .arg("--path")
         .arg(temp_dir.path())
         .arg("--format")
         .arg("json");
@@ -130,7 +128,6 @@ pub fn process_data_{}() {{
     
     let mut cmd = Command::cargo_bin("codeguardian").unwrap();
     cmd.arg("check")
-        .arg("--path")
         .arg(temp_dir.path())
         .arg("--parallel")
         .arg("4")  // Use 4 workers

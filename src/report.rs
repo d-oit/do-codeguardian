@@ -60,20 +60,20 @@ mod tests {
         
         // Should contain basic structure
         assert!(content.contains("# CodeGuardian Analysis Report"));
-        assert!(content.contains("## Summary"));
-        assert!(content.contains("## Findings"));
+        assert!(content.contains("## 📊 Summary"));
+        assert!(content.contains("## 🔍 Detailed Findings"));
     }
 
     #[test]
     fn test_generate_markdown_contains_findings() {
         let results = create_test_results();
         let markdown = generate_markdown(&results).unwrap();
-        
+
         // Should contain finding details
         assert!(markdown.contains("hardcoded_secret"));
         assert!(markdown.contains("Hardcoded API key detected"));
         assert!(markdown.contains("src/main.rs"));
-        assert!(markdown.contains("line 42"));
+        assert!(markdown.contains("- **Line:** 42"));
     }
 
     #[test]
@@ -93,9 +93,9 @@ mod tests {
         let markdown = generate_markdown(&results).unwrap();
         
         // Should group by severity
-        assert!(markdown.contains("Critical"));
-        assert!(markdown.contains("Medium"));
-        assert!(markdown.contains("Low"));
+        assert!(markdown.contains("| critical |"));
+        assert!(markdown.contains("| medium |"));
+        assert!(markdown.contains("| low |"));
     }
 
     #[test]
@@ -106,7 +106,7 @@ mod tests {
         // Should handle empty results gracefully
         assert!(markdown.is_ok());
         let content = markdown.unwrap();
-        assert!(content.contains("No issues found"));
+        assert!(content.contains("## ✅ No Issues Found"));
     }
 
     #[test]

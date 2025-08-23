@@ -116,6 +116,26 @@ pub struct CheckArgs {
     /// Path to ML model for false positive reduction
     #[arg(long)]
     pub ml_model: Option<String>,
+
+    /// Configuration file path
+    #[arg(long)]
+    pub config: Option<PathBuf>,
+
+    /// Patterns to exclude from analysis
+    #[arg(long)]
+    pub exclude: Vec<String>,
+
+    /// Patterns to include in analysis
+    #[arg(long)]
+    pub include: Vec<String>,
+
+    /// Output file for results
+    #[arg(long)]
+    pub output: Option<PathBuf>,
+
+    /// Verbose output
+    #[arg(long)]
+    pub verbose: bool,
 }
 
 #[derive(Parser)]

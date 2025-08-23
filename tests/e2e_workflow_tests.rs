@@ -29,7 +29,6 @@ fn main() {
     // Step 3: Run analysis
     let mut check_cmd = Command::cargo_bin("codeguardian").unwrap();
     check_cmd.arg("check")
-        .arg("--path")
         .arg(temp_dir.path())
         .arg("--format")
         .arg("json")
@@ -48,7 +47,7 @@ fn main() {
     // Step 5: Convert to markdown report
     let mut report_cmd = Command::cargo_bin("codeguardian").unwrap();
     report_cmd.arg("report")
-        .arg("--input")
+        .arg("--from")
         .arg(&results_file)
         .arg("--format")
         .arg("markdown")
@@ -93,7 +92,6 @@ if __name__ == "__main__":
     // Run in CI mode (should be faster, less verbose)
     let mut cmd = Command::cargo_bin("codeguardian").unwrap();
     cmd.arg("check")
-        .arg("--path")
         .arg(temp_dir.path())
         .arg("--format")
         .arg("sarif")  // CI-friendly format

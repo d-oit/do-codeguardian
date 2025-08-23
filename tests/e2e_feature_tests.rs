@@ -28,7 +28,6 @@ mod tests {
     
     let mut cmd = Command::cargo_bin("codeguardian").unwrap();
     cmd.arg("check")
-        .arg("--path")
         .arg(temp_dir.path())
         .arg("--ml-threshold")
         .arg("0.7") // Higher threshold to filter false positives
@@ -53,7 +52,6 @@ fn main() {
     // First run - should populate cache
     let mut cmd1 = Command::cargo_bin("codeguardian").unwrap();
     cmd1.arg("check")
-        .arg("--path")
         .arg(temp_dir.path())
         .arg("--format")
         .arg("json")
@@ -66,7 +64,6 @@ fn main() {
     // Second run - should use cache (faster)
     let mut cmd2 = Command::cargo_bin("codeguardian").unwrap();
     cmd2.arg("check")
-        .arg("--path")
         .arg(temp_dir.path())
         .arg("--format")
         .arg("json")
@@ -102,7 +99,6 @@ fn main() {
     // Run analysis and generate GitHub issue (dry run)
     let mut cmd = Command::cargo_bin("codeguardian").unwrap();
     cmd.arg("gh-issue")
-        .arg("--path")
         .arg(temp_dir.path())
         .arg("--dry-run") // Don't actually create issues
         .arg("--title")
@@ -124,7 +120,6 @@ fn test_streaming_analysis() {
     
     let mut cmd = Command::cargo_bin("codeguardian").unwrap();
     cmd.arg("check")
-        .arg("--path")
         .arg(temp_dir.path())
         .arg("--streaming") // Enable streaming mode
         .arg("--format")
@@ -166,7 +161,6 @@ fn main() {
     
     let mut cmd = Command::cargo_bin("codeguardian").unwrap();
     cmd.arg("check")
-        .arg("--path")
         .arg(temp_dir.path())
         .arg("--config")
         .arg(temp_dir.path().join("custom.toml"))
@@ -193,7 +187,6 @@ fn main() {
     // First run to establish baseline
     let mut baseline_cmd = Command::cargo_bin("codeguardian").unwrap();
     baseline_cmd.arg("check")
-        .arg("--path")
         .arg(temp_dir.path())
         .arg("--baseline")
         .arg(temp_dir.path().join("baseline.json"))
@@ -213,7 +206,6 @@ fn new_function() {
     // Second run should only report new issues
     let mut diff_cmd = Command::cargo_bin("codeguardian").unwrap();
     diff_cmd.arg("check")
-        .arg("--path")
         .arg(temp_dir.path())
         .arg("--baseline")
         .arg(temp_dir.path().join("baseline.json"))

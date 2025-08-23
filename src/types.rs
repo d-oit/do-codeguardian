@@ -228,8 +228,8 @@ impl AnalysisResults {
     pub fn sort_findings(&mut self) {
         // Deterministic ordering: severity → file → line
         self.findings.sort_by(|a, b| {
-            a.severity
-                .cmp(&b.severity)
+            b.severity
+                .cmp(&a.severity)
                 .then_with(|| a.file.cmp(&b.file))
                 .then_with(|| a.line.cmp(&b.line))
         });
