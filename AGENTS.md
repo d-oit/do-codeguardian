@@ -20,6 +20,8 @@ This guide provides essential information for AI agents working with the CodeGua
 - **Check formatting**: `cargo fmt -- --check`
 - **Lint with clippy**: `cargo clippy -- -D warnings`
 - **Lint specific package**: `cargo clippy --package <package_name>`
+- **Security audit**: `cargo audit` (if cargo-audit is installed)
+- **Check dependencies**: `cargo outdated` (if cargo-outdated is installed)
 
 ### Single Test Execution
 To run a specific test function:
@@ -114,6 +116,29 @@ pub fn should_analyze_file(&self, path: &Path) -> bool {
 
 // Use canonicalized paths to prevent path traversal
 let safe_path = canonicalize_path_safe(path);
+
+// Enhanced security validation
+pub fn validate_analysis_input(&self, input: &AnalysisInput) -> Result<(), SecurityError> {
+    // Validate file paths
+    for path in &input.file_paths {
+        if !self.is_path_safe(path)? {
+            return Err(SecurityError::UnsafePath(path.clone()));
+        }
+    }
+
+    // Check resource limits
+    if input.file_paths.len() > self.config.max_files {
+        return Err(SecurityError::TooManyFiles(input.file_paths.len()));
+    }
+
+    // Validate memory requirements
+    let estimated_memory = self.estimate_memory_usage(&input.file_paths)?;
+    if estimated_memory > self.config.memory_limit_mb * 1024 * 1024 {
+        return Err(SecurityError::MemoryLimitExceeded(estimated_memory));
+    }
+
+    Ok(())
+}
 ```
 
 ### Thread Safety and Concurrency

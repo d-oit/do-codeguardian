@@ -22,6 +22,30 @@ pub struct CacheEntry {
     pub cached_at: SystemTime,
 }
 
+impl CacheEntry {
+    /// Calculate SHA-256 hash of content for cache verification
+    ///
+    /// # Arguments
+    /// * `content` - The file content as bytes
+    ///
+    /// # Returns
+    /// A lowercase hexadecimal string representation of the SHA-256 hash
+    ///
+    /// # Examples
+    /// ```
+    /// use codeguardian::cache::CacheEntry;
+    /// let hash = CacheEntry::calculate_content_hash(b"test content");
+    /// assert_eq!(hash.len(), 64); // SHA-256 produces 64 character hex string
+    /// ```
+    pub fn calculate_content_hash(content: &[u8]) -> String {
+
+
+        let mut hasher = Sha256::new();
+        hasher.update(content);
+        format!("{:x}", hasher.finalize())
+    }
+}
+
 #[derive(Debug, Serialize, Deserialize)]
 pub struct FileCache {
     entries: HashMap<PathBuf, CacheEntry>,
@@ -280,9 +304,9 @@ impl FileCache {
     }
 
     fn compute_content_hash(&self, content: &[u8]) -> String {
-        let mut hasher = Sha256::new();
-        hasher.update(content);
-        format!("{:x}", hasher.finalize())[..16].to_string()
+        // Use the standard method and truncate for storage efficiency
+        // Full hash is stored in CacheEntry for verification
+        CacheEntry::calculate_content_hash(content)[..16].to_string()
     }
 
     #[allow(dead_code)]

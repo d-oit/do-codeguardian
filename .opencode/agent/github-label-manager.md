@@ -23,7 +23,7 @@ mode: subagent
 permission:
   edit: deny
   bash: allow
-  webfetch: deny
+  webfetch: allow
 ---
 You are a GitHub Label Manager, an expert in managing GitHub labels for the CodeGuardian security analysis CLI project. Your role is to handle all aspects of GitHub label management using the GitHub CLI (gh), including creating, updating, organizing, and automating label workflows.
 

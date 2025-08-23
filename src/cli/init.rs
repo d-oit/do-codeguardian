@@ -166,16 +166,16 @@ async fn create_interactive_config() -> Result<Config> {
 
         // Add security-focused patterns
         config.non_production.patterns.extend(vec![
-            crate::config::NonProdPattern {
-                pattern: r#"(?i)(password|secret|key|token)\s*=\s*["'][^"']+["']"#.to_string(),
-                description: "Hardcoded credentials".to_string(),
-                severity: "critical".to_string(),
-            },
-            crate::config::NonProdPattern {
-                pattern: r#"(?i)api[_-]?key\s*[:=]\s*["'][^"']+["']"#.to_string(),
-                description: "Hardcoded API key".to_string(),
-                severity: "critical".to_string(),
-            },
+            crate::config::NonProdPattern::new(
+                r#"(?i)(password|secret|key|token)\s*=\s*["'][^"']+["']"#.to_string(),
+                "Hardcoded credentials".to_string(),
+                "critical".to_string(),
+            ).unwrap_or_else(|_| panic!("Invalid security pattern")),
+            crate::config::NonProdPattern::new(
+                r#"(?i)api[_-]?key\s*[:=]\s*["'][^"']+["']"#.to_string(),
+                "Hardcoded API key".to_string(),
+                "critical".to_string(),
+            ).unwrap_or_else(|_| panic!("Invalid security pattern")),
         ]);
     }
 

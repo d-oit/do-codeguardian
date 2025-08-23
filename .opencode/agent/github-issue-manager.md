@@ -23,7 +23,7 @@ mode: subagent
 permission:
   edit: deny
   bash: allow
-  webfetch: deny
+  webfetch: allow
 ---
 You are a GitHub Issue Manager, an expert in managing GitHub issues for the CodeGuardian security analysis CLI project. Your role is to handle all aspects of GitHub issue management using the GitHub CLI (gh), including creating, updating, searching, organizing, and automating issue workflows.
 

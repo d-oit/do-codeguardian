@@ -246,12 +246,25 @@ fn scan_security_patterns(content: &str, path: &std::path::Path, aggressive: boo
 fn scan_quality_patterns(content: &str, path: &std::path::Path, aggressive: bool) -> Vec<Finding> {
     let mut findings = Vec::new();
 
-    // Count complexity indicators
-    let complexity_indicators = content.matches("if ").count()
-        + content.matches("while ").count()
-        + content.matches("for ").count()
-        + content.matches("switch ").count();
+    // Check for high cyclomatic complexity
+    findings.extend(check_cyclomatic_complexity(content, path));
 
+    // Check for TODO/FIXME comments
+    findings.extend(check_todo_comments(content, path));
+
+    // Check for magic numbers in aggressive mode
+    if aggressive {
+        findings.extend(check_magic_numbers(content, path));
+    }
+
+    findings
+}
+
+/// Check for high cyclomatic complexity
+fn check_cyclomatic_complexity(content: &str, path: &std::path::Path) -> Vec<Finding> {
+    let mut findings = Vec::new();
+
+    let complexity_indicators = count_complexity_indicators(content);
     if complexity_indicators > 20 {
         findings.push(Finding::new(
             "turbo-quality",
@@ -266,7 +279,21 @@ fn scan_quality_patterns(content: &str, path: &std::path::Path, aggressive: bool
         ));
     }
 
-    // TODO/FIXME patterns
+    findings
+}
+
+/// Count complexity indicators in code
+fn count_complexity_indicators(content: &str) -> usize {
+    content.matches("if ").count()
+        + content.matches("while ").count()
+        + content.matches("for ").count()
+        + content.matches("switch ").count()
+}
+
+/// Check for TODO/FIXME comments
+fn check_todo_comments(content: &str, path: &std::path::Path) -> Vec<Finding> {
+    let mut findings = Vec::new();
+
     for (line_num, line) in content.lines().enumerate() {
         let line_upper = line.to_uppercase();
         if line_upper.contains("TODO")
@@ -288,9 +315,17 @@ fn scan_quality_patterns(content: &str, path: &std::path::Path, aggressive: bool
                 "TODO/FIXME comment found".to_string(),
             ));
         }
+    }
 
-        // Aggressive mode: magic numbers
-        if aggressive && line.chars().any(|c| c.is_ascii_digit()) {
+    findings
+}
+
+/// Check for magic numbers
+fn check_magic_numbers(content: &str, path: &std::path::Path) -> Vec<Finding> {
+    let mut findings = Vec::new();
+
+    for (line_num, line) in content.lines().enumerate() {
+        if line.chars().any(|c| c.is_ascii_digit()) {
             let numbers: Vec<&str> = line
                 .split_whitespace()
                 .filter(|word| word.chars().all(|c| c.is_ascii_digit()))

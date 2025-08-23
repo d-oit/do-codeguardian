@@ -86,11 +86,11 @@ fn test_deep_directory_structure() {
         fs::create_dir_all(&current_path).unwrap();
         
         fs::write(current_path.join("deep.rs"), format!(r#"
-// File at depth {}
-pub fn function_at_depth_{}() {{
-    println!("Deep function {}", {});
-}}
-"#, i, i, i)).unwrap();
+ // File at depth {}
+ pub fn function_at_depth_{}() {{
+     println!("Deep function {{}}", {});
+ }}
+ "#, i, i, i)).unwrap();
     }
     
     let mut cmd = Command::cargo_bin("codeguardian").unwrap();

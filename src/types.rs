@@ -108,7 +108,7 @@ pub struct Finding {
 /// The severity indicates the potential impact and urgency of addressing
 /// a security or code quality issue. Higher severities should be addressed
 /// before lower ones.
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
 pub enum Severity {
     /// Critical issues that could lead to immediate security breaches or system compromise
     Critical,
@@ -120,6 +120,33 @@ pub enum Severity {
     Low,
     /// Informational findings that provide context or suggestions but are not issues
     Info,
+}
+
+impl PartialOrd for Severity {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for Severity {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        // Reverse the default ordering so Critical > High > Medium > Low > Info
+        match (self, other) {
+            (Severity::Critical, Severity::Critical) => std::cmp::Ordering::Equal,
+            (Severity::Critical, _) => std::cmp::Ordering::Greater,
+            (_, Severity::Critical) => std::cmp::Ordering::Less,
+            (Severity::High, Severity::High) => std::cmp::Ordering::Equal,
+            (Severity::High, _) => std::cmp::Ordering::Greater,
+            (_, Severity::High) => std::cmp::Ordering::Less,
+            (Severity::Medium, Severity::Medium) => std::cmp::Ordering::Equal,
+            (Severity::Medium, _) => std::cmp::Ordering::Greater,
+            (_, Severity::Medium) => std::cmp::Ordering::Less,
+            (Severity::Low, Severity::Low) => std::cmp::Ordering::Equal,
+            (Severity::Low, _) => std::cmp::Ordering::Greater,
+            (_, Severity::Low) => std::cmp::Ordering::Less,
+            (Severity::Info, Severity::Info) => std::cmp::Ordering::Equal,
+        }
+    }
 }
 
 /// Summary statistics from an analysis run.

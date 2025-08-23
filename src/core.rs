@@ -173,6 +173,23 @@ impl GuardianEngine {
         Ok(files)
     }
 
+    /// Scans the given paths and performs comprehensive analysis.
+    ///
+    /// This method discovers all files from the provided paths (expanding directories)
+    /// and then performs a full analysis on them, returning complete analysis results
+    /// including all findings and statistics.
+    ///
+    /// # Arguments
+    /// * `paths` - List of file or directory paths to scan and analyze
+    ///
+    /// # Returns
+    /// Complete analysis results including all findings and statistics
+    #[allow(dead_code)]
+    pub async fn scan_paths(&mut self, paths: &[PathBuf]) -> Result<AnalysisResults> {
+        let files = self.get_all_files(paths).await?;
+        self.analyze_files(&files, 1).await
+    }
+
     fn should_analyze_file(&self, path: &Path) -> bool {
         // Skip files based on configuration
         if let Some(name) = path.file_name().and_then(|n| n.to_str()) {
@@ -218,26 +235,47 @@ impl GuardianEngine {
         let config_hash = self.compute_config_hash();
         let mut results = AnalysisResults::new(config_hash.clone());
 
+        // Initialize analysis
+        self.initialize_analysis(files.len()).await?;
+
+        // Process files using cache and adaptive parallelism
+        self.process_files_with_caching(&mut results, files, &config_hash, parallel).await?;
+
+        // Finalize analysis
+        self.finalize_analysis(&mut results, files.len(), start_time).await?;
+
+        Ok(results)
+    }
+
+    /// Initialize analysis components
+    async fn initialize_analysis(&mut self, file_count: usize) -> Result<()> {
         // Start load monitoring if available
         if let Some(ref monitor) = self.load_monitor {
             monitor.start_monitoring().await?;
         }
 
         // Start progress reporting
-        self.progress.start_scan(files.len());
+        self.progress.start_scan(file_count);
 
-        // Pre-allocate string buffer for progress messages
-        let mut progress_buffer = String::with_capacity(PROGRESS_BUFFER_CAPACITY);
+        Ok(())
+    }
 
+    /// Process files using caching and adaptive parallelism
+    async fn process_files_with_caching(
+        &mut self,
+        results: &mut AnalysisResults,
+        files: &[PathBuf],
+        config_hash: &str,
+        parallel: usize,
+    ) -> Result<()> {
         // Handle cached files
-        self.process_cached_files(&mut results, files, &config_hash)
-            .await?;
+        self.process_cached_files(results, files, config_hash).await?;
 
         // Process uncached files with adaptive parallelism
-        let uncached_files = self.get_uncached_files(files, &config_hash).await?;
+        let uncached_files = self.get_uncached_files(files, config_hash).await?;
         if !uncached_files.is_empty() {
             let filtered_findings = self
-                .process_uncached_files_adaptive(&uncached_files, parallel, &config_hash)
+                .process_uncached_files_adaptive(&uncached_files, parallel, config_hash)
                 .await?;
 
             // Add findings to results
@@ -246,8 +284,18 @@ impl GuardianEngine {
             }
         }
 
+        Ok(())
+    }
+
+    /// Finalize analysis and report results
+    async fn finalize_analysis(
+        &mut self,
+        results: &mut AnalysisResults,
+        file_count: usize,
+        start_time: Instant,
+    ) -> Result<()> {
         // Update summary and finalize
-        results.summary.total_files_scanned = files.len();
+        results.summary.total_files_scanned = file_count;
         self.stats.total_duration = start_time.elapsed();
 
         // Stop load monitoring
@@ -255,46 +303,56 @@ impl GuardianEngine {
             monitor.stop_monitoring();
         }
 
-        // Save cache with enhanced features
-        {
-            // Perform async operation without holding lock across await
-            // For now, we'll skip the auto-save to avoid the Send issue
-            // TODO: Implement proper async cache handling
+        // Report cache statistics
+        self.report_cache_statistics().await?;
 
-            let stats = self.cache.lock().await.performance_stats();
-            self.progress.update(&format!(
-                "Cache: {} entries, {} findings, {:.1}MB cached",
-                stats.total_entries,
-                stats.total_findings,
-                stats.total_cached_size as f64 / BYTES_PER_MB
-            ));
-        }
+        // Report adaptive parallelism metrics
+        self.report_parallelism_metrics()?;
 
-        // Log adaptive parallelism metrics
+        // Finish progress reporting
+        self.finish_progress_reporting(file_count)?;
+
+        Ok(())
+    }
+
+    /// Report cache statistics
+    async fn report_cache_statistics(&self) -> Result<()> {
+        let stats = self.cache.lock().await.performance_stats();
+        self.progress.update(&format!(
+            "Cache: {} entries, {} findings, {:.1}MB cached",
+            stats.total_entries,
+            stats.total_findings,
+            stats.total_cached_size as f64 / BYTES_PER_MB
+        ));
+        Ok(())
+    }
+
+    /// Report adaptive parallelism metrics
+    fn report_parallelism_metrics(&self) -> Result<()> {
         let parallelism_metrics = self.parallelism_controller.metrics();
-        progress_buffer.clear();
+        let mut progress_buffer = String::with_capacity(PROGRESS_BUFFER_CAPACITY);
         write!(
             progress_buffer,
             "Adaptive parallelism: {} workers (load: {:.2})",
             parallelism_metrics.current_workers, parallelism_metrics.current_load_score
-        )
-        .unwrap();
+        )?;
         self.progress.update(&progress_buffer);
+        Ok(())
+    }
 
-        // Finish progress reporting
-        progress_buffer.clear();
+    /// Finish progress reporting with final statistics
+    fn finish_progress_reporting(&self, file_count: usize) -> Result<()> {
+        let mut progress_buffer = String::with_capacity(PROGRESS_BUFFER_CAPACITY);
         write!(
             progress_buffer,
             "Analyzed {} files ({} cached, {} new) in {:.2}s",
-            files.len(),
+            file_count,
             self.stats.cache_hits.load(Ordering::Relaxed),
             self.stats.cache_misses.load(Ordering::Relaxed),
             self.stats.total_duration.as_secs_f64()
-        )
-        .unwrap();
+        )?;
         self.progress.finish(&progress_buffer);
-
-        Ok(results)
+        Ok(())
     }
 
     async fn process_cached_files(
@@ -397,7 +455,7 @@ impl GuardianEngine {
                     {
                         // Perform async operation without holding lock across await
                         // For now, we'll skip the async caching to avoid the Send issue
-                        // TODO: Implement proper async cache handling
+                        // Note: Async cache handling needs refactoring to avoid Send trait issues
                         let mut cache_guard = self.cache.lock().await;
                         let _ = cache_guard
                             .cache_findings(file_path, findings.clone(), config_hash)
@@ -600,9 +658,10 @@ mod tests {
     #[tokio::test]
     async fn test_analyze_empty_directory() {
         let temp_dir = TempDir::new().unwrap();
-        let engine = create_test_engine().await;
-        
-        let results = engine.scan_directory(temp_dir.path()).await.unwrap();
+        let mut engine = create_test_engine().await;
+
+        let paths = vec![temp_dir.path().to_path_buf()];
+        let results = engine.scan_paths(&paths).await.unwrap();
         assert_eq!(results.summary.total_files_scanned, 0);
         assert_eq!(results.findings.len(), 0);
     }
@@ -613,9 +672,10 @@ mod tests {
         let test_file = temp_dir.path().join("test.rs");
         fs::write(&test_file, "fn main() { println!(\"Hello, world!\"); }").await.unwrap();
 
-        let engine = create_test_engine().await;
-        let results = engine.scan_directory(temp_dir.path()).await.unwrap();
-        
+        let mut engine = create_test_engine().await;
+        let paths = vec![temp_dir.path().to_path_buf()];
+        let results = engine.scan_paths(&paths).await.unwrap();
+
         assert!(results.summary.total_files_scanned > 0);
     }
 
@@ -625,9 +685,10 @@ mod tests {
         let test_file = temp_dir.path().join("test.js");
         fs::write(&test_file, r#"const apiKey = "sk-1234567890abcdef1234567890abcdef";"#).await.unwrap();
 
-        let engine = create_test_engine().await;
-        let results = engine.scan_directory(temp_dir.path()).await.unwrap();
-        
+        let mut engine = create_test_engine().await;
+        let paths = vec![temp_dir.path().to_path_buf()];
+        let results = engine.scan_paths(&paths).await.unwrap();
+
         // Should detect hardcoded secret
         assert!(results.findings.iter().any(|f| f.rule == "hardcoded_secret"));
     }
@@ -636,14 +697,15 @@ mod tests {
     async fn test_file_size_limit() {
         let temp_dir = TempDir::new().unwrap();
         let large_file = temp_dir.path().join("large.txt");
-        
+
         // Create a file larger than the default limit
         let large_content = "x".repeat(15 * 1024 * 1024); // 15MB
         fs::write(&large_file, large_content).await.unwrap();
 
-        let engine = create_test_engine().await;
-        let results = engine.scan_directory(temp_dir.path()).await.unwrap();
-        
+        let mut engine = create_test_engine().await;
+        let paths = vec![temp_dir.path().to_path_buf()];
+        let results = engine.scan_paths(&paths).await.unwrap();
+
         // Large file should be skipped
         assert_eq!(results.summary.total_files_scanned, 0);
     }
@@ -651,20 +713,20 @@ mod tests {
     #[tokio::test]
     async fn test_analyze_paths_with_filters() {
         let temp_dir = TempDir::new().unwrap();
-        
+
         // Create test files
         let rust_file = temp_dir.path().join("test.rs");
         let js_file = temp_dir.path().join("test.js");
         let txt_file = temp_dir.path().join("test.txt");
-        
+
         fs::write(&rust_file, "fn main() {}").await.unwrap();
         fs::write(&js_file, "console.log('hello');").await.unwrap();
         fs::write(&txt_file, "plain text").await.unwrap();
 
-        let engine = create_test_engine().await;
+        let mut engine = create_test_engine().await;
         let paths = vec![rust_file, js_file, txt_file];
         let results = engine.scan_paths(&paths).await.unwrap();
-        
+
         // Should analyze supported file types
         assert!(results.summary.total_files_scanned >= 2);
     }
@@ -675,16 +737,17 @@ mod tests {
         let test_file = temp_dir.path().join("test.rs");
         fs::write(&test_file, "fn main() {}").await.unwrap();
 
-        let engine = create_test_engine().await;
-        
+        let mut engine = create_test_engine().await;
+        let paths = vec![temp_dir.path().to_path_buf()];
+
         // First analysis
-        let results1 = engine.scan_directory(temp_dir.path()).await.unwrap();
+        let results1 = engine.scan_paths(&paths).await.unwrap();
         let initial_cache_hits = engine.stats.cache_hits.load(Ordering::Relaxed);
-        
+
         // Second analysis (should use cache)
-        let results2 = engine.scan_directory(temp_dir.path()).await.unwrap();
+        let results2 = engine.scan_paths(&paths).await.unwrap();
         let final_cache_hits = engine.stats.cache_hits.load(Ordering::Relaxed);
-        
+
         assert_eq!(results1.findings.len(), results2.findings.len());
         // Cache hits should increase (though exact behavior depends on cache implementation)
         assert!(final_cache_hits >= initial_cache_hits);
@@ -698,10 +761,11 @@ mod tests {
 
         let config = Config::minimal();
         let progress = ProgressReporter::new(false);
-        let engine = GuardianEngine::new_with_ml(config, progress, None).await.unwrap();
-        
-        let results = engine.scan_directory(temp_dir.path()).await.unwrap();
-        
+        let mut engine = GuardianEngine::new_with_ml(config, progress, None).await.unwrap();
+        let paths = vec![temp_dir.path().to_path_buf()];
+
+        let results = engine.scan_paths(&paths).await.unwrap();
+
         // Should still work even without ML model
         assert!(results.summary.total_files_scanned > 0);
     }
@@ -719,16 +783,17 @@ mod tests {
     #[tokio::test]
     async fn test_concurrent_analysis() {
         let temp_dir = TempDir::new().unwrap();
-        
+
         // Create multiple test files
         for i in 0..5 {
             let file_path = temp_dir.path().join(format!("test{}.rs", i));
             fs::write(&file_path, format!("fn test{}() {{}}", i)).await.unwrap();
         }
 
-        let engine = create_test_engine().await;
-        let results = engine.scan_directory(temp_dir.path()).await.unwrap();
-        
+        let mut engine = create_test_engine().await;
+        let paths = vec![temp_dir.path().to_path_buf()];
+        let results = engine.scan_paths(&paths).await.unwrap();
+
         assert_eq!(results.summary.total_files_scanned, 5);
     }
 

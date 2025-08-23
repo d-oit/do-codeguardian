@@ -32,11 +32,14 @@ This directory contains comprehensive end-to-end tests for the CodeGuardian CLI 
 - **Recovery**: Graceful handling of interruptions
 
 ### Feature Tests (`e2e_feature_tests.rs`)
-- **ML integration**: False positive reduction
-- **Caching**: Performance optimization
-- **GitHub integration**: Issue creation (dry-run)
-- **Custom patterns**: User-defined rules
-- **Baseline mode**: Incremental analysis
+- **ML integration**: False positive reduction with RUV-FANN
+- **Enhanced caching**: Intelligent file caching with mtime/hash checking
+- **GitHub integration**: Issue creation with rate limiting and retry logic
+- **Custom patterns**: User-defined security rules and patterns
+- **Baseline mode**: Incremental analysis with diff support
+- **Turbo mode**: High-performance analysis testing
+- **Streaming analysis**: Large file processing validation
+- **Security enhancements**: Enhanced security checks and validation
 
 ### Test Utilities (`e2e_test_runner.rs`)
 - **Helper functions**: Project creation, git setup
@@ -77,11 +80,13 @@ cargo test --test "*e2e*"
 ## Test Coverage
 
 ### CLI Commands Tested
-- ✅ `codeguardian check` - Core analysis functionality
-- ✅ `codeguardian report` - Report format conversion
-- ✅ `codeguardian init` - Configuration initialization
-- ✅ `codeguardian turbo` - High-performance analysis
-- ✅ `codeguardian gh-issue` - GitHub integration
+- ✅ `codeguardian check` - Core analysis functionality with enhanced options
+- ✅ `codeguardian report` - Report format conversion with new formats
+- ✅ `codeguardian init` - Configuration initialization with enhanced defaults
+- ✅ `codeguardian turbo` - High-performance analysis with new performance options
+- ✅ `codeguardian gh-issue` - GitHub integration with rate limiting
+- ✅ `codeguardian train` - ML model training and validation
+- ✅ `codeguardian metrics` - ML model performance metrics
 - ✅ `codeguardian --help` - Help documentation
 - ✅ `codeguardian --version` - Version information
 
@@ -98,12 +103,16 @@ cargo test --test "*e2e*"
 - ✅ Configuration files (`.toml`, `.json`, `.yaml`)
 
 ### Security Issues Tested
-- ✅ Hardcoded secrets and API keys
-- ✅ SQL injection vulnerabilities
-- ✅ XSS vulnerabilities
-- ✅ Command injection
-- ✅ Weak cryptography
-- ✅ Non-production code markers
+- ✅ Hardcoded secrets and API keys with enhanced pattern detection
+- ✅ SQL injection vulnerabilities with context-aware analysis
+- ✅ XSS vulnerabilities with improved detection algorithms
+- ✅ Command injection with shell escaping validation
+- ✅ Weak cryptography with modern standard compliance
+- ✅ Non-production code markers with escalation tracking
+- ✅ Path traversal vulnerabilities with canonical path validation
+- ✅ Resource exhaustion with file size and memory limits
+- ✅ Information disclosure with secret redaction
+- ✅ Authentication bypass with enhanced security checks
 
 ### Performance Scenarios
 - ✅ Large codebases (50+ files)

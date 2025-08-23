@@ -67,7 +67,7 @@ async fn main() -> Result<()> {
         Commands::Train(args) => cli::train::run(args).await,
         Commands::Metrics(args) => cli::metrics::run(args).await,
         Commands::Turbo(args) => {
-            let config = config::Config::load(&std::path::PathBuf::from("codeguardian.toml"))
+            let config = config::Config::load_from_project_root()
                 .unwrap_or_else(|_| config::Config::minimal());
             cli::turbo::run_turbo_analysis(args, config).await
         }

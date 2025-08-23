@@ -62,132 +62,171 @@ impl NonProductionAnalyzer {
         for (line_num, line) in content_str.lines().enumerate() {
             let line_number = (line_num + 1) as u32;
 
-            // Check for TODO/FIXME comments
-            if let Some(captures) = self.todo_pattern.captures(line) {
-                let keyword = captures.get(1).unwrap().as_str();
-                let severity = match keyword.to_lowercase().as_str() {
-                    "bug" | "xxx" => Severity::High,
-                    "fixme" | "hack" => Severity::Medium,
-                    "todo" => Severity::Low,
-                    _ => Severity::Info,
-                };
-
-                findings.push(
-                    Finding::new(
-                        "non_production",
-                        "todo_comment",
-                        severity,
-                        file_path.to_path_buf(),
-                        line_number,
-                        format!("{} comment found", keyword.to_uppercase()),
-                    )
-                    .with_description(format!(
-                        "Line contains a {} comment that should be resolved before production",
-                        keyword
-                    ))
-                    .with_suggestion(
-                        "Resolve the issue or create a proper issue tracker entry".to_string(),
-                    )
-                    .with_metadata(
-                        "comment_type".to_string(),
-                        serde_json::Value::String(keyword.to_string()),
-                    ),
-                );
-            }
-
-            // Check for debug statements
-            if self.debug_pattern.is_match(line) {
-                let severity = if line.contains("debugger") {
-                    Severity::High
-                } else {
-                    Severity::Medium
-                };
-
-                findings.push(
-                    Finding::new(
-                        "non_production",
-                        "debug_statement",
-                        severity,
-                        file_path.to_path_buf(),
-                        line_number,
-                        "Debug statement found".to_string(),
-                    )
-                    .with_description(
-                        "Debug statements should not be present in production code".to_string(),
-                    )
-                    .with_suggestion(
-                        "Remove debug statements or replace with proper logging".to_string(),
-                    ),
-                );
-            }
-
-            // Check for console statements in JavaScript/TypeScript
-            if self.is_js_ts_file(file_path) && self.console_pattern.is_match(line) {
-                findings.push(
-                    Finding::new(
-                        "non_production",
-                        "console_statement",
-                        Severity::Low,
-                        file_path.to_path_buf(),
-                        line_number,
-                        "Console statement found".to_string(),
-                    )
-                    .with_description(
-                        "Console statements should be replaced with proper logging in production"
-                            .to_string(),
-                    )
-                    .with_suggestion(
-                        "Use a proper logging library instead of console statements".to_string(),
-                    ),
-                );
-            }
-
-            // Check for hardcoded credentials or secrets
-            if self.contains_potential_secret(line) {
-                // Check if this is in a test or non-production context
-                let context = self.analyze_secret_context(file_path, line);
-                let (severity, message, description) = match context {
-                    SecretContext::Test => (
-                        Severity::Info,
-                        "Hardcoded secret in test code".to_string(),
-                        "Test secrets should use mock values or be clearly marked as test data"
-                            .to_string(),
-                    ),
-                    SecretContext::NonProduction => (
-                        Severity::Low,
-                        "Hardcoded secret in non-production code".to_string(),
-                        "Non-production secrets should be externalized or clearly documented"
-                            .to_string(),
-                    ),
-                    SecretContext::Production => (
-                        Severity::Critical,
-                        "Potential hardcoded secret detected".to_string(),
-                        "Line may contain hardcoded credentials or API keys".to_string(),
-                    ),
-                };
-
-                findings.push(
-                    Finding::new(
-                        "non_production",
-                        "potential_secret",
-                        severity,
-                        file_path.to_path_buf(),
-                        line_number,
-                        message,
-                    )
-                    .with_description(description)
-                    .with_suggestion(
-                        "Move secrets to environment variables or secure configuration".to_string(),
-                    )
-                    .with_metadata(
-                        "context".to_string(),
-                        serde_json::Value::String(context.to_string()),
-                    ),
-                );
-            }
+            // Check for different types of non-production code patterns
+            findings.extend(self.check_todo_comments(file_path, line, line_number));
+            findings.extend(self.check_debug_statements(file_path, line, line_number));
+            findings.extend(self.check_console_statements(file_path, line, line_number));
+            findings.extend(self.check_hardcoded_secrets(file_path, line, line_number));
         }
 
         Ok(findings)
+    }
+
+    /// Check for TODO/FIXME comments
+    fn check_todo_comments(&self, file_path: &Path, line: &str, line_number: u32) -> Vec<Finding> {
+        let mut findings = Vec::new();
+
+        if let Some(captures) = self.todo_pattern.captures(line) {
+            let keyword = captures.get(1).unwrap().as_str();
+            let severity = self.get_todo_severity(keyword);
+
+            findings.push(
+                Finding::new(
+                    "non_production",
+                    "todo_comment",
+                    severity,
+                    file_path.to_path_buf(),
+                    line_number,
+                    format!("{} comment found", keyword.to_uppercase()),
+                )
+                .with_description(format!(
+                    "Line contains a {} comment that should be resolved before production",
+                    keyword
+                ))
+                .with_suggestion(
+                    "Resolve the issue or create a proper issue tracker entry".to_string(),
+                )
+                .with_metadata(
+                    "comment_type".to_string(),
+                    serde_json::Value::String(keyword.to_string()),
+                ),
+            );
+        }
+
+        findings
+    }
+
+    /// Determine severity for TODO comment types
+    fn get_todo_severity(&self, keyword: &str) -> Severity {
+        match keyword.to_lowercase().as_str() {
+            "bug" | "xxx" => Severity::High,
+            "fixme" | "hack" => Severity::Medium,
+            "todo" => Severity::Low,
+            _ => Severity::Info,
+        }
+    }
+
+    /// Check for debug statements
+    fn check_debug_statements(&self, file_path: &Path, line: &str, line_number: u32) -> Vec<Finding> {
+        let mut findings = Vec::new();
+
+        if self.debug_pattern.is_match(line) {
+            let severity = if line.contains("debugger") {
+                Severity::High
+            } else {
+                Severity::Medium
+            };
+
+            findings.push(
+                Finding::new(
+                    "non_production",
+                    "debug_statement",
+                    severity,
+                    file_path.to_path_buf(),
+                    line_number,
+                    "Debug statement found".to_string(),
+                )
+                .with_description(
+                    "Debug statements should not be present in production code".to_string(),
+                )
+                .with_suggestion(
+                    "Remove debug statements or replace with proper logging".to_string(),
+                ),
+            );
+        }
+
+        findings
+    }
+
+    /// Check for console statements in JavaScript/TypeScript
+    fn check_console_statements(&self, file_path: &Path, line: &str, line_number: u32) -> Vec<Finding> {
+        let mut findings = Vec::new();
+
+        if self.is_js_ts_file(file_path) && self.console_pattern.is_match(line) {
+            findings.push(
+                Finding::new(
+                    "non_production",
+                    "console_statement",
+                    Severity::Low,
+                    file_path.to_path_buf(),
+                    line_number,
+                    "Console statement found".to_string(),
+                )
+                .with_description(
+                    "Console statements should be replaced with proper logging in production"
+                        .to_string(),
+                )
+                .with_suggestion(
+                    "Use a proper logging library instead of console statements".to_string(),
+                ),
+            );
+        }
+
+        findings
+    }
+
+    /// Check for hardcoded credentials or secrets
+    fn check_hardcoded_secrets(&self, file_path: &Path, line: &str, line_number: u32) -> Vec<Finding> {
+        let mut findings = Vec::new();
+
+        if self.contains_potential_secret(line) {
+            let context = self.analyze_secret_context(file_path, line);
+            let (severity, message, description) = self.get_secret_finding_details(&context);
+
+            findings.push(
+                Finding::new(
+                    "non_production",
+                    "potential_secret",
+                    severity,
+                    file_path.to_path_buf(),
+                    line_number,
+                    message,
+                )
+                .with_description(description)
+                .with_suggestion(
+                    "Move secrets to environment variables or secure configuration".to_string(),
+                )
+                .with_metadata(
+                    "context".to_string(),
+                    serde_json::Value::String(context.to_string()),
+                ),
+            );
+        }
+
+        findings
+    }
+
+    /// Get finding details based on secret context
+    fn get_secret_finding_details(&self, context: &SecretContext) -> (Severity, String, String) {
+        match context {
+            SecretContext::Test => (
+                Severity::Info,
+                "Hardcoded secret in test code".to_string(),
+                "Test secrets should use mock values or be clearly marked as test data"
+                    .to_string(),
+            ),
+            SecretContext::NonProduction => (
+                Severity::Low,
+                "Hardcoded secret in non-production code".to_string(),
+                "Non-production secrets should be externalized or clearly documented"
+                    .to_string(),
+            ),
+            SecretContext::Production => (
+                Severity::Critical,
+                "Potential hardcoded secret detected".to_string(),
+                "Line may contain hardcoded credentials or API keys".to_string(),
+            ),
+        }
     }
 
     fn is_js_ts_file(&self, file_path: &Path) -> bool {
@@ -244,98 +283,96 @@ impl NonProductionAnalyzer {
 
     /// Analyze the context of a potential secret to determine if it's in test/non-production code
     fn analyze_secret_context(&self, file_path: &Path, line: &str) -> SecretContext {
-        // Check file path indicators
-        let file_path_str = file_path.to_string_lossy().to_lowercase();
-
-        // Test file indicators
-        if file_path_str.contains("test")
-            || file_path_str.contains("spec")
-            || file_path_str.contains("__tests__")
-            || file_path_str.contains("tests/")
-            || file_path_str.contains("/test/")
-            || file_path_str.ends_with("_test.rs")
-            || file_path_str.ends_with(".test.js")
-            || file_path_str.ends_with(".test.ts")
-            || file_path_str.ends_with("_spec.rb")
-        {
+        // Check file path indicators first (most reliable)
+        if self.is_test_file(file_path) {
             return SecretContext::Test;
         }
 
-        // Non-production file indicators
-        if file_path_str.contains("example")
-            || file_path_str.contains("demo")
-            || file_path_str.contains("sample")
-            || file_path_str.contains("mock")
-            || file_path_str.contains("fixture")
-            || file_path_str.contains("dev")
-            || file_path_str.contains("development")
-            || file_path_str.contains("staging")
-        {
+        if self.is_non_production_file(file_path) {
             return SecretContext::NonProduction;
         }
 
-        // Check line content for test/non-production indicators
+        // Check line content for context indicators
         let line_lower = line.to_lowercase();
 
-        // Test function/method indicators
-        if line_lower.contains("#[test]")
-            || line_lower.contains("fn test_")
-            || line_lower.contains("function test")
-            || line_lower.contains("it(")
-            || line_lower.contains("describe(")
-            || line_lower.contains("test(")
-            || line_lower.contains("@test")
-            || line_lower.contains("def test_")
-            || line_lower.contains("class test")
-        {
+        if self.is_test_code_line(&line_lower) {
             return SecretContext::Test;
         }
 
-        // Non-production indicators in code
-        if line_lower.contains("example")
-            || line_lower.contains("demo")
-            || line_lower.contains("sample")
-            || line_lower.contains("mock")
-            || line_lower.contains("fake")
-            || line_lower.contains("dummy")
-            || line_lower.contains("placeholder")
-            || line_lower.contains("test_")
-            || line_lower.contains("_test")
-            || line_lower.contains("dev_")
-            || line_lower.contains("development")
-        {
+        if self.is_non_production_code_line(&line_lower) {
             return SecretContext::NonProduction;
         }
 
-        // Check for obvious test/example values (but not if already in test context)
-        if line_lower.contains("your_")
-            || line_lower.contains("replace_")
-            || line_lower.contains("insert_")
-            || line_lower.contains("placeholder")
-            || line_lower.contains("example")
-            || line_lower.contains("demo")
-            || line_lower.contains("mock")
-            || line_lower.contains("fake")
-            || line_lower.contains("dummy")
-        {
-            return SecretContext::NonProduction;
-        }
-
-        // Check for obvious placeholder patterns (but be more specific)
-        if line_lower.contains("xxxx")
-            || line_lower.contains("abcd")
-            || (line_lower.contains("1234")
-                && (line_lower.contains("example")
-                    || line_lower.contains("demo")
-                    || line_lower.contains("test")
-                    || line_lower.contains("placeholder")
-                    || line_lower.contains("your_")))
-        {
+        if self.is_placeholder_value(&line_lower) {
             return SecretContext::NonProduction;
         }
 
         // Default to production context for safety
         SecretContext::Production
+    }
+
+    /// Check if file path indicates a test file
+    fn is_test_file(&self, file_path: &Path) -> bool {
+        let file_path_str = file_path.to_string_lossy().to_lowercase();
+        let test_indicators = [
+            "test", "spec", "__tests__", "tests/", "/test/",
+            "_test.rs", ".test.js", ".test.ts", "_spec.rb"
+        ];
+
+        test_indicators.iter().any(|&indicator| file_path_str.contains(indicator))
+    }
+
+    /// Check if file path indicates a non-production file
+    fn is_non_production_file(&self, file_path: &Path) -> bool {
+        let file_path_str = file_path.to_string_lossy().to_lowercase();
+        let non_prod_indicators = [
+            "example", "demo", "sample", "mock", "fixture",
+            "dev", "development", "staging"
+        ];
+
+        non_prod_indicators.iter().any(|&indicator| file_path_str.contains(indicator))
+    }
+
+    /// Check if line content indicates test code
+    fn is_test_code_line(&self, line_lower: &str) -> bool {
+        let test_code_indicators = [
+            "#[test]", "fn test_", "function test", "it(", "describe(",
+            "test(", "@test", "def test_", "class test"
+        ];
+
+        test_code_indicators.iter().any(|&indicator| line_lower.contains(indicator))
+    }
+
+    /// Check if line content indicates non-production code
+    fn is_non_production_code_line(&self, line_lower: &str) -> bool {
+        let non_prod_indicators = [
+            "example", "demo", "sample", "mock", "fake", "dummy",
+            "placeholder", "test_", "_test", "dev_", "development"
+        ];
+
+        non_prod_indicators.iter().any(|&indicator| line_lower.contains(indicator))
+    }
+
+    /// Check if line contains obvious placeholder values
+    fn is_placeholder_value(&self, line_lower: &str) -> bool {
+        // Check for obvious placeholder prefixes
+        if line_lower.contains("your_") || line_lower.contains("replace_") ||
+           line_lower.contains("insert_") || line_lower.contains("placeholder") {
+            return true;
+        }
+
+        // Check for common placeholder patterns
+        if line_lower.contains("xxxx") || line_lower.contains("abcd") {
+            return true;
+        }
+
+        // Check for 1234 with context words
+        if line_lower.contains("1234") {
+            let context_words = ["example", "demo", "test", "placeholder", "your_"];
+            return context_words.iter().any(|&word| line_lower.contains(word));
+        }
+
+        false
     }
 }
 

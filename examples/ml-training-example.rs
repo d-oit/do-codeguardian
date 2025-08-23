@@ -73,7 +73,7 @@ async fn main() -> anyhow::Result<()> {
 
     // Step 4: Test the trained classifier
     println!("\n🧪 Step 4: Testing classifier...");
-    test_classifier(&classifier).await?;
+    test_classifier(&mut classifier).await?;
 
     // Step 5: Save the trained model
     println!("\n💾 Step 5: Saving trained model...");
@@ -147,7 +147,7 @@ fn create_sample_findings() -> Vec<Finding> {
     ]
 }
 
-async fn test_classifier(classifier: &FannClassifier) -> anyhow::Result<()> {
+async fn test_classifier(classifier: &mut FannClassifier) -> anyhow::Result<()> {
     use codeguardian::ml::feature_extractor::FeatureExtractor;
 
     let extractor = FeatureExtractor::new();

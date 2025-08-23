@@ -14,7 +14,7 @@ pub async fn run(args: TrainArgs) -> Result<()> {
     let start_time = Instant::now();
 
     // Load configuration
-    let config = Config::load(Path::new("codeguardian.toml")).unwrap_or_else(|_| {
+    let config = Config::load_from_project_root().unwrap_or_else(|_| {
         eprintln!("Warning: No configuration file found, using defaults");
         Config::default()
     });

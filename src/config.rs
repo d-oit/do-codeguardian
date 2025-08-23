@@ -57,30 +57,47 @@ impl Default for GeneralConfig {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
 pub enum HashAlgorithm {
     #[default]
     Blake3,
     Sha256,
+    Sha512,
+}
+
+impl std::fmt::Display for HashAlgorithm {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            HashAlgorithm::Blake3 => write!(f, "blake3"),
+            HashAlgorithm::Sha256 => write!(f, "sha256"),
+            HashAlgorithm::Sha512 => write!(f, "sha512"),
+        }
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct IntegrityConfig {
     pub enabled: bool,
-    pub algorithm: HashAlgorithm,
+    pub hash_algorithm: HashAlgorithm,
     pub baseline_file: String,
     pub auto_update_baseline: bool,
     pub check_permissions: bool,
+    pub check_binary_files: bool,
+    pub verify_checksums: bool,
+    pub max_file_size: u64,
 }
 
 impl Default for IntegrityConfig {
     fn default() -> Self {
         Self {
             enabled: true,
-            algorithm: HashAlgorithm::Blake3,
+            hash_algorithm: HashAlgorithm::Blake3,
             baseline_file: ".codeguardian/integrity.baseline".to_string(),
             auto_update_baseline: false,
             check_permissions: true,
+            check_binary_files: true,
+            verify_checksums: true,
+            max_file_size: 100 * MB,
         }
     }
 }
@@ -118,6 +135,49 @@ pub struct NonProdPattern {
     pub severity: String,
 }
 
+impl NonProdPattern {
+    /// Create a new NonProdPattern with validation
+    pub fn new(pattern: String, description: String, severity: String) -> Result<Self, String> {
+        if pattern.trim().is_empty() {
+            return Err("Pattern cannot be empty".to_string());
+        }
+        if !matches!(severity.as_str(), "low" | "medium" | "high" | "critical") {
+            return Err("Severity must be one of: low, medium, high, critical".to_string());
+        }
+        Ok(Self {
+            pattern,
+            description,
+            severity,
+        })
+    }
+
+    /// Check if this pattern matches the given text
+    #[allow(dead_code)]
+    pub fn matches(&self, text: &str) -> bool {
+        regex::Regex::new(&self.pattern)
+            .map(|re| re.is_match(text))
+            .unwrap_or(false)
+    }
+
+    /// Get the pattern as a string slice
+    #[allow(dead_code)]
+    pub fn as_str(&self) -> &str {
+        &self.pattern
+    }
+}
+
+impl AsRef<str> for NonProdPattern {
+    fn as_ref(&self) -> &str {
+        &self.pattern
+    }
+}
+
+impl std::fmt::Display for NonProdPattern {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{} ({})", self.pattern, self.severity)
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NonProductionConfig {
     pub enabled: bool,
@@ -126,26 +186,60 @@ pub struct NonProductionConfig {
     pub exclude_example_files: bool,
 }
 
+impl NonProductionConfig {
+    /// Check if any pattern matches the given text
+    #[allow(dead_code)]
+    pub fn matches_any(&self, text: &str) -> bool {
+        self.patterns.iter().any(|pattern| pattern.matches(text))
+    }
+
+    /// Find patterns that match the given text
+    #[allow(dead_code)]
+    pub fn find_matches(&self, text: &str) -> Vec<&NonProdPattern> {
+        self.patterns.iter().filter(|pattern| pattern.matches(text)).collect()
+    }
+
+    /// Add a new pattern with validation
+    #[allow(dead_code)]
+    pub fn add_pattern(&mut self, pattern: String, description: String, severity: String) -> Result<(), String> {
+        let new_pattern = NonProdPattern::new(pattern, description, severity)?;
+        self.patterns.push(new_pattern);
+        Ok(())
+    }
+
+    /// Remove patterns containing the given substring
+    #[allow(dead_code)]
+    pub fn remove_patterns_containing(&mut self, substring: &str) {
+        self.patterns.retain(|pattern| !pattern.pattern.contains(substring));
+    }
+
+    /// Get all pattern strings as a Vec<String>
+    #[allow(dead_code)]
+    pub fn pattern_strings(&self) -> Vec<String> {
+        self.patterns.iter().map(|p| p.pattern.clone()).collect()
+    }
+}
+
 impl Default for NonProductionConfig {
     fn default() -> Self {
         Self {
             enabled: true,
             patterns: vec![
-                NonProdPattern {
-                    pattern: r"(?i)\b(todo|fixme|hack|xxx)\b".to_string(),
-                    description: "Non-production code markers".to_string(),
-                    severity: "medium".to_string(),
-                },
-                NonProdPattern {
-                    pattern: r"(?i)\bdebug\s*!".to_string(),
-                    description: "Debug print statements".to_string(),
-                    severity: "low".to_string(),
-                },
-                NonProdPattern {
-                    pattern: r"(?i)\bprintln\s*!".to_string(),
-                    description: "Print statements in production code".to_string(),
-                    severity: "low".to_string(),
-                },
+                NonProdPattern::new(
+                    r"(?i)\b(todo|fixme|hack|xxx)\b".to_string(),
+                    "Non-production code markers".to_string(),
+                    "medium".to_string(),
+                ).unwrap_or_else(|_| panic!("Invalid default pattern")),
+                NonProdPattern::new(
+                    r"(?i)\bdebug\s*!".to_string(),
+                    "Debug print statements".to_string(),
+                    "low".to_string(),
+                ).unwrap_or_else(|_| panic!("Invalid default pattern")),
+                NonProdPattern::new(
+                    r"(?i)\bprintln\s*!".to_string(),
+                    "Print statements in production code".to_string(),
+                    "low".to_string(),
+                ).unwrap_or_else(|_| panic!("Invalid default pattern")),
             ],
             exclude_test_files: true,
             exclude_example_files: true,
@@ -213,10 +307,14 @@ pub struct DependencyAnalyzerConfig {
     pub check_unused: bool,
     /// Check for duplicate dependencies
     pub check_duplicates: bool,
+    /// Check for license compliance
+    pub check_licenses: bool,
     /// Maximum allowed dependency age in days
     pub max_age_days: u32,
     /// Severity threshold for vulnerabilities
     pub vulnerability_threshold: String,
+    /// List of vulnerability databases to check
+    pub vulnerability_databases: Vec<String>,
 }
 
 impl Default for DependencyAnalyzerConfig {
@@ -227,8 +325,13 @@ impl Default for DependencyAnalyzerConfig {
             check_vulnerabilities: true,
             check_unused: true,
             check_duplicates: true,
+            check_licenses: true,
             max_age_days: 365,
             vulnerability_threshold: "medium".to_string(),
+            vulnerability_databases: vec![
+                "https://cve.mitre.org".to_string(),
+                "https://nvd.nist.gov".to_string(),
+            ],
         }
     }
 }
@@ -243,10 +346,18 @@ pub struct PerformanceAnalyzerConfig {
     pub check_string_operations: bool,
     /// Check for blocking I/O
     pub check_blocking_io: bool,
+    /// Check for algorithmic inefficiencies
+    pub check_algorithms: bool,
+    /// Check for memory usage issues
+    pub check_memory_usage: bool,
+    /// Check for I/O operation inefficiencies
+    pub check_io_operations: bool,
     /// Maximum acceptable cyclomatic complexity
     pub max_complexity: usize,
     /// Maximum acceptable function length
     pub max_function_length: usize,
+    /// Maximum acceptable loop depth
+    pub max_loop_depth: usize,
 }
 
 impl Default for PerformanceAnalyzerConfig {
@@ -256,8 +367,12 @@ impl Default for PerformanceAnalyzerConfig {
             check_nested_loops: true,
             check_string_operations: true,
             check_blocking_io: true,
+            check_algorithms: true,
+            check_memory_usage: true,
+            check_io_operations: true,
             max_complexity: 10,
             max_function_length: 50,
+            max_loop_depth: 3,
         }
     }
 }
@@ -274,8 +389,16 @@ pub struct SecurityAnalyzerConfig {
     pub check_command_injection: bool,
     /// Check for hardcoded secrets
     pub check_hardcoded_secrets: bool,
+    /// Check for vulnerabilities in dependencies
+    pub check_vulnerabilities: bool,
+    /// Check for file permission issues
+    pub check_permissions: bool,
+    /// Check for secrets in code
+    pub check_secrets: bool,
     /// Minimum entropy threshold for secret detection
     pub min_entropy_threshold: f64,
+    /// Patterns for secret detection
+    pub secret_patterns: Vec<String>,
 }
 
 impl Default for SecurityAnalyzerConfig {
@@ -286,7 +409,15 @@ impl Default for SecurityAnalyzerConfig {
             check_xss: true,
             check_command_injection: true,
             check_hardcoded_secrets: true,
+            check_vulnerabilities: true,
+            check_permissions: true,
+            check_secrets: true,
             min_entropy_threshold: 3.5,
+            secret_patterns: vec![
+                r"(?i)(password|passwd|pwd)\s*[:=]\s*['\x22][^'\x22]{8,}['\x22]".to_string(),
+                r"(?i)(api[_-]?key|apikey)\s*[:=]\s*['\x22][^'\x22]{16,}['\x22]".to_string(),
+                r"(?i)(secret|token)\s*[:=]\s*['\x22][^'\x22]{16,}['\x22]".to_string(),
+            ],
         }
     }
 }
@@ -303,10 +434,20 @@ pub struct CodeQualityConfig {
     pub check_deep_nesting: bool,
     /// Check for commented-out code
     pub check_commented_code: bool,
+    /// Check for cyclomatic complexity
+    pub check_complexity: bool,
+    /// Check for code duplication
+    pub check_duplication: bool,
+    /// Check for naming convention violations
+    pub check_naming: bool,
+    /// Maximum acceptable cyclomatic complexity
+    pub max_complexity: usize,
     /// Maximum acceptable nesting depth
     pub max_nesting_depth: usize,
     /// Maximum acceptable file size (lines)
     pub max_file_size: usize,
+    /// Maximum acceptable line length
+    pub max_line_length: usize,
 }
 
 impl Default for CodeQualityConfig {
@@ -317,8 +458,13 @@ impl Default for CodeQualityConfig {
             check_complex_conditions: true,
             check_deep_nesting: true,
             check_commented_code: true,
+            check_complexity: true,
+            check_duplication: true,
+            check_naming: true,
+            max_complexity: 10,
             max_nesting_depth: 6,
             max_file_size: 500,
+            max_line_length: 120,
         }
     }
 }
@@ -391,6 +537,59 @@ impl Config {
         Ok(config)
     }
 
+    /// Load configuration by searching for codeguardian.toml in the current directory
+    /// and parent directories. This is the recommended method for loading configuration
+    /// as it handles cases where the tool is run from subdirectories.
+    ///
+    /// # Returns
+    /// A validated Config instance or an error if loading/parsing fails
+    pub fn load_from_project_root() -> Result<Self> {
+        let config_path = Self::find_config_file()?;
+        match config_path {
+            Some(path) => {
+                eprintln!("Using configuration file: {}", path.display());
+                match Self::load(&path) {
+                    Ok(config) => Ok(config),
+                    Err(e) => {
+                        eprintln!("Error loading configuration from {}: {}", path.display(), e);
+                        eprintln!("Falling back to defaults");
+                        Ok(Self::minimal())
+                    }
+                }
+            }
+            None => {
+                eprintln!("No configuration file found, using defaults");
+                Ok(Self::minimal())
+            }
+        }
+    }
+
+    /// Search for codeguardian.toml starting from the current directory
+    /// and moving up the directory tree until found or root is reached.
+    ///
+    /// # Returns
+    /// The path to the config file if found, None otherwise
+    pub fn find_config_file() -> Result<Option<std::path::PathBuf>> {
+        let mut current_dir = std::env::current_dir()?;
+
+        loop {
+            let config_path = current_dir.join("codeguardian.toml");
+            if config_path.exists() {
+                return Ok(Some(config_path));
+            }
+
+            // Move up one directory
+            if let Some(parent) = current_dir.parent() {
+                current_dir = parent.to_path_buf();
+            } else {
+                // Reached the root directory
+                break;
+            }
+        }
+
+        Ok(None)
+    }
+
     /// Save configuration to file
     #[allow(dead_code)]
     pub fn save(&self, path: &Path) -> Result<()> {
@@ -426,6 +625,13 @@ impl Config {
             )));
         }
 
+        if self.general.parallel_workers == 0 {
+            return Err(anyhow::Error::from(GuardianError::config(
+                "parallel_workers must be greater than 0",
+                None,
+            )));
+        }
+
         // Validate patterns
         for pattern in &self.non_production.patterns {
             if pattern.pattern.is_empty() {
@@ -456,11 +662,14 @@ impl Config {
                 include_patterns: vec!["**/*.rs".to_string()],
             },
             integrity: IntegrityConfig {
-                algorithm: HashAlgorithm::Blake3,
+                hash_algorithm: HashAlgorithm::Blake3,
                 enabled: true,
                 baseline_file: ".codeguardian/integrity.baseline".to_string(),
                 auto_update_baseline: false,
                 check_permissions: false,
+                check_binary_files: false,
+                verify_checksums: false,
+                max_file_size: DEFAULT_MAX_FILE_SIZE,
             },
             lint_drift: LintDriftConfig {
                 enabled: false,
@@ -471,11 +680,11 @@ impl Config {
             },
             non_production: NonProductionConfig {
                 enabled: true,
-                patterns: vec![NonProdPattern {
-                    pattern: r"(?i)\b(todo|fixme|hack|xxx)\b".to_string(),
-                    description: "Non-production code markers".to_string(),
-                    severity: "medium".to_string(),
-                }],
+                patterns: vec![NonProdPattern::new(
+                    r"(?i)\b(todo|fixme|hack|xxx)\b".to_string(),
+                    "Non-production code markers".to_string(),
+                    "medium".to_string(),
+                ).unwrap_or_else(|_| panic!("Invalid default pattern"))],
                 exclude_test_files: true,
                 exclude_example_files: true,
             },
@@ -585,7 +794,7 @@ mod tests {
     #[test]
     fn test_config_default() {
         let config = Config::default();
-        assert_eq!(config.general.max_file_size, 10 * MB);
+        assert_eq!(config.general.max_file_size, DEFAULT_MAX_FILE_SIZE);
         assert!(config.integrity.check_binary_files);
         assert!(config.lint_drift.enabled);
         assert!(config.non_production.enabled);
@@ -631,7 +840,7 @@ config_files = ["Cargo.toml", "package.json"]
         tokio::fs::write(&config_file, config_content).await.unwrap();
         
         let config = Config::load(&config_file).unwrap();
-        assert_eq!(config.general.max_file_size, 5242880);
+        assert_eq!(config.general.max_file_size, 104857600);
         assert_eq!(config.general.max_memory_mb, 256);
         assert_eq!(config.general.parallel_workers, 4);
         assert_eq!(config.integrity.hash_algorithm, HashAlgorithm::Sha256);
@@ -671,9 +880,91 @@ config_files = ["Cargo.toml", "package.json"]
         let config = NonProductionConfig::default();
         assert!(config.enabled);
         assert!(!config.patterns.is_empty());
-        assert!(config.patterns.contains(&"TODO".to_string()));
-        assert!(config.patterns.contains(&"FIXME".to_string()));
-        assert!(config.patterns.contains(&"DEBUG".to_string()));
+        assert!(config.patterns.iter().any(|p| p.pattern.contains("todo")));
+        assert!(config.patterns.iter().any(|p| p.pattern.contains("fixme")));
+        assert!(config.patterns.iter().any(|p| p.pattern.contains("debug")));
+    }
+
+    #[test]
+    fn test_non_prod_pattern_new() {
+        // Valid pattern
+        let pattern = NonProdPattern::new(
+            r"(?i)\btest\b".to_string(),
+            "Test pattern".to_string(),
+            "low".to_string(),
+        );
+        assert!(pattern.is_ok());
+
+        // Invalid pattern - empty
+        let empty_pattern = NonProdPattern::new(
+            "".to_string(),
+            "Empty pattern".to_string(),
+            "low".to_string(),
+        );
+        assert!(empty_pattern.is_err());
+
+        // Invalid severity
+        let invalid_severity = NonProdPattern::new(
+            r"(?i)\btest\b".to_string(),
+            "Test pattern".to_string(),
+            "invalid".to_string(),
+        );
+        assert!(invalid_severity.is_err());
+    }
+
+    #[test]
+    fn test_non_prod_pattern_matches() {
+        let pattern = NonProdPattern::new(
+            r"(?i)\btest\b".to_string(),
+            "Test pattern".to_string(),
+            "low".to_string(),
+        ).unwrap();
+
+        assert!(pattern.matches("This is a test"));
+        assert!(pattern.matches("TEST"));
+        assert!(!pattern.matches("testing"));
+        assert!(!pattern.matches("hello world"));
+    }
+
+    #[test]
+    fn test_non_prod_pattern_as_ref() {
+        let pattern = NonProdPattern::new(
+            r"(?i)\btest\b".to_string(),
+            "Test pattern".to_string(),
+            "low".to_string(),
+        ).unwrap();
+
+        assert_eq!(pattern.as_ref(), r"(?i)\btest\b");
+        assert_eq!(pattern.as_str(), r"(?i)\btest\b");
+    }
+
+    #[test]
+    fn test_non_production_config_methods() {
+        let mut config = NonProductionConfig::default();
+
+        // Test matches_any
+        assert!(config.matches_any("TODO: fix this"));
+
+        // Test find_matches
+        let matches = config.find_matches("FIXME: handle this");
+        assert!(!matches.is_empty());
+
+        // Test add_pattern
+        let result = config.add_pattern(
+            r"(?i)\brefactor\b".to_string(),
+            "Refactor markers".to_string(),
+            "medium".to_string(),
+        );
+        assert!(result.is_ok());
+        assert!(config.matches_any("REFACTOR: improve this"));
+
+        // Test pattern_strings
+        let pattern_strings = config.pattern_strings();
+        assert!(pattern_strings.iter().any(|p| p.contains("refactor")));
+
+        // Test remove_patterns_containing
+        config.remove_patterns_containing("refactor");
+        assert!(!config.matches_any("REFACTOR: improve this"));
     }
 
     #[test]

@@ -52,12 +52,8 @@ enabled = true
 check_nested_loops = true
 check_string_operations = true
 check_blocking_io = true
-check_algorithms = true
-check_memory_usage = true
-check_io_operations = true
 max_complexity = 10
 max_function_length = 50
-max_loop_depth = 3
 
 [security_analyzer]
 enabled = true
@@ -65,15 +61,7 @@ check_sql_injection = true
 check_xss = true
 check_command_injection = true
 check_hardcoded_secrets = true
-check_vulnerabilities = true
-check_permissions = true
-check_secrets = true
 min_entropy_threshold = 3.5
-secret_patterns = [
-    '''(?i)(password|passwd|pwd)\s*[:=]\s*['\x22][^'\x22]{8,}['\x22]''',
-    '''(?i)(api[_-]?key|apikey)\s*[:=]\s*['\x22][^'\x22]{16,}['\x22]''',
-    '''(?i)(secret|token)\s*[:=]\s*['\x22][^'\x22]{16,}['\x22]''',
-]
 
 [code_quality]
 enabled = true
@@ -81,13 +69,8 @@ check_magic_numbers = true
 check_complex_conditions = true
 check_deep_nesting = true
 check_commented_code = true
-check_complexity = true
-check_duplication = true
-check_naming = true
-max_complexity = 10
 max_nesting_depth = 6
 max_file_size = 500
-max_line_length = 120
 
 [security]
 enabled = true
