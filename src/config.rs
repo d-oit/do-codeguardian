@@ -17,13 +17,24 @@ const DEFAULT_PARALLEL_WORKERS: usize = 2;
 const DEFAULT_TIMEOUT_SECONDS: u64 = 120;
 pub use performance::PerformanceConfig as OptimizationConfig;
 
+/// General configuration settings that apply across all analyzers.
+///
+/// This struct contains global settings that control the overall behavior
+/// of the CodeGuardian analysis engine, including resource limits and
+/// file processing rules.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GeneralConfig {
+    /// Maximum file size to analyze (in bytes)
     pub max_file_size: u64,
+    /// Maximum memory usage limit (in MB)
     pub max_memory_mb: u64,
+    /// Number of parallel worker threads
     pub parallel_workers: usize,
+    /// Analysis timeout in seconds
     pub timeout_seconds: u64,
+    /// File patterns to exclude from analysis
     pub exclude_patterns: Vec<String>,
+    /// File patterns to include in analysis
     pub include_patterns: Vec<String>,
 }
 
@@ -100,7 +111,7 @@ impl Default for LintDriftConfig {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct NonProdPattern {
     pub pattern: String,
     pub description: String,
@@ -312,18 +323,34 @@ impl Default for CodeQualityConfig {
     }
 }
 
+/// Main configuration structure for CodeGuardian.
+///
+/// This struct contains all configuration settings organized by analyzer type.
+/// It provides methods for loading, saving, and validating configuration files,
+/// as well as preset configurations for different use cases.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Config {
+    /// General settings that apply to all analyzers
     pub general: GeneralConfig,
+    /// Integrity checking configuration
     pub integrity: IntegrityConfig,
+    /// Lint configuration drift detection settings
     pub lint_drift: LintDriftConfig,
+    /// Non-production code detection settings
     pub non_production: NonProductionConfig,
+    /// Dependency analysis configuration
     pub dependency: DependencyAnalyzerConfig,
+    /// Performance analyzer settings
     pub performance_analyzer: PerformanceAnalyzerConfig,
+    /// Security analyzer configuration
     pub security_analyzer: SecurityAnalyzerConfig,
+    /// Code quality analysis settings
     pub code_quality: CodeQualityConfig,
+    /// Security analysis configuration
     pub security: SecurityConfig,
+    /// Performance analysis settings
     pub performance: PerformanceConfig,
+    /// Optimization configuration
     pub optimization: OptimizationConfig,
 }
 
@@ -334,7 +361,17 @@ impl Default for Config {
 }
 
 impl Config {
-    /// Load configuration from file
+    /// Load configuration from a TOML file.
+    ///
+    /// Reads and parses a configuration file. If the file doesn't exist,
+    /// returns a minimal configuration. The loaded configuration is validated
+    /// before being returned.
+    ///
+    /// # Arguments
+    /// * `path` - Path to the configuration file
+    ///
+    /// # Returns
+    /// A validated Config instance or an error if loading/parsing fails
     pub fn load(path: &Path) -> Result<Self> {
         if !path.exists() {
             return Ok(Self::minimal());
@@ -402,7 +439,12 @@ impl Config {
         Ok(())
     }
 
-    /// Minimal configuration for basic usage
+    /// Creates a minimal configuration for basic usage.
+    ///
+    /// This configuration enables only essential analyzers with conservative
+    /// settings, suitable for initial setup or environments with limited resources.
+    /// It focuses on core security and integrity checks while keeping
+    /// performance overhead low.
     pub fn minimal() -> Self {
         Self {
             general: GeneralConfig {
@@ -453,7 +495,12 @@ impl Config {
         }
     }
 
-    /// Security-focused configuration
+    /// Creates a security-focused configuration.
+    ///
+    /// This configuration enables all security-related analyzers with
+    /// thorough settings, optimized for maximum security coverage.
+    /// It includes comprehensive vulnerability detection, secret scanning,
+    /// and security best practice enforcement.
     pub fn security_focused() -> Self {
         Self {
             general: GeneralConfig::default(),
@@ -470,7 +517,12 @@ impl Config {
         }
     }
 
-    /// CI-optimized configuration
+    /// Creates a CI-optimized configuration.
+    ///
+    /// This configuration is tuned for continuous integration environments,
+    /// balancing thorough analysis with fast execution times. It enables
+    /// all analyzers but uses settings optimized for CI performance and
+    /// reliability.
     pub fn ci_optimized() -> Self {
         Self {
             general: GeneralConfig::default(),
@@ -485,5 +537,195 @@ impl Config {
             performance: PerformanceConfig::default(),
             optimization: OptimizationConfig::ci_optimized(),
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::path::PathBuf;
+    use tempfile::TempDir;
+
+    #[test]
+    fn test_general_config_default() {
+        let config = GeneralConfig::default();
+        assert_eq!(config.max_file_size, 10 * MB);
+        assert_eq!(config.max_memory_mb, 512);
+        assert_eq!(config.parallel_workers, num_cpus::get());
+        assert_eq!(config.timeout_seconds, 300);
+        assert!(!config.exclude_patterns.is_empty());
+        assert!(!config.include_patterns.is_empty());
+    }
+
+    #[test]
+    fn test_integrity_config_default() {
+        let config = IntegrityConfig::default();
+        assert_eq!(config.hash_algorithm, HashAlgorithm::Blake3);
+        assert!(config.check_binary_files);
+        assert!(config.verify_checksums);
+        assert_eq!(config.max_file_size, 100 * MB);
+    }
+
+    #[test]
+    fn test_hash_algorithm_display() {
+        assert_eq!(HashAlgorithm::Blake3.to_string(), "blake3");
+        assert_eq!(HashAlgorithm::Sha256.to_string(), "sha256");
+        assert_eq!(HashAlgorithm::Sha512.to_string(), "sha512");
+    }
+
+    #[test]
+    fn test_config_minimal() {
+        let config = Config::minimal();
+        assert_eq!(config.general.max_file_size, DEFAULT_MAX_FILE_SIZE);
+        assert_eq!(config.general.max_memory_mb, DEFAULT_MAX_MEMORY_MB);
+        assert_eq!(config.general.parallel_workers, DEFAULT_PARALLEL_WORKERS);
+        assert_eq!(config.general.timeout_seconds, DEFAULT_TIMEOUT_SECONDS);
+    }
+
+    #[test]
+    fn test_config_default() {
+        let config = Config::default();
+        assert_eq!(config.general.max_file_size, 10 * MB);
+        assert!(config.integrity.check_binary_files);
+        assert!(config.lint_drift.enabled);
+        assert!(config.non_production.enabled);
+    }
+
+    #[test]
+    fn test_config_security_focused() {
+        let config = Config::security_focused();
+        // Should use thorough optimization for security
+        assert_eq!(config.optimization, OptimizationConfig::thorough());
+    }
+
+    #[test]
+    fn test_config_ci_optimized() {
+        let config = Config::ci_optimized();
+        // Should use CI-optimized settings
+        assert_eq!(config.optimization, OptimizationConfig::ci_optimized());
+    }
+
+    #[tokio::test]
+    async fn test_config_load_from_file() {
+        let temp_dir = TempDir::new().unwrap();
+        let config_file = temp_dir.path().join("test_config.toml");
+        
+        let config_content = r#"
+[general]
+max_file_size = 5242880
+max_memory_mb = 256
+parallel_workers = 4
+timeout_seconds = 120
+
+[integrity]
+hash_algorithm = "sha256"
+check_binary_files = true
+verify_checksums = true
+max_file_size = 104857600
+
+[lint_drift]
+enabled = true
+config_files = ["Cargo.toml", "package.json"]
+"#;
+        
+        tokio::fs::write(&config_file, config_content).await.unwrap();
+        
+        let config = Config::load(&config_file).unwrap();
+        assert_eq!(config.general.max_file_size, 5242880);
+        assert_eq!(config.general.max_memory_mb, 256);
+        assert_eq!(config.general.parallel_workers, 4);
+        assert_eq!(config.integrity.hash_algorithm, HashAlgorithm::Sha256);
+    }
+
+    #[tokio::test]
+    async fn test_config_load_nonexistent_file() {
+        let nonexistent_path = PathBuf::from("/nonexistent/config.toml");
+        let result = Config::load(&nonexistent_path);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_config_validation() {
+        let mut config = Config::default();
+        
+        // Valid config should pass validation
+        assert!(config.validate().is_ok());
+        
+        // Invalid max_file_size should fail
+        config.general.max_file_size = 0;
+        assert!(config.validate().is_err());
+        
+        // Reset and test invalid parallel_workers
+        config.general.max_file_size = DEFAULT_MAX_FILE_SIZE;
+        config.general.parallel_workers = 0;
+        assert!(config.validate().is_err());
+        
+        // Reset and test invalid timeout
+        config.general.parallel_workers = DEFAULT_PARALLEL_WORKERS;
+        config.general.timeout_seconds = 0;
+        assert!(config.validate().is_err());
+    }
+
+    #[test]
+    fn test_non_production_config_default() {
+        let config = NonProductionConfig::default();
+        assert!(config.enabled);
+        assert!(!config.patterns.is_empty());
+        assert!(config.patterns.contains(&"TODO".to_string()));
+        assert!(config.patterns.contains(&"FIXME".to_string()));
+        assert!(config.patterns.contains(&"DEBUG".to_string()));
+    }
+
+    #[test]
+    fn test_dependency_analyzer_config_default() {
+        let config = DependencyAnalyzerConfig::default();
+        assert!(config.enabled);
+        assert!(!config.vulnerability_databases.is_empty());
+        assert!(config.check_licenses);
+        assert!(config.check_outdated);
+    }
+
+    #[test]
+    fn test_security_analyzer_config_default() {
+        let config = SecurityAnalyzerConfig::default();
+        assert!(config.enabled);
+        assert!(config.check_secrets);
+        assert!(config.check_vulnerabilities);
+        assert!(config.check_permissions);
+        assert!(!config.secret_patterns.is_empty());
+    }
+
+    #[test]
+    fn test_code_quality_config_default() {
+        let config = CodeQualityConfig::default();
+        assert!(config.enabled);
+        assert!(config.check_complexity);
+        assert!(config.check_duplication);
+        assert!(config.check_naming);
+        assert!(config.max_complexity > 0);
+        assert!(config.max_line_length > 0);
+    }
+
+    #[test]
+    fn test_performance_analyzer_config_default() {
+        let config = PerformanceAnalyzerConfig::default();
+        assert!(config.enabled);
+        assert!(config.check_algorithms);
+        assert!(config.check_memory_usage);
+        assert!(config.check_io_operations);
+        assert!(config.max_loop_depth > 0);
+    }
+
+    #[test]
+    fn test_config_serialization() {
+        let config = Config::default();
+        let serialized = toml::to_string(&config).unwrap();
+        assert!(serialized.contains("[general]"));
+        assert!(serialized.contains("[integrity]"));
+        assert!(serialized.contains("[lint_drift]"));
+        
+        // Should be able to deserialize back
+        let deserialized: Config = toml::from_str(&serialized).unwrap();
+        assert_eq!(config.general.max_file_size, deserialized.general.max_file_size);
     }
 }

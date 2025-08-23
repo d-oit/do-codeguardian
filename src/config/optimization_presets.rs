@@ -5,7 +5,7 @@ use std::collections::HashMap;
 const DEFAULT_TIMEOUT_SECONDS: u64 = 120;
 
 /// Optimization presets for different scenarios
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum OptimizationScenario {
     /// Development environment with fast feedback needed
     Development,
@@ -109,7 +109,7 @@ impl OptimizationScenario {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct PerformanceCharacteristics {
     pub expected_scan_speed: ScanSpeed,
     pub memory_usage: MemoryUsage,
@@ -117,28 +117,28 @@ pub struct PerformanceCharacteristics {
     pub parallel_processing: ParallelProcessing,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum ScanSpeed {
     Slow,      // Thorough analysis, comprehensive checks
     Balanced,  // Good balance of speed and thoroughness
     Fast,      // Optimized for speed, may miss some issues
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum MemoryUsage {
     Low,       // Minimal memory usage, streaming analysis
     Moderate,  // Standard memory usage
     High,      // High memory usage for performance
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum AnalysisDepth {
     Optimized, // Use optimized analyzers only
     Standard,  // Standard analysis depth
     Maximum,   // All analyzers, maximum depth
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum ParallelProcessing {
     Minimal,   // 1-2 workers
     Fixed,     // Fixed number of workers
@@ -152,7 +152,7 @@ pub struct ConfigurationOptimizer {
     optimization_history: HashMap<OptimizationScenario, OptimizationResult>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct SystemInfo {
     pub cpu_cores: usize,
     pub total_memory_gb: usize,
@@ -161,7 +161,7 @@ pub struct SystemInfo {
     pub is_ci_environment: bool,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct OptimizationResult {
     pub scenario: OptimizationScenario,
     pub performance_score: f64,

@@ -32,6 +32,8 @@ A security-first code analysis CLI with GitHub integration, built with best-prac
 - **Pre-commit automation** - Documentation updates automatically before each commit
 - **Comprehensive coverage** - README, API docs, performance docs, and security docs
 - **Zero-config setup** - Works out of the box with simple installation
+- **Codebase-wide updates** - Updates docstrings, inline comments, and module documentation
+- **Quality assurance** - Validates documentation accuracy and completeness
 
 ## Quick Start
 
@@ -112,7 +114,10 @@ CodeGuardian includes automatic documentation updates using [opencode](https://o
 - **Pre-commit hook**: Automatically runs before each git commit
 - **Smart analysis**: Uses AI to understand your codebase and update documentation
 - **Multiple doc types**: Updates README, API docs, performance docs, and security docs
+- **Code entity documentation**: Adds docstrings to functions, structs, traits, and modules
+- **Inline comments**: Adds explanatory comments for complex logic
 - **Review changes**: You can see and modify documentation updates before committing
+- **Quality validation**: Ensures documentation follows Rust documentation standards
 
 ### Manual Usage
 

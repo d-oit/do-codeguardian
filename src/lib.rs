@@ -28,8 +28,13 @@ pub mod streaming;
 pub mod types;
 pub mod utils;
 
-// Re-export commonly used types
-pub use crate::{config::Config, core::GuardianEngine, types::*};
+// Re-export commonly used types for easier access
+/// Main configuration structure for CodeGuardian
+pub use crate::config::Config;
+/// Core engine that orchestrates the analysis process
+pub use crate::core::GuardianEngine;
+/// Common types including AnalysisResults, Finding, and Severity
+pub use crate::types::*;
 
 /// Version information
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");

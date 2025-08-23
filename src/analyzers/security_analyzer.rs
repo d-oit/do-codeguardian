@@ -24,13 +24,23 @@ impl std::fmt::Display for SecretContext {
     }
 }
 
-/// Advanced security analyzer for detecting vulnerabilities and security anti-patterns
+/// Advanced security analyzer for detecting vulnerabilities and security anti-patterns.
+///
+/// The SecurityAnalyzer performs comprehensive security analysis including:
+/// - Detection of hardcoded secrets and credentials
+/// - Identification of dangerous function calls
+/// - Analysis of potential injection vulnerabilities
+/// - Detection of insecure cryptographic practices
+/// - Validation of security configurations
+///
+/// It uses optimized pattern matching and caching for high-performance analysis
+/// while maintaining accuracy across multiple programming languages.
 pub struct SecurityAnalyzer {
-    // Pattern cache for performance
+    /// Pattern cache for performance optimization
     pattern_cache: PatternCache,
-    // Known dangerous functions
+    /// Set of known dangerous functions to detect
     dangerous_functions: HashSet<String>,
-    // Language-specific security checks
+    /// Language-specific security checks and validations
     security_checks: SecurityChecks,
 }
 
@@ -41,6 +51,13 @@ impl Default for SecurityAnalyzer {
 }
 
 impl SecurityAnalyzer {
+    /// Creates a new SecurityAnalyzer with default security patterns and checks.
+    ///
+    /// Initializes the analyzer with:
+    /// - Predefined dangerous functions (eval, exec, system, etc.)
+    /// - Common secret patterns for various programming languages
+    /// - Security vulnerability patterns
+    /// - Optimized pattern caching for performance
     pub fn new() -> Self {
         let mut dangerous_functions = HashSet::with_capacity(8);
         dangerous_functions.insert("eval".to_string());

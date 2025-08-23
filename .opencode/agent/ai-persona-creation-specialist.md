@@ -2,7 +2,7 @@
 description: >-
   Use this agent for creating specialized AI personas for the CodeGuardian project.
   This agent should only be called manually by the user.
-mode: subagent
+mode: all
 permission:
   edit: allow
   bash: deny

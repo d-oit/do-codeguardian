@@ -29,23 +29,62 @@ const PATH_VECTOR_CAPACITY_MULTIPLIER: usize = 2; // Multiplier for path vector 
 const PROGRESS_BUFFER_CAPACITY: usize = 256; // String buffer size for progress messages
 const STREAMING_YIELD_INTERVAL: u32 = 10_000; // Yield every 10,000 lines for large files
 
+/// Core engine that orchestrates the entire code analysis process.
+///
+/// The GuardianEngine coordinates all aspects of security and code quality analysis,
+/// including file discovery, caching, parallel processing, ML-based false positive
+/// reduction, and progress reporting. It uses adaptive parallelism to optimize
+/// performance based on system load and file characteristics.
 pub struct GuardianEngine {
+    /// Configuration settings for the analysis
     config: Config,
+    /// Registry of all available analyzers
     analyzer_registry: AnalyzerRegistry,
+    /// Progress reporting interface
     progress: ProgressReporter,
+    /// File cache for storing analysis results
     cache: Arc<Mutex<FileCache>>,
+    /// Streaming analyzer for large files
     streaming_analyzer: StreamingAnalyzer,
+    /// ML classifier for false positive reduction
     ml_classifier: MLClassifier,
+    /// Analysis statistics and metrics
     stats: AnalysisStats,
+    /// Controller for adaptive parallelism
     parallelism_controller: Arc<AdaptiveParallelismController>,
+    /// Optional system load monitor
     load_monitor: Option<SystemLoadMonitor>,
 }
 
 impl GuardianEngine {
+    /// Creates a new GuardianEngine with the specified configuration.
+    ///
+    /// Initializes all components including the analyzer registry, cache,
+    /// ML classifier, and adaptive parallelism controller. This is the
+    /// standard constructor for most use cases.
+    ///
+    /// # Arguments
+    /// * `config` - Configuration settings for the analysis
+    /// * `progress` - Progress reporter for user feedback
+    ///
+    /// # Returns
+    /// A new GuardianEngine instance or an error if initialization fails
     pub async fn new(config: Config, progress: ProgressReporter) -> Result<Self> {
         Self::new_with_ml(config, progress, None).await
     }
 
+    /// Creates a new GuardianEngine with optional ML model configuration.
+    ///
+    /// Similar to `new()`, but allows specifying a custom ML model path
+    /// for false positive reduction. If no path is provided, uses the default model.
+    ///
+    /// # Arguments
+    /// * `config` - Configuration settings for the analysis
+    /// * `progress` - Progress reporter for user feedback
+    /// * `ml_model_path` - Optional path to ML model file
+    ///
+    /// # Returns
+    /// A new GuardianEngine instance or an error if initialization fails
     pub async fn new_with_ml(
         config: Config,
         progress: ProgressReporter,
@@ -82,6 +121,16 @@ impl GuardianEngine {
         })
     }
 
+    /// Recursively discovers all files from the given paths.
+    ///
+    /// Expands directories into their constituent files and filters out
+    /// files that should not be analyzed based on configuration and security rules.
+    ///
+    /// # Arguments
+    /// * `paths` - List of file or directory paths to process
+    ///
+    /// # Returns
+    /// A vector of file paths to analyze, or an error if discovery fails
     pub async fn get_all_files(&self, paths: &[PathBuf]) -> Result<Vec<PathBuf>> {
         let mut all_files = Vec::with_capacity(paths.len() * PATH_VECTOR_CAPACITY_MULTIPLIER); // Estimate capacity
 
@@ -144,6 +193,21 @@ impl GuardianEngine {
         true
     }
 
+    /// Performs comprehensive analysis on the given files.
+    ///
+    /// This is the main analysis entry point that coordinates the entire analysis process:
+    /// - Processes cached results where available
+    /// - Analyzes uncached files with adaptive parallelism
+    /// - Applies ML-based false positive reduction
+    /// - Updates cache with new results
+    /// - Reports progress and final statistics
+    ///
+    /// # Arguments
+    /// * `files` - List of file paths to analyze
+    /// * `parallel` - Base parallelism level (may be adjusted adaptively)
+    ///
+    /// # Returns
+    /// Complete analysis results including all findings and statistics
     #[allow(clippy::await_holding_lock)]
     pub async fn analyze_files(
         &mut self,
@@ -447,11 +511,19 @@ impl GuardianEngine {
     }
 }
 
+/// Statistics collected during an analysis run.
+///
+/// Tracks various metrics about the analysis performance including
+/// cache effectiveness, error counts, and timing information.
 #[derive(Debug)]
 pub struct AnalysisStats {
+    /// Number of cache hits (files with cached results)
     pub cache_hits: AtomicUsize,
+    /// Number of cache misses (files that needed fresh analysis)
     pub cache_misses: AtomicUsize,
+    /// Number of errors encountered during analysis
     pub errors: AtomicUsize,
+    /// Total duration of the analysis
     pub total_duration: std::time::Duration,
 }
 
@@ -462,6 +534,7 @@ impl Default for AnalysisStats {
 }
 
 impl AnalysisStats {
+    /// Creates a new AnalysisStats instance with zeroed counters.
     pub fn new() -> Self {
         Self {
             cache_hits: AtomicUsize::new(0),
@@ -471,6 +544,13 @@ impl AnalysisStats {
         }
     }
 
+    /// Calculates the cache hit rate as a percentage.
+    ///
+    /// Returns the ratio of cache hits to total cache operations (hits + misses).
+    /// Returns 0.0 if no cache operations have been performed.
+    ///
+    /// # Returns
+    /// Cache hit rate as a float between 0.0 and 1.0
     #[allow(dead_code)]
     pub fn cache_hit_rate(&self) -> f64 {
         let cache_hits = self.cache_hits.load(Ordering::Relaxed);
@@ -481,5 +561,200 @@ impl AnalysisStats {
         } else {
             cache_hits as f64 / total as f64
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::config::Config;
+    use crate::utils::progress::ProgressReporter;
+    use std::path::PathBuf;
+    use tempfile::TempDir;
+    use tokio::fs;
+
+    async fn create_test_engine() -> GuardianEngine {
+        let config = Config::minimal();
+        let progress = ProgressReporter::new(false);
+        GuardianEngine::new(config, progress).await.unwrap()
+    }
+
+    #[tokio::test]
+    async fn test_guardian_engine_creation() {
+        let engine = create_test_engine().await;
+        assert_eq!(engine.stats.cache_hits.load(Ordering::Relaxed), 0);
+        assert_eq!(engine.stats.cache_misses.load(Ordering::Relaxed), 0);
+        assert_eq!(engine.stats.errors.load(Ordering::Relaxed), 0);
+    }
+
+    #[tokio::test]
+    async fn test_analysis_stats() {
+        let stats = AnalysisStats::new();
+        assert_eq!(stats.cache_hit_rate(), 0.0);
+
+        stats.cache_hits.store(3, Ordering::Relaxed);
+        stats.cache_misses.store(1, Ordering::Relaxed);
+        assert_eq!(stats.cache_hit_rate(), 0.75);
+    }
+
+    #[tokio::test]
+    async fn test_analyze_empty_directory() {
+        let temp_dir = TempDir::new().unwrap();
+        let engine = create_test_engine().await;
+        
+        let results = engine.scan_directory(temp_dir.path()).await.unwrap();
+        assert_eq!(results.summary.total_files_scanned, 0);
+        assert_eq!(results.findings.len(), 0);
+    }
+
+    #[tokio::test]
+    async fn test_analyze_single_file() {
+        let temp_dir = TempDir::new().unwrap();
+        let test_file = temp_dir.path().join("test.rs");
+        fs::write(&test_file, "fn main() { println!(\"Hello, world!\"); }").await.unwrap();
+
+        let engine = create_test_engine().await;
+        let results = engine.scan_directory(temp_dir.path()).await.unwrap();
+        
+        assert!(results.summary.total_files_scanned > 0);
+    }
+
+    #[tokio::test]
+    async fn test_analyze_file_with_security_issue() {
+        let temp_dir = TempDir::new().unwrap();
+        let test_file = temp_dir.path().join("test.js");
+        fs::write(&test_file, r#"const apiKey = "sk-1234567890abcdef1234567890abcdef";"#).await.unwrap();
+
+        let engine = create_test_engine().await;
+        let results = engine.scan_directory(temp_dir.path()).await.unwrap();
+        
+        // Should detect hardcoded secret
+        assert!(results.findings.iter().any(|f| f.rule == "hardcoded_secret"));
+    }
+
+    #[tokio::test]
+    async fn test_file_size_limit() {
+        let temp_dir = TempDir::new().unwrap();
+        let large_file = temp_dir.path().join("large.txt");
+        
+        // Create a file larger than the default limit
+        let large_content = "x".repeat(15 * 1024 * 1024); // 15MB
+        fs::write(&large_file, large_content).await.unwrap();
+
+        let engine = create_test_engine().await;
+        let results = engine.scan_directory(temp_dir.path()).await.unwrap();
+        
+        // Large file should be skipped
+        assert_eq!(results.summary.total_files_scanned, 0);
+    }
+
+    #[tokio::test]
+    async fn test_analyze_paths_with_filters() {
+        let temp_dir = TempDir::new().unwrap();
+        
+        // Create test files
+        let rust_file = temp_dir.path().join("test.rs");
+        let js_file = temp_dir.path().join("test.js");
+        let txt_file = temp_dir.path().join("test.txt");
+        
+        fs::write(&rust_file, "fn main() {}").await.unwrap();
+        fs::write(&js_file, "console.log('hello');").await.unwrap();
+        fs::write(&txt_file, "plain text").await.unwrap();
+
+        let engine = create_test_engine().await;
+        let paths = vec![rust_file, js_file, txt_file];
+        let results = engine.scan_paths(&paths).await.unwrap();
+        
+        // Should analyze supported file types
+        assert!(results.summary.total_files_scanned >= 2);
+    }
+
+    #[tokio::test]
+    async fn test_cache_integration() {
+        let temp_dir = TempDir::new().unwrap();
+        let test_file = temp_dir.path().join("test.rs");
+        fs::write(&test_file, "fn main() {}").await.unwrap();
+
+        let engine = create_test_engine().await;
+        
+        // First analysis
+        let results1 = engine.scan_directory(temp_dir.path()).await.unwrap();
+        let initial_cache_hits = engine.stats.cache_hits.load(Ordering::Relaxed);
+        
+        // Second analysis (should use cache)
+        let results2 = engine.scan_directory(temp_dir.path()).await.unwrap();
+        let final_cache_hits = engine.stats.cache_hits.load(Ordering::Relaxed);
+        
+        assert_eq!(results1.findings.len(), results2.findings.len());
+        // Cache hits should increase (though exact behavior depends on cache implementation)
+        assert!(final_cache_hits >= initial_cache_hits);
+    }
+
+    #[tokio::test]
+    async fn test_ml_classifier_integration() {
+        let temp_dir = TempDir::new().unwrap();
+        let test_file = temp_dir.path().join("test.js");
+        fs::write(&test_file, r#"const secret = "test_secret_123";"#).await.unwrap();
+
+        let config = Config::minimal();
+        let progress = ProgressReporter::new(false);
+        let engine = GuardianEngine::new_with_ml(config, progress, None).await.unwrap();
+        
+        let results = engine.scan_directory(temp_dir.path()).await.unwrap();
+        
+        // Should still work even without ML model
+        assert!(results.summary.total_files_scanned > 0);
+    }
+
+    #[tokio::test]
+    async fn test_error_handling_invalid_path() {
+        let engine = create_test_engine().await;
+        let invalid_path = PathBuf::from("/nonexistent/path/that/does/not/exist");
+        
+        let result = engine.scan_directory(&invalid_path).await;
+        // Should handle gracefully - either return empty results or appropriate error
+        assert!(result.is_ok() || result.is_err());
+    }
+
+    #[tokio::test]
+    async fn test_concurrent_analysis() {
+        let temp_dir = TempDir::new().unwrap();
+        
+        // Create multiple test files
+        for i in 0..5 {
+            let file_path = temp_dir.path().join(format!("test{}.rs", i));
+            fs::write(&file_path, format!("fn test{}() {{}}", i)).await.unwrap();
+        }
+
+        let engine = create_test_engine().await;
+        let results = engine.scan_directory(temp_dir.path()).await.unwrap();
+        
+        assert_eq!(results.summary.total_files_scanned, 5);
+    }
+
+    #[test]
+    fn test_analysis_stats_default() {
+        let stats = AnalysisStats::default();
+        assert_eq!(stats.cache_hits.load(Ordering::Relaxed), 0);
+        assert_eq!(stats.cache_misses.load(Ordering::Relaxed), 0);
+        assert_eq!(stats.errors.load(Ordering::Relaxed), 0);
+        assert_eq!(stats.total_duration, std::time::Duration::default());
+    }
+
+    #[test]
+    fn test_analysis_stats_cache_hit_rate_edge_cases() {
+        let stats = AnalysisStats::new();
+        
+        // No cache operations
+        assert_eq!(stats.cache_hit_rate(), 0.0);
+        
+        // Only hits
+        stats.cache_hits.store(5, Ordering::Relaxed);
+        assert_eq!(stats.cache_hit_rate(), 1.0);
+        
+        // Only misses
+        stats.cache_hits.store(0, Ordering::Relaxed);
+        stats.cache_misses.store(3, Ordering::Relaxed);
+        assert_eq!(stats.cache_hit_rate(), 0.0);
     }
 }

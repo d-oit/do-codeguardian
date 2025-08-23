@@ -3,7 +3,7 @@
 use serde::{Deserialize, Serialize};
 
 /// Performance configuration for CodeGuardian
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct PerformanceConfig {
     /// Enable optimized analyzers (uses combined patterns and caching)
     pub enable_optimized_analyzers: bool,
@@ -33,7 +33,7 @@ pub struct PerformanceConfig {
     pub early_termination: EarlyTerminationConfig,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct CacheCleanupConfig {
     /// Enable automatic cache cleanup
     pub enabled: bool,
@@ -48,7 +48,7 @@ pub struct CacheCleanupConfig {
     pub cleanup_frequency: usize,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct EarlyTerminationConfig {
     /// Enable early termination for performance
     pub enabled: bool,

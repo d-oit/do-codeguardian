@@ -13,14 +13,44 @@ use crate::types::Finding;
 use anyhow::Result;
 use std::path::Path;
 
+/// Trait for code analysis components.
+///
+/// Analyzers implement this trait to provide specific types of code analysis
+/// such as security checks, performance analysis, or code quality metrics.
+/// Each analyzer can examine files and produce findings based on its rules.
 pub trait Analyzer {
+    /// Returns the name of this analyzer.
     #[allow(dead_code)]
     fn name(&self) -> &str;
+
+    /// Analyzes the given file content and returns any findings.
+    ///
+    /// # Arguments
+    /// * `file_path` - Path to the file being analyzed
+    /// * `content` - Raw content of the file as bytes
+    ///
+    /// # Returns
+    /// A vector of findings discovered during analysis
     fn analyze(&self, file_path: &Path, content: &[u8]) -> Result<Vec<Finding>>;
+
+    /// Determines if this analyzer can process the given file type.
+    ///
+    /// # Arguments
+    /// * `file_path` - Path to the file to check
+    ///
+    /// # Returns
+    /// `true` if this analyzer supports the file type, `false` otherwise
     fn supports_file(&self, file_path: &Path) -> bool;
 }
 
+/// Registry that manages and coordinates multiple analyzers.
+///
+/// The AnalyzerRegistry holds all registered analyzers and provides
+/// a unified interface for analyzing files. It automatically determines
+/// which analyzers are applicable to each file type and coordinates
+/// their execution.
 pub struct AnalyzerRegistry {
+    /// Collection of registered analyzers
     analyzers: Vec<Box<dyn Analyzer + Send + Sync>>,
 }
 
@@ -31,6 +61,11 @@ impl Default for AnalyzerRegistry {
 }
 
 impl AnalyzerRegistry {
+    /// Creates a new AnalyzerRegistry with all default analyzers registered.
+    ///
+    /// This includes analyzers for integrity checking, lint drift detection,
+    /// non-production code identification, dependency analysis, performance
+    /// analysis, security analysis, code quality, and optimized analysis.
     pub fn new() -> Self {
         let mut registry = Self {
             analyzers: Vec::new(),
@@ -53,10 +88,25 @@ impl AnalyzerRegistry {
         registry
     }
 
+    /// Registers a new analyzer with the registry.
+    ///
+    /// # Arguments
+    /// * `analyzer` - The analyzer to register (boxed for dynamic dispatch)
     pub fn register(&mut self, analyzer: Box<dyn Analyzer + Send + Sync>) {
         self.analyzers.push(analyzer);
     }
 
+    /// Analyzes a file using all applicable registered analyzers.
+    ///
+    /// Iterates through all registered analyzers, checks if each supports
+    /// the file type, and collects findings from all applicable analyzers.
+    ///
+    /// # Arguments
+    /// * `file_path` - Path to the file being analyzed
+    /// * `content` - Raw content of the file as bytes
+    ///
+    /// # Returns
+    /// A vector containing all findings from all applicable analyzers
     pub fn analyze_file(&self, file_path: &Path, content: &[u8]) -> Result<Vec<Finding>> {
         let mut all_findings = Vec::new();
 

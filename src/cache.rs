@@ -479,3 +479,96 @@ impl std::fmt::Display for CacheStats {
         )
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::path::PathBuf;
+
+    #[test]
+    fn test_file_cache_creation() {
+        let cache = FileCache::new();
+        assert_eq!(cache.entries.len(), 0);
+        assert_eq!(cache.cache_version, FileCache::CACHE_VERSION);
+        assert!(cache.compressed);
+        assert!(cache.auto_save);
+    }
+
+    #[test]
+    fn test_cache_entry_creation() {
+        let test_file = PathBuf::from("test.txt");
+        let entry = CacheEntry {
+            path: test_file.clone(),
+            mtime: std::time::SystemTime::now(),
+            size: 12,
+            content_hash: CacheEntry::calculate_content_hash(b"test content"),
+            config_hash: "config_hash".to_string(),
+            findings: vec![],
+            cached_at: std::time::SystemTime::now(),
+        };
+
+        assert_eq!(entry.path, test_file);
+        assert_eq!(entry.size, 12);
+        assert!(!entry.content_hash.is_empty());
+        assert_eq!(entry.config_hash, "config_hash");
+    }
+
+    #[test]
+    fn test_cache_basic_operations() {
+        let cache = FileCache::new();
+        
+        // Test basic properties
+        assert!(cache.entries.is_empty());
+        assert_eq!(cache.cache_version, FileCache::CACHE_VERSION);
+        assert!(cache.compressed);
+        assert!(cache.auto_save);
+        assert_eq!(cache.max_entries, 10000);
+    }
+
+    #[test]
+    fn test_cache_stats_creation() {
+        let stats = CacheStats {
+            total_entries: 10,
+            cache_size_bytes: 1024,
+        };
+        
+        assert_eq!(stats.total_entries, 10);
+        assert_eq!(stats.cache_size_bytes, 1024);
+    }
+
+    #[test]
+    fn test_cache_stats_display() {
+        let stats = CacheStats {
+            total_entries: 42,
+            cache_size_bytes: 1024 * 5, // 5KB
+        };
+        let display = stats.to_string();
+        
+        assert!(display.contains("42 entries"));
+        assert!(display.contains("5.0KB"));
+    }
+
+    #[test]
+    fn test_cache_entry_hash_consistency() {
+        let content1 = b"test content";
+        let content2 = b"test content";
+        let content3 = b"different content";
+
+        let hash1 = CacheEntry::calculate_content_hash(content1);
+        let hash2 = CacheEntry::calculate_content_hash(content2);
+        let hash3 = CacheEntry::calculate_content_hash(content3);
+
+        assert_eq!(hash1, hash2);
+        assert_ne!(hash1, hash3);
+        assert_eq!(hash1.len(), 64); // SHA-256 hex string length
+    }
+
+    #[test]
+    fn test_cache_compression_flag() {
+        let mut cache = FileCache::new();
+        assert!(cache.compressed);
+        
+        cache.compressed = false;
+        assert!(!cache.compressed);
+    }
+}

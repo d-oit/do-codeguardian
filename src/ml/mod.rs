@@ -55,7 +55,7 @@ impl MLClassifier {
         let start_time = Instant::now();
         let features = self.feature_extractor.extract_features(finding)?;
 
-        let confidence = if let Some(classifier) = &self.classifier {
+        let confidence = if let Some(classifier) = &mut self.classifier {
             classifier.predict(&features)?
         } else {
             0.5
@@ -92,7 +92,7 @@ impl MLClassifier {
 
         // Record feedback in metrics
         if let Some(metrics_collector) = &mut self.metrics_collector {
-            let confidence = if let Some(classifier) = &self.classifier {
+            let confidence = if let Some(classifier) = &mut self.classifier {
                 classifier.predict(&features).unwrap_or(0.5)
             } else {
                 0.5

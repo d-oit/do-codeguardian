@@ -46,6 +46,15 @@ enum Commands {
     Turbo(TurboArgs),
 }
 
+/// Main entry point for the CodeGuardian CLI application.
+///
+/// This function parses command-line arguments and dispatches to the appropriate
+/// subcommand handler based on user input. It supports various operations including
+/// code analysis, report generation, GitHub issue creation, configuration initialization,
+/// ML model training, metrics viewing, and high-performance turbo analysis.
+///
+/// # Returns
+/// - `Result<()>`: Success or an error if the command fails to execute
 #[tokio::main]
 async fn main() -> Result<()> {
     let cli = Cli::parse();
