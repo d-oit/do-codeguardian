@@ -1,16 +1,13 @@
-[general]
-max_file_size = 5242880
-max_memory_mb = 256
-parallel_workers = 2
-timeout_seconds = 120
+[analysis]
 exclude_patterns = [
-    "target/**",
-    ".git/**",
-    "benches/**",
-    "examples/**",
-    "tests/**",
+    "*.log",
+    "*.tmp",
+    "target/",
+    "node_modules/",
 ]
-include_patterns = ["**/*.rs"]
+analyze_binaries = false
+analysis_timeout = 300
+output_dir = "codeguardian-results"
 
 [integrity]
 enabled = true

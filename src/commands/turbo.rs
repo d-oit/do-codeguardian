@@ -45,13 +45,25 @@ use crate::utils::progress::ProgressReporter;
 /// - File collection fails
 /// - Analysis fails due to resource constraints
 /// - Output writing fails
-pub async fn execute_turbo(args: TurboArgs, config: Config) -> Result<()> {
+pub async fn execute_turbo(mut args: TurboArgs, config: Config) -> Result<()> {
     info!(
         "Starting turbo analysis with {} parallel workers",
         get_worker_count(&args)
     );
 
     let start_time = Instant::now();
+
+    // Clone output_dir before moving config
+    let output_dir = config.analysis.output_dir.clone();
+
+    // Use configured output directory if default output path is used
+    if args.output == PathBuf::from("turbo-results.json") {
+        args.output = PathBuf::from(&output_dir).join("turbo-results.json");
+        // Ensure output directory exists
+        if let Some(parent) = args.output.parent() {
+            tokio::fs::create_dir_all(parent).await?;
+        }
+    }
 
     // Initialize progress reporter
     let progress = ProgressReporter::new(true);

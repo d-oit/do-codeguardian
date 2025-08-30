@@ -3,9 +3,15 @@ use crate::config::Config;
 use crate::types::AnalysisResults;
 use anyhow::Result;
 use std::collections::HashMap;
+use std::path::PathBuf;
 use tokio::fs;
 
-pub async fn run(args: ReportArgs, _config: &Config) -> Result<()> {
+pub async fn run(mut args: ReportArgs, config: &Config) -> Result<()> {
+    // Use configured output directory for default paths
+    if args.from == PathBuf::from("results.json") {
+        args.from = PathBuf::from(&config.analysis.output_dir).join("results.json");
+    }
+
     // Load results from JSON file
     let json_content = fs::read_to_string(&args.from).await?;
     let results: AnalysisResults = serde_json::from_str(&json_content)?;
@@ -19,8 +25,20 @@ pub async fn run(args: ReportArgs, _config: &Config) -> Result<()> {
 
     // Output to file or stdout
     if let Some(output_path) = &args.md {
-        fs::write(output_path, report_content).await?;
-        tracing::info!("Report saved to: {}", output_path.display());
+        let mut final_output_path = output_path.clone();
+        // Use configured output directory if relative path is used
+        if !output_path.is_absolute()
+            && !output_path.starts_with("./")
+            && !output_path.starts_with("../")
+        {
+            final_output_path = PathBuf::from(&config.analysis.output_dir).join(output_path);
+            // Ensure output directory exists
+            if let Some(parent) = final_output_path.parent() {
+                tokio::fs::create_dir_all(parent).await?;
+            }
+        }
+        fs::write(&final_output_path, report_content).await?;
+        tracing::info!("Report saved to: {}", final_output_path.display());
     } else {
         print!("{}", report_content);
     }

@@ -5,11 +5,15 @@ use crate::types::AnalysisResults;
 use crate::utils::progress::ProgressReporter;
 use anyhow::Result;
 use serde_json;
+use std::path::PathBuf;
 use std::time::Instant;
 use tokio::fs;
 
-pub async fn run(args: CheckArgs, mut config: Config) -> Result<()> {
+pub async fn run(mut args: CheckArgs, mut config: Config) -> Result<()> {
     let start_time = Instant::now();
+
+    // Clone output_dir before moving config
+    let output_dir = config.analysis.output_dir.clone();
 
     // Override config with CLI options
     if let Some(baseline_path) = &args.baseline {
@@ -19,6 +23,15 @@ pub async fn run(args: CheckArgs, mut config: Config) -> Result<()> {
         config.analysis.ml_threshold = Some(threshold);
     }
     config.analysis.streaming = args.streaming;
+
+    // Use configured output directory if default output path is used
+    if args.out == PathBuf::from("results.json") {
+        args.out = PathBuf::from(&output_dir).join("results.json");
+        // Ensure output directory exists
+        if let Some(parent) = args.out.parent() {
+            tokio::fs::create_dir_all(parent).await?;
+        }
+    }
 
     // Initialize progress reporter (TTY-aware)
     let progress = ProgressReporter::new(!args.quiet && atty::is(atty::Stream::Stdout));
@@ -77,11 +90,22 @@ pub async fn run(args: CheckArgs, mut config: Config) -> Result<()> {
 
     // Emit markdown report if requested
     if let Some(md_path) = &args.emit_md {
+        let mut final_md_path = md_path.clone();
+        // Use configured output directory if relative path is used
+        if md_path == &PathBuf::from("report.md")
+            || !md_path.is_absolute() && !md_path.starts_with("./") && !md_path.starts_with("../")
+        {
+            final_md_path = PathBuf::from(&output_dir).join(md_path);
+            // Ensure output directory exists
+            if let Some(parent) = final_md_path.parent() {
+                tokio::fs::create_dir_all(parent).await?;
+            }
+        }
         let markdown = crate::report::generate_markdown(&results)?;
-        fs::write(md_path, markdown).await?;
+        fs::write(&final_md_path, markdown).await?;
 
         if !args.quiet {
-            tracing::info!("Markdown report saved to: {}", md_path.display());
+            tracing::info!("Markdown report saved to: {}", final_md_path.display());
         }
     }
 

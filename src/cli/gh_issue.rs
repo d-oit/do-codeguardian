@@ -9,7 +9,12 @@ use tokio::fs;
 // Constants for GitHub issues
 const GITHUB_ISSUE_MAX_BODY_SIZE: usize = 60000; // GitHub's approximate limit
 
-pub async fn run(args: GhIssueArgs, _config: &Config) -> Result<()> {
+pub async fn run(mut args: GhIssueArgs, config: &Config) -> Result<()> {
+    // Use configured output directory for default paths
+    if args.from == std::path::PathBuf::from("results.json") {
+        args.from = std::path::PathBuf::from(&config.analysis.output_dir).join("results.json");
+    }
+
     // Load results from JSON file
     let json_content = fs::read_to_string(&args.from).await?;
     let results: AnalysisResults = serde_json::from_str(&json_content)?;

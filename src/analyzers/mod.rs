@@ -37,6 +37,9 @@ impl AnalyzerRegistry {
         registry.register(Box::new(non_production::NonProductionAnalyzer::new()));
         registry.register(Box::new(performance_analyzer::PerformanceAnalyzer::new()));
         registry.register(Box::new(security_analyzer::SecurityAnalyzer::new()));
+        registry.register(Box::new(dependency_analyzer::DependencyAnalyzer::new(
+            std::env::current_dir().unwrap(),
+        )));
 
         registry
     }

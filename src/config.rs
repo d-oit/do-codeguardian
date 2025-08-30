@@ -109,6 +109,8 @@ pub struct AnalysisConfig {
     pub ml_threshold: Option<f64>,
     /// Enable streaming analysis
     pub streaming: bool,
+    /// Default output directory for analysis results
+    pub output_dir: String,
 }
 
 impl Default for AnalysisConfig {
@@ -125,6 +127,7 @@ impl Default for AnalysisConfig {
             baseline_path: None,
             ml_threshold: None,
             streaming: false,
+            output_dir: "codeguardian-results".to_string(),
         }
     }
 }

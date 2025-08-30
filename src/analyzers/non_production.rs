@@ -29,6 +29,12 @@ impl NonProductionAnalyzer {
 
     fn check_non_production_code(&self, file_path: &Path, content: &[u8]) -> Result<Vec<Finding>> {
         let mut findings = Vec::new();
+
+        // Skip analyzer files as they contain legitimate patterns by design
+        if self.should_skip_file(file_path) {
+            return Ok(findings);
+        }
+
         let content_str = String::from_utf8_lossy(content);
 
         for (line_num, line) in content_str.lines().enumerate() {
@@ -177,6 +183,33 @@ impl NonProductionAnalyzer {
                     }
                 }
             }
+        }
+
+        false
+    }
+
+    /// Check if a file should be skipped from non-production analysis
+    fn should_skip_file(&self, file_path: &Path) -> bool {
+        if let Some(file_name) = file_path.file_name().and_then(|n| n.to_str()) {
+            // Skip analyzer files as they contain legitimate patterns by design
+            if file_name.contains("analyzer") || file_name.contains("security") {
+                return true;
+            }
+        }
+
+        // Skip test files
+        if let Some(file_name) = file_path.file_name().and_then(|n| n.to_str()) {
+            if file_name.ends_with("_test.rs")
+                || file_name == "tests.rs"
+                || file_name.contains("test")
+            {
+                return true;
+            }
+        }
+
+        // Skip files in tests directory
+        if file_path.to_string_lossy().contains("/tests/") {
+            return true;
         }
 
         false

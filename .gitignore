@@ -46,10 +46,10 @@ examples/codeguardian.toml
 
 test_performance/
 .codeguardian-cache.json.gz
-report.md
 results.json
 results-ml-enhanced.json
 verification-results.json
 codeguardian_full_report.json
 codeguardian_report.md
 .codeguardian-cache.json
+codeguardian-results/

@@ -1,3 +1,4 @@
+use crate::analyzers::Analyzer;
 use crate::types::{Finding, Severity};
 use anyhow::{Context, Result};
 use cargo_metadata::MetadataCommand;
@@ -17,7 +18,7 @@ impl DependencyAnalyzer {
     }
 
     /// Analyze dependencies for vulnerabilities, outdated packages, and license issues
-    pub async fn analyze_dependencies(&self) -> Result<Vec<Finding>> {
+    pub fn analyze_dependencies(&self) -> Result<Vec<Finding>> {
         let mut findings = Vec::new();
 
         // Check for Cargo.toml
@@ -33,7 +34,7 @@ impl DependencyAnalyzer {
             .context("Failed to parse Cargo.toml")?;
 
         // Analyze vulnerabilities
-        findings.extend(self.analyze_vulnerabilities(&cargo_toml).await?);
+        findings.extend(self.analyze_vulnerabilities(&cargo_toml)?);
 
         // Note: Outdated packages and license compliance checks require external tools
         // and are not implemented in this basic version to avoid dependency conflicts
@@ -42,7 +43,7 @@ impl DependencyAnalyzer {
     }
 
     /// Analyze for known vulnerabilities using cargo-audit
-    async fn analyze_vulnerabilities(&self, cargo_toml: &Path) -> Result<Vec<Finding>> {
+    fn analyze_vulnerabilities(&self, cargo_toml: &Path) -> Result<Vec<Finding>> {
         let mut findings = Vec::new();
 
         // Run cargo audit as a subprocess
@@ -115,23 +116,42 @@ impl DependencyAnalyzer {
     }
 }
 
+impl Analyzer for DependencyAnalyzer {
+    fn name(&self) -> &str {
+        "dependency-analyzer"
+    }
+
+    fn analyze(&self, file_path: &Path, _content: &[u8]) -> Result<Vec<Finding>> {
+        // For dependency analysis, we only care about Cargo.toml files
+        if file_path.file_name().and_then(|n| n.to_str()) != Some("Cargo.toml") {
+            return Ok(Vec::new());
+        }
+
+        self.analyze_dependencies()
+    }
+
+    fn supports_file(&self, file_path: &Path) -> bool {
+        file_path.file_name().and_then(|n| n.to_str()) == Some("Cargo.toml")
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
     use tempfile::tempdir;
 
-    #[tokio::test]
-    async fn test_dependency_analyzer_creation() {
+    #[test]
+    fn test_dependency_analyzer_creation() {
         let temp_dir = tempdir().unwrap();
         let analyzer = DependencyAnalyzer::new(temp_dir.path().to_path_buf());
         assert_eq!(analyzer.project_root, temp_dir.path());
     }
 
-    #[tokio::test]
-    async fn test_analyze_dependencies_no_cargo_toml() {
+    #[test]
+    fn test_analyze_dependencies_no_cargo_toml() {
         let temp_dir = tempdir().unwrap();
         let analyzer = DependencyAnalyzer::new(temp_dir.path().to_path_buf());
-        let findings = analyzer.analyze_dependencies().await.unwrap();
+        let findings = analyzer.analyze_dependencies().unwrap();
         assert!(findings.is_empty());
     }
 

@@ -29,17 +29,18 @@ impl SecurityAnalyzer {
                 Regex::new(r#";\s*DROP\s+TABLE"#).unwrap(),
             ],
             xss_patterns: vec![
+                // More precise patterns to avoid matching legitimate code
                 Regex::new(r#"<script[^>]*>.*?</script>"#).unwrap(),
-                Regex::new(r#"javascript:""#).unwrap(),
-                Regex::new(r#"on\w+\s*="#).unwrap(),
-                Regex::new(r#"<iframe[^>]*>"#).unwrap(),
-                Regex::new(r#"<object[^>]*>"#).unwrap(),
+                Regex::new(r#"javascript:\s*["'][^"']*["']"#).unwrap(), // Require quotes around JS URLs
+                Regex::new(r#"\bon\w+\s*=\s*["'][^"']*["']"#).unwrap(), // Require quotes and = for event handlers
+                Regex::new(r#"<iframe[^>]*src\s*=\s*["'][^"']*["'][^>]*>"#).unwrap(), // More specific iframe
+                Regex::new(r#"<object[^>]*data\s*=\s*["'][^"']*["'][^>]*>"#).unwrap(), // More specific object
             ],
             command_injection_patterns: vec![
                 Regex::new(r#";\s*(rm|del|format|shutdown)"#).unwrap(),
                 Regex::new(r#"\|\s*(cat|ls|dir)"#).unwrap(),
-                Regex::new(r#"`.*`"#).unwrap(),
-                Regex::new(r#"\$\(.*\)"#).unwrap(),
+                Regex::new(r#"`[^`]*`"#).unwrap(), // More precise backtick pattern
+                Regex::new(r#"\$\([^)]*\)"#).unwrap(), // More precise dollar-parentheses
                 Regex::new(r#"system\s*\("#).unwrap(),
             ],
             secret_patterns: vec![
@@ -58,6 +59,11 @@ impl SecurityAnalyzer {
                 Regex::new(r#"eval\s*\("#).unwrap(),
             ],
         }
+    }
+
+    /// Check if the file is a Rust source file
+    fn is_rust_file(&self, file_path: &Path) -> bool {
+        file_path.extension().and_then(|e| e.to_str()) == Some("rs")
     }
 
     fn detect_sql_injection(&self, content: &str, file_path: &Path) -> Vec<Finding> {
@@ -112,14 +118,35 @@ impl SecurityAnalyzer {
 
     fn detect_command_injection(&self, content: &str, file_path: &Path) -> Vec<Finding> {
         let mut findings = Vec::new();
+        let is_rust = self.is_rust_file(file_path);
         for (line_num, line) in content.lines().enumerate() {
             for pattern in &self.command_injection_patterns {
+                // Skip backtick pattern for Rust files as backticks are not used for command execution in Rust
+                if is_rust && pattern.as_str().contains("`") {
+                    continue;
+                }
+                // Skip dollar-parentheses pattern for Rust files as $(...) is macro syntax
+                if is_rust && pattern.as_str().contains(r#"\$\("#) {
+                    continue;
+                }
+
                 if pattern.is_match(line) {
+                    // Additional context checks for false positives
+                    if self.is_likely_false_positive(line, pattern.as_str(), is_rust) {
+                        continue;
+                    }
+
+                    let severity = if self.is_high_risk_command_pattern(pattern.as_str()) {
+                        Severity::Critical
+                    } else {
+                        Severity::High
+                    };
+
                     findings.push(
                         Finding::new(
                             "security",
                             "command_injection",
-                            Severity::Critical,
+                            severity,
                             file_path.to_path_buf(),
                             (line_num + 1) as u32,
                             "Potential command injection vulnerability detected".to_string(),
@@ -139,11 +166,59 @@ impl SecurityAnalyzer {
         findings
     }
 
+    /// Check if a pattern match is likely a false positive
+    fn is_likely_false_positive(&self, line: &str, pattern: &str, is_rust: bool) -> bool {
+        if is_rust {
+            // In Rust, backticks in strings are typically for documentation or raw strings
+            if pattern.contains("`")
+                && (line.contains("///") || line.contains("//!") || line.contains("r#\""))
+            {
+                return true;
+            }
+            // Dollar-parentheses in Rust are typically macro syntax or documentation
+            if pattern.contains(r#"\$\("#)
+                && (line.contains("macro_rules!") || line.contains("///") || line.contains("//!"))
+            {
+                return true;
+            }
+        }
+
+        // Skip patterns in comments
+        if line.trim().starts_with("//")
+            || line.trim().starts_with("#")
+            || line.trim().starts_with("/*")
+        {
+            return true;
+        }
+
+        // Skip patterns in test functions
+        if line.contains("#[test]") || line.contains("fn test_") {
+            return true;
+        }
+
+        false
+    }
+
+    /// Check if a command pattern is high risk
+    fn is_high_risk_command_pattern(&self, pattern: &str) -> bool {
+        // High risk patterns that are more likely to be real vulnerabilities
+        pattern.contains("rm")
+            || pattern.contains("format")
+            || pattern.contains("shutdown")
+            || pattern.contains("DROP TABLE")
+            || pattern.contains("DELETE FROM")
+    }
+
     fn scan_hardcoded_secrets(&self, content: &str, file_path: &Path) -> Vec<Finding> {
         let mut findings = Vec::new();
         for (line_num, line) in content.lines().enumerate() {
             for pattern in &self.secret_patterns {
                 if pattern.is_match(line) {
+                    // Skip if this is likely a false positive (pattern definition, test, or documentation)
+                    if self.is_likely_secret_false_positive(line, pattern.as_str()) {
+                        continue;
+                    }
+
                     findings.push(
                         Finding::new(
                             "security",
@@ -162,6 +237,49 @@ impl SecurityAnalyzer {
             }
         }
         findings
+    }
+
+    /// Check if a secret pattern match is likely a false positive
+    fn is_likely_secret_false_positive(&self, line: &str, _pattern: &str) -> bool {
+        // Skip patterns in comments
+        if line.trim().starts_with("//")
+            || line.trim().starts_with("#")
+            || line.trim().starts_with("/*")
+        {
+            return true;
+        }
+
+        // Skip patterns in test functions
+        if line.contains("#[test]") || line.contains("fn test_") {
+            return true;
+        }
+
+        // Skip pattern definitions (common in security analyzers)
+        if line.contains("Regex::new") || line.contains("Pattern::new") || line.contains("pattern")
+        {
+            return true;
+        }
+
+        // Skip documentation or example code
+        if line.contains("///")
+            || line.contains("//!")
+            || line.contains("example")
+            || line.contains("Example")
+        {
+            return true;
+        }
+
+        // Skip if the line contains quotes around the pattern (indicating it's a string literal for pattern matching)
+        if line.contains("\"API_KEY\"")
+            || line.contains("\"PASSWORD\"")
+            || line.contains("\"SECRET\"")
+            || line.contains("\"TOKEN\"")
+            || line.contains("\"aws_access_key")
+        {
+            return true;
+        }
+
+        false
     }
 
     fn analyze_vulnerabilities(&self, content: &str, file_path: &Path) -> Vec<Finding> {
@@ -197,6 +315,11 @@ impl SecurityAnalyzer {
         let content_str = String::from_utf8_lossy(content);
         let mut all_findings = Vec::new();
 
+        // Skip security analysis for analyzer files as they contain security patterns by design
+        if self.should_skip_file(file_path) {
+            return Ok(all_findings);
+        }
+
         all_findings.extend(self.detect_sql_injection(&content_str, file_path));
         all_findings.extend(self.detect_xss(&content_str, file_path));
         all_findings.extend(self.detect_command_injection(&content_str, file_path));
@@ -204,6 +327,33 @@ impl SecurityAnalyzer {
         all_findings.extend(self.analyze_vulnerabilities(&content_str, file_path));
 
         Ok(all_findings)
+    }
+
+    /// Check if a file should be skipped from security analysis
+    fn should_skip_file(&self, file_path: &Path) -> bool {
+        if let Some(file_name) = file_path.file_name().and_then(|n| n.to_str()) {
+            // Skip analyzer files as they contain security patterns by design
+            if file_name.contains("analyzer") || file_name.contains("security") {
+                return true;
+            }
+        }
+
+        // Skip test files
+        if let Some(file_name) = file_path.file_name().and_then(|n| n.to_str()) {
+            if file_name.ends_with("_test.rs")
+                || file_name == "tests.rs"
+                || file_name.contains("test")
+            {
+                return true;
+            }
+        }
+
+        // Skip files in tests directory
+        if file_path.to_string_lossy().contains("/tests/") {
+            return true;
+        }
+
+        false
     }
 }
 

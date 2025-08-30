@@ -21,6 +21,24 @@ CodeGuardian is a cutting-edge, security-first code analysis tool that combines 
 - 🐳 **Container Support**: Docker and cloud-native deployment options
 - 📈 **Performance Monitoring**: Built-in benchmarking and optimization tools
 
+## 🤖 Agent System
+
+CodeGuardian features a sophisticated agent system for specialized development and management tasks. The system includes consolidated and enhanced agents for optimal performance:
+
+### Recent Consolidations
+- **Enhanced GitHub Workflow Manager**: Combines workflow management and optimization
+- **Enhanced Documentation Specialist**: Unified documentation creation and maintenance
+- **Enhanced Orchestrator**: Integrated task coordination and swarm management
+
+### New Specialized Agents
+- **Analyzer Orchestrator**: Coordinates comprehensive code analysis modules
+- **ML Pipeline Manager**: Manages machine learning workflows and model optimization
+- **Cache Intelligence Agent**: Optimizes caching performance and intelligence
+- **Streaming Processor**: Enhances streaming analysis performance
+- **Configuration Validator**: Ensures configuration integrity and best practices
+
+For detailed agent information, see [AGENTS.md](AGENTS.md) and the `.opencode/agent/` directory.
+
 ## 🚀 Quick Start
 
 ### Prerequisites
@@ -163,4 +181,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 [⭐ Star us on GitHub](https://github.com/d-oit/do-codeguardian) | [🐛 Report Issues](https://github.com/d-oit/do-codeguardian/issues) | [💬 Join Discussions](https://github.com/d-oit/do-codeguardian/discussions)
 
-</div>
+</div># Test comment for workflow verification
