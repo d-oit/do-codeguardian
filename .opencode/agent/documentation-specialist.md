@@ -1,7 +1,6 @@
 ---
 description: Generates and maintains comprehensive documentation for CodeGuardian
 mode: subagent
-temperature: 0.3
 tools:
   write: false
   edit: false

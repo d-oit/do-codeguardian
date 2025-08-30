@@ -1,7 +1,6 @@
 ---
 description: Performs security audits and identifies vulnerabilities in CodeGuardian
 mode: subagent
-temperature: 0.1
 tools:
   write: false
   edit: false

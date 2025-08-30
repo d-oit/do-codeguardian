@@ -1,7 +1,6 @@
 ---
 description: Optimizes build processes, CI/CD pipelines, and deployment for CodeGuardian
 mode: subagent
-temperature: 0.2
 tools:
   write: false
   edit: false

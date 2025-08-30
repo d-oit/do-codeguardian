@@ -1,7 +1,6 @@
 ---
 description: Primary agent for secure Git commits and GitHub integration with best practices
 mode: primary
-temperature: 0.2
 tools:
   write: true
   edit: true

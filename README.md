@@ -86,8 +86,10 @@ codeguardian check . --config security-config.toml --format json --out audit.jso
 ## 📚 Documentation
 
 - 📦 **[Installation Guide](docs/installation.md)** - Installation instructions and system requirements
+- 🚀 **[Quick Start Guide](docs/user-guide/quick-start.md)** - Get up and running quickly
 - 🔧 **[Usage Guide](docs/usage.md)** - Commands, patterns, and examples
 - ⚙️ **[Configuration Guide](docs/configuration.md)** - Configuration options and presets
+- 🔄 **[CI/CD Setup Guide](docs/user-guide/ci-cd-setup.md)** - Comprehensive CI/CD workflows and automation
 - 📊 **[API Reference](docs/api.md)** - Output formats, programmatic integration, and webhooks
 - 🤝 **[Contributing Guide](docs/contributing.md)** - Development setup and contribution process
 - 📄 **[License Information](docs/license.md)** - License details and third-party dependencies
@@ -96,86 +98,73 @@ codeguardian check . --config security-config.toml --format json --out audit.jso
 
 ### GitHub Actions
 
-CodeGuardian provides multiple GitHub Actions workflows for different CI/CD scenarios:
+CodeGuardian includes comprehensive GitHub Actions workflows for automated CI/CD integration. All workflows build CodeGuardian from source and run analysis directly, ensuring you always use the latest version.
 
-- **CI Pipeline**: Standard code analysis with security checks
-- **PR Analysis**: Turbo-mode analysis for pull requests with performance monitoring
-- **Security Analysis**: Comprehensive security audits with ML filtering
-- **Performance Monitoring**: Continuous performance tracking and optimization
-- **Nightly Builds**: Automated nightly analysis and reporting
-- **Release Automation**: Pre-release validation and quality gates
+#### Available Workflows
+
+- **CodeGuardian CI** (`.github/workflows/codeguardian-ci.yml`): Standard CI pipeline with diff-only PR analysis and full scans on main branch
+- **Turbo Security Analysis** (`.github/workflows/turbo-security-analysis.yml`): High-performance security analysis with multiple modes and performance metrics
+- **Turbo PR Analysis** (`.github/workflows/turbo-pr-analysis.yml`): Fast PR-focused analysis that only scans changed files
+- **Turbo Performance Monitor** (`.github/workflows/turbo-performance-monitor.yml`): Continuous performance tracking and benchmarking
+- **Turbo Nightly** (`.github/workflows/turbo-nightly.yml`): Automated nightly builds and comprehensive analysis
+- **Turbo Release** (`.github/workflows/turbo-release.yml`): Pre-release validation and quality gates
+
+For detailed workflow documentation, configuration options, and best practices, see the **[CI/CD Setup Guide](docs/user-guide/ci-cd-setup.md)**.
+
+#### Quick Setup
 
 ```yaml
-- name: Run CodeGuardian Turbo Analysis
-  uses: d-oit/do-codeguardian-action@v1
-  with:
-      args: |
-        turbo . \
+name: 🔍 CodeGuardian Analysis
+
+on:
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Setup Rust
+      uses: actions-rust-lang/setup-rust-toolchain@v1
+      with:
+        toolchain: stable
+        cache: true
+
+    - name: Build CodeGuardian
+      run: cargo build --release
+
+    - name: Run Analysis
+      run: |
+        ./target/release/codeguardian check . \
           --diff origin/main..HEAD \
           --format json \
           --out results.json \
           --emit-gh \
-          --repo ${{ github.repository }} \
-          --ml-model enhanced-model.fann \
-          --max-parallel 8 \
-          --memory-limit 2048 \
-          --metrics
-    env:
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          --repo ${{ github.repository }}
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 ```
 
-### GitLab CI
+### Other CI/CD Platforms
 
-```yaml
-codeguardian:
-  stage: security
-  image: codeguardian/codeguardian:latest
-  script:
-    - |
-      if [ -n "$CI_MERGE_REQUEST_TARGET_BRANCH_NAME" ]; then
-        codeguardian check . \
-          --diff origin/$CI_MERGE_REQUEST_TARGET_BRANCH_NAME..HEAD \
-          --format json \
-          --out results.json \
-          --emit-md report.md
-      else
-        codeguardian check . \
-          --format json \
-          --out results.json \
-          --emit-md report.md
-      fi
-  artifacts:
-    paths:
-      - results.json
-      - report.md
-    reports:
-      junit: results.json
-```
+CodeGuardian works with all major CI/CD platforms. For detailed integration guides, see the **[CI/CD Setup Guide](docs/user-guide/ci-cd-setup.md)**.
 
-### Jenkins Pipeline
+#### Build Instructions
 
-```groovy
-pipeline {
-    agent {
-        docker {
-            image 'codeguardian/codeguardian:latest'
-            args '-v $WORKSPACE:/workspace -w /workspace'
-        }
-    }
-    stages {
-        stage('CodeGuardian Analysis') {
-            steps {
-                sh '''
-                    codeguardian check . \
-                      --format json \
-                      --out results.json \
-                      --emit-md report.md \
-                      --max-parallel 4
-                '''
-            }
-        }
-    }
-}
+```bash
+# Install Rust toolchain
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+source $HOME/.cargo/env
+
+# Build in release mode for optimal performance
+cargo build --release
+
+# Run analysis
+./target/release/codeguardian check . --format json --out results.json
 ```
 
 ## 📈 Performance Benchmarks

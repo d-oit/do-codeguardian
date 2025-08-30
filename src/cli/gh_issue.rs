@@ -34,7 +34,7 @@ pub async fn create_or_update_issue(results: &AnalysisResults, args: &GhIssueArg
 
     // Handle different scan types with appropriate issue management
     let issue_strategy = determine_issue_strategy(&title, &args.labels);
-    
+
     match issue_strategy {
         IssueStrategy::UpdateExisting => {
             handle_update_existing_issue(&mut github_client, &title, &body, args).await?;
@@ -52,9 +52,9 @@ pub async fn create_or_update_issue(results: &AnalysisResults, args: &GhIssueArg
 
 #[derive(Debug)]
 enum IssueStrategy {
-    UpdateExisting,     // For PR scans - update the same issue
-    CloseOldCreateNew,  // For push to main - close old, create new
-    CreateIfNotExists,  // For scheduled scans - create if none exists
+    UpdateExisting,    // For PR scans - update the same issue
+    CloseOldCreateNew, // For push to main - close old, create new
+    CreateIfNotExists, // For scheduled scans - create if none exists
 }
 
 fn determine_issue_strategy(title: &str, _labels: &str) -> IssueStrategy {
@@ -84,9 +84,7 @@ async fn handle_update_existing_issue(
     fs::write(temp_file, body).await?;
 
     // Check for existing issue (idempotency)
-    let existing_issue = github_client
-        .find_existing_issue(title, &args.repo)
-        .await?;
+    let existing_issue = github_client.find_existing_issue(title, &args.repo).await?;
 
     // Create or update issue with rate limiting
     if let Some(issue_number) = existing_issue {
@@ -125,7 +123,10 @@ async fn handle_close_old_create_new(
     let issue_number = github_client
         .create_issue(title, temp_file, &args.labels, &args.repo)
         .await?;
-    println!("✅ Created new issue #{} (closed previous issues)", issue_number);
+    println!(
+        "✅ Created new issue #{} (closed previous issues)",
+        issue_number
+    );
 
     // Clean up temp file
     fs::remove_file(temp_file).await.ok();
@@ -139,9 +140,7 @@ async fn handle_create_if_not_exists(
     args: &GhIssueArgs,
 ) -> Result<()> {
     // Check for existing issue
-    let existing_issue = github_client
-        .find_existing_issue(title, &args.repo)
-        .await?;
+    let existing_issue = github_client.find_existing_issue(title, &args.repo).await?;
 
     if existing_issue.is_some() {
         println!("ℹ️  Scheduled scan issue already exists, skipping creation");
@@ -180,7 +179,10 @@ async fn close_existing_branch_issues(
     };
 
     // Search for existing CodeGuardian issues for this branch
-    let search_query = format!("CodeGuardian \"Push to {}\" in:title label:codeguardian is:open", branch);
+    let search_query = format!(
+        "CodeGuardian \"Push to {}\" in:title label:codeguardian is:open",
+        branch
+    );
     let args = [
         "issue",
         "list",
@@ -197,7 +199,7 @@ async fn close_existing_branch_issues(
     ];
 
     let output = github_client.execute_gh_command(&args).await?;
-    
+
     if output.trim().is_empty() || output.trim() == "null" {
         return Ok(());
     }
@@ -215,7 +217,7 @@ async fn close_existing_branch_issues(
                     "--comment",
                     "Closing previous scan results. New analysis available.",
                 ];
-                
+
                 if let Err(e) = github_client.execute_gh_command(&close_args).await {
                     eprintln!("⚠️  Warning: Failed to close issue #{}: {}", number, e);
                 } else {
@@ -336,7 +338,7 @@ async fn update_issue(
 
 fn generate_issue_title(prefix: &str, _repo: &str) -> Result<String> {
     let mut title_parts = vec![prefix.trim_end_matches(": ").to_string()];
-    
+
     // Determine context type and add appropriate identifier
     if let Ok(event_name) = std::env::var("GITHUB_EVENT_NAME") {
         match event_name.as_str() {
@@ -344,7 +346,7 @@ fn generate_issue_title(prefix: &str, _repo: &str) -> Result<String> {
                 // For PRs, use PR number and head commit
                 if let Ok(pr_number) = std::env::var("GITHUB_PR_NUMBER") {
                     title_parts.push(format!("PR #{}", pr_number));
-                    
+
                     // Add head commit for uniqueness within PR
                     if let Ok(head_sha) = std::env::var("GITHUB_HEAD_SHA") {
                         let short_sha = &head_sha[..std::cmp::min(7, head_sha.len())];
@@ -352,14 +354,17 @@ fn generate_issue_title(prefix: &str, _repo: &str) -> Result<String> {
                     }
                 } else {
                     // Fallback to current commit for PR context
-                    if let Ok(output) = Command::new("git").args(["rev-parse", "--short", "HEAD"]).output() {
+                    if let Ok(output) = Command::new("git")
+                        .args(["rev-parse", "--short", "HEAD"])
+                        .output()
+                    {
                         if output.status.success() {
                             let commit = String::from_utf8_lossy(&output.stdout).trim().to_string();
                             title_parts.push(format!("PR ({})", commit));
                         }
                     }
                 }
-            },
+            }
             "push" => {
                 // For pushes, use branch and commit
                 if let Ok(ref_name) = std::env::var("GITHUB_REF_NAME") {
@@ -369,16 +374,16 @@ fn generate_issue_title(prefix: &str, _repo: &str) -> Result<String> {
                     let short_sha = &sha[..std::cmp::min(7, sha.len())];
                     title_parts.push(format!("({})", short_sha));
                 }
-            },
+            }
             "schedule" => {
                 // For scheduled runs, use date and workflow
                 let date = chrono::Utc::now().format("%Y-%m-%d");
                 title_parts.push(format!("Scheduled Scan {}", date));
-                
+
                 if let Ok(workflow) = std::env::var("GITHUB_WORKFLOW") {
                     title_parts.push(format!("({})", workflow));
                 }
-            },
+            }
             _ => {
                 // Generic event handling
                 title_parts.push(format!("Event: {}", event_name));
@@ -390,7 +395,10 @@ fn generate_issue_title(prefix: &str, _repo: &str) -> Result<String> {
         }
     } else {
         // Local execution fallback
-        if let Ok(output) = Command::new("git").args(["rev-parse", "--short", "HEAD"]).output() {
+        if let Ok(output) = Command::new("git")
+            .args(["rev-parse", "--short", "HEAD"])
+            .output()
+        {
             if output.status.success() {
                 let commit = String::from_utf8_lossy(&output.stdout).trim().to_string();
                 title_parts.push(format!("Local ({})", commit));
@@ -401,7 +409,7 @@ fn generate_issue_title(prefix: &str, _repo: &str) -> Result<String> {
             title_parts.push(format!("Manual ({})", timestamp));
         }
     }
-    
+
     Ok(title_parts.join(" "))
 }
 
@@ -866,10 +874,10 @@ mod tests {
         env::set_var("GITHUB_EVENT_NAME", "pull_request");
         env::set_var("GITHUB_PR_NUMBER", "123");
         env::set_var("GITHUB_HEAD_SHA", "abcdef1234567890");
-        
+
         let title = generate_issue_title("CodeGuardian: ", "owner/repo").unwrap();
         assert_eq!(title, "CodeGuardian PR #123 (abcdef1)");
-        
+
         // Clean up
         env::remove_var("GITHUB_EVENT_NAME");
         env::remove_var("GITHUB_PR_NUMBER");
@@ -882,10 +890,10 @@ mod tests {
         env::set_var("GITHUB_EVENT_NAME", "push");
         env::set_var("GITHUB_REF_NAME", "main");
         env::set_var("GITHUB_SHA", "abcdef1234567890");
-        
+
         let title = generate_issue_title("CodeGuardian: ", "owner/repo").unwrap();
         assert_eq!(title, "CodeGuardian Push to main (abcdef1)");
-        
+
         // Clean up
         env::remove_var("GITHUB_EVENT_NAME");
         env::remove_var("GITHUB_REF_NAME");
@@ -897,11 +905,11 @@ mod tests {
         // Set up scheduled environment
         env::set_var("GITHUB_EVENT_NAME", "schedule");
         env::set_var("GITHUB_WORKFLOW", "CodeGuardian CI");
-        
+
         let title = generate_issue_title("CodeGuardian: ", "owner/repo").unwrap();
         assert!(title.starts_with("CodeGuardian Scheduled Scan"));
         assert!(title.contains("(CodeGuardian CI)"));
-        
+
         // Clean up
         env::remove_var("GITHUB_EVENT_NAME");
         env::remove_var("GITHUB_WORKFLOW");
@@ -910,15 +918,22 @@ mod tests {
     #[test]
     fn test_determine_issue_strategy() {
         // Test PR strategy
-        let strategy = determine_issue_strategy("CodeGuardian PR #123 (abcdef1)", "codeguardian,pr-123");
+        let strategy =
+            determine_issue_strategy("CodeGuardian PR #123 (abcdef1)", "codeguardian,pr-123");
         assert!(matches!(strategy, IssueStrategy::UpdateExisting));
 
         // Test main branch push strategy
-        let strategy = determine_issue_strategy("CodeGuardian Push to main (abcdef1)", "codeguardian,full-scan");
+        let strategy = determine_issue_strategy(
+            "CodeGuardian Push to main (abcdef1)",
+            "codeguardian,full-scan",
+        );
         assert!(matches!(strategy, IssueStrategy::CloseOldCreateNew));
 
         // Test scheduled scan strategy
-        let strategy = determine_issue_strategy("CodeGuardian Scheduled Scan 2024-01-15", "codeguardian,scheduled");
+        let strategy = determine_issue_strategy(
+            "CodeGuardian Scheduled Scan 2024-01-15",
+            "codeguardian,scheduled",
+        );
         assert!(matches!(strategy, IssueStrategy::CreateIfNotExists));
     }
 }

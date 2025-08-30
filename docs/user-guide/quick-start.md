@@ -180,7 +180,7 @@ codeguardian init --help
 Now that you have CodeGuardian running, explore these advanced features:
 
 - **[Advanced Features Guide](advanced-features.md)** - ML integration, turbo mode, custom rules
-- **[CI/CD Integration](ci-cd-integration.md)** - Automate analysis in your pipeline
+- **[CI/CD Setup Guide](ci-cd-setup.md)** - Comprehensive CI/CD workflows and automation
 - **[Configuration Guide](configuration.md)** - Fine-tune analysis for your needs
 - **[GitHub Integration](github-integration.md)** - Set up automated issue management
 

@@ -1,7 +1,6 @@
 ---
 description: Optimizes CodeGuardian performance, memory usage, and resource efficiency
 mode: subagent
-temperature: 0.1
 tools:
   write: false
   edit: false

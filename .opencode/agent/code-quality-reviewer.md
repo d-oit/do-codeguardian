@@ -1,7 +1,6 @@
 ---
 description: Reviews CodeGuardian code for quality, maintainability, and best practices
 mode: subagent
-temperature: 0.1
 tools:
   write: false
   edit: false

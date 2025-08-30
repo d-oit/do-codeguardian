@@ -1,7 +1,6 @@
 ---
 description: Optimizes GitHub Actions workflows for performance, security, and cost efficiency in the CodeGuardian project
 mode: subagent
-temperature: 0.1
 tools:
   write: false
   edit: true

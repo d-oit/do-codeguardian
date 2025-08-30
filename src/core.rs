@@ -265,32 +265,33 @@ impl GuardianEngine {
     ) -> Result<AnalysisResults> {
         // First, perform standard analysis
         let mut results = self.analyze_files(files, parallel).await?;
-        
+
         // Apply strict validation for GitHub issue creation
         results = self.validation_engine.filter_results_for_github(results)?;
-        
+
         // Add validation metadata to results
         let validation_stats = self.validation_engine.get_validation_stats();
         results.summary.metadata.insert(
             "validation_mode".to_string(),
-            "strict_github_validation".to_string()
+            "strict_github_validation".to_string(),
         );
-        results.summary.metadata.insert(
-            "validation_stats".to_string(),
-            validation_stats.to_string()
-        );
-        
+        results
+            .summary
+            .metadata
+            .insert("validation_stats".to_string(), validation_stats.to_string());
+
         // Report validation statistics
         self.progress.update(&format!(
             "Validation applied: {} findings validated for GitHub issues ({})",
             results.findings.len(),
             validation_stats
         ));
-        
+
         Ok(results)
     }
 
     /// Get validation engine statistics
+    #[allow(dead_code)]
     pub fn get_validation_stats(&self) -> ValidationStats {
         self.validation_engine.get_validation_stats()
     }
@@ -477,7 +478,9 @@ impl GuardianEngine {
         let ml_filtered_findings = self.ml_classifier.filter_findings(all_findings, 0.3)?;
 
         // Apply validation for reports (less strict than GitHub issues)
-        let validated_findings = self.validation_engine.validate_for_reports(ml_filtered_findings)?;
+        let validated_findings = self
+            .validation_engine
+            .validate_for_reports(ml_filtered_findings)?;
 
         Ok(validated_findings)
     }

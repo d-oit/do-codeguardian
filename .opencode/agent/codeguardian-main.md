@@ -2,8 +2,7 @@
 description: >-
   Main CodeGuardian development agent with comprehensive knowledge of the security analysis CLI project.
   Handles general development tasks, code review, feature implementation, and project maintenance.
-mode: primary
-temperature: 0.3
+mode: all
 permission:
   edit: allow
   bash: allow

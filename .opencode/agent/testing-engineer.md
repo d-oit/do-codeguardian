@@ -1,7 +1,6 @@
 ---
 description: Manages testing, generates tests, and ensures code quality for CodeGuardian
 mode: subagent
-temperature: 0.2
 tools:
   write: false
   edit: false

@@ -277,7 +277,8 @@ fn test_cli_report_conversion() {
             "total_findings": 1,
             "findings_by_severity": {"High": 1},
             "findings_by_analyzer": {"security": 1},
-            "scan_duration_ms": 100
+            "scan_duration_ms": 100,
+            "metadata": {}
         },
         "config_hash": "test",
         "timestamp": "2024-01-01T00:00:00Z"

@@ -1,7 +1,6 @@
 ---
 description: Manages ML training, data preparation, and model optimization for CodeGuardian
 mode: subagent
-temperature: 0.3
 tools:
   write: false
   edit: false

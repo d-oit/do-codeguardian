@@ -32,19 +32,36 @@ sudo cargo install codeguardian
 
 #### Build failures during installation
 ```bash
-# Update Rust
+# Update Rust toolchain
 rustup update stable
 
 # Clean and rebuild
 cargo clean
 cargo install codeguardian
 
-# Check for missing dependencies
+# Check for missing system dependencies
 # Ubuntu/Debian
-sudo apt install build-essential pkg-config libssl-dev
+sudo apt install build-essential pkg-config libssl-dev libgit2-dev
+
+# CentOS/RHEL/Fedora
+sudo dnf install gcc pkg-config openssl-devel libgit2-devel
 
 # macOS
 xcode-select --install
+brew install pkg-config openssl git2
+
+# Windows (using MSYS2 or similar)
+pacman -S mingw-w64-x86_64-gcc mingw-w64-x86_64-pkg-config mingw-w64-x86_64-openssl
+
+# Verify Rust version compatibility (requires Rust 1.70+ for edition 2021)
+rustc --version
+cargo --version
+
+# Build with verbose output for debugging
+cargo build --verbose
+
+# Check for dependency conflicts
+cargo tree
 ```
 
 ### Configuration Issues
@@ -69,8 +86,74 @@ codeguardian config validate
 # Generate example configuration
 codeguardian config generate > codeguardian.toml
 
-# Check for syntax errors
+# Check for TOML syntax errors
 cat codeguardian.toml | python -c "import toml; toml.load(sys.stdin)"
+
+# Validate specific sections
+# Check [general] section
+codeguardian check . --config codeguardian.toml --verbose | head -20
+
+# Check analyzer-specific configurations
+codeguardian check . --analyzer security --config codeguardian.toml
+```
+
+#### Memory and performance configuration issues
+```toml
+# codeguardian.toml - Memory limits
+[general]
+max_memory_mb = 512  # Increase if getting OOM errors
+parallel_workers = 1  # Reduce for memory-constrained environments
+
+[optimization]
+enable_file_caching = true
+max_parallel_workers = 2
+max_memory_file_size = 10485760  # 10MB limit per file
+
+[optimization.cache_cleanup]
+enabled = true
+max_age_days = 7
+max_size_mb = 100
+```
+
+#### Analyzer-specific configuration problems
+```toml
+# Security analyzer configuration
+[security_analyzer]
+enabled = true
+min_entropy_threshold = 3.5  # Adjust for false positives
+check_hardcoded_secrets = true
+
+# Performance analyzer configuration
+[performance_analyzer]
+enabled = true
+max_complexity = 15  # Increase for complex codebases
+max_function_length = 100  # Adjust based on coding standards
+
+# ML configuration
+[ml]
+enabled = true
+model_path = "enhanced-model.fann"
+confidence_threshold = 0.8
+```
+
+#### Path and file pattern issues
+```toml
+# Correct exclude patterns
+exclude_patterns = [
+    "target/**",
+    ".git/**",
+    "node_modules/**",
+    "**/*.min.js",
+    "**/*.bundle.js"
+]
+
+# Include specific file types
+include_patterns = [
+    "**/*.rs",
+    "**/*.js",
+    "**/*.ts",
+    "**/*.py"
+]
 ```
 
 #### Settings not applied
@@ -157,17 +240,73 @@ codeguardian check . --ml-model enhanced-model.fann --ml-threshold 0.7
 
 #### Performance degradation
 ```bash
-# Enable caching
-codeguardian check . --cache-enabled
+# Enable caching and optimization
+codeguardian check . --cache-enabled --streaming-threshold 5
 
-# Use turbo mode
-codeguardian turbo . --max-parallel 8
+# Use turbo mode with optimized settings
+codeguardian turbo . --max-parallel 4 --memory-limit 1024
 
-# Clear cache if corrupted
+# Clear corrupted cache
 codeguardian cache clear
+rm -rf ~/.cache/codeguardian/
 
-# Check system resources
-top -p $(pgrep codeguardian)
+# Monitor system resources during scan
+codeguardian check . --metrics | tee performance.log
+
+# Profile with system tools
+timeout 60s perf record -g codeguardian check . --max-parallel 1
+perf report
+```
+
+#### Memory usage optimization
+```bash
+# Adjust memory settings based on system
+codeguardian check . \
+  --memory-limit 512 \
+  --streaming-threshold 10 \
+  --max-parallel 2
+
+# Monitor memory usage in real-time
+codeguardian check . --metrics &
+watch -n 5 'ps aux | grep codeguardian'
+
+# Use memory profiling
+valgrind --tool=massif --massif-out-file=massif.out codeguardian check . --max-parallel 1
+ms_print massif.out | head -50
+```
+
+#### Large codebase handling
+```bash
+# For very large codebases (>100k files)
+codeguardian check . \
+  --streaming-threshold 1 \
+  --max-parallel 1 \
+  --memory-limit 2048 \
+  --timeout 3600
+
+# Exclude unnecessary directories
+codeguardian check . \
+  --exclude "node_modules/**" \
+  --exclude "target/**" \
+  --exclude ".git/**" \
+  --exclude "build/**"
+
+# Use incremental analysis
+codeguardian check . --diff HEAD~1
+```
+
+#### Parallel processing issues
+```bash
+# Adjust parallelism based on CPU cores
+nproc  # Check available cores
+codeguardian check . --max-parallel $(nproc)
+
+# For systems with limited resources
+codeguardian check . --max-parallel 1 --streaming-threshold 5
+
+# Monitor CPU usage
+codeguardian check . --metrics &
+htop -p $(pgrep codeguardian)
 ```
 
 #### High memory usage
@@ -192,29 +331,103 @@ codeguardian check . --max-parallel 2
 # Check GitHub token
 echo $GITHUB_TOKEN
 
-# Verify token permissions
+# Verify token permissions and scope
 curl -H "Authorization: token $GITHUB_TOKEN" https://api.github.com/user
+curl -H "Authorization: token $GITHUB_TOKEN" https://api.github.com/user/repos
 
-# Set token in environment
-export GITHUB_TOKEN=your_token_here
+# Set token with proper scope
+export GITHUB_TOKEN=your_personal_access_token
 
-# Use GitHub CLI authentication
+# Use GitHub CLI for authentication
 gh auth login
+gh auth status
+
+# Check token permissions for repository
+gh repo view owner/repo --permission
+```
+
+#### Repository access and permissions
+```bash
+# Verify repository exists and is accessible
+gh repo view owner/repo
+
+# Check if token has required permissions
+curl -H "Authorization: token $GITHUB_TOKEN" \
+  https://api.github.com/repos/owner/repo
+
+# Test issue creation permissions
+gh issue list --repo owner/repo --limit 1
+
+# Check organization permissions if applicable
+gh org list
 ```
 
 #### Rate limit exceeded
 ```bash
-# Check rate limit status
+# Check current rate limit status
 curl -H "Authorization: token $GITHUB_TOKEN" https://api.github.com/rate_limit
 
 # Wait for rate limit reset
 sleep 3600
 
-# Use GitHub App authentication for higher limits
+# Use GitHub App authentication for higher limits (5000 requests/hour)
 # Configure GitHub App in codeguardian.toml
 [github]
 app_id = "your_app_id"
 private_key_path = "/path/to/private-key.pem"
+installation_id = "your_installation_id"
+
+# Use personal access token with higher limits
+# Create token with repo scope for private repos
+export GITHUB_TOKEN=your_high_limit_token
+
+# Implement retry logic in CI
+- name: Run CodeGuardian with retry
+  uses: nick-invision/retry@v2
+  with:
+    timeout_minutes: 10
+    max_attempts: 3
+    command: codeguardian check . --emit-gh --repo owner/repo
+```
+
+#### Issue creation and management failures
+```bash
+# Test issue creation manually
+gh issue create \
+  --repo owner/repo \
+  --title "Test CodeGuardian Issue" \
+  --body "Testing issue creation" \
+  --label "codeguardian,test"
+
+# Check existing issues to avoid duplicates
+gh issue list --repo owner/repo --label codeguardian --state open
+
+# Verify issue template configuration
+codeguardian gh-issue --dry-run --from results.json --repo owner/repo
+
+# Handle large issue bodies (GitHub 65536 char limit)
+codeguardian gh-issue \
+  --from results.json \
+  --repo owner/repo \
+  --mode simple \
+  --summary-max-chars 500
+```
+
+#### Webhook and automation issues
+```bash
+# Verify webhook delivery
+gh api repos/owner/repo/hooks
+
+# Check webhook payload format
+curl -X POST \
+  -H "Content-Type: application/json" \
+  -H "X-GitHub-Event: pull_request" \
+  -d '{"action":"opened"}' \
+  http://your-webhook-endpoint
+
+# Test webhook signature verification
+# Ensure webhook secret is configured correctly
+export GITHUB_WEBHOOK_SECRET=your_secret
 ```
 
 #### Issue creation failed
@@ -333,7 +546,84 @@ docker run --rm \
 
 ### CI/CD Integration Issues
 
-#### GitHub Actions failures
+#### GitHub Actions workflow failures
+```yaml
+# Check workflow permissions in .github/workflows/codeguardian-ci.yml
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+  actions: read  # For workflow artifacts
+
+# Ensure proper token scope
+env:
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+# Handle diff-only mode failures
+- name: Run CodeGuardian (PR diff-only)
+  run: |
+    # Check if diff exists before running
+    if git diff --quiet HEAD~1; then
+      echo "No changes detected, skipping analysis"
+      exit 0
+    fi
+
+    ./target/release/codeguardian check . \
+      --diff origin/main..HEAD \
+      --format json \
+      --out results.json
+  env:
+    GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+```
+
+#### CI build cache issues
+```bash
+# Clear Rust cache in CI
+- name: Clear cache
+  run: |
+    cargo clean
+    rm -rf ~/.cargo/registry/cache/
+    rm -rf ~/.cargo/git/db/
+
+# Use incremental builds
+- name: Build with incremental
+  run: cargo build --release --incremental
+```
+
+#### Artifact upload failures
+```yaml
+# Ensure artifacts directory exists
+- name: Create artifacts directory
+  run: mkdir -p artifacts
+
+# Upload with proper error handling
+- name: Upload results
+  uses: actions/upload-artifact@v4
+  if: always()
+  with:
+    name: codeguardian-results
+    path: |
+      results.json
+      report.md
+    retention-days: 30
+```
+
+#### Scheduled job failures
+```yaml
+# Add timeout and error handling for scheduled runs
+- name: Run scheduled scan
+  timeout-minutes: 30
+  run: |
+    ./target/release/codeguardian check . \
+      --format json \
+      --out results.json \
+      --timeout 1800 \
+      --fail-on-issues
+  env:
+    GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+```
+
+#### GitLab CI issues
 ```yaml
 # Check workflow permissions
 permissions:
@@ -485,11 +775,38 @@ setenforce 0  # Temporarily disable if needed
 # Enable debug logging
 CODEGUARDIAN_LOG_LEVEL=debug codeguardian check .
 
-# Save debug output
-codeguardian check . --verbose 2>&1 | tee debug.log
+# Save debug output with timestamps
+codeguardian check . --verbose 2>&1 | ts '%Y-%m-%d %H:%M:%S' | tee debug.log
 
-# Check system information
+# Check system information and diagnostics
 codeguardian doctor
+
+# Debug specific analyzers
+codeguardian check . --analyzer security --verbose
+codeguardian check . --analyzer performance --verbose
+
+# Debug configuration loading
+CODEGUARDIAN_LOG_LEVEL=debug codeguardian config validate
+```
+
+#### Dependency and environment debugging
+```bash
+# Check Rust and Cargo versions
+rustc --version
+cargo --version
+rustup show
+
+# Verify system dependencies
+ldd $(which codeguardian)  # Linux
+otool -L $(which codeguardian)  # macOS
+
+# Check for conflicting installations
+which -a codeguardian
+ls -la ~/.cargo/bin/codeguardian
+
+# Debug dependency resolution
+cargo tree --duplicates
+cargo update
 ```
 
 #### Performance Profiling
@@ -531,6 +848,89 @@ curl -I https://api.github.com
 # File system checks
 find . -type f -size +100M  # Large files
 ls -la ~/.cache/codeguardian  # Cache directory
+```
+
+### Common Error Messages and Solutions
+
+#### "Failed to compile CodeGuardian"
+```
+error: linking with `cc` failed: exit code: 1
+```
+```bash
+# Install missing system libraries
+# Ubuntu/Debian
+sudo apt install build-essential pkg-config libssl-dev libgit2-dev
+
+# macOS
+brew install pkg-config openssl git2
+
+# Check for 32-bit vs 64-bit issues
+uname -m
+rustup target list --installed
+```
+
+#### "Permission denied" errors
+```bash
+# Fix file permissions
+chmod +x ~/.cargo/bin/codeguardian
+
+# Run with sudo if necessary (not recommended)
+sudo -u $(whoami) codeguardian check .
+
+# Check directory permissions
+ls -la /path/to/project
+chmod -R 755 /path/to/project
+```
+
+#### "No such file or directory" for configuration
+```bash
+# Create default configuration
+codeguardian init
+
+# Specify full path to config
+codeguardian check . --config /full/path/to/codeguardian.toml
+
+# Check if file exists
+ls -la codeguardian.toml
+```
+
+#### "Memory allocation failed" or OOM errors
+```bash
+# Reduce memory usage
+codeguardian check . --memory-limit 256 --max-parallel 1
+
+# Use streaming for large files
+codeguardian check . --streaming-threshold 1
+
+# Monitor memory usage
+free -h  # Linux
+vm_stat  # macOS
+```
+
+#### "Timeout exceeded" errors
+```bash
+# Increase timeout values
+codeguardian check . --timeout 1800
+
+# Reduce analysis scope
+codeguardian check . --exclude "node_modules/**" --max-parallel 1
+
+# Use diff mode for faster analysis
+codeguardian check . --diff HEAD~1
+```
+
+#### GitHub API errors
+```bash
+# "Bad credentials"
+# Check token validity
+curl -H "Authorization: token $GITHUB_TOKEN" https://api.github.com/user
+
+# "Repository not found"
+gh repo view owner/repo
+
+# "Issues are disabled for this repository"
+# Enable issues in repository settings
+gh repo edit owner/repo --enable-issues=true
 ```
 
 ### Getting Professional Help

@@ -25,7 +25,7 @@ cargo install codeguardian
 ### From Source
 
 ```bash
-git clone https://github.com/d-oit/codeguardian
+git clone https://github.com/d-oit/do-codeguardian.git
 cd codeguardian
 cargo build --release
 cargo install --path .
@@ -46,7 +46,7 @@ docker run --rm -v $(pwd):/workspace -v $(pwd)/codeguardian.toml:/etc/codeguardi
 
 ### Pre-built Binaries
 
-Download from [GitHub Releases](https://github.com/d-oit/codeguardian/releases) for:
+Download from [GitHub Releases](https://github.com/d-oit/do-codeguardian/releases) for:
 - Linux (x64, ARM64)
 - macOS (x64, ARM64/M1)
 - Windows (x64)
@@ -69,6 +69,20 @@ sudo apt update && sudo apt install codeguardian
 ```bash
 choco install codeguardian
 ```
+
+## CI/CD Integration
+
+CodeGuardian includes several GitHub Actions workflows for automated CI/CD processes:
+
+- **codeguardian-ci.yml**: Main CI pipeline for building, testing, and linting the codebase
+- **turbo-nightly.yml**: Nightly builds and performance monitoring
+- **turbo-performance-monitor.yml**: Continuous performance benchmarking
+- **turbo-pr-analysis.yml**: Automated analysis of pull requests
+- **turbo-release.yml**: Automated release process and publishing
+- **turbo-security-analysis.yml**: Security scanning and vulnerability assessment
+- **issue-triage.yml**: Automated issue triage and labeling
+
+These workflows are located in `.github/workflows/` and can be customized for your specific needs. For more details, see the [CI/CD Guide](TURBO_CI_GUIDE.md).
 
 ## Quick Start
 

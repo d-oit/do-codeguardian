@@ -27,7 +27,7 @@ mod integration_tests {
         let test_files = create_test_files();
 
         // Test cache integration
-        let cache = FileCache::load().await.unwrap();
+        let _cache = FileCache::load().await.unwrap();
         // Cache may have 0 entries initially, which is fine
 
         // Test streaming analyzer

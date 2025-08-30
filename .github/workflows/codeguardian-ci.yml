@@ -28,15 +28,14 @@ jobs:
         toolchain: stable
         cache: true
     
-    - name: Install CodeGuardian
+    - name: Build CodeGuardian
       run: |
-        # Replace with actual installation method
-        cargo install --git https://github.com/d-oit/do-codeguardian
+        cargo build --release
     
     - name: Run CodeGuardian (PR diff-only)
       run: |
         # Diff-only mode for PRs - fast and focused feedback
-        codeguardian check . \
+        ./target/release/codeguardian check . \
           --diff origin/main..HEAD \
           --format json \
           --out results.json \
@@ -74,15 +73,14 @@ jobs:
         toolchain: stable
         cache: true
     
-    - name: Install CodeGuardian
+    - name: Build CodeGuardian
       run: |
-        # Replace with actual installation method
-        cargo install --git https://github.com/d-oit/do-codeguardian
+        cargo build --release
     
     - name: Run CodeGuardian (Full scan)
       run: |
         # Full repository scan for scheduled jobs and main branch pushes
-        codeguardian check . \
+        ./target/release/codeguardian check . \
           --format json \
           --out results.json \
           --emit-md report.md \
@@ -119,16 +117,16 @@ jobs:
         toolchain: stable
         cache: true
     
-    - name: Install CodeGuardian
+    - name: Build CodeGuardian
       run: |
-        cargo install --git https://github.com/d-oit/do-codeguardian
+        cargo build --release
     
     - name: Update baseline
       run: |
-        codeguardian check . \
+        ./target/release/codeguardian check . \
           --format json \
           --out baseline.json
-        
+
         # Commit updated baseline if it changed
         if ! git diff --quiet baseline.json 2>/dev/null; then
           git config user.name "CodeGuardian Bot"

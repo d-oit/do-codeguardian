@@ -6,6 +6,9 @@ timeout_seconds = 120
 exclude_patterns = [
     "target/**",
     ".git/**",
+    "benches/**",
+    "examples/**",
+    "tests/**",
 ]
 include_patterns = ["**/*.rs"]
 
