@@ -93,7 +93,7 @@ pub async fn run(args: CheckArgs) -> Result<()> {
     }
 
     // Determine exit code
-    if args.fail_on_issues && results.has_issues() {
+    if args.fail_on_issues && results.has_high_severity_issues() {
         std::process::exit(2);
     }
 

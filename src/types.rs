@@ -245,6 +245,7 @@ impl AnalysisResults {
     ///
     /// # Returns
     /// `true` if any findings were detected, `false` otherwise
+    #[allow(dead_code)]
     pub fn has_issues(&self) -> bool {
         !self.findings.is_empty()
     }
@@ -256,7 +257,6 @@ impl AnalysisResults {
     ///
     /// # Returns
     /// `true` if any Critical or High severity findings were detected, `false` otherwise
-    #[allow(dead_code)]
     pub fn has_high_severity_issues(&self) -> bool {
         self.findings
             .iter()
