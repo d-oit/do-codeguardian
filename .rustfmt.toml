@@ -1,0 +1,18 @@
+# Rustfmt configuration for CodeGuardian
+# This configuration ensures consistent code formatting across the security-focused codebase,
+# promoting readability and maintainability for better code reviews and vulnerability detection.
+
+# Maximum line width (characters)
+max_width = 100
+
+# Number of spaces per indentation level
+tab_spaces = 4
+
+# Reorder imports alphabetically
+reorder_imports = true
+
+# Rust edition to target
+edition = "2021"
+
+# Maximum width for method chains
+chain_width = 60
