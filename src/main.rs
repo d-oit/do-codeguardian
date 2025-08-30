@@ -15,6 +15,7 @@ mod report;
 mod streaming;
 mod types;
 mod utils;
+mod validation;
 
 use cli::turbo::TurboArgs;
 use cli::*;

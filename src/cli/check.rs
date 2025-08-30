@@ -38,8 +38,12 @@ pub async fn run(args: CheckArgs) -> Result<()> {
         return Ok(());
     }
 
-    // Run analysis
-    let mut results = engine.analyze_files(&files_to_scan, args.parallel).await?;
+    // Run analysis - use strict validation if creating GitHub issues
+    let mut results = if args.emit_gh {
+        engine.analyze_files_for_github_issues(&files_to_scan, args.parallel).await?
+    } else {
+        engine.analyze_files(&files_to_scan, args.parallel).await?
+    };
 
     // Sort findings deterministically
     results.sort_findings();

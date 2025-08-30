@@ -165,6 +165,8 @@ pub struct ResultsSummary {
     pub findings_by_analyzer: HashMap<String, usize>,
     /// Duration of the scan in milliseconds
     pub scan_duration_ms: u64,
+    /// Additional metadata for validation and processing information
+    pub metadata: std::collections::HashMap<String, String>,
 }
 
 impl AnalysisResults {
@@ -191,6 +193,7 @@ impl AnalysisResults {
                 findings_by_severity: HashMap::new(),
                 findings_by_analyzer: HashMap::new(),
                 scan_duration_ms: 0,
+                metadata: HashMap::new(),
             },
             config_hash,
             timestamp: Utc::now(),

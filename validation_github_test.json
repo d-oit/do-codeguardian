@@ -1,0 +1,197 @@
+{
+  "schema_version": "1.0.0",
+  "tool_metadata": {
+    "name": "codeguardian",
+    "version": "0.1.0",
+    "config_hash": "4074d55f6da08123",
+    "timestamp": "2025-08-30T08:15:09.963576676Z"
+  },
+  "findings": [
+    {
+      "id": "267710b62d1545b8",
+      "analyzer": "non_production",
+      "rule": "potential_secret",
+      "severity": "Critical",
+      "file": "/workspaces/do-codeguardian/src/validation/mod.rs",
+      "line": 303,
+      "column": null,
+      "message": "Potential hardcoded secret detected",
+      "description": "Line may contain hardcoded credentials or API keys",
+      "suggestion": "Move secrets to environment variables or secure configuration",
+      "metadata": {
+        "context": "production"
+      }
+    },
+    {
+      "id": "956dabc51a60764f",
+      "analyzer": "code_quality",
+      "rule": "high_complexity",
+      "severity": "High",
+      "file": "/workspaces/do-codeguardian/src/validation/mod.rs",
+      "line": 73,
+      "column": null,
+      "message": "Function 'should_create_github_issue' has high cyclomatic complexity (18)",
+      "description": "High complexity functions are harder to understand, test, and maintain",
+      "suggestion": "Break this function into smaller, more focused functions",
+      "metadata": {}
+    },
+    {
+      "id": "5f86bfd8205c6f06",
+      "analyzer": "code_quality",
+      "rule": "high_complexity",
+      "severity": "High",
+      "file": "/workspaces/do-codeguardian/src/validation/mod.rs",
+      "line": 76,
+      "column": null,
+      "message": "Function 'Ok' has high cyclomatic complexity (11)",
+      "description": "High complexity functions are harder to understand, test, and maintain",
+      "suggestion": "Break this function into smaller, more focused functions",
+      "metadata": {}
+    },
+    {
+      "id": "8946f5600885ba53",
+      "analyzer": "code_quality",
+      "rule": "high_complexity",
+      "severity": "High",
+      "file": "/workspaces/do-codeguardian/src/validation/mod.rs",
+      "line": 93,
+      "column": null,
+      "message": "Function 'Ok' has high cyclomatic complexity (58)",
+      "description": "High complexity functions are harder to understand, test, and maintain",
+      "suggestion": "Break this function into smaller, more focused functions",
+      "metadata": {}
+    },
+    {
+      "id": "87c3fc1241c48850",
+      "analyzer": "code_quality",
+      "rule": "high_complexity",
+      "severity": "High",
+      "file": "/workspaces/do-codeguardian/src/validation/mod.rs",
+      "line": 97,
+      "column": null,
+      "message": "Function 'Ok' has high cyclomatic complexity (52)",
+      "description": "High complexity functions are harder to understand, test, and maintain",
+      "suggestion": "Break this function into smaller, more focused functions",
+      "metadata": {}
+    },
+    {
+      "id": "f4183f628976d1a3",
+      "analyzer": "code_quality",
+      "rule": "high_complexity",
+      "severity": "High",
+      "file": "/workspaces/do-codeguardian/src/validation/mod.rs",
+      "line": 102,
+      "column": null,
+      "message": "Function 'Ok' has high cyclomatic complexity (47)",
+      "description": "High complexity functions are harder to understand, test, and maintain",
+      "suggestion": "Break this function into smaller, more focused functions",
+      "metadata": {}
+    },
+    {
+      "id": "42f54fdb8973b3d4",
+      "analyzer": "code_quality",
+      "rule": "high_complexity",
+      "severity": "High",
+      "file": "/workspaces/do-codeguardian/src/validation/mod.rs",
+      "line": 112,
+      "column": null,
+      "message": "Function 'Ok' has high cyclomatic complexity (46)",
+      "description": "High complexity functions are harder to understand, test, and maintain",
+      "suggestion": "Break this function into smaller, more focused functions",
+      "metadata": {}
+    },
+    {
+      "id": "99ad40dddd4a6f1c",
+      "analyzer": "code_quality",
+      "rule": "high_complexity",
+      "severity": "High",
+      "file": "/workspaces/do-codeguardian/src/validation/mod.rs",
+      "line": 118,
+      "column": null,
+      "message": "Function 'Ok' has high cyclomatic complexity (40)",
+      "description": "High complexity functions are harder to understand, test, and maintain",
+      "suggestion": "Break this function into smaller, more focused functions",
+      "metadata": {}
+    },
+    {
+      "id": "9846ae32b72a8e6c",
+      "analyzer": "code_quality",
+      "rule": "high_complexity",
+      "severity": "High",
+      "file": "/workspaces/do-codeguardian/src/validation/mod.rs",
+      "line": 210,
+      "column": null,
+      "message": "Function 'is_likely_test_data' has high cyclomatic complexity (26)",
+      "description": "High complexity functions are harder to understand, test, and maintain",
+      "suggestion": "Break this function into smaller, more focused functions",
+      "metadata": {}
+    },
+    {
+      "id": "b6575a728c3178ba",
+      "analyzer": "code_quality",
+      "rule": "high_complexity",
+      "severity": "High",
+      "file": "/workspaces/do-codeguardian/src/validation/mod.rs",
+      "line": 282,
+      "column": null,
+      "message": "Function 'validate_secret_finding' has high cyclomatic complexity (11)",
+      "description": "High complexity functions are harder to understand, test, and maintain",
+      "suggestion": "Break this function into smaller, more focused functions",
+      "metadata": {}
+    },
+    {
+      "id": "cef7b8841ce78b03",
+      "analyzer": "code_quality",
+      "rule": "high_complexity",
+      "severity": "High",
+      "file": "/workspaces/do-codeguardian/src/validation/mod.rs",
+      "line": 329,
+      "column": null,
+      "message": "Function 'Some' has high cyclomatic complexity (15)",
+      "description": "High complexity functions are harder to understand, test, and maintain",
+      "suggestion": "Break this function into smaller, more focused functions",
+      "metadata": {}
+    },
+    {
+      "id": "6ef6d181b9e3b381",
+      "analyzer": "code_quality",
+      "rule": "high_complexity",
+      "severity": "High",
+      "file": "/workspaces/do-codeguardian/src/validation/mod.rs",
+      "line": 334,
+      "column": null,
+      "message": "Function 'Some' has high cyclomatic complexity (13)",
+      "description": "High complexity functions are harder to understand, test, and maintain",
+      "suggestion": "Break this function into smaller, more focused functions",
+      "metadata": {}
+    }
+  ],
+  "summary": {
+    "total_files_scanned": 1,
+    "total_findings": 12,
+    "findings_by_severity": {
+      "Low": 20,
+      "Info": 2,
+      "High": 11,
+      "Critical": 1,
+      "Medium": 36
+    },
+    "findings_by_analyzer": {
+      "performance": 20,
+      "non_production": 5,
+      "optimized-quality": 4,
+      "code_quality": 41
+    },
+    "scan_duration_ms": 1197,
+    "metadata": {
+      "original_findings_count": "70",
+      "validation_stats": "Validation: GitHub threshold: 90.0%, Report threshold: 70.0%, Strict: true, ML: false",
+      "filtered_findings_count": "12",
+      "validation_applied": "strict_github_validation",
+      "filter_rate": "82.9%",
+      "validation_mode": "strict_github_validation"
+    }
+  },
+  "config_hash": "4074d55f6da08123",
+  "timestamp": "2025-08-30T08:15:09.963580855Z"
+}

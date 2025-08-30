@@ -27,6 +27,7 @@ pub mod report;
 pub mod streaming;
 pub mod types;
 pub mod utils;
+pub mod validation;
 
 // Re-export commonly used types for easier access
 /// Main configuration structure for CodeGuardian

@@ -8,6 +8,7 @@ use crate::types::{AnalysisResults, Finding};
 use crate::utils::adaptive_parallelism::{AdaptiveParallelismController, SystemLoadMonitor};
 use crate::utils::progress::ProgressReporter;
 use crate::utils::security::{canonicalize_path_safe, should_follow_path};
+use crate::validation::{ValidationEngine, ValidationStats};
 use anyhow::Result;
 use std::fmt::Write;
 use std::path::{Path, PathBuf};
@@ -48,6 +49,8 @@ pub struct GuardianEngine {
     streaming_analyzer: StreamingAnalyzer,
     /// ML classifier for false positive reduction
     ml_classifier: MLClassifier,
+    /// Validation engine for ensuring 100% validated findings
+    validation_engine: ValidationEngine,
     /// Analysis statistics and metrics
     stats: AnalysisStats,
     /// Controller for adaptive parallelism
@@ -95,6 +98,9 @@ impl GuardianEngine {
         // Initialize ML classifier with provided model path or default
         let ml_classifier = MLClassifier::new(ml_model_path.or(Some("codeguardian-model.fann")));
 
+        // Initialize validation engine with ML classifier reference
+        let validation_engine = ValidationEngine::new(None); // We'll pass ML classifier separately
+
         // Initialize adaptive parallelism controller
         let min_workers = 1;
         let max_workers = config.general.parallel_workers;
@@ -115,6 +121,7 @@ impl GuardianEngine {
             cache,
             streaming_analyzer: StreamingAnalyzer::new(),
             ml_classifier,
+            validation_engine,
             stats: AnalysisStats::new(),
             parallelism_controller,
             load_monitor,
@@ -247,6 +254,45 @@ impl GuardianEngine {
             .await?;
 
         Ok(results)
+    }
+
+    /// Analyze files and prepare results specifically for GitHub issue creation
+    /// This applies strict validation to ensure only 100% validated findings create issues
+    pub async fn analyze_files_for_github_issues(
+        &mut self,
+        files: &[PathBuf],
+        parallel: usize,
+    ) -> Result<AnalysisResults> {
+        // First, perform standard analysis
+        let mut results = self.analyze_files(files, parallel).await?;
+        
+        // Apply strict validation for GitHub issue creation
+        results = self.validation_engine.filter_results_for_github(results)?;
+        
+        // Add validation metadata to results
+        let validation_stats = self.validation_engine.get_validation_stats();
+        results.summary.metadata.insert(
+            "validation_mode".to_string(),
+            "strict_github_validation".to_string()
+        );
+        results.summary.metadata.insert(
+            "validation_stats".to_string(),
+            validation_stats.to_string()
+        );
+        
+        // Report validation statistics
+        self.progress.update(&format!(
+            "Validation applied: {} findings validated for GitHub issues ({})",
+            results.findings.len(),
+            validation_stats
+        ));
+        
+        Ok(results)
+    }
+
+    /// Get validation engine statistics
+    pub fn get_validation_stats(&self) -> ValidationStats {
+        self.validation_engine.get_validation_stats()
     }
 
     /// Initialize analysis components
@@ -428,9 +474,12 @@ impl GuardianEngine {
         }
 
         // Apply ML-based false positive reduction if enabled
-        let filtered_findings = self.ml_classifier.filter_findings(all_findings, 0.3)?;
+        let ml_filtered_findings = self.ml_classifier.filter_findings(all_findings, 0.3)?;
 
-        Ok(filtered_findings)
+        // Apply validation for reports (less strict than GitHub issues)
+        let validated_findings = self.validation_engine.validate_for_reports(ml_filtered_findings)?;
+
+        Ok(validated_findings)
     }
 
     async fn process_file_batch(

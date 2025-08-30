@@ -4,25 +4,25 @@
 
 [![Rust](https://img.shields.io/badge/rust-1.70%2B-orange.svg)](https://www.rust-lang.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![CI Status](https://github.com/d-oit/do-codeguardian/workflows/CI/badge.svg)](https://github.com/d-oit/do-codeguardian/actions)
+[![CI Status](https://github.com/d-oit/do-codeguardian/workflows/CodeGuardian%20CI/badge.svg)](https://github.com/d-oit/do-codeguardian/actions)
 [![codecov](https://codecov.io/gh/d-oit/do-codeguardian/branch/main/graph/badge.svg)](https://codecov.io/gh/d-oit/do-codeguardian)
 [![Downloads](https://img.shields.io/github/downloads/d-oit/do-codeguardian/total.svg)](https://github.com/d-oit/do-codeguardian/releases)
 [![Contributors](https://img.shields.io/github/contributors/d-oit/do-codeguardian.svg)](https://github.com/d-oit/do-codeguardian/graphs/contributors)
 [![Last Commit](https://img.shields.io/github/last-commit/d-oit/do-codeguardian.svg)](https://github.com/d-oit/do-codeguardian/commits/main)
 
-**CodeGuardian** is a comprehensive security and code quality analysis tool designed specifically for modern development workflows. It combines deterministic analysis, ML-powered false positive reduction, and seamless CI/CD integration to help teams maintain high code quality and security standards.
+**CodeGuardian** is a comprehensive security and code quality analysis tool designed specifically for modern development workflows. It combines deterministic analysis, advanced ML-powered false positive reduction with RUV-FANN neural networks, turbo-mode performance optimization, and seamless CI/CD integration to help teams maintain high code quality and security standards.
 
-Built with Rust for memory safety and performance, CodeGuardian provides code analysis with advanced features like streaming analysis for large files, intelligent caching, and comprehensive security checks.
+Built with Rust for memory safety and performance, CodeGuardian provides code analysis with advanced features like streaming analysis for large files, intelligent caching, comprehensive security checks, ML model training, and detailed performance metrics.
 
 ## ✨ Key Features
 
 - 🔒 **Security-by-Default**: Deterministic findings with stable IDs, automatic secret redaction, sandboxed execution
 - 🚀 **CI-First UX**: JSON-first output, diff-only mode for PRs, TTY-aware progress bars
 - 📊 **Comprehensive Analysis**: Security, performance, code quality, dependency, integrity, and naming analysis
-- 🧠 **Intelligent ML Filtering**: RUV-FANN neural networks for 60-80% false positive reduction
-- ⚡ **Turbo Mode**: High-performance analysis for large codebases with 18x speedup and streaming support
-- 🔗 **GitHub Integration**: Idempotent issue creation with automatic updates and multiple issue modes
-- 📈 **Advanced Performance**: Adaptive parallelism, memory pooling, intelligent caching, and resource optimization
+- 🧠 **Advanced ML Capabilities**: RUV-FANN neural networks for 60-80% false positive reduction, custom model training, and detailed metrics
+- ⚡ **Turbo Mode**: High-performance analysis for large codebases with 18x speedup, streaming support, and adaptive parallelism
+- 🔗 **GitHub Integration**: Idempotent issue creation with automatic updates, multiple issue modes, and comprehensive CI/CD workflows
+- 📈 **Performance Monitoring**: Real-time metrics, optimization presets, and resource usage tracking
 - 🔧 **Extensible Architecture**: Pluggable analyzer system with custom security checks and patterns
 
 ## 🚀 Quick Start
@@ -73,6 +73,12 @@ codeguardian check . --diff origin/main..HEAD --ml-model enhanced-model.fann --e
 # High-performance analysis
 codeguardian turbo . --max-parallel 16 --metrics --format json --output results.json
 
+# Train ML model for false positive reduction
+codeguardian train --data training-data.json --model custom-model.fann --epochs 1000
+
+# Show detailed ML model metrics and performance
+codeguardian metrics --model enhanced-model.fann --format json
+
 # Security audit with comprehensive reporting
 codeguardian check . --config security-config.toml --format json --out audit.json --emit-md audit-report.md --emit-gh --repo owner/repo --fail-on-issues
 ```
@@ -90,20 +96,30 @@ codeguardian check . --config security-config.toml --format json --out audit.jso
 
 ### GitHub Actions
 
+CodeGuardian provides multiple GitHub Actions workflows for different CI/CD scenarios:
+
+- **CI Pipeline**: Standard code analysis with security checks
+- **PR Analysis**: Turbo-mode analysis for pull requests with performance monitoring
+- **Security Analysis**: Comprehensive security audits with ML filtering
+- **Performance Monitoring**: Continuous performance tracking and optimization
+- **Nightly Builds**: Automated nightly analysis and reporting
+- **Release Automation**: Pre-release validation and quality gates
+
 ```yaml
-- name: Run CodeGuardian
+- name: Run CodeGuardian Turbo Analysis
   uses: d-oit/do-codeguardian-action@v1
   with:
       args: |
-        check . \
+        turbo . \
           --diff origin/main..HEAD \
           --format json \
           --out results.json \
           --emit-gh \
           --repo ${{ github.repository }} \
           --ml-model enhanced-model.fann \
-          --max-parallel 4 \
-          --memory-limit 1024
+          --max-parallel 8 \
+          --memory-limit 2048 \
+          --metrics
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 ```
@@ -161,6 +177,28 @@ pipeline {
     }
 }
 ```
+
+## 📈 Performance Benchmarks
+
+CodeGuardian's turbo mode delivers significant performance improvements for large codebases:
+
+- **18x Speedup**: Turbo mode achieves up to 18x faster analysis compared to standard mode
+- **Adaptive Parallelism**: Automatically scales parallelism based on available CPU cores and memory
+- **Streaming Analysis**: Processes large files without loading entire content into memory
+- **Intelligent Caching**: Reduces redundant analysis through smart caching mechanisms
+
+### Benchmark Results
+
+```bash
+# Run performance benchmarks
+./performance_benchmark.sh
+
+# Compare standard vs turbo mode
+codeguardian check large-codebase/ --benchmark
+codeguardian turbo large-codebase/ --benchmark --metrics
+```
+
+For detailed performance comparisons and optimization tips, see [Performance Benchmarks](examples/performance-comparison.md).
 
 ## 🤝 Contributing
 

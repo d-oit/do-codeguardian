@@ -50,3 +50,5 @@ report.md
 results.json
 results-ml-enhanced.json
 verification-results.json
+codeguardian_full_report.json
+codeguardian_report.md
