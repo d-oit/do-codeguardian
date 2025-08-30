@@ -1,12 +1,12 @@
 name: CodeGuardian CI
 
-on:
+"on":
   pull_request:
-    branches: [ main, develop ]
+    branches: [main, develop]
   push:
-    branches: [ main ]
+    branches: [main]
   schedule:
-    - cron: '0 2 * * 1' # Weekly full scan
+    - cron: '0 2 * * 1'  # Weekly full scan
 
 jobs:
   codeguardian-pr:
@@ -20,17 +20,22 @@ jobs:
     steps:
     - uses: actions/checkout@v4
       with:
-        fetch-depth: 0 # Need full history for diff
+        fetch-depth: 0  # Need full history for diff
     
-    - name: Install CodeGuardian
+    - name: Setup Rust
+      uses: actions-rust-lang/setup-rust-toolchain@v1
+      with:
+        toolchain: stable
+        cache: true
+    
+    - name: Build CodeGuardian
       run: |
-        # Replace with actual installation method
-        cargo install --git https://github.com/your-org/codeguardian
+        cargo build --release
     
     - name: Run CodeGuardian (PR diff-only)
       run: |
         # Diff-only mode for PRs - fast and focused feedback
-        codeguardian check . \
+        ./target/release/codeguardian check . \
           --diff origin/main..HEAD \
           --format json \
           --out results.json \
@@ -62,15 +67,20 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     
-    - name: Install CodeGuardian
+    - name: Setup Rust
+      uses: actions-rust-lang/setup-rust-toolchain@v1
+      with:
+        toolchain: stable
+        cache: true
+    
+    - name: Build CodeGuardian
       run: |
-        # Replace with actual installation method
-        cargo install --git https://github.com/your-org/codeguardian
+        cargo build --release
     
     - name: Run CodeGuardian (Full scan)
       run: |
         # Full repository scan for scheduled jobs and main branch pushes
-        codeguardian check . \
+        ./target/release/codeguardian check . \
           --format json \
           --out results.json \
           --emit-md report.md \
@@ -101,16 +111,22 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     
-    - name: Install CodeGuardian
+    - name: Setup Rust
+      uses: actions-rust-lang/setup-rust-toolchain@v1
+      with:
+        toolchain: stable
+        cache: true
+    
+    - name: Build CodeGuardian
       run: |
-        cargo install --git https://github.com/your-org/codeguardian
+        cargo build --release
     
     - name: Update baseline
       run: |
-        codeguardian check . \
+        ./target/release/codeguardian check . \
           --format json \
           --out baseline.json
-        
+
         # Commit updated baseline if it changed
         if ! git diff --quiet baseline.json 2>/dev/null; then
           git config user.name "CodeGuardian Bot"

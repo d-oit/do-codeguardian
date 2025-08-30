@@ -22,6 +22,6 @@ pub async fn create_or_update_issue(
         summary_max_issues: 10,
         dry_run,
     };
-    
+
     crate::cli::gh_issue::create_or_update_issue(results, &args).await
 }

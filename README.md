@@ -1,256 +1,166 @@
-# CodeGuardian
+# CodeGuardian 🛡️
 
-A security-first code analysis CLI with GitHub integration, built with best-practice defaults for CI/CD workflows.
+[![CI Status](https://github.com/d-oit/do-codeguardian/workflows/CI/badge.svg)](https://github.com/d-oit/do-codeguardian/actions)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Rust](https://img.shields.io/badge/rust-1.70%2B-orange.svg)](https://www.rust-lang.org/)
+[![GitHub stars](https://img.shields.io/github/stars/d-oit/do-codeguardian.svg)](https://github.com/d-oit/do-codeguardian/stargazers)
+[![GitHub issues](https://img.shields.io/github/issues/d-oit/do-codeguardian.svg)](https://github.com/d-oit/do-codeguardian/issues)
 
-## Features
+> **Secure Your Codebase with AI-Powered Analysis**
 
-### 🔒 Security-by-Default
-- **Deterministic findings** with stable IDs using SHA-256
-- **No secrets in logs** - automatic redaction of common patterns
-- **Sandboxed execution** - no symlink following, resource limits
-- **Canonicalized paths** - prevents path traversal issues
+CodeGuardian is a cutting-edge, security-first code analysis tool that combines machine learning, advanced static analysis, and seamless GitHub integration to help developers identify vulnerabilities, optimize performance, and maintain high code quality standards. Built with Rust for speed and reliability, it empowers teams to ship secure software faster.
 
-### 🚀 CI-First UX
-- **JSON as source of truth** - Markdown and GitHub issues are derived artifacts
-- **Diff-only mode** for PRs - fast, focused feedback
-- **TTY-aware progress bars** - auto-disable in CI environments
-- **Idempotent GitHub integration** - updates existing issues instead of creating duplicates
+## ✨ Key Features
 
-### 📊 Comprehensive Analysis
-- **Integrity checking** - cryptographic hashing with BLAKE3
-- **Lint drift detection** - configuration consistency across projects
-- **Non-production code detection** - TODOs, debug statements, potential secrets
+- 🔒 **Security-First Analysis**: Advanced vulnerability detection with ML-powered insights
+- 🤖 **Machine Learning Integration**: Intelligent code quality assessment and pattern recognition
+- 🚀 **Turbo Mode**: High-performance scanning for large codebases
+- 🔗 **GitHub Integration**: Automated issue creation, PR analysis, and workflow optimization
+- 📊 **Comprehensive Reporting**: Detailed analysis reports with actionable recommendations
+- ⚡ **CI/CD Ready**: Seamless integration with popular CI/CD pipelines
+- 🐳 **Container Support**: Docker and cloud-native deployment options
+- 📈 **Performance Monitoring**: Built-in benchmarking and optimization tools
 
-### 🧠 **Intelligent ML Filtering** (NEW!)
-- **RUV-FANN neural networks** - 200x faster than BERT, 100x smaller
-- **False positive reduction** - 60-80% noise reduction with 90%+ accuracy
-- **Online learning** - improves from user feedback automatically
-- **Zero-config ML** - works out of the box, no setup required
+## 🚀 Quick Start
 
-## Quick Start
+### Prerequisites
+- Rust 1.70 or later
+- Git
 
 ### Installation
 
+#### From Source (Recommended)
 ```bash
-# Install from source
-cargo install --git https://github.com/your-org/codeguardian
-
-# Or download binary from releases
-curl -L https://github.com/your-org/codeguardian/releases/latest/download/codeguardian-linux-x64.tar.gz | tar xz
-```
-
-### Basic Usage
-
-```bash
-# Initialize configuration
-codeguardian init --default
-
-# Run analysis (recommended defaults)
-codeguardian check . --format json --out results.json
-
-# Generate markdown report
-codeguardian report --from results.json --md report.md
-
-# Create GitHub issue
-codeguardian gh-issue --from results.json --repo owner/repo
-```
-
-### CI Integration
-
-For PRs (diff-only, fast feedback):
-```bash
-codeguardian check . \
-  --diff origin/main..HEAD \
-  --format json \
-  --out results.json \
-  --emit-md report.md \
-  --emit-gh \
-  --repo $GITHUB_REPOSITORY
-```
-
-For scheduled scans (full repository):
-```bash
-codeguardian check . \
-  --format json \
-  --out results.json \
-  --emit-md report.md \
-  --emit-gh \
-  --repo $GITHUB_REPOSITORY \
-  --fail-on-issues
-```
-
-## Commands
-
-### `check` (Primary Command)
-
-Run comprehensive code analysis with best-practice defaults:
-
-```bash
-codeguardian check [OPTIONS] [PATHS]...
-```
-
-**Key Options:**
-- `--format json` - Output format (JSON is source of truth)
-- `--out results.json` - Output file for results
-- `--emit-md report.md` - Generate markdown report
-- `--emit-gh` - Create/update GitHub issue
-- `--diff origin/main..HEAD` - Analyze only changed files
-- `--only-changed` - Analyze only staged files
-- `--fail-on-issues` - Exit with code 2 if issues found
-
-### `report` (Converter)
-
-Convert results to different formats:
-
-```bash
-codeguardian report --from results.json --md report.md
-```
-
-### `gh-issue` (GitHub Integration)
-
-Create or update GitHub issues with idempotent behavior:
-
-```bash
-codeguardian gh-issue \
-  --from results.json \
-  --repo owner/repo \
-  --mode checklist \
-  --title "CodeGuardian: " \
-  --labels "codeguardian,automated"
-```
-
-**GitHub Issue Modes:**
-- `checklist` - Interactive checklist format (default)
-- `simple` - Standard issue format
-- `children` - Parent issue with child issues for large reports
-
-### `init` (Setup)
-
-Initialize configuration:
-
-```bash
-codeguardian init --default
-```
-
-## Configuration
-
-CodeGuardian uses `codeguardian.toml` for configuration. See [examples/codeguardian.toml](examples/codeguardian.toml) for a complete example.
-
-### Key Configuration Sections
-
-```toml
-[general]
-follow_symlinks = false  # Security: don't follow symlinks
-max_file_size = 10485760  # 10MB limit
-parallel_workers = 0      # Auto-detect CPU cores
-
-[analyzers.integrity]
-enabled = true
-hash_algorithm = "blake3"  # BLAKE3 by default
-
-[analyzers.lint_drift]
-enabled = true
-canonicalize_configs = true  # Stable JSON/YAML formatting
-
-[analyzers.non_production]
-enabled = true
-todo_escalation_days = 30  # Escalate old TODOs
-
-[github]
-default_labels = ["codeguardian", "automated"]
-title_prefix = "CodeGuardian: "
-max_body_size = 60000  # Auto-switch to children mode
-```
-
-## GitHub Actions Integration
-
-See [.github/workflows/codeguardian-ci.yml](.github/workflows/codeguardian-ci.yml) for a complete CI setup:
-
-```yaml
-- name: Run CodeGuardian (PR diff-only)
-  run: |
-    codeguardian check . \
-      --diff origin/main..HEAD \
-      --format json \
-      --out results.json \
-      --emit-md report.md \
-      --emit-gh \
-      --repo ${{ github.repository }}
-  env:
-    GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-```
-
-## Best Practices
-
-### 1. Deterministic Results
-- Findings are sorted by severity → file → line
-- Stable IDs ensure consistent tracking across runs
-- Versioned schemas prevent compatibility issues
-
-### 2. Security Hardening
-- No secrets in logs (automatic redaction)
-- Sandboxed file access with size limits
-- No symlink following by default
-
-### 3. CI Optimization
-- Use `--diff` for PRs (fast, focused)
-- Use full scans for scheduled jobs
-- Always upload `results.json` and `report.md` as artifacts
-
-### 4. GitHub Integration
-- Issues are idempotent (updates existing instead of duplicating)
-- Automatic body truncation for large reports
-- Stable checklist format with finding IDs
-
-## Development
-
-### Building
-
-```bash
+git clone https://github.com/d-oit/do-codeguardian.git
+cd do-codeguardian
 cargo build --release
 ```
 
-### Testing
-
+#### Using Cargo
 ```bash
+cargo install codeguardian
+```
+
+#### Docker
+```bash
+docker run -v $(pwd):/workspace d-oit/codeguardian:latest analyze .
+```
+
+## 📖 Usage Examples
+
+### Basic Code Analysis
+```bash
+# Analyze current directory
+codeguardian check
+
+# Analyze specific files
+codeguardian check src/main.rs src/lib.rs
+
+# Generate detailed report
+codeguardian report --output analysis.json
+```
+
+### Security Scanning
+```bash
+# Run security audit
+codeguardian security --deep-scan
+
+# Check for vulnerabilities
+codeguardian vuln --severity high
+```
+
+### GitHub Integration
+```bash
+# Initialize GitHub integration
+codeguardian init --github
+
+# Analyze pull request
+codeguardian pr analyze 123
+
+# Create issues for findings
+codeguardian issue create --auto
+```
+
+### Performance Analysis
+```bash
+# Run performance benchmarks
+codeguardian bench
+
+# Optimize code patterns
+codeguardian optimize --target performance
+```
+
+## 📚 Documentation
+
+Dive deeper into CodeGuardian's capabilities:
+
+- **[📖 User Guide](docs/user-guide/)** - Complete usage tutorials and workflows
+- **[🔧 API Reference](docs/api/)** - Programmatic integration and customization
+- **[🏗️ Architecture](docs/architecture/)** - Technical design and components
+- **[⚙️ Configuration](docs/configuration.md)** - Advanced setup and customization
+- **[🚀 CI/CD Integration](docs/user-guide/ci-cd-setup.md)** - Pipeline integration guides
+- **[🔍 Troubleshooting](docs/troubleshooting/)** - Common issues and solutions
+
+## 🤝 Contributing
+
+We welcome contributions from the community! Here's how you can get involved:
+
+### Development Setup
+```bash
+git clone https://github.com/d-oit/do-codeguardian.git
+cd do-codeguardian
+cargo build
 cargo test
-cargo clippy -- -D warnings
-cargo fmt -- --check
 ```
 
-### Benchmarking
+### Ways to Contribute
+- 🐛 **Bug Reports**: [Open an issue](https://github.com/d-oit/do-codeguardian/issues/new?labels=bug)
+- 💡 **Feature Requests**: [Start a discussion](https://github.com/d-oit/do-codeguardian/discussions/categories/ideas)
+- 📝 **Documentation**: Improve docs in the `docs/` directory
+- 🔧 **Code**: Submit pull requests with fixes or enhancements
+- 🧪 **Testing**: Add tests or improve test coverage
 
-```bash
-cargo bench
-```
+See our **[Contributing Guide](CONTRIBUTING.md)** for detailed guidelines.
 
-## Architecture
+## 🌟 Why CodeGuardian?
 
-CodeGuardian follows a modular architecture:
+- **🔐 Security by Design**: Built with security best practices from the ground up
+- **⚡ Performance Optimized**: Fast analysis even for large, complex codebases
+- **🤖 AI-Powered**: Machine learning enhances detection accuracy over time
+- **🔄 Continuous Integration**: Seamless integration with your development workflow
+- **📊 Data-Driven**: Comprehensive metrics and reporting for informed decisions
+- **🌍 Open Source**: Transparent, community-driven development
 
-- **CLI Layer** - Argument parsing and command dispatch
-- **Core Engine** - File discovery, parallel processing, result aggregation
-- **Analyzer Registry** - Pluggable analysis modules
-- **GitHub Integration** - Idempotent issue creation/updates
-- **Security Layer** - Path validation, secret redaction, resource limits
+## 🏢 Use Cases
 
-## Contributing
+- **Enterprise Security**: Large-scale vulnerability assessment and compliance
+- **DevSecOps**: Integrate security scanning into CI/CD pipelines
+- **Code Review Automation**: Automated analysis for pull requests and commits
+- **Performance Optimization**: Identify and fix performance bottlenecks
+- **Quality Assurance**: Maintain consistent code standards across teams
 
-1. Fork the repository
-2. Create a feature branch
-3. Add tests for new functionality
-4. Ensure all tests pass and code is formatted
-5. Submit a pull request
+## 📞 Community & Support
 
-## License
+- **🐛 Issues**: [Report bugs](https://github.com/d-oit/do-codeguardian/issues)
+- **💬 Discussions**: [Join the conversation](https://github.com/d-oit/do-codeguardian/discussions)
+- **📧 Security**: [Report vulnerabilities](SECURITY.md)
 
-MIT License - see [LICENSE](LICENSE) for details.
+## 📄 License
 
-## Roadmap
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-- [ ] SARIF output format support
-- [ ] Additional language-specific analyzers
-- [ ] Baseline drift detection
-- [ ] Custom rule definitions
-- [ ] VS Code extension
-- [ ] Integration with more CI platforms
+## 🙏 Acknowledgments
+
+- Built with ❤️ using Rust
+- Powered by advanced machine learning algorithms
+- Inspired by the need for better security in software development
+
+---
+
+<div align="center">
+
+**Made with ❤️ by the CodeGuardian Community**
+
+[⭐ Star us on GitHub](https://github.com/d-oit/do-codeguardian) | [🐛 Report Issues](https://github.com/d-oit/do-codeguardian/issues) | [💬 Join Discussions](https://github.com/d-oit/do-codeguardian/discussions)
+
+</div>

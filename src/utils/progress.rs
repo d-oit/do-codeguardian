@@ -8,10 +8,7 @@ pub struct ProgressReporter {
 
 impl ProgressReporter {
     pub fn new(enabled: bool) -> Self {
-        Self {
-            enabled,
-            bar: None,
-        }
+        Self { enabled, bar: None }
     }
 
     pub fn start_scan(&mut self, total_files: usize) {
@@ -27,7 +24,7 @@ impl ProgressReporter {
                 .progress_chars("#>-"),
         );
         bar.enable_steady_tick(Duration::from_millis(100));
-        
+
         self.bar = Some(bar);
     }
 

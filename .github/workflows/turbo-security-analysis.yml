@@ -1,0 +1,159 @@
+name: 🚀 Turbo Security Analysis
+
+"on":
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: '0 2 * * *'  # Run daily security scan at 2 AM UTC
+  workflow_dispatch:
+    inputs:
+      analysis_mode:
+        description: 'Analysis mode'
+        required: true
+        default: 'normal'
+        type: choice
+        options:
+        - normal
+        - aggressive
+        - comprehensive
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  turbo-analysis:
+    name: 🚀 Turbo Security Analysis
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    
+    strategy:
+      matrix:
+        mode: 
+          - name: "Fast CI"
+            args: "--max-parallel 4 --memory-limit 512"
+            timeout: "30s"
+          - name: "Comprehensive"
+            args: "--aggressive --max-parallel 8 --memory-limit 1024"
+            timeout: "60s"
+    
+    steps:
+    - name: 📥 Checkout repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # Full history for comprehensive analysis
+    
+    - name: 🦀 Setup Rust toolchain
+      uses: actions-rust-lang/setup-rust-toolchain@v1
+      with:
+        toolchain: stable
+        cache: true
+    
+    - name: 📦 Cache Rust dependencies
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+          target/
+        key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-cargo-
+    
+    - name: 🔨 Build CodeGuardian
+      run: |
+        echo "🔨 Building CodeGuardian in release mode..."
+        cargo build --release --quiet
+        echo "✅ Build complete"
+    
+    - name: 🚀 Run Turbo Analysis - ${{ matrix.mode.name }}
+      id: analysis
+      run: |
+        echo "🚀 Starting Turbo Analysis: ${{ matrix.mode.name }}"
+        echo "⚙️  Args: ${{ matrix.mode.args }}"
+        echo "⏱️  Timeout: ${{ matrix.mode.timeout }}"
+        echo ""
+        
+        # Set analysis mode based on input or default
+        MODE="${{ github.event.inputs.analysis_mode || 'normal' }}"
+        EXTRA_ARGS=""
+        
+        if [ "$MODE" = "aggressive" ]; then
+          EXTRA_ARGS="--aggressive"
+        elif [ "$MODE" = "comprehensive" ]; then
+          EXTRA_ARGS="--aggressive --max-files 0"
+        fi
+        
+        # Run analysis with timing
+        START_TIME=$(date +%s.%N)
+        
+        timeout ${{ matrix.mode.timeout }} ./target/release/codeguardian turbo . \
+          ${{ matrix.mode.args }} \
+          $EXTRA_ARGS \
+          --format json \
+          --output "security-report-${{ matrix.mode.name }}.json" \
+          --metrics || {
+            echo "❌ Analysis timed out or failed"
+            exit 1
+          }
+        
+        END_TIME=$(date +%s.%N)
+        DURATION=$(echo "$END_TIME - $START_TIME" | bc -l)
+        
+        echo "✅ Analysis complete in ${DURATION}s"
+        echo "duration=${DURATION}" >> $GITHUB_OUTPUT
+    
+    - name: 📊 Parse Results
+      id: results
+      run: |
+        REPORT="security-report-${{ matrix.mode.name }}.json"
+        
+        if [ -f "$REPORT" ]; then
+          TOTAL_FINDINGS=$(jq '.summary.total_findings' "$REPORT")
+          FILES_ANALYZED=$(jq '.summary.total_files_scanned' "$REPORT")
+          SCAN_DURATION=$(jq '.summary.scan_duration_ms' "$REPORT")
+          
+          # Count findings by severity
+          HIGH_FINDINGS=$(jq '[.findings[] | select(.severity == "High")] | length' "$REPORT")
+          MEDIUM_FINDINGS=$(jq '[.findings[] | select(.severity == "Medium")] | length' "$REPORT")
+          CRITICAL_FINDINGS=$(jq '[.findings[] | select(.severity == "Critical")] | length' "$REPORT")
+          
+          echo "total_findings=${TOTAL_FINDINGS}" >> $GITHUB_OUTPUT
+          echo "files_analyzed=${FILES_ANALYZED}" >> $GITHUB_OUTPUT
+          echo "scan_duration=${SCAN_DURATION}" >> $GITHUB_OUTPUT
+          echo "high_findings=${HIGH_FINDINGS}" >> $GITHUB_OUTPUT
+          echo "medium_findings=${MEDIUM_FINDINGS}" >> $GITHUB_OUTPUT
+          echo "critical_findings=${CRITICAL_FINDINGS}" >> $GITHUB_OUTPUT
+          
+          # Calculate performance metrics
+          FILES_PER_SEC=$(echo "scale=1; $FILES_ANALYZED * 1000 / $SCAN_DURATION" | bc -l)
+          echo "files_per_sec=${FILES_PER_SEC}" >> $GITHUB_OUTPUT
+          
+          echo "📊 Analysis Results:"
+          echo "  📁 Files: $FILES_ANALYZED"
+          echo "  🔍 Findings: $TOTAL_FINDINGS"
+          echo "  ⏱️  Duration: ${SCAN_DURATION}ms"
+          echo "  ⚡ Speed: ${FILES_PER_SEC} files/sec"
+          echo "  🔴 Critical: $CRITICAL_FINDINGS"
+          echo "  🟠 High: $HIGH_FINDINGS"
+          echo "  🟡 Medium: $MEDIUM_FINDINGS"
+        else
+          echo "❌ Report file not found: $REPORT"
+          exit 1
+        fi
+    
+    - name: 🔍 Security Gate Check
+      if: steps.results.outputs.critical_findings > 0
+      run: |
+        echo "🚨 SECURITY GATE FAILED"
+        echo "Critical security issues found: ${{ steps.results.outputs.critical_findings }}"
+        echo "Please review and fix critical issues before merging."
+        exit 1
+    
+    - name: 📄 Upload Security Report
+      uses: actions/upload-artifact@v4
+      with:
+        name: security-report-${{ matrix.mode.name }}-${{ github.run_number }}
+        path: security-report-${{ matrix.mode.name }}.json
+        retention-days: 30

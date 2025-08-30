@@ -5,17 +5,31 @@ use std::path::Path;
 use tokio::fs::File;
 use tokio::io::{AsyncBufReadExt, BufReader as AsyncBufReader};
 
+// Constants for streaming analysis
+const STREAMING_THRESHOLD_BYTES: u64 = 5 * 1024 * 1024; // 5MB
+const CHUNK_SIZE_BYTES: usize = 64 * 1024; // 64KB chunks
+const MAX_CHUNK_SIZE_BYTES: usize = 1024 * 1024; // 1MB max chunk
+const MEMORY_USAGE_RATIO: usize = 10; // Use 10% of available memory
+const FILE_SIZE_RATIO: usize = 100; // Chunk size based on 1/100th of file size
+const PROGRESS_UPDATE_INTERVAL: usize = 1000; // Update progress every 1000 lines
+
 /// Threshold for switching to streaming analysis (5MB)
-const STREAMING_THRESHOLD: u64 = 5 * 1024 * 1024;
+const STREAMING_THRESHOLD: u64 = STREAMING_THRESHOLD_BYTES;
 
 pub struct StreamingAnalyzer {
     chunk_size: usize,
 }
 
+impl Default for StreamingAnalyzer {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl StreamingAnalyzer {
     pub fn new() -> Self {
         Self {
-            chunk_size: 64 * 1024, // 64KB chunks
+            chunk_size: CHUNK_SIZE_BYTES,
         }
     }
 
@@ -47,7 +61,7 @@ impl StreamingAnalyzer {
             line_number += 1;
 
             // Yield control periodically to prevent blocking
-            if line_number % 1000 == 0 {
+            if line_number % PROGRESS_UPDATE_INTERVAL == 0 {
                 tokio::task::yield_now().await;
             }
         }
@@ -119,20 +133,27 @@ pub struct AdaptiveChunking {
     available_memory: usize,
 }
 
+impl Default for AdaptiveChunking {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl AdaptiveChunking {
     pub fn new() -> Self {
         Self {
-            base_chunk_size: 64 * 1024,     // 64KB
-            max_chunk_size: 1024 * 1024,    // 1MB
+            base_chunk_size: CHUNK_SIZE_BYTES,
+            max_chunk_size: MAX_CHUNK_SIZE_BYTES,
             available_memory: Self::estimate_available_memory(),
         }
     }
 
     pub fn optimal_chunk_size(&self, file_size: u64) -> usize {
         // Adaptive chunking based on file size and available memory
-        let memory_based_chunk = self.available_memory / 10; // Use 10% of available memory
-        let file_based_chunk = (file_size / 100).max(self.base_chunk_size as u64) as usize;
-        
+        let memory_based_chunk = self.available_memory / MEMORY_USAGE_RATIO;
+        let file_based_chunk =
+            (file_size / FILE_SIZE_RATIO as u64).max(self.base_chunk_size as u64) as usize;
+
         memory_based_chunk
             .min(file_based_chunk)
             .min(self.max_chunk_size)
@@ -155,7 +176,7 @@ impl AdaptiveChunking {
                 }
             }
         }
-        
+
         // Fallback: assume 1GB available
         1024 * 1024 * 1024
     }
@@ -164,17 +185,17 @@ impl AdaptiveChunking {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::io::Write;
     use tempfile::NamedTempFile;
-    use tokio::io::AsyncWriteExt;
 
     #[tokio::test]
     async fn test_streaming_analysis() {
         let mut temp_file = NamedTempFile::new().unwrap();
-        
+
         // Write test content
         let content = "line 1\nline 2\nline 3\n".repeat(1000);
         temp_file.write_all(content.as_bytes()).unwrap();
-        
+
         let analyzer = StreamingAnalyzer::new();
         let findings = analyzer
             .analyze_large_file(temp_file.path(), |line, line_num| {
@@ -200,11 +221,11 @@ mod tests {
     #[test]
     fn test_adaptive_chunking() {
         let chunking = AdaptiveChunking::new();
-        
+
         // Small file should use base chunk size
         let small_chunk = chunking.optimal_chunk_size(1024);
         assert_eq!(small_chunk, chunking.base_chunk_size);
-        
+
         // Large file should use larger chunks but not exceed max
         let large_chunk = chunking.optimal_chunk_size(100 * 1024 * 1024);
         assert!(large_chunk > chunking.base_chunk_size);

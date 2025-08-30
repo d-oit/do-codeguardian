@@ -1,0 +1,235 @@
+name: 📊 Turbo Performance Monitor
+
+"on":
+  schedule:
+    - cron: '0 6 * * *'  # Run performance monitoring daily at 6 AM UTC
+  workflow_dispatch:
+    inputs:
+      benchmark_type:
+        description: 'Benchmark type'
+        required: true
+        default: 'standard'
+        type: choice
+        options:
+        - standard
+        - comprehensive
+        - stress-test
+
+jobs:
+  performance-benchmark:
+    name: 🚀 Performance Benchmark
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    
+    strategy:
+      matrix:
+        test-scenario:
+          - name: "Small Codebase"
+            file-count: 50
+            size: "small"
+          - name: "Medium Codebase"
+            file-count: 500
+            size: "medium"
+          - name: "Large Codebase"
+            file-count: 2000
+            size: "large"
+    
+    steps:
+    - name: 📥 Checkout repository
+      uses: actions/checkout@v4
+    
+    - name: 🦀 Setup Rust
+      uses: actions-rust-lang/setup-rust-toolchain@v1
+      with:
+        toolchain: stable
+        cache: true
+    
+    - name: 🔨 Build CodeGuardian
+      run: cargo build --release --quiet
+    
+    - name: 🧪 Generate Test Files
+      run: |
+        echo "🧪 Generating test files for ${{ matrix.test-scenario.name }}"
+        mkdir -p test-codebase
+        
+        # Generate test files based on scenario
+        for i in $(seq 1 ${{ matrix.test-scenario.file-count }}); do
+          cat > "test-codebase/test_file_$i.rs" << EOF
+        // Test file $i for performance benchmarking
+        use std::collections::HashMap;
+        
+        fn main() {
+            let api_key = "sk-test-key-$i"; // Test secret
+            let mut data = HashMap::new();
+            
+            // TODO: Optimize this function
+            for x in 0..100 {
+                for y in 0..100 {
+                    if x * y > 5000 {
+                        data.insert(format!("key_{}_{}", x, y), x + y);
+                    }
+                }
+            }
+            
+            // FIXME: This is inefficient
+            let mut result = String::new();
+            for k in 0..1000 {
+                result = result + &format!("item_{}", k);
+            }
+        }
+        EOF
+        done
+        
+        echo "✅ Generated ${{ matrix.test-scenario.file-count }} test files"
+    
+    - name: ⚖️ Benchmark Standard vs Turbo
+      id: benchmark
+      run: |
+        echo "⚖️ Running Performance Benchmark: ${{ matrix.test-scenario.name }}"
+        echo "=============================================================="
+        
+        # Benchmark standard analysis
+        echo "🐌 Standard Analysis..."
+        START_STANDARD=$(date +%s.%N)
+        timeout 300s ./target/release/codeguardian check test-codebase \
+          --format json --out standard-bench.json 2>/dev/null || {
+          echo "Standard analysis timed out"
+          STANDARD_TIMEOUT=true
+        }
+        END_STANDARD=$(date +%s.%N)
+        STANDARD_DURATION=$(echo "$END_STANDARD - $START_STANDARD" | bc -l)
+        
+        # Benchmark turbo analysis
+        echo "🚀 Turbo Analysis..."
+        START_TURBO=$(date +%s.%N)
+        ./target/release/codeguardian turbo test-codebase \
+          --format json --output turbo-bench.json --metrics
+        END_TURBO=$(date +%s.%N)
+        TURBO_DURATION=$(echo "$END_TURBO - $START_TURBO" | bc -l)
+        
+        # Calculate metrics
+        if [ -f "standard-bench.json" ] && [ "$STANDARD_TIMEOUT" != "true" ]; then
+          STANDARD_FILES=$(jq '.summary.total_files_scanned' standard-bench.json)
+          STANDARD_FINDINGS=$(jq '.summary.total_findings' standard-bench.json)
+          STANDARD_SPEED=$(echo "scale=1; $STANDARD_FILES / $STANDARD_DURATION" | bc -l)
+        else
+          STANDARD_SPEED="timeout"
+          STANDARD_FILES="N/A"
+          STANDARD_FINDINGS="N/A"
+        fi
+        
+        TURBO_FILES=$(jq '.summary.total_files_scanned' turbo-bench.json)
+        TURBO_FINDINGS=$(jq '.summary.total_findings' turbo-bench.json)
+        TURBO_SPEED=$(echo "scale=1; $TURBO_FILES / $TURBO_DURATION" | bc -l)
+        
+        # Calculate speedup
+        if [ "$STANDARD_SPEED" != "timeout" ]; then
+          SPEEDUP=$(echo "scale=1; $TURBO_SPEED / $STANDARD_SPEED" | bc -l)
+        else
+          SPEEDUP="∞"
+        fi
+        
+        # Output results
+        echo "📊 Benchmark Results:"
+        echo "===================="
+        echo "Standard: ${STANDARD_DURATION}s, $STANDARD_FILES files, $STANDARD_SPEED files/sec"
+        echo "Turbo: ${TURBO_DURATION}s, $TURBO_FILES files, $TURBO_SPEED files/sec"
+        echo "Speedup: ${SPEEDUP}x"
+        
+        # Set outputs
+        echo "standard_duration=${STANDARD_DURATION}" >> $GITHUB_OUTPUT
+        echo "turbo_duration=${TURBO_DURATION}" >> $GITHUB_OUTPUT
+        echo "standard_speed=${STANDARD_SPEED}" >> $GITHUB_OUTPUT
+        echo "turbo_speed=${TURBO_SPEED}" >> $GITHUB_OUTPUT
+        echo "speedup=${SPEEDUP}" >> $GITHUB_OUTPUT
+        echo "files_analyzed=${TURBO_FILES}" >> $GITHUB_OUTPUT
+    
+    - name: 📈 Performance Report
+      run: |
+        echo "📈 Performance Report - ${{ matrix.test-scenario.name }}"
+        echo "=================================================="
+        echo ""
+        echo "| Metric | Standard | Turbo | Improvement |"
+        echo "|--------|----------|-------|-------------|"
+        echo "| Duration | ${{ steps.benchmark.outputs.standard_duration }}s | ${{ steps.benchmark.outputs.turbo_duration }}s | ${{ steps.benchmark.outputs.speedup }}x faster |"
+        echo "| Speed | ${{ steps.benchmark.outputs.standard_speed }} files/sec | ${{ steps.benchmark.outputs.turbo_speed }} files/sec | ${{ steps.benchmark.outputs.speedup }}x faster |"
+        echo "| Files | ${{ steps.benchmark.outputs.files_analyzed }} | ${{ steps.benchmark.outputs.files_analyzed }} | Same |"
+        echo ""
+        
+        # Performance assertions
+        MIN_SPEEDUP=5.0
+        ACTUAL_SPEEDUP="${{ steps.benchmark.outputs.speedup }}"
+        
+        if [ "$ACTUAL_SPEEDUP" != "∞" ] && [ "$ACTUAL_SPEEDUP" != "timeout" ]; then
+          if (( $(echo "$ACTUAL_SPEEDUP >= $MIN_SPEEDUP" | bc -l) )); then
+            echo "✅ Performance target met: ${ACTUAL_SPEEDUP}x speedup (target: ${MIN_SPEEDUP}x)"
+          else
+            echo "⚠️ Performance below target: ${ACTUAL_SPEEDUP}x speedup (target: ${MIN_SPEEDUP}x)"
+          fi
+        else
+          echo "✅ Turbo completed while standard timed out"
+        fi
+    
+    - name: 📊 Upload Benchmark Results
+      uses: actions/upload-artifact@v4
+      with:
+        name: benchmark-${{ matrix.test-scenario.size }}-${{ github.run_number }}
+        path: |
+          *-bench.json
+        retention-days: 30
+
+  performance-regression-check:
+    name: 🔍 Performance Regression Check
+    runs-on: ubuntu-latest
+    needs: performance-benchmark
+    
+    steps:
+    - name: 📥 Download benchmark results
+      uses: actions/download-artifact@v4
+      with:
+        pattern: benchmark-*
+        merge-multiple: true
+    
+    - name: 🔍 Analyze Performance Trends
+      run: |
+        echo "🔍 Performance Regression Analysis"
+        echo "=================================="
+        
+        # Expected minimum performance thresholds
+        declare -A MIN_SPEEDS=(
+          ["small"]=200
+          ["medium"]=150
+          ["large"]=100
+        )
+        
+        REGRESSION_DETECTED=false
+        
+        for size in small medium large; do
+          if [ -f "turbo-bench.json" ]; then
+            # This is a simplified check - in real implementation,
+            # you'd compare against historical data
+            echo "Checking $size codebase performance..."
+            
+            TURBO_SPEED=$(jq '.summary.total_files_scanned / (.summary.scan_duration_ms / 1000)' turbo-bench.json 2>/dev/null || echo "0")
+            MIN_EXPECTED=${MIN_SPEEDS[$size]}
+            
+            if (( $(echo "$TURBO_SPEED < $MIN_EXPECTED" | bc -l) )); then
+              echo "⚠️ Performance regression detected for $size codebase"
+              echo "   Expected: >$MIN_EXPECTED files/sec"
+              echo "   Actual: $TURBO_SPEED files/sec"
+              REGRESSION_DETECTED=true
+            else
+              echo "✅ Performance OK for $size codebase: $TURBO_SPEED files/sec"
+            fi
+          fi
+        done
+        
+        if [ "$REGRESSION_DETECTED" = true ]; then
+          echo ""
+          echo "🚨 PERFORMANCE REGRESSION DETECTED"
+          echo "Please investigate performance issues before merging"
+          exit 1
+        else
+          echo ""
+          echo "✅ No performance regressions detected"
+        fi

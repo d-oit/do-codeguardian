@@ -2,9 +2,9 @@ use clap::{Parser, Subcommand, ValueEnum};
 use std::path::PathBuf;
 
 pub mod check;
-pub mod report;
 pub mod gh_issue;
 pub mod init;
+pub mod report;
 
 #[derive(Parser)]
 #[command(
@@ -38,15 +38,18 @@ pub struct Cli {
 pub enum Commands {
     /// Run code analysis (primary command)
     Check(CheckArgs),
-    
+
     /// Convert results to different formats
     Report(ReportArgs),
-    
+
     /// Create or update GitHub issues
     GhIssue(GhIssueArgs),
-    
+
     /// Initialize configuration
     Init(InitArgs),
+
+    /// Perform enhanced git commit with security analysis
+    GitCommit(GitCommitArgs),
 }
 
 #[derive(Parser)]
@@ -72,7 +75,7 @@ pub struct CheckArgs {
     pub emit_gh: bool,
 
     /// GitHub repository (owner/repo)
-    #[arg(long, env = "GITHUB_REPOSITORY")]
+    #[arg(long)]
     pub repo: Option<String>,
 
     /// GitHub issue mode
@@ -102,6 +105,22 @@ pub struct CheckArgs {
     /// Baseline file for drift analysis
     #[arg(short, long)]
     pub baseline: Option<PathBuf>,
+
+    /// Suppress all output except errors
+    #[arg(long)]
+    pub quiet: bool,
+
+    /// Only analyze files that are new compared to baseline
+    #[arg(long)]
+    pub only_new: bool,
+
+    /// Enable streaming analysis for large files
+    #[arg(long)]
+    pub streaming: bool,
+
+    /// ML threshold for anomaly detection (0.0-1.0)
+    #[arg(long, value_name = "THRESHOLD")]
+    pub ml_threshold: Option<f64>,
 }
 
 #[derive(Parser)]
@@ -126,7 +145,7 @@ pub struct GhIssueArgs {
     pub from: PathBuf,
 
     /// GitHub repository (owner/repo)
-    #[arg(long, env = "GITHUB_REPOSITORY")]
+    #[arg(long)]
     pub repo: String,
 
     /// GitHub issue mode
@@ -171,6 +190,13 @@ pub struct InitArgs {
     /// Template to use
     #[arg(long)]
     pub template: Option<String>,
+}
+
+#[derive(Parser)]
+pub struct GitCommitArgs {
+    /// Custom commit message
+    #[arg(short, long)]
+    pub message: Option<String>,
 }
 
 #[derive(ValueEnum, Clone, Debug)]

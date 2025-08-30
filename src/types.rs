@@ -1,13 +1,15 @@
+use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
+#[cfg(feature = "hashing")]
 use sha2::{Digest, Sha256};
 use std::collections::HashMap;
 use std::path::PathBuf;
-use chrono::{DateTime, Utc};
 
 /// Schema version for results format
 pub const RESULTS_SCHEMA_VERSION: &str = "1.0.0";
 
 /// Stable finding ID generation using SHA-256
+#[cfg(feature = "hashing")]
 pub fn generate_finding_id(analyzer: &str, rule: &str, file: &str, line: u32, key: &str) -> String {
     let mut hasher = Sha256::new();
     hasher.update(analyzer.as_bytes());
@@ -16,6 +18,15 @@ pub fn generate_finding_id(analyzer: &str, rule: &str, file: &str, line: u32, ke
     hasher.update(line.to_le_bytes());
     hasher.update(key.as_bytes());
     format!("{:x}", hasher.finalize())[..16].to_string()
+}
+
+/// Fallback ID generation without hashing
+#[cfg(not(feature = "hashing"))]
+pub fn generate_finding_id(analyzer: &str, rule: &str, file: &str, line: u32, key: &str) -> String {
+    format!("{}_{}_{}_{}_{}", analyzer, rule, file, line, key)
+        .chars()
+        .take(16)
+        .collect()
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -51,7 +62,7 @@ pub struct Finding {
     pub metadata: HashMap<String, serde_json::Value>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum Severity {
     Critical,
     High,
@@ -93,8 +104,16 @@ impl AnalysisResults {
     }
 
     pub fn add_finding(&mut self, finding: Finding) {
-        *self.summary.findings_by_severity.entry(finding.severity.clone()).or_insert(0) += 1;
-        *self.summary.findings_by_analyzer.entry(finding.analyzer.clone()).or_insert(0) += 1;
+        *self
+            .summary
+            .findings_by_severity
+            .entry(finding.severity.clone())
+            .or_insert(0) += 1;
+        *self
+            .summary
+            .findings_by_analyzer
+            .entry(finding.analyzer.clone())
+            .or_insert(0) += 1;
         self.summary.total_findings += 1;
         self.findings.push(finding);
     }
@@ -102,7 +121,8 @@ impl AnalysisResults {
     pub fn sort_findings(&mut self) {
         // Deterministic ordering: severity → file → line
         self.findings.sort_by(|a, b| {
-            a.severity.cmp(&b.severity)
+            a.severity
+                .cmp(&b.severity)
                 .then_with(|| a.file.cmp(&b.file))
                 .then_with(|| a.line.cmp(&b.line))
         });
@@ -113,7 +133,9 @@ impl AnalysisResults {
     }
 
     pub fn has_high_severity_issues(&self) -> bool {
-        self.findings.iter().any(|f| matches!(f.severity, Severity::Critical | Severity::High))
+        self.findings
+            .iter()
+            .any(|f| matches!(f.severity, Severity::Critical | Severity::High))
     }
 }
 
@@ -127,7 +149,7 @@ impl Finding {
         message: String,
     ) -> Self {
         let id = generate_finding_id(analyzer, rule, &file.to_string_lossy(), line, &message);
-        
+
         Self {
             id,
             analyzer: analyzer.to_string(),

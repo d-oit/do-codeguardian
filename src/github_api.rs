@@ -3,6 +3,14 @@ use std::process::Command;
 use std::time::{Duration, Instant};
 use tokio::time::sleep;
 
+// Constants for GitHub API
+const GITHUB_RATE_LIMIT_REQUESTS: u32 = 5000; // GitHub's rate limit
+const MAX_RETRIES: u32 = 3;
+const BASE_DELAY_SECS: u64 = 1;
+const MAX_DELAY_SECS: u64 = 60;
+const RATE_LIMIT_RESET_HOURS: u64 = 1;
+const MIN_REQUEST_INTERVAL_MS: u64 = 100; // 10 requests per second max
+
 /// GitHub API rate limiting and retry logic
 pub struct GitHubApiClient {
     rate_limiter: RateLimiter,
@@ -24,25 +32,31 @@ pub struct RetryConfig {
     max_delay: Duration,
 }
 
+impl Default for GitHubApiClient {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl GitHubApiClient {
     pub fn new() -> Self {
         Self {
-            rate_limiter: RateLimiter::new(5000), // GitHub's rate limit
+            rate_limiter: RateLimiter::new(GITHUB_RATE_LIMIT_REQUESTS),
             retry_config: RetryConfig {
-                max_retries: 3,
-                base_delay: Duration::from_secs(1),
-                max_delay: Duration::from_secs(60),
+                max_retries: MAX_RETRIES,
+                base_delay: Duration::from_secs(BASE_DELAY_SECS),
+                max_delay: Duration::from_secs(MAX_DELAY_SECS),
             },
         }
     }
 
     pub async fn execute_gh_command(&mut self, args: &[&str]) -> Result<String> {
         let mut attempt = 0;
-        
+
         loop {
             // Check rate limit before making request
             self.rate_limiter.wait_if_needed().await;
-            
+
             match self.try_gh_command(args).await {
                 Ok(output) => {
                     self.rate_limiter.record_request();
@@ -50,19 +64,26 @@ impl GitHubApiClient {
                 }
                 Err(e) => {
                     attempt += 1;
-                    
+
                     if attempt >= self.retry_config.max_retries {
                         return Err(e);
                     }
-                    
+
                     // Check if this is a rate limit error
                     if self.is_rate_limit_error(&e) {
                         let delay = self.calculate_backoff_delay(attempt);
-                        eprintln!("Rate limited, waiting {}s before retry...", delay.as_secs());
+                        tracing::warn!(
+                            "Rate limited, waiting {}s before retry...",
+                            delay.as_secs()
+                        );
                         sleep(delay).await;
                     } else if self.is_retryable_error(&e) {
                         let delay = self.calculate_backoff_delay(attempt);
-                        eprintln!("Retryable error, waiting {}s before retry: {}", delay.as_secs(), e);
+                        tracing::warn!(
+                            "Retryable error, waiting {}s before retry: {}",
+                            delay.as_secs(),
+                            e
+                        );
                         sleep(delay).await;
                     } else {
                         return Err(e);
@@ -73,9 +94,7 @@ impl GitHubApiClient {
     }
 
     async fn try_gh_command(&self, args: &[&str]) -> Result<String> {
-        let output = Command::new("gh")
-            .args(args)
-            .output()?;
+        let output = Command::new("gh").args(args).output()?;
 
         if output.status.success() {
             Ok(String::from_utf8_lossy(&output.stdout).to_string())
@@ -87,18 +106,18 @@ impl GitHubApiClient {
 
     fn is_rate_limit_error(&self, error: &anyhow::Error) -> bool {
         let error_str = error.to_string().to_lowercase();
-        error_str.contains("rate limit") || 
-        error_str.contains("403") ||
-        error_str.contains("api rate limit exceeded")
+        error_str.contains("rate limit")
+            || error_str.contains("403")
+            || error_str.contains("api rate limit exceeded")
     }
 
     fn is_retryable_error(&self, error: &anyhow::Error) -> bool {
         let error_str = error.to_string().to_lowercase();
-        error_str.contains("timeout") ||
-        error_str.contains("connection") ||
-        error_str.contains("502") ||
-        error_str.contains("503") ||
-        error_str.contains("504")
+        error_str.contains("timeout")
+            || error_str.contains("connection")
+            || error_str.contains("502")
+            || error_str.contains("503")
+            || error_str.contains("504")
     }
 
     fn calculate_backoff_delay(&self, attempt: u32) -> Duration {
@@ -109,17 +128,23 @@ impl GitHubApiClient {
     pub async fn find_existing_issue(&mut self, title: &str, repo: &str) -> Result<Option<u64>> {
         let search_query = format!("{} in:title", title);
         let args = [
-            "issue", "list",
-            "--repo", repo,
-            "--state", "open",
-            "--search", &search_query,
-            "--json", "number,title",
-            "-q", ".[0].number"
+            "issue",
+            "list",
+            "--repo",
+            repo,
+            "--state",
+            "open",
+            "--search",
+            &search_query,
+            "--json",
+            "number,title",
+            "-q",
+            ".[0].number",
         ];
 
         let output = self.execute_gh_command(&args).await?;
         let trimmed = output.trim();
-        
+
         if trimmed.is_empty() || trimmed == "null" {
             Ok(None)
         } else {
@@ -135,22 +160,27 @@ impl GitHubApiClient {
         repo: &str,
     ) -> Result<u64> {
         let args = [
-            "issue", "create",
-            "--repo", repo,
-            "--title", title,
-            "--label", labels,
-            "--body-file", body_file
+            "issue",
+            "create",
+            "--repo",
+            repo,
+            "--title",
+            title,
+            "--label",
+            labels,
+            "--body-file",
+            body_file,
         ];
 
         let output = self.execute_gh_command(&args).await?;
-        
+
         // Extract issue number from GitHub CLI output (usually a URL)
-        if let Some(issue_url) = output.lines().last() {
-            if let Some(number_str) = issue_url.split('/').last() {
+        if let Some(issue_url) = output.lines().next_back() {
+            if let Some(number_str) = issue_url.split('/').next_back() {
                 return Ok(number_str.parse().unwrap_or(0));
             }
         }
-        
+
         Ok(0)
     }
 
@@ -162,10 +192,15 @@ impl GitHubApiClient {
         repo: &str,
     ) -> Result<()> {
         let args = [
-            "issue", "edit", &issue_number.to_string(),
-            "--repo", repo,
-            "--body-file", body_file,
-            "--add-label", labels
+            "issue",
+            "edit",
+            &issue_number.to_string(),
+            "--repo",
+            repo,
+            "--body-file",
+            body_file,
+            "--add-label",
+            labels,
         ];
 
         self.execute_gh_command(&args).await?;
@@ -185,19 +220,25 @@ impl RateLimiter {
 
     async fn wait_if_needed(&mut self) {
         let now = Instant::now();
-        
+
         // Reset window if an hour has passed
-        if now.duration_since(self.window_start) >= Duration::from_secs(3600) {
+        if now.duration_since(self.window_start)
+            >= Duration::from_secs(RATE_LIMIT_RESET_HOURS * 3600)
+        {
             self.requests_made = 0;
             self.window_start = now;
         }
 
         // Check if we're approaching the rate limit
         if self.requests_made >= self.requests_per_hour {
-            let time_until_reset = Duration::from_secs(3600) - now.duration_since(self.window_start);
-            eprintln!("Rate limit reached, waiting {}s until reset", time_until_reset.as_secs());
+            let time_until_reset = Duration::from_secs(RATE_LIMIT_RESET_HOURS * 3600)
+                - now.duration_since(self.window_start);
+            tracing::warn!(
+                "Rate limit reached, waiting {}s until reset",
+                time_until_reset.as_secs()
+            );
             sleep(time_until_reset).await;
-            
+
             // Reset after waiting
             self.requests_made = 0;
             self.window_start = Instant::now();
@@ -205,9 +246,9 @@ impl RateLimiter {
 
         // Ensure minimum delay between requests (avoid burst)
         if let Some(last) = self.last_request {
-            let min_interval = Duration::from_millis(100); // 10 requests per second max
+            let min_interval = Duration::from_millis(MIN_REQUEST_INTERVAL_MS);
             let elapsed = now.duration_since(last);
-            
+
             if elapsed < min_interval {
                 sleep(min_interval - elapsed).await;
             }
@@ -228,38 +269,38 @@ mod tests {
     #[tokio::test]
     async fn test_rate_limiter() {
         pause();
-        
+
         let mut limiter = RateLimiter::new(2); // Very low limit for testing
-        
+
         // First request should go through immediately
         let start = Instant::now();
         limiter.wait_if_needed().await;
         limiter.record_request();
         assert!(start.elapsed() < Duration::from_millis(10));
-        
+
         // Second request should also go through
         limiter.wait_if_needed().await;
         limiter.record_request();
-        
+
         // Third request should be rate limited
-        let start = Instant::now();
+        let _start = Instant::now();
         let wait_future = limiter.wait_if_needed();
-        
+
         // Advance time to simulate waiting
         advance(Duration::from_secs(3600)).await;
         wait_future.await;
-        
+
         resume();
     }
 
     #[test]
     fn test_backoff_calculation() {
         let client = GitHubApiClient::new();
-        
+
         assert_eq!(client.calculate_backoff_delay(1), Duration::from_secs(1));
         assert_eq!(client.calculate_backoff_delay(2), Duration::from_secs(2));
         assert_eq!(client.calculate_backoff_delay(3), Duration::from_secs(4));
-        
+
         // Should cap at max_delay
         let long_delay = client.calculate_backoff_delay(10);
         assert!(long_delay <= client.retry_config.max_delay);

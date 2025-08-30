@@ -1,11 +1,11 @@
-use crate::types::{Finding, AnalysisResults};
+use crate::types::Finding;
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::time::SystemTime;
 use tokio::fs;
-use sha2::{Digest, Sha256};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CacheEntry {
@@ -24,9 +24,15 @@ pub struct FileCache {
     cache_version: String,
 }
 
+impl Default for FileCache {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl FileCache {
     const CACHE_VERSION: &'static str = "1.0.0";
-    const CACHE_FILE: &'static str = ".codeguardian-cache.json";
+    pub const CACHE_FILE: &'static str = ".codeguardian-cache.json";
 
     pub fn new() -> Self {
         Self {
@@ -41,7 +47,7 @@ impl FileCache {
                 Ok(cache) if cache.cache_version == Self::CACHE_VERSION => Ok(cache),
                 _ => {
                     // Cache version mismatch or invalid format, start fresh
-                    eprintln!("Cache version mismatch or invalid format, starting fresh");
+                    tracing::warn!("Cache version mismatch or invalid format, starting fresh");
                     Ok(Self::new())
                 }
             }
@@ -58,7 +64,7 @@ impl FileCache {
 
     pub fn is_cached(&self, file_path: &Path, config_hash: &str) -> Option<&CacheEntry> {
         let entry = self.entries.get(file_path)?;
-        
+
         // Check if config changed
         if entry.config_hash != config_hash {
             return None;
@@ -90,7 +96,7 @@ impl FileCache {
         let metadata = file_path.metadata()?;
         let mtime = metadata.modified()?;
         let size = metadata.len();
-        
+
         // Compute content hash for additional verification
         let content = fs::read(file_path).await?;
         let content_hash = self.compute_content_hash(&content);
@@ -119,10 +125,12 @@ impl FileCache {
         let cutoff = SystemTime::now()
             .duration_since(SystemTime::UNIX_EPOCH)
             .unwrap()
-            .as_secs() - (max_age_days * 24 * 60 * 60);
+            .as_secs()
+            - (max_age_days * 24 * 60 * 60);
 
         self.entries.retain(|_, entry| {
-            entry.cached_at
+            entry
+                .cached_at
                 .duration_since(SystemTime::UNIX_EPOCH)
                 .map(|d| d.as_secs() > cutoff)
                 .unwrap_or(false)

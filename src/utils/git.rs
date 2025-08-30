@@ -4,7 +4,7 @@ use std::process::Command;
 
 pub fn get_diff_files(diff_spec: &str) -> Result<Vec<PathBuf>> {
     let output = Command::new("git")
-        .args(&["diff", "--name-only", diff_spec])
+        .args(["diff", "--name-only", diff_spec])
         .output()?;
 
     if !output.status.success() {
@@ -22,7 +22,7 @@ pub fn get_diff_files(diff_spec: &str) -> Result<Vec<PathBuf>> {
 
 pub fn get_staged_files() -> Result<Vec<PathBuf>> {
     let output = Command::new("git")
-        .args(&["diff", "--cached", "--name-only"])
+        .args(["diff", "--cached", "--name-only"])
         .output()?;
 
     if !output.status.success() {
@@ -40,7 +40,7 @@ pub fn get_staged_files() -> Result<Vec<PathBuf>> {
 
 pub fn get_current_commit_hash() -> Result<String> {
     let output = Command::new("git")
-        .args(&["rev-parse", "--short", "HEAD"])
+        .args(["rev-parse", "--short", "HEAD"])
         .output()?;
 
     if !output.status.success() {

@@ -2,82 +2,137 @@
 name = "codeguardian"
 version = "0.1.0"
 edition = "2021"
-description = "A security-first code analysis CLI with GitHub integration"
-license = "MIT"
-repository = "https://github.com/your-org/codeguardian"
+authors = ["CodeGuardian Team <team@codeguardian.dev>"]
+description = "A security analysis CLI tool for validating production code created by AI, featuring ML integration, turbo mode, and comprehensive security checks."
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/d-oit/do-codeguardian"
+homepage = "https://github.com/d-oit/do-codeguardian"
+documentation = "https://github.com/d-oit/do-codeguardian/docs"
+readme = "docs/README.md"
+keywords = ["security", "analysis", "git", "cli", "code-quality", "ai", "validation", "production"]
+categories = ["command-line-utilities", "development-tools", "security"]
+exclude = ["target/", "benches/", "tests/fixtures/", "examples/ml-training-example.rs"]
 
-[[bin]]
-name = "codeguardian"
-path = "src/main.rs"
+[features]
+default = ["git", "security", "logging"]
+git = ["git2"]
+security = ["regex"]
+logging = ["tracing", "tracing-subscriber"]
+hashing = []
+
+
+# Enable all features for development
+full = ["git", "security", "logging", "hashing"]
 
 [dependencies]
-# CLI and argument parsing
-clap = { version = "4.4", features = ["derive", "env"] }
-anyhow = "1.0"
-thiserror = "1.0"
+# CLI and async runtime
+clap = { version = "4.4", features = ["derive", "color", "suggestions"] }
+tokio = { version = "1.35", features = ["full"] }
 
-# Serialization
+# Serialization and configuration
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 toml = "0.8"
 
-# Hashing and crypto
-blake3 = "1.5"
-sha2 = "0.10"
+# Error handling
+anyhow = "1.0"
+thiserror = "1.0"
 
-# File system and path handling
+# Git operations
+git2 = { version = "0.18", optional = true }
+
+# Logging
+tracing = { version = "0.1", optional = true }
+tracing-subscriber = { version = "0.3", optional = true, features = ["env-filter"] }
+
+# HTTP client
+reqwest = { version = "0.11", features = ["json", "rustls-tls"] }
+
+# Regular expressions and pattern matching
+regex = { version = "1.10", optional = true }
+
+# Directory traversal
 walkdir = "2.4"
-ignore = "0.4"
-globset = "0.4"
 
-# Git integration
-git2 = "0.18"
+# File hashing
+sha2 = "0.10"
+blake3 = "1.5"
 
-# Progress and terminal
-indicatif = "0.17"
-console = "0.15"
-atty = "0.2"
-
-# Async and concurrency
-tokio = { version = "1.0", features = ["full"] }
+# Parallel processing
 rayon = "1.8"
 
-# Time and date
+# Additional utilities
+uuid = { version = "1.6", features = ["v4"] }
 chrono = { version = "0.4", features = ["serde"] }
-
-# Regex
-regex = "1.10"
-
-# YAML parsing
-serde_yaml = "0.9"
-
-# Lazy static for regex compilation
 lazy_static = "1.4"
-
-# Terminal detection
+indicatif = "0.17"
+num_cpus = "1.16"
+serde_yaml = "0.9"
 atty = "0.2"
 
-# CPU detection
-num_cpus = "1.16"
-
-# LRU cache for optimization
-lru = "0.12"
-
-# Additional async utilities
-futures = "0.3"
-
-# RUV-FANN for lightweight ML
-fann = "1.1"
-
 [dev-dependencies]
+# Testing utilities
 tempfile = "3.8"
+assert_cmd = "2.0"
+predicates = "3.0"
 criterion = "0.5"
-pretty_assertions = "1.4"
+
+# Mocking and fixtures
+mockito = "1.2"
+fake = "2.9"
+
+# Development tools
+cargo-husky = { version = "1", default-features = false, features = ["precommit-hook", "run-cargo-clippy", "run-cargo-fmt"] }
+
+# Benchmarking
+divan = "0.1"
+
+# Tokio with test utilities for testing
+tokio = { version = "1.35", features = ["test-util"] }
+
+# Code coverage (uncomment when needed)
+# tarpaulin = "0.27"
 
 [[bench]]
 name = "hashing_benchmark"
 harness = false
 
 [[bench]]
+name = "optimization_benchmarks"
+harness = false
+
+[[bench]]
+name = "performance_benchmark"
+harness = false
+
+[[bench]]
 name = "scanning_benchmark"
 harness = false
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true
+
+[profile.dev]
+opt-level = 0
+debug = true
+overflow-checks = true
+
+[profile.bench]
+opt-level = 3
+debug = false
+lto = true
+
+[profile.test]
+opt-level = 0
+debug = true
+
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]
+
+[badges]
+maintenance = { status = "actively-developed" }
