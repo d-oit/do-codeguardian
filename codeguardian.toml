@@ -1,42 +1,145 @@
-[analysis]
-exclude_patterns = [
-    "*.log",
-    "*.tmp",
-    "target/",
-    "node_modules/",
-]
-analyze_binaries = false
-analysis_timeout = 300
-output_dir = "codeguardian-results"
+# CodeGuardian Configuration File
+# This configuration file controls the behavior of the CodeGuardian security analysis CLI tool.
+# It includes settings for output directories, security thresholds, performance optimizations,
+# analyzer-specific configurations, file patterns, severity levels, and integrations.
+#
+# Production-ready defaults prioritize security and performance while maintaining usability.
+# All settings include documentation comments explaining their purpose and impact.
 
-[integrity]
+# =============================================================================
+# OUTPUT CONFIGURATION
+# =============================================================================
+[output]
+# Directory where analysis results and reports will be saved
+# Default: "codeguardian-results" - matches the implemented directory structure
+directory = "codeguardian-results"
+
+# Output format options: "json", "html", "markdown", "sarif"
+# SARIF is recommended for integration with security tools and CI/CD pipelines
+format = "sarif"
+
+# Enable verbose output for detailed analysis information
+verbose = false
+
+# Generate summary reports in addition to detailed findings
+generate_summary = true
+
+# Compress large output files to save disk space
+compress_output = true
+
+# =============================================================================
+# SECURITY ANALYSIS THRESHOLDS AND RULES
+# =============================================================================
+[security]
+# Enable comprehensive security analysis
+enabled = true
+
+# Minimum entropy threshold for detecting potential secrets (higher = more sensitive)
+entropy_threshold = 4.5
+
+# Maximum file size to analyze for security issues (in bytes, 50MB default)
+max_file_size_bytes = 52428800
+
+# Security vulnerability severity thresholds
+# Findings below these thresholds will be treated as warnings instead of errors
+vulnerability_threshold = "medium"  # Options: low, medium, high, critical
+
+# Enable detection of hardcoded secrets and credentials
+check_hardcoded_secrets = true
+
+# Enable detection of unsafe code patterns
+check_unsafe_code = true
+
+# Enable dependency vulnerability scanning
+check_dependencies = true
+
+# Custom secret detection patterns (regex)
+secret_patterns = [
+    '''(?i)(password|passwd|pwd)\s*[:=]\s*['\x22][^'\x22]{8,}['\x22]''',
+    '''(?i)(api[_-]?key|apikey)\s*[:=]\s*['\x22][^'\x22]{16,}['\x22]''',
+    '''(?i)(secret|token)\s*[:=]\s*['\x22][^'\x22]{16,}['\x22]''',
+    '''(?i)(private[_-]?key)\s*[:=]\s*['\x22][^'\x22]{32,}['\x22]''',
+]
+
+# Enable SQL injection detection
+check_sql_injection = true
+
+# Enable XSS (Cross-Site Scripting) detection
+check_xss = true
+
+# Enable command injection detection
+check_command_injection = true
+
+# =============================================================================
+# PERFORMANCE OPTIMIZATION SETTINGS
+# =============================================================================
+[performance]
+# Enable performance analysis
+enabled = true
+
+# Check for excessive memory allocations
+check_allocations = true
+
+# Check for blocking operations in async code
+check_async_blocking = true
+
+# Maximum cyclomatic complexity allowed
+max_complexity = 15
+
+# Maximum function length (lines)
+max_function_length = 150
+
+# Enable performance profiling during analysis
+enable_profiling = false
+
+# Memory usage limits (in MB)
+max_memory_usage_mb = 512
+
+# CPU usage limits (percentage)
+max_cpu_usage_percent = 80
+
+# =============================================================================
+# ANALYZER-SPECIFIC CONFIGURATIONS
+# =============================================================================
+[analyzers]
+
+[analyzers.integrity]
+# File integrity checking
 enabled = true
 hash_algorithm = "Blake3"
 baseline_file = ".codeguardian/integrity.baseline"
 auto_update_baseline = false
-check_permissions = false
+check_permissions = true
 check_binary_files = false
-verify_checksums = false
+verify_checksums = true
 max_file_size = 5242880
 
-[lint_drift]
+[analyzers.lint_drift]
+# Configuration drift detection
 enabled = false
-config_files = ["Cargo.toml"]
+config_files = ["Cargo.toml", "package.json", ".eslintrc.json"]
 baseline_file = ".codeguardian/lint_drift.baseline"
 auto_update_baseline = false
 strict_mode = false
 
-[non_production]
+[analyzers.non_production]
+# Non-production code detection
 enabled = true
 exclude_test_files = true
 exclude_example_files = true
 
-[[non_production.patterns]]
+[[analyzers.non_production.patterns]]
 pattern = '(?i)\b(todo|fixme|hack|xxx)\b'
 description = "Non-production code markers"
 severity = "medium"
 
-[dependency]
+[[analyzers.non_production.patterns]]
+pattern = '(?i)\bconsole\.log\b'
+description = "Debug logging statements"
+severity = "low"
+
+[analyzers.dependency]
+# Dependency analysis
 enabled = true
 check_outdated = true
 check_vulnerabilities = true
@@ -44,10 +147,10 @@ check_unused = true
 check_duplicates = true
 check_licenses = true
 max_age_days = 365
-vulnerability_threshold = "medium"
 vulnerability_databases = ["https://cve.mitre.org", "https://nvd.nist.gov"]
 
-[performance_analyzer]
+[analyzers.performance_analyzer]
+# Performance analysis
 enabled = true
 check_nested_loops = true
 check_string_operations = true
@@ -59,7 +162,8 @@ max_complexity = 10
 max_function_length = 50
 max_loop_depth = 3
 
-[security_analyzer]
+[analyzers.security_analyzer]
+# Security analysis
 enabled = true
 check_sql_injection = true
 check_xss = true
@@ -69,13 +173,9 @@ check_vulnerabilities = true
 check_permissions = true
 check_secrets = true
 min_entropy_threshold = 3.5
-secret_patterns = [
-    '''(?i)(password|passwd|pwd)\s*[:=]\s*['\x22][^'\x22]{8,}['\x22]''',
-    '''(?i)(api[_-]?key|apikey)\s*[:=]\s*['\x22][^'\x22]{16,}['\x22]''',
-    '''(?i)(secret|token)\s*[:=]\s*['\x22][^'\x22]{16,}['\x22]''',
-]
 
-[code_quality]
+[analyzers.code_quality]
+# Code quality analysis
 enabled = true
 check_magic_numbers = true
 check_complex_conditions = true
@@ -89,42 +189,203 @@ max_nesting_depth = 6
 max_file_size = 500
 max_line_length = 120
 
-[security]
-enabled = true
-check_secrets = true
-check_unsafe_code = true
-check_dependencies = true
-secret_patterns = [
-    '''(?i)(password|passwd|pwd)\s*[:=]\s*['\x22][^'\x22]{8,}['\x22]''',
-    '''(?i)(api[_-]?key|apikey)\s*[:=]\s*['\x22][^'\x22]{16,}['\x22]''',
-    '''(?i)(secret|token)\s*[:=]\s*['\x22][^'\x22]{16,}['\x22]''',
+# =============================================================================
+# FILE INCLUSION/EXCLUSION PATTERNS
+# =============================================================================
+[files]
+# File patterns to include in analysis (empty means all files)
+include_patterns = []
+
+# File patterns to exclude from analysis
+exclude_patterns = [
+    "*.log",
+    "*.tmp",
+    "target/",
+    "node_modules/",
+    ".git/",
+    "dist/",
+    "build/",
+    "*.min.js",
+    "*.min.css",
+    "vendor/",
+    "third_party/",
 ]
-entropy_threshold = 4.5
 
-[performance]
+# File extensions to analyze
+analyze_extensions = [
+    ".rs", ".js", ".ts", ".py", ".java", ".cpp", ".c", ".h",
+    ".go", ".php", ".rb", ".cs", ".swift", ".kt", ".scala",
+    ".html", ".css", ".json", ".xml", ".yaml", ".yml", ".toml",
+    ".md", ".txt", ".sh", ".bat", ".ps1"
+]
+
+# Skip binary files
+skip_binaries = true
+
+# Maximum file size to analyze (in bytes, 10MB default)
+max_file_size_bytes = 10485760
+
+# Skip files larger than this size
+skip_large_files = true
+
+# =============================================================================
+# SEVERITY LEVEL CUSTOMIZATIONS
+# =============================================================================
+[severity]
+# Custom severity mappings for specific finding types
+# Format: "analyzer.finding_type" = "severity_level"
+
+# Security findings
+"security_analyzer.hardcoded_secret" = "high"
+"security_analyzer.sql_injection" = "critical"
+"security_analyzer.xss" = "high"
+"security_analyzer.command_injection" = "critical"
+
+# Performance findings
+"performance_analyzer.nested_loops" = "medium"
+"performance_analyzer.blocking_io" = "medium"
+
+# Code quality findings
+"code_quality.complexity" = "medium"
+"code_quality.duplication" = "low"
+
+# Dependency findings
+"dependency.vulnerability" = "high"
+"dependency.outdated" = "low"
+
+# Custom severity levels (can be used in patterns)
+custom_levels = ["info", "low", "medium", "high", "critical"]
+
+# Enable severity escalation for repeated findings
+enable_escalation = true
+
+# Number of occurrences before escalating severity
+escalation_threshold = 5
+
+# =============================================================================
+# INTEGRATION SETTINGS
+# =============================================================================
+[integrations]
+
+[integrations.github]
+# Enable GitHub integration
 enabled = false
-check_allocations = false
-check_async_blocking = false
-max_complexity = 15
-max_function_length = 150
 
+# GitHub repository (format: owner/repo)
+repository = ""
+
+# GitHub token for API access (use environment variable: CODEGUARDIAN_GITHUB_TOKEN)
+token = "${CODEGUARDIAN_GITHUB_TOKEN}"
+
+# Create GitHub issues for findings
+create_issues = false
+
+# Issue labels to apply
+issue_labels = ["security", "codeguardian"]
+
+# Comment on pull requests
+comment_prs = false
+
+# Minimum severity to create issues/PR comments
+min_severity = "high"
+
+[integrations.gitlab]
+# Enable GitLab integration
+enabled = false
+
+# GitLab project ID or path
+project = ""
+
+# GitLab token for API access (use environment variable: CODEGUARDIAN_GITLAB_TOKEN)
+token = "${CODEGUARDIAN_GITLAB_TOKEN}"
+
+# Create GitLab issues for findings
+create_issues = false
+
+# Issue labels to apply
+issue_labels = ["security", "codeguardian"]
+
+# Comment on merge requests
+comment_mrs = false
+
+# Minimum severity to create issues/MR comments
+min_severity = "high"
+
+# =============================================================================
+# GENERAL ANALYSIS SETTINGS
+# =============================================================================
+[analysis]
+# Enable analysis
+enabled = true
+
+# Analyze binary files (not recommended for security)
+analyze_binaries = false
+
+# Analysis timeout in seconds
+timeout_seconds = 300
+
+# Enable parallel processing
+parallel_processing = true
+
+# Number of parallel workers
+max_workers = 4
+
+# Enable caching of analysis results
+enable_caching = true
+
+# Cache directory
+cache_dir = ".codeguardian/cache"
+
+# Cache expiration in days
+cache_expiration_days = 7
+
+# =============================================================================
+# OPTIMIZATION SETTINGS
+# =============================================================================
 [optimization]
+# Enable optimized analyzers
 enable_optimized_analyzers = true
+
+# Enable file caching
 enable_file_caching = true
-max_parallel_workers = 2
+
+# Maximum parallel workers
+max_parallel_workers = 4
+
+# Maximum file size to load into memory (in bytes)
 max_memory_file_size = 10485760
+
+# Streaming chunk size for large files (in bytes)
 streaming_chunk_size = 65536
+
+# Maximum findings per file (to prevent overwhelming output)
 max_findings_per_file = 50
+
+# Pattern cache size
 pattern_cache_size = 1000
 
 [optimization.cache_cleanup]
+# Enable automatic cache cleanup
 enabled = true
+
+# Maximum cache age in days
 max_age_days = 7
+
+# Maximum cache size in MB
 max_size_mb = 100
+
+# Cleanup frequency (runs every N analyses)
 cleanup_frequency = 10
 
 [optimization.early_termination]
+# Enable early termination for performance
 enabled = true
+
+# Maximum analysis time per file in seconds
 max_analysis_time_seconds = 30
+
+# Maximum lines per file
 max_lines_per_file = 10000
+
+# Skip files larger than this size (in bytes)
 skip_large_files_bytes = 52428800

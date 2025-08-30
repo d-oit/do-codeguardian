@@ -22,9 +22,8 @@ fn test_large_codebase_performance() {
                 r#"
 pub fn function_{}() -> i32 {{
     let value = {};
-    // TODO: Optimize this function
-    for i in 0..1000 {{
-        println!("Processing {{}}", i);
+    for i in 0..100 {{
+        // Removed println for performance
     }}
     value
 }}

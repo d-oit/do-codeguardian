@@ -190,11 +190,19 @@ impl NonProductionAnalyzer {
 
     /// Check if a file should be skipped from non-production analysis
     fn should_skip_file(&self, file_path: &Path) -> bool {
-        if let Some(file_name) = file_path.file_name().and_then(|n| n.to_str()) {
-            // Skip analyzer files as they contain legitimate patterns by design
-            if file_name.contains("analyzer") || file_name.contains("security") {
-                return true;
-            }
+        let path_str = file_path.to_string_lossy();
+
+        // Skip analyzer files as they contain legitimate patterns by design
+        if path_str.contains("/analyzers/")
+            || path_str.contains("analyzer")
+            || path_str.contains("_analyzer")
+        {
+            return true;
+        }
+
+        // Skip security-related files that contain legitimate patterns
+        if path_str.contains("security") && path_str.ends_with(".rs") {
+            return true;
         }
 
         // Skip test files
@@ -208,7 +216,7 @@ impl NonProductionAnalyzer {
         }
 
         // Skip files in tests directory
-        if file_path.to_string_lossy().contains("/tests/") {
+        if path_str.contains("/tests/") {
             return true;
         }
 

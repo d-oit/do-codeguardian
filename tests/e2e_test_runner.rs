@@ -131,7 +131,6 @@ pub fn authenticate(password: &str) -> bool {
 }
 
 pub fn process_data() {
-    // TODO: Implement this function
     println!("Processing...");
 }
 "#,

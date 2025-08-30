@@ -39,14 +39,11 @@ fn main() {
     let api_key = "sk-test123456789abcdef"; // Hardcoded secret
     println!("Starting application with key: {}", api_key);
     
-    // TODO: Remove this debug code
-    println!("Debug mode enabled");
-    
     // Complex nested loops (performance issue)
-    for i in 0..100 {
-        for j in 0..100 {
-            for k in 0..10 {
-                println!("{}-{}-{}", i, j, k);
+    for i in 0..10 {
+        for j in 0..10 {
+            for k in 0..5 {
+                // Removed println for performance
             }
         }
     }

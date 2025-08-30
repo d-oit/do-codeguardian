@@ -5,6 +5,7 @@ use cargo_metadata::MetadataCommand;
 use serde_json;
 use std::path::{Path, PathBuf};
 use std::process::Command;
+use tracing::warn;
 
 /// Dependency analyzer for scanning Cargo.toml dependencies
 pub struct DependencyAnalyzer {
@@ -104,11 +105,9 @@ impl DependencyAnalyzer {
             // Check if cargo-audit is installed
             let stderr = String::from_utf8_lossy(&output.stderr);
             if stderr.contains("cargo-audit") || stderr.contains("not found") {
-                eprintln!(
-                    "Warning: cargo-audit not found. Install with: cargo install cargo-audit"
-                );
+                warn!("cargo-audit not found. Install with: cargo install cargo-audit");
             } else {
-                eprintln!("Warning: Failed to run vulnerability audit: {}", stderr);
+                warn!("Failed to run vulnerability audit: {}", stderr);
             }
         }
 
