@@ -13,14 +13,13 @@
 //! ## Example
 //!
 //! ```rust,no_run
-//! use codeguardian::{analyze_files, Config};
+//! use do_codeguardian::{git_commit, Config};
 //!
 //! #[tokio::main]
 //! async fn main() -> anyhow::Result<()> {
 //!     let config = Config::default();
-//!     let files = vec!["src/main.rs".into()];
-//!     let results = analyze_files(&files, &config).await?;
-//!     println!("Analysis complete: {:?}", results);
+//!     git_commit(None, &config).await?;
+//!     println!("Commit successful");
 //!     Ok(())
 //! }
 //! ```

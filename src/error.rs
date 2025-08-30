@@ -53,6 +53,10 @@ pub enum CodeGuardianError {
     #[error("JSON parsing error: {0}")]
     Json(#[from] serde_json::Error),
 
+    /// Anyhow errors
+    #[error("Error: {0}")]
+    Anyhow(#[from] anyhow::Error),
+
     /// Generic errors
     #[error("Generic error: {0}")]
     Generic(String),

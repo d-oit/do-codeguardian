@@ -7,8 +7,11 @@
 //!
 //! - `analyze`: Security analysis of files
 //! - `git-commit`: Enhanced git commit with security checks
+//! - `turbo`: High-performance parallel analysis
 
 pub mod git_commit;
+pub mod turbo;
 
 // Re-export command functions for easier access
 pub use git_commit::execute_git_commit;
+pub use turbo::execute_turbo;

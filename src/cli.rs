@@ -50,6 +50,9 @@ pub enum Commands {
 
     /// Perform enhanced git commit with security analysis
     GitCommit(GitCommitArgs),
+
+    /// Run high-performance parallel analysis (turbo mode)
+    Turbo(TurboArgs),
 }
 
 #[derive(Parser)]
@@ -197,6 +200,53 @@ pub struct GitCommitArgs {
     /// Custom commit message
     #[arg(short, long)]
     pub message: Option<String>,
+}
+
+#[derive(Parser)]
+pub struct TurboArgs {
+    /// Paths to analyze (files or directories)
+    #[arg(default_value = ".")]
+    pub paths: Vec<PathBuf>,
+
+    /// Maximum number of parallel workers
+    #[arg(long, default_value = "0")]
+    pub max_parallel: usize,
+
+    /// Memory limit in MB (0 = no limit)
+    #[arg(long, default_value = "0")]
+    pub memory_limit: usize,
+
+    /// Output format (json, human, sarif)
+    #[arg(long, default_value = "json")]
+    pub format: OutputFormat,
+
+    /// Output file for results
+    #[arg(long, default_value = "turbo-results.json")]
+    pub output: PathBuf,
+
+    /// Enable metrics output
+    #[arg(long)]
+    pub metrics: bool,
+
+    /// Aggressive analysis mode (more thorough but slower)
+    #[arg(long)]
+    pub aggressive: bool,
+
+    /// Only analyze changed files (git diff)
+    #[arg(long)]
+    pub diff: Option<String>,
+
+    /// Only analyze staged files
+    #[arg(long)]
+    pub only_staged: bool,
+
+    /// Exit with non-zero code if issues are found
+    #[arg(long)]
+    pub fail_on_issues: bool,
+
+    /// Baseline file for drift analysis
+    #[arg(long)]
+    pub baseline: Option<PathBuf>,
 }
 
 #[derive(ValueEnum, Clone, Debug)]

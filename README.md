@@ -1,6 +1,6 @@
-# CodeGuardian 🛡️
+# d.o. CodeGuardian 🛡️
 
-[![CI Status](https://github.com/d-oit/do-codeguardian/workflows/CI/badge.svg)](https://github.com/d-oit/do-codeguardian/actions)
+[![CI Status](https://github.com/d-oit/do-codeguardian/workflows/CodeGuardian%20CI/badge.svg)](https://github.com/d-oit/do-codeguardian/actions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Rust](https://img.shields.io/badge/rust-1.70%2B-orange.svg)](https://www.rust-lang.org/)
 [![GitHub stars](https://img.shields.io/github/stars/d-oit/do-codeguardian.svg)](https://github.com/d-oit/do-codeguardian/stargazers)

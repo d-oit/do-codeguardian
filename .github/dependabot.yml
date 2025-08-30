@@ -1,0 +1,39 @@
+version: 2
+updates:
+  - package-ecosystem: "cargo"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "UTC"
+    open-pull-requests-limit: 10
+    groups:
+      rust-dependencies:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+     commit-message:
+       prefix: "deps"
+       prefix-development: "deps-dev"
+       include: "scope"
+     reviewers:
+       - "d-oit"  # Replace with actual team/user
+     assignees:
+       - "d-oit"  # Replace with actual team/user
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "daily"
+      time: "09:00"
+      timezone: "UTC"
+    open-pull-requests-limit: 5
+     commit-message:
+       prefix: "ci"
+       include: "scope"
+     reviewers:
+       - "d-oit"  # Replace with actual team/user
+     assignees:
+       - "d-oit"  # Replace with actual team/user

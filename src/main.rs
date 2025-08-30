@@ -15,13 +15,14 @@ use tracing::{info, Level};
 use tracing_subscriber::FmtSubscriber;
 
 use anyhow::Result;
-use codeguardian::cli::check;
-use codeguardian::cli::gh_issue;
-use codeguardian::cli::init;
-use codeguardian::cli::report;
-use codeguardian::cli::{Cli, Commands};
-use codeguardian::commands::git_commit;
-use codeguardian::{CodeGuardianError, Config};
+use do_codeguardian::cli::check;
+use do_codeguardian::cli::gh_issue;
+use do_codeguardian::cli::init;
+use do_codeguardian::cli::report;
+use do_codeguardian::cli::{Cli, Commands};
+use do_codeguardian::commands::git_commit;
+use do_codeguardian::commands::turbo;
+use do_codeguardian::{CodeGuardianError, Config};
 
 // CLI structure is now imported from cli.rs
 
@@ -74,6 +75,9 @@ async fn main() -> Result<()> {
             if !cli.quiet {
                 tracing::info!("Commit successful");
             }
+        }
+        Commands::Turbo(args) => {
+            turbo::execute_turbo(args, config).await?;
         }
     }
 
