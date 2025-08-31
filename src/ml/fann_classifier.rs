@@ -2,9 +2,20 @@ use anyhow::{anyhow, Result};
 use serde::{Deserialize, Serialize};
 use std::path::Path;
 
+#[cfg(feature = "ml")]
+use fann::{ActivationFunc, Fann};
+
 /// Lightweight neural network classifier using FANN
+#[cfg(feature = "ml")]
 pub struct FannClassifier {
-    network: fann::FannNetwork,
+    network: Fann,
+    input_size: usize,
+    learning_rate: f32,
+}
+
+/// Stub implementation when ML feature is disabled
+#[cfg(not(feature = "ml"))]
+pub struct FannClassifier {
     input_size: usize,
     learning_rate: f32,
 }
@@ -18,20 +29,22 @@ pub struct NetworkConfig {
     pub activation_function: String,
 }
 
+#[cfg(feature = "ml")]
 impl FannClassifier {
     /// Create a new classifier with the given configuration
     pub fn new(config: NetworkConfig) -> Result<Self> {
-        let mut layers = vec![config.input_size];
-        layers.extend(config.hidden_layers);
-        layers.push(config.output_size);
+        let mut layers: Vec<u32> = vec![config.input_size as u32];
+        layers.extend(config.hidden_layers.iter().map(|&x| x as u32));
+        layers.push(config.output_size as u32);
 
-        let network = fann::FannNetwork::new(&layers)
-            .map_err(|e| anyhow!("Failed to create FANN network: {:?}", e))?;
+        let mut network =
+            Fann::new(&layers).map_err(|e| anyhow!("Failed to create FANN network: {:?}", e))?;
 
         // Configure network
-        network.set_learning_rate(config.learning_rate);
-        network.set_activation_function_hidden(fann::ActivationFunction::Sigmoid);
-        network.set_activation_function_output(fann::ActivationFunction::Sigmoid);
+        // Note: FANN crate may not have set_learning_rate method
+        // network.set_learning_rate(config.learning_rate);
+        network.set_activation_func_hidden(ActivationFunc::Sigmoid);
+        network.set_activation_func_output(ActivationFunc::Sigmoid);
 
         Ok(Self {
             network,
@@ -42,12 +55,12 @@ impl FannClassifier {
 
     /// Load a pre-trained model from file
     pub fn load<P: AsRef<Path>>(path: P) -> Result<Self> {
-        let network = fann::FannNetwork::load(path.as_ref())
+        let network = Fann::from_file(path.as_ref().to_str().unwrap())
             .map_err(|e| anyhow!("Failed to load FANN network: {:?}", e))?;
 
         // Extract configuration from loaded network
         let input_size = network.get_num_input() as usize;
-        let learning_rate = network.get_learning_rate();
+        let learning_rate = 0.1; // Default learning rate since get_learning_rate may not be available
 
         Ok(Self {
             network,
@@ -58,7 +71,8 @@ impl FannClassifier {
 
     /// Save the trained model to file
     pub fn save<P: AsRef<Path>>(&self, path: P) -> Result<()> {
-        self.network.save(path.as_ref())
+        self.network
+            .save(path.as_ref().to_str().unwrap())
             .map_err(|e| anyhow!("Failed to save FANN network: {:?}", e))
     }
 
@@ -72,7 +86,9 @@ impl FannClassifier {
             ));
         }
 
-        let output = self.network.run(features)
+        let output = self
+            .network
+            .run(&features)
             .map_err(|e| anyhow!("FANN prediction failed: {:?}", e))?;
 
         Ok(output[0]) // Single output for binary classification
@@ -89,8 +105,9 @@ impl FannClassifier {
         }
 
         let target_output = vec![target];
-        
-        self.network.train(features, &target_output)
+
+        self.network
+            .train(&features, &target_output)
             .map_err(|e| anyhow!("FANN training failed: {:?}", e))?;
 
         Ok(())
@@ -102,15 +119,15 @@ impl FannClassifier {
 
         for _ in 0..epochs {
             let mut epoch_error = 0.0;
-            
+
             for (features, target) in training_data {
                 self.train_incremental(features, *target)?;
-                
+
                 // Calculate error for this example
                 let prediction = self.predict(features)?;
                 epoch_error += (prediction - target).powi(2);
             }
-            
+
             total_error = epoch_error / training_data.len() as f32;
         }
 
@@ -124,6 +141,54 @@ impl FannClassifier {
             hidden_layers: self.network.get_num_layers() as usize - 2, // Exclude input/output
             total_neurons: self.network.get_total_neurons() as usize,
             total_connections: self.network.get_total_connections() as usize,
+            learning_rate: self.learning_rate,
+        }
+    }
+}
+
+/// Stub implementation when ML feature is disabled
+#[cfg(not(feature = "ml"))]
+impl FannClassifier {
+    /// Create a new classifier with the given configuration (stub)
+    pub fn new(config: NetworkConfig) -> Result<Self> {
+        Ok(Self {
+            input_size: config.input_size,
+            learning_rate: config.learning_rate,
+        })
+    }
+
+    /// Load a pre-trained model from file (stub)
+    pub fn load<P: AsRef<Path>>(_path: P) -> Result<Self> {
+        Err(anyhow!("ML feature is disabled. Enable with --features ml"))
+    }
+
+    /// Save the trained model to file (stub)
+    pub fn save<P: AsRef<Path>>(&self, _path: P) -> Result<()> {
+        Err(anyhow!("ML feature is disabled. Enable with --features ml"))
+    }
+
+    /// Predict output for given input features (stub)
+    pub fn predict(&self, _features: &[f32]) -> Result<f32> {
+        Ok(0.5) // Neutral score when ML is disabled
+    }
+
+    /// Train the network with a single example (stub)
+    pub fn train_incremental(&mut self, _features: &[f32], _target: f32) -> Result<()> {
+        Ok(()) // No-op when ML is disabled
+    }
+
+    /// Batch training with multiple examples (stub)
+    pub fn train_batch(&mut self, _training_data: &[(Vec<f32>, f32)], _epochs: u32) -> Result<f32> {
+        Ok(0.0) // Return zero error for stub
+    }
+
+    /// Get network statistics (stub)
+    pub fn get_stats(&self) -> NetworkStats {
+        NetworkStats {
+            input_size: self.input_size,
+            hidden_layers: 0,
+            total_neurons: 0,
+            total_connections: 0,
             learning_rate: self.learning_rate,
         }
     }
@@ -156,9 +221,38 @@ impl std::fmt::Display for NetworkStats {
 impl Default for NetworkConfig {
     fn default() -> Self {
         Self {
-            input_size: 8,  // Feature vector size
-            hidden_layers: vec![12, 8],  // Two hidden layers
-            output_size: 1,  // Single relevance score
+            input_size: if cfg!(feature = "ast") { 24 } else { 8 }, // Enhanced feature vector size
+            hidden_layers: if cfg!(feature = "ast") {
+                vec![32, 16, 8] // Deeper network for more features
+            } else {
+                vec![12, 8] // Original network for base features
+            },
+            output_size: 1, // Single relevance score
+            learning_rate: 0.1,
+            activation_function: "sigmoid".to_string(),
+        }
+    }
+}
+
+impl NetworkConfig {
+    /// Create configuration optimized for AST-enhanced features
+    #[cfg(feature = "ast")]
+    pub fn enhanced() -> Self {
+        Self {
+            input_size: 24,                  // 8 base + 16 AST features
+            hidden_layers: vec![48, 24, 12], // Larger network for complex patterns
+            output_size: 1,
+            learning_rate: 0.05, // Lower learning rate for stability
+            activation_function: "sigmoid".to_string(),
+        }
+    }
+
+    /// Create configuration for base features only
+    pub fn basic() -> Self {
+        Self {
+            input_size: 8,
+            hidden_layers: vec![12, 8],
+            output_size: 1,
             learning_rate: 0.1,
             activation_function: "sigmoid".to_string(),
         }

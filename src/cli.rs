@@ -5,6 +5,8 @@ pub mod check;
 pub mod gh_issue;
 pub mod init;
 pub mod report;
+#[cfg(feature = "ml")]
+pub mod train;
 
 #[derive(Parser)]
 #[command(
@@ -53,6 +55,10 @@ pub enum Commands {
 
     /// Run high-performance parallel analysis (turbo mode)
     Turbo(TurboArgs),
+
+    /// Train machine learning model for false positive reduction
+    #[cfg(feature = "ml")]
+    Train(TrainArgs),
 }
 
 #[derive(Parser)]
@@ -247,6 +253,42 @@ pub struct TurboArgs {
     /// Baseline file for drift analysis
     #[arg(long)]
     pub baseline: Option<PathBuf>,
+}
+
+#[cfg(feature = "ml")]
+#[derive(Parser)]
+pub struct TrainArgs {
+    /// Path to save the trained model
+    #[arg(long, default_value = "codeguardian-model.fann")]
+    pub model_path: PathBuf,
+
+    /// Number of training epochs
+    #[arg(long, default_value = "1000")]
+    pub epochs: u32,
+
+    /// Learning rate for training
+    #[arg(long, default_value = "0.1")]
+    pub learning_rate: f32,
+
+    /// Generate synthetic training data for cold start
+    #[arg(long)]
+    pub bootstrap: bool,
+
+    /// Path to existing training data (JSON format)
+    #[arg(long)]
+    pub training_data: Option<PathBuf>,
+
+    /// Continue training from existing model
+    #[arg(long)]
+    pub continue_training: bool,
+
+    /// Validate model performance after training
+    #[arg(long)]
+    pub validate: bool,
+
+    /// Use AST-enhanced features (requires ast feature)
+    #[arg(long)]
+    pub enhanced: bool,
 }
 
 #[derive(ValueEnum, Clone, Debug)]

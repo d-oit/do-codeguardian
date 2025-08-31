@@ -9,7 +9,7 @@ use tokio::fs;
 pub async fn run(mut args: ReportArgs, config: &Config) -> Result<()> {
     // Use configured output directory for default paths
     if args.from == PathBuf::from("results.json") {
-        args.from = PathBuf::from(&config.analysis.output_dir).join("results.json");
+        args.from = PathBuf::from(&config.output.directory).join("results.json");
     }
 
     // Load results from JSON file
@@ -31,7 +31,7 @@ pub async fn run(mut args: ReportArgs, config: &Config) -> Result<()> {
             && !output_path.starts_with("./")
             && !output_path.starts_with("../")
         {
-            final_output_path = PathBuf::from(&config.analysis.output_dir).join(output_path);
+            final_output_path = PathBuf::from(&config.output.directory).join(output_path);
             // Ensure output directory exists
             if let Some(parent) = final_output_path.parent() {
                 tokio::fs::create_dir_all(parent).await?;

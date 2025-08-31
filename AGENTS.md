@@ -63,7 +63,9 @@ The CodeGuardian project includes specialized AI agents for various development 
 
 ### Utility Agents
 - **general**: General-purpose agent for research and multi-step tasks
-- **orchestrator**: Enhanced Orchestrator - coordinates complex multi-agent workflows with task coordination and swarm management
+- **orchestrator**: Enhanced Orchestrator - provides analysis and recommendations for coordinating complex multi-agent workflows
+- **swarm-orchestrator**: Dynamic coordinator for managing agent swarms and parallel processing strategies
+- **analyzer-orchestrator**: Coordinates multiple CodeGuardian analyzers for comprehensive code analysis
 - **ai-persona-creation-specialist**: Creates specialized AI personas (manual activation only)
 
 Each agent includes detailed specifications, usage examples, and integration protocols. Agents can be invoked through the Task tool with appropriate parameters for their specific domain expertise.
@@ -181,6 +183,26 @@ mod tests {
 
 - **Single Agent**: Use for focused, well-defined tasks with clear success criteria
 - **Agent Swarm**: Use for complex, multi-faceted tasks requiring diverse expertise or cross-validation
+
+## Agent Architecture Limitations
+
+### Parallel Processing Constraints
+
+**Important**: Individual agents cannot invoke other agents or execute tasks in parallel. The agent system is designed for single-agent invocations where each agent provides analysis, recommendations, or performs specific tasks independently.
+
+**To achieve parallel processing:**
+1. The main assistant must make multiple `Task` tool calls in a single response
+2. Each `Task` call invokes a separate agent with a specific subagent_type
+3. Results from parallel agents are collected and synthesized by the main assistant
+4. Orchestrator agents provide strategic guidance but cannot execute parallel operations themselves
+
+**Example of actual parallel execution:**
+```bash
+# Main assistant makes multiple concurrent Task calls:
+Task(description="Security audit", prompt="Audit file for vulnerabilities", subagent_type="security-auditor")
+Task(description="Performance analysis", prompt="Analyze performance bottlenecks", subagent_type="performance-optimizer")
+Task(description="Code quality review", prompt="Review code quality", subagent_type="code-quality-reviewer")
+```
 
 ## Swarm Patterns and Coordination
 

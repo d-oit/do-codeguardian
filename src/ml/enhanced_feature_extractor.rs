@@ -1,0 +1,295 @@
+#[cfg(feature = "ast")]
+use crate::ml::ast_analyzer::{AstAnalyzer, AstFeatures};
+use crate::ml::feature_extractor::FeatureExtractor;
+use crate::types::{Finding, Severity};
+use anyhow::Result;
+use std::collections::HashMap;
+use std::path::Path;
+
+/// Enhanced feature extractor that combines traditional features with AST analysis
+pub struct EnhancedFeatureExtractor {
+    base_extractor: FeatureExtractor,
+    #[cfg(feature = "ast")]
+    ast_analyzer: AstAnalyzer,
+    file_cache: HashMap<String, CachedFileAnalysis>,
+}
+
+#[derive(Debug, Clone)]
+struct CachedFileAnalysis {
+    #[cfg(feature = "ast")]
+    ast_features: AstFeatures,
+    #[cfg(not(feature = "ast"))]
+    _placeholder: (),
+    file_hash: u64,
+    timestamp: std::time::SystemTime,
+}
+
+impl EnhancedFeatureExtractor {
+    pub fn new() -> Self {
+        Self {
+            base_extractor: FeatureExtractor::new(),
+            #[cfg(feature = "ast")]
+            ast_analyzer: AstAnalyzer::new(),
+            file_cache: HashMap::new(),
+        }
+    }
+
+    /// Extract enhanced feature vector combining traditional and AST features
+    pub fn extract_enhanced_features(&mut self, finding: &Finding) -> Result<Vec<f32>> {
+        // Get base features (8 dimensions)
+        let mut base_features = self.base_extractor.extract_features(finding)?;
+
+        // Get AST features if available
+        #[cfg(feature = "ast")]
+        let ast_features = self.get_ast_features(&finding.file)?;
+
+        #[cfg(not(feature = "ast"))]
+        let ast_features = vec![0.0; 16]; // Placeholder when AST is disabled
+
+        // Combine features: 8 base + 16 AST = 24 total dimensions
+        base_features.extend(ast_features);
+
+        Ok(base_features)
+    }
+
+    /// Get AST features for a file, using cache when possible
+    #[cfg(feature = "ast")]
+    fn get_ast_features(&mut self, file_path: &Path) -> Result<Vec<f32>> {
+        let file_path_str = file_path.to_string_lossy().to_string();
+
+        // Check if we have cached analysis
+        if let Some(cached) = self.file_cache.get(&file_path_str) {
+            // Check if cache is still valid (file hasn't changed)
+            if let Ok(metadata) = std::fs::metadata(file_path) {
+                if let Ok(modified) = metadata.modified() {
+                    if modified <= cached.timestamp {
+                        return Ok(cached.ast_features.to_feature_vector());
+                    }
+                }
+            }
+        }
+
+        // Read and analyze file
+        let content = std::fs::read_to_string(file_path).unwrap_or_else(|_| String::new());
+
+        let ast_features = self
+            .ast_analyzer
+            .extract_ast_features(file_path, &content)?;
+
+        // Cache the analysis
+        let cached_analysis = CachedFileAnalysis {
+            ast_features: ast_features.clone(),
+            file_hash: self.calculate_file_hash(&content),
+            timestamp: std::time::SystemTime::now(),
+        };
+        self.file_cache.insert(file_path_str, cached_analysis);
+
+        Ok(ast_features.to_feature_vector())
+    }
+
+    #[cfg(not(feature = "ast"))]
+    fn get_ast_features(&mut self, _file_path: &Path) -> Result<Vec<f32>> {
+        // Return zero features when AST analysis is disabled
+        Ok(vec![0.0; 16])
+    }
+
+    fn calculate_file_hash(&self, content: &str) -> u64 {
+        use std::collections::hash_map::DefaultHasher;
+        use std::hash::{Hash, Hasher};
+
+        let mut hasher = DefaultHasher::new();
+        content.hash(&mut hasher);
+        hasher.finish()
+    }
+
+    /// Get feature names for the enhanced feature vector
+    pub fn get_feature_names() -> Vec<String> {
+        let mut names = vec![
+            // Base features (8)
+            "severity_score".to_string(),
+            "file_type_relevance".to_string(),
+            "analyzer_confidence".to_string(),
+            "message_length".to_string(),
+            "line_position".to_string(),
+            "has_description".to_string(),
+            "has_suggestion".to_string(),
+            "rule_specificity".to_string(),
+        ];
+
+        // AST features (16)
+        #[cfg(feature = "ast")]
+        {
+            let ast_names: Vec<String> = AstFeatures::feature_names()
+                .iter()
+                .map(|name| format!("ast_{}", name))
+                .collect();
+            names.extend(ast_names);
+        }
+
+        #[cfg(not(feature = "ast"))]
+        {
+            // Placeholder names when AST is disabled
+            for i in 0..16 {
+                names.push(format!("ast_placeholder_{}", i));
+            }
+        }
+
+        names
+    }
+
+    /// Analyze feature importance for a given finding
+    pub fn analyze_feature_importance(
+        &mut self,
+        finding: &Finding,
+    ) -> Result<FeatureImportanceAnalysis> {
+        let features = self.extract_enhanced_features(finding)?;
+        let feature_names = Self::get_feature_names();
+
+        let mut analysis = FeatureImportanceAnalysis {
+            total_features: features.len(),
+            base_feature_contribution: 0.0,
+            ast_feature_contribution: 0.0,
+            top_features: Vec::new(),
+        };
+
+        // Calculate contributions
+        let base_sum: f32 = features[..8].iter().sum();
+        let ast_sum: f32 = features[8..].iter().sum();
+        let total_sum = base_sum + ast_sum;
+
+        if total_sum > 0.0 {
+            analysis.base_feature_contribution = base_sum / total_sum;
+            analysis.ast_feature_contribution = ast_sum / total_sum;
+        }
+
+        // Find top contributing features
+        let mut feature_pairs: Vec<(String, f32)> = feature_names
+            .into_iter()
+            .zip(features.iter())
+            .map(|(name, &value)| (name, value))
+            .collect();
+
+        feature_pairs.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
+        analysis.top_features = feature_pairs.into_iter().take(5).collect();
+
+        Ok(analysis)
+    }
+
+    /// Clear the file analysis cache
+    pub fn clear_cache(&mut self) {
+        self.file_cache.clear();
+    }
+
+    /// Get cache statistics
+    pub fn get_cache_stats(&self) -> CacheStats {
+        CacheStats {
+            cached_files: self.file_cache.len(),
+            cache_size_bytes: self.file_cache.len() * std::mem::size_of::<CachedFileAnalysis>(),
+        }
+    }
+}
+
+#[derive(Debug)]
+pub struct FeatureImportanceAnalysis {
+    pub total_features: usize,
+    pub base_feature_contribution: f32,
+    pub ast_feature_contribution: f32,
+    pub top_features: Vec<(String, f32)>,
+}
+
+#[derive(Debug)]
+pub struct CacheStats {
+    pub cached_files: usize,
+    pub cache_size_bytes: usize,
+}
+
+impl std::fmt::Display for FeatureImportanceAnalysis {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        writeln!(f, "Feature Importance Analysis:")?;
+        writeln!(f, "  Total features: {}", self.total_features)?;
+        writeln!(
+            f,
+            "  Base feature contribution: {:.1}%",
+            self.base_feature_contribution * 100.0
+        )?;
+        writeln!(
+            f,
+            "  AST feature contribution: {:.1}%",
+            self.ast_feature_contribution * 100.0
+        )?;
+        writeln!(f, "  Top contributing features:")?;
+        for (i, (name, value)) in self.top_features.iter().enumerate() {
+            writeln!(f, "    {}. {}: {:.3}", i + 1, name, value)?;
+        }
+        Ok(())
+    }
+}
+
+impl std::fmt::Display for CacheStats {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "Cache: {} files, ~{} KB",
+            self.cached_files,
+            self.cache_size_bytes / 1024
+        )
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::types::Finding;
+    use std::path::PathBuf;
+
+    #[test]
+    fn test_enhanced_feature_extractor_creation() {
+        let extractor = EnhancedFeatureExtractor::new();
+        assert_eq!(extractor.file_cache.len(), 0);
+    }
+
+    #[test]
+    fn test_feature_names() {
+        let names = EnhancedFeatureExtractor::get_feature_names();
+        assert_eq!(names.len(), 24); // 8 base + 16 AST
+        assert!(names[0].contains("severity"));
+        assert!(names[8].contains("ast"));
+    }
+
+    #[test]
+    fn test_enhanced_features_extraction() {
+        let mut extractor = EnhancedFeatureExtractor::new();
+
+        let finding = Finding::new(
+            "security",
+            "test_rule",
+            Severity::High,
+            PathBuf::from("src/main.rs"),
+            42,
+            "Test finding".to_string(),
+        );
+
+        let features = extractor.extract_enhanced_features(&finding).unwrap();
+        assert_eq!(features.len(), 24); // 8 base + 16 AST features
+    }
+
+    #[test]
+    fn test_feature_importance_analysis() {
+        let mut extractor = EnhancedFeatureExtractor::new();
+
+        let finding = Finding::new(
+            "integrity",
+            "test_rule",
+            Severity::Critical,
+            PathBuf::from("test.rs"),
+            1,
+            "Critical test finding".to_string(),
+        );
+
+        let analysis = extractor.analyze_feature_importance(&finding).unwrap();
+        assert_eq!(analysis.total_features, 24);
+        assert!(analysis.base_feature_contribution >= 0.0);
+        assert!(analysis.ast_feature_contribution >= 0.0);
+        assert_eq!(analysis.top_features.len(), 5);
+    }
+}

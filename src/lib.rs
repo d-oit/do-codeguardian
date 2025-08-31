@@ -24,19 +24,20 @@
 //! }
 //! ```
 
+pub mod analyzers;
+pub mod cache;
 pub mod cli;
 pub mod commands;
 pub mod config;
+pub mod core;
 pub mod error;
 pub mod git;
 pub mod github;
 pub mod github_api;
+#[cfg(feature = "ml")]
+pub mod ml;
 pub mod report;
 pub mod security;
-// pub mod ml; // Disabled due to missing fann dependency
-pub mod analyzers;
-pub mod cache;
-pub mod core;
 pub mod streaming;
 pub mod types;
 pub mod utils;

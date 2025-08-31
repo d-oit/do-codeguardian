@@ -42,7 +42,7 @@ fn create_from_template(template: &str) -> Result<Config> {
     match template {
         "minimal" => {
             let mut config = Config::default();
-            config.analysis.exclude_patterns = vec![
+            config.files.exclude_patterns = vec![
                 "*.log".to_string(),
                 "*.tmp".to_string(),
                 "target/".to_string(),
@@ -59,7 +59,7 @@ fn create_from_template(template: &str) -> Result<Config> {
         }
         "ci" => {
             let mut config = Config::default();
-            config.analysis.analysis_timeout = CI_ANALYSIS_TIMEOUT_SECS;
+            config.analysis.timeout_seconds = CI_ANALYSIS_TIMEOUT_SECS;
             Ok(config)
         }
         _ => {

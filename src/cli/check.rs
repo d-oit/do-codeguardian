@@ -13,16 +13,23 @@ pub async fn run(mut args: CheckArgs, mut config: Config) -> Result<()> {
     let start_time = Instant::now();
 
     // Clone output_dir before moving config
-    let output_dir = config.analysis.output_dir.clone();
+    let output_dir = config.output.directory.clone();
 
     // Override config with CLI options
-    if let Some(baseline_path) = &args.baseline {
-        config.analysis.baseline_path = Some(baseline_path.clone());
+    // TODO: Implement baseline handling in new config structure
+    // if let Some(baseline_path) = &args.baseline {
+    //     // Handle baseline path for comparison functionality
+    // }
+
+    // TODO: Implement ML threshold in new config structure
+    // if let Some(threshold) = args.ml_threshold {
+    //     // Handle ML threshold for anomaly detection
+    // }
+
+    // Override parallel processing setting
+    if args.parallel > 0 {
+        config.analysis.max_workers = args.parallel as u32;
     }
-    if let Some(threshold) = args.ml_threshold {
-        config.analysis.ml_threshold = Some(threshold);
-    }
-    config.analysis.streaming = args.streaming;
 
     // Use configured output directory if default output path is used
     if args.out == PathBuf::from("results.json") {

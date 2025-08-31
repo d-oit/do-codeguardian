@@ -27,6 +27,24 @@ generate_summary = true
 # Compress large output files to save disk space
 compress_output = true
 
+# Subdirectory for reports within the output directory
+reports_subdirectory = "reports"
+
+# Subdirectory for data files within the output directory
+data_subdirectory = "data"
+
+# Subdirectory for temporary files within the output directory
+temp_subdirectory = "temp"
+
+# Subdirectory for historical reports within the output directory
+historical_subdirectory = "historical"
+
+# Automatically archive old reports to manage disk space
+auto_archive = true
+
+# Maximum number of reports to keep before archiving (0 = unlimited)
+max_reports_kept = 10
+
 # =============================================================================
 # SECURITY ANALYSIS THRESHOLDS AND RULES
 # =============================================================================

@@ -79,6 +79,10 @@ async fn main() -> Result<()> {
         Commands::Turbo(args) => {
             turbo::execute_turbo(args, config).await?;
         }
+        #[cfg(feature = "ml")]
+        Commands::Train(args) => {
+            do_codeguardian::cli::train::run(args, &config).await?;
+        }
     }
 
     info!("CodeGuardian CLI completed");

@@ -12,7 +12,7 @@ const GITHUB_ISSUE_MAX_BODY_SIZE: usize = 60000; // GitHub's approximate limit
 pub async fn run(mut args: GhIssueArgs, config: &Config) -> Result<()> {
     // Use configured output directory for default paths
     if args.from == std::path::PathBuf::from("results.json") {
-        args.from = std::path::PathBuf::from(&config.analysis.output_dir).join("results.json");
+        args.from = std::path::PathBuf::from(&config.output.directory).join("results.json");
     }
 
     // Load results from JSON file

@@ -7,6 +7,12 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 use tracing::warn;
 
+// Use cargo-audit crate for future direct integration
+// #[cfg(feature = "cargo-audit")]
+// use cargo_audit::auditor::Auditor;
+// #[cfg(feature = "cargo-audit")]
+// use cargo_audit::config::AuditConfig;
+
 /// Dependency analyzer for scanning Cargo.toml dependencies
 pub struct DependencyAnalyzer {
     project_root: PathBuf,
@@ -47,12 +53,46 @@ impl DependencyAnalyzer {
     fn analyze_vulnerabilities(&self, cargo_toml: &Path) -> Result<Vec<Finding>> {
         let mut findings = Vec::new();
 
-        // Run cargo audit as a subprocess
+        #[cfg(feature = "cargo-audit")]
+        {
+            // Use cargo-audit crate directly for better integration
+            match self.run_cargo_audit_direct() {
+                Ok(audit_findings) => findings.extend(audit_findings),
+                Err(e) => {
+                    warn!(
+                        "Failed to run cargo-audit directly: {}. Falling back to subprocess.",
+                        e
+                    );
+                    findings.extend(self.run_cargo_audit_subprocess(cargo_toml)?);
+                }
+            }
+        }
+
+        #[cfg(not(feature = "cargo-audit"))]
+        {
+            // Fallback to subprocess when cargo-audit feature is not enabled
+            findings.extend(self.run_cargo_audit_subprocess(cargo_toml)?);
+        }
+
+        Ok(findings)
+    }
+
+    #[cfg(feature = "cargo-audit")]
+    fn run_cargo_audit_direct(&self) -> Result<Vec<Finding>> {
+        // For now, fall back to subprocess approach due to API complexity
+        // TODO: Implement direct cargo-audit integration when API stabilizes
+        self.run_cargo_audit_subprocess(&self.project_root.join("Cargo.toml"))
+    }
+
+    fn run_cargo_audit_subprocess(&self, cargo_toml: &Path) -> Result<Vec<Finding>> {
+        let mut findings = Vec::new();
+
+        // Run cargo audit as a subprocess (fallback method)
         let output = Command::new("cargo")
             .args(["audit", "--json"])
             .current_dir(&self.project_root)
             .output()
-            .context("Failed to run cargo audit")?;
+            .context("Failed to run cargo audit subprocess")?;
 
         if output.status.success() {
             // Parse the JSON output
@@ -84,7 +124,7 @@ impl DependencyAnalyzer {
                                 "vulnerability",
                                 Severity::Critical,
                                 cargo_toml.to_path_buf(),
-                                0, // Line number not applicable
+                                0,
                                 format!("Vulnerable dependency: {} - {}", package, title),
                             )
                             .with_description(description.to_string())
@@ -106,6 +146,7 @@ impl DependencyAnalyzer {
             let stderr = String::from_utf8_lossy(&output.stderr);
             if stderr.contains("cargo-audit") || stderr.contains("not found") {
                 warn!("cargo-audit not found. Install with: cargo install cargo-audit");
+                warn!("Alternatively, enable the 'cargo-audit' feature in Cargo.toml for direct integration");
             } else {
                 warn!("Failed to run vulnerability audit: {}", stderr);
             }

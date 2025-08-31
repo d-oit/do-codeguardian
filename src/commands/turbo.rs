@@ -54,7 +54,7 @@ pub async fn execute_turbo(mut args: TurboArgs, config: Config) -> Result<()> {
     let start_time = Instant::now();
 
     // Clone output_dir before moving config
-    let output_dir = config.analysis.output_dir.clone();
+    let output_dir = config.output.directory.clone();
 
     // Use configured output directory if default output path is used
     if args.output == PathBuf::from("turbo-results.json") {

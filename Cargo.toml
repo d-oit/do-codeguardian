@@ -14,15 +14,18 @@ categories = ["command-line-utilities", "development-tools", "security"]
 exclude = ["target/", "benches/", "tests/fixtures/", "examples/ml-training-example.rs"]
 
 [features]
-default = ["git", "security", "logging"]
+default = ["git", "security", "logging", "cargo-audit"]
 git = ["git2"]
 security = ["regex"]
 logging = ["tracing", "tracing-subscriber"]
 hashing = []
-
+cargo-audit = ["dep:cargo-audit"]
+ml = ["fann"]
+ast = ["syn", "quote", "proc-macro2"]
+ml-enhanced = ["ml", "ast"]
 
 # Enable all features for development
-full = ["git", "security", "logging", "hashing"]
+full = ["git", "security", "logging", "hashing", "cargo-audit", "ml", "ast"]
 
 [dependencies]
 # CLI and async runtime
@@ -70,9 +73,17 @@ num_cpus = "1.16"
 serde_yaml = "0.9"
 atty = "0.2"
 
+# Machine Learning
+fann = { version = "0.1", optional = true }
+
+# AST Analysis for enhanced feature engineering
+syn = { version = "2.0", features = ["full", "extra-traits", "visit"], optional = true }
+quote = { version = "1.0", optional = true }
+proc-macro2 = { version = "1.0", optional = true }
+
 # Dependency analysis
 cargo_metadata = "0.18"
-cargo-audit = "0.18"
+cargo-audit = { version = "0.18", optional = true }
 
 [dev-dependencies]
 # Testing utilities
@@ -112,6 +123,12 @@ harness = false
 [[bench]]
 name = "scanning_benchmark"
 harness = false
+
+[[bin]]
+name = "tmp_rovodev_ast_demo"
+path = "tmp_rovodev_ast_demo.rs"
+required-features = ["ml", "ast"]
+
 
 [profile.release]
 opt-level = 3

@@ -179,7 +179,7 @@ fn should_analyze_file(path: &std::path::Path, config: &Config) -> bool {
     let path_str = path.to_string_lossy();
 
     // Check exclude patterns
-    for pattern in &config.analysis.exclude_patterns {
+    for pattern in &config.files.exclude_patterns {
         // Simple substring match for now; could be improved with glob matching
         if path_str.contains(pattern) {
             return false;
@@ -198,7 +198,7 @@ fn should_analyze_file(path: &std::path::Path, config: &Config) -> bool {
 
     // Check file size limits (security: prevent huge files)
     if let Ok(metadata) = path.metadata() {
-        if metadata.len() > config.security.max_file_size {
+        if metadata.len() > config.security.max_file_size_bytes {
             return false;
         }
     }

@@ -13,7 +13,6 @@ use std::time::Instant;
 use walkdir::WalkDir;
 
 // Constants for file processing
-const MAX_FILE_SIZE_BYTES: u64 = 10 * 1024 * 1024; // 10MB
 const PROGRESS_UPDATE_INTERVAL: u32 = 10000; // Update progress every 10k lines
 
 pub struct GuardianEngine {
@@ -88,11 +87,30 @@ impl GuardianEngine {
             if name.starts_with('.') && name != ".gitignore" && name != ".dockerignore" {
                 return false;
             }
+
+            // Check exclude patterns from config
+            for pattern in &self.config.files.exclude_patterns {
+                if name.contains(pattern.trim_start_matches('*')) {
+                    return false;
+                }
+            }
         }
 
-        // Check file size limits (security: prevent processing huge files)
+        // Check file size limits from config (security: prevent processing huge files)
         if let Ok(metadata) = path.metadata() {
-            if metadata.len() > MAX_FILE_SIZE_BYTES {
+            if metadata.len() > self.config.files.max_file_size_bytes {
+                return false;
+            }
+        }
+
+        // Check file extension against allowed extensions
+        if let Some(ext) = path.extension().and_then(|e| e.to_str()) {
+            if !self
+                .config
+                .files
+                .analyze_extensions
+                .contains(&format!(".{}", ext))
+            {
                 return false;
             }
         }
