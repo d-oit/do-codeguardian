@@ -1,0 +1,3285 @@
+{
+  "schema_version": "1.0.0",
+  "tool_metadata": {
+    "name": "codeguardian",
+    "version": "0.1.0",
+    "config_hash": "472c6da11e5b00f1",
+    "timestamp": "2025-09-01T15:32:13.727737436Z"
+  },
+  "findings": [
+    {
+      "id": "performance_nest",
+      "analyzer": "performance",
+      "rule": "nested_loops",
+      "severity": "Medium",
+      "file": "/workspaces/do-codeguardian/src/analyzers/non_production.rs",
+      "line": 8,
+      "column": null,
+      "message": "Potential nested loop detected",
+      "description": "Nested loops can lead to O(n^2) or higher time complexity. Consider optimizing the algorithm.",
+      "suggestion": "Review the algorithm for potential optimizations, such as using hash maps or breaking early.",
+      "metadata": {}
+    },
+    {
+      "id": "performance_nest",
+      "analyzer": "performance",
+      "rule": "nested_loops",
+      "severity": "Medium",
+      "file": "/workspaces/do-codeguardian/src/analyzers/integrity.rs",
+      "line": 7,
+      "column": null,
+      "message": "Potential nested loop detected",
+      "description": "Nested loops can lead to O(n^2) or higher time complexity. Consider optimizing the algorithm.",
+      "suggestion": "Review the algorithm for potential optimizations, such as using hash maps or breaking early.",
+      "metadata": {}
+    },
+    {
+      "id": "performance_nest",
+      "analyzer": "performance",
+      "rule": "nested_loops",
+      "severity": "Medium",
+      "file": "/workspaces/do-codeguardian/src/analyzers/optimized_security_analyzer.rs",
+      "line": 3,
+      "column": null,
+      "message": "Potential nested loop detected",
+      "description": "Nested loops can lead to O(n^2) or higher time complexity. Consider optimizing the algorithm.",
+      "suggestion": "Review the algorithm for potential optimizations, such as using hash maps or breaking early.",
+      "metadata": {}
+    },
+    {
+      "id": "performance_nest",
+      "analyzer": "performance",
+      "rule": "nested_loops",
+      "severity": "Medium",
+      "file": "/workspaces/do-codeguardian/src/analyzers/performance_analyzer.rs",
+      "line": 7,
+      "column": null,
+      "message": "Potential nested loop detected",
+      "description": "Nested loops can lead to O(n^2) or higher time complexity. Consider optimizing the algorithm.",
+      "suggestion": "Review the algorithm for potential optimizations, such as using hash maps or breaking early.",
+      "metadata": {}
+    },
+    {
+      "id": "performance_inef",
+      "analyzer": "performance",
+      "rule": "inefficient_string_ops",
+      "severity": "Medium",
+      "file": "/workspaces/do-codeguardian/src/analyzers/performance_analyzer.rs",
+      "line": 261,
+      "column": null,
+      "message": "Inefficient string operation detected",
+      "description": "String concatenation in loops can be inefficient due to reallocations.",
+      "suggestion": "Use String::with_capacity or collect into a Vec and join for better performance.",
+      "metadata": {}
+    },
+    {
+      "id": "performance_bloc",
+      "analyzer": "performance",
+      "rule": "blocking_io",
+      "severity": "High",
+      "file": "/workspaces/do-codeguardian/src/analyzers/performance_analyzer.rs",
+      "line": 51,
+      "column": null,
+      "message": "Blocking I/O operation detected",
+      "description": "Blocking I/O can cause performance issues in async contexts.",
+      "suggestion": "Use async equivalents like tokio::fs or spawn blocking operations.",
+      "metadata": {}
+    },
+    {
+      "id": "performance_nest",
+      "analyzer": "performance",
+      "rule": "nested_loops",
+      "severity": "Medium",
+      "file": "/workspaces/do-codeguardian/src/analyzers/lint_drift.rs",
+      "line": 7,
+      "column": null,
+      "message": "Potential nested loop detected",
+      "description": "Nested loops can lead to O(n^2) or higher time complexity. Consider optimizing the algorithm.",
+      "suggestion": "Review the algorithm for potential optimizations, such as using hash maps or breaking early.",
+      "metadata": {}
+    },
+    {
+      "id": "performance_nest",
+      "analyzer": "performance",
+      "rule": "nested_loops",
+      "severity": "Medium",
+      "file": "/workspaces/do-codeguardian/src/analyzers/mod.rs",
+      "line": 5,
+      "column": null,
+      "message": "Potential nested loop detected",
+      "description": "Nested loops can lead to O(n^2) or higher time complexity. Consider optimizing the algorithm.",
+      "suggestion": "Review the algorithm for potential optimizations, such as using hash maps or breaking early.",
+      "metadata": {}
+    },
+    {
+      "id": "performance_nest",
+      "analyzer": "performance",
+      "rule": "nested_loops",
+      "severity": "Medium",
+      "file": "/workspaces/do-codeguardian/src/analyzers/dependency_analyzer.rs",
+      "line": 10,
+      "column": null,
+      "message": "Potential nested loop detected",
+      "description": "Nested loops can lead to O(n^2) or higher time complexity. Consider optimizing the algorithm.",
+      "suggestion": "Review the algorithm for potential optimizations, such as using hash maps or breaking early.",
+      "metadata": {}
+    },
+    {
+      "id": "performance_nest",
+      "analyzer": "performance",
+      "rule": "nested_loops",
+      "severity": "Medium",
+      "file": "/workspaces/do-codeguardian/src/analyzers/security_analyzer.rs",
+      "line": 15,
+      "column": null,
+      "message": "Potential nested loop detected",
+      "description": "Nested loops can lead to O(n^2) or higher time complexity. Consider optimizing the algorithm.",
+      "suggestion": "Review the algorithm for potential optimizations, such as using hash maps or breaking early.",
+      "metadata": {}
+    },
+    {
+      "id": "non_production_t",
+      "analyzer": "non_production",
+      "rule": "todo_comment",
+      "severity": "High",
+      "file": "/workspaces/do-codeguardian/src/ml/enhanced_feature_extractor.rs",
+      "line": 17,
+      "column": null,
+      "message": "BUG comment found",
+      "description": "Line contains a bug comment that should be resolved before production",
+      "suggestion": "Resolve the issue or create a proper issue tracker entry",
+      "metadata": {
+        "comment_type": "bug"
+      }
+    },
+    {
+      "id": "non_production_d",
+      "analyzer": "non_production",
+      "rule": "debug_statement",
+      "severity": "Medium",
+      "file": "/workspaces/do-codeguardian/src/ml/enhanced_feature_extractor.rs",
+      "line": 17,
+      "column": null,
+      "message": "Debug statement found",
+      "description": "Debug statements should not be present in production code",
+      "suggestion": "Remove debug statements or replace with proper logging",
+      "metadata": {}
+    },
+    {
+      "id": "non_production_t",
+      "analyzer": "non_production",
+      "rule": "todo_comment",
+      "severity": "High",
+      "file": "/workspaces/do-codeguardian/src/ml/enhanced_feature_extractor.rs",
+      "line": 192,
+      "column": null,
+      "message": "BUG comment found",
+      "description": "Line contains a bug comment that should be resolved before production",
+      "suggestion": "Resolve the issue or create a proper issue tracker entry",
+      "metadata": {
+        "comment_type": "bug"
+      }
+    },
+    {
+      "id": "non_production_d",
+      "analyzer": "non_production",
+      "rule": "debug_statement",
+      "severity": "Medium",
+      "file": "/workspaces/do-codeguardian/src/ml/enhanced_feature_extractor.rs",
+      "line": 192,
+      "column": null,
+      "message": "Debug statement found",
+      "description": "Debug statements should not be present in production code",
+      "suggestion": "Remove debug statements or replace with proper logging",
+      "metadata": {}
+    },
+    {
+      "id": "non_production_t",
+      "analyzer": "non_production",
+      "rule": "todo_comment",
+      "severity": "High",
+      "file": "/workspaces/do-codeguardian/src/ml/enhanced_feature_extractor.rs",
+      "line": 200,
+      "column": null,
+      "message": "BUG comment found",
+      "description": "Line contains a bug comment that should be resolved before production",
+      "suggestion": "Resolve the issue or create a proper issue tracker entry",
+      "metadata": {
+        "comment_type": "bug"
+      }
+    },
+    {
+      "id": "non_production_d",
+      "analyzer": "non_production",
+      "rule": "debug_statement",
+      "severity": "Medium",
+      "file": "/workspaces/do-codeguardian/src/ml/enhanced_feature_extractor.rs",
+      "line": 200,
+      "column": null,
+      "message": "Debug statement found",
+      "description": "Debug statements should not be present in production code",
+      "suggestion": "Remove debug statements or replace with proper logging",
+      "metadata": {}
+    },
+    {
+      "id": "performance_nest",
+      "analyzer": "performance",
+      "rule": "nested_loops",
+      "severity": "Medium",
+      "file": "/workspaces/do-codeguardian/src/ml/enhanced_feature_extractor.rs",
+      "line": 55,
+      "column": null,
+      "message": "Potential nested loop detected",
+      "description": "Nested loops can lead to O(n^2) or higher time complexity. Consider optimizing the algorithm.",
+      "suggestion": "Review the algorithm for potential optimizations, such as using hash maps or breaking early.",
+      "metadata": {}
+    },
+    {
+      "id": "non_production_t",
+      "analyzer": "non_production",
+      "rule": "todo_comment",
+      "severity": "High",
+      "file": "/workspaces/do-codeguardian/src/ml/training_data.rs",
+      "line": 7,
+      "column": null,
+      "message": "BUG comment found",
+      "description": "Line contains a bug comment that should be resolved before production",
+      "suggestion": "Resolve the issue or create a proper issue tracker entry",
+      "metadata": {
+        "comment_type": "bug"
+      }
+    },
+    {
+      "id": "non_production_d",
+      "analyzer": "non_production",
+      "rule": "debug_statement",
+      "severity": "Medium",
+      "file": "/workspaces/do-codeguardian/src/ml/training_data.rs",
+      "line": 7,
+      "column": null,
+      "message": "Debug statement found",
+      "description": "Debug statements should not be present in production code",
+      "suggestion": "Remove debug statements or replace with proper logging",
+      "metadata": {}
+    },
+    {
+      "id": "non_production_t",
+      "analyzer": "non_production",
+      "rule": "todo_comment",
+      "severity": "High",
+      "file": "/workspaces/do-codeguardian/src/ml/training_data.rs",
+      "line": 14,
+      "column": null,
+      "message": "BUG comment found",
+      "description": "Line contains a bug comment that should be resolved before production",
+      "suggestion": "Resolve the issue or create a proper issue tracker entry",
+      "metadata": {
+        "comment_type": "bug"
+      }
+    },
+    {
+      "id": "non_production_d",
+      "analyzer": "non_production",
+      "rule": "debug_statement",
+      "severity": "Medium",
+      "file": "/workspaces/do-codeguardian/src/ml/training_data.rs",
+      "line": 14,
+      "column": null,
+      "message": "Debug statement found",
+      "description": "Debug statements should not be present in production code",
+      "suggestion": "Remove debug statements or replace with proper logging",
+      "metadata": {}
+    },
+    {
+      "id": "non_production_t",
+      "analyzer": "non_production",
+      "rule": "todo_comment",
+      "severity": "High",
+      "file": "/workspaces/do-codeguardian/src/ml/training_data.rs",
+      "line": 23,
+      "column": null,
+      "message": "BUG comment found",
+      "description": "Line contains a bug comment that should be resolved before production",
+      "suggestion": "Resolve the issue or create a proper issue tracker entry",
+      "metadata": {
+        "comment_type": "bug"
+      }
+    },
+    {
+      "id": "non_production_d",
+      "analyzer": "non_production",
+      "rule": "debug_statement",
+      "severity": "Medium",
+      "file": "/workspaces/do-codeguardian/src/ml/training_data.rs",
+      "line": 23,
+      "column": null,
+      "message": "Debug statement found",
+      "description": "Debug statements should not be present in production code",
+      "suggestion": "Remove debug statements or replace with proper logging",
+      "metadata": {}
+    },
+    {
+      "id": "non_production_t",
+      "analyzer": "non_production",
+      "rule": "todo_comment",
+      "severity": "Low",
+      "file": "/workspaces/do-codeguardian/src/ml/training_data.rs",
+      "line": 126,
+      "column": null,
+      "message": "TODO comment found",
+      "description": "Line contains a todo comment that should be resolved before production",
+      "suggestion": "Resolve the issue or create a proper issue tracker entry",
+      "metadata": {
+        "comment_type": "todo"
+      }
+    },
+    {
+      "id": "non_production_t",
+      "analyzer": "non_production",
+      "rule": "todo_comment",
+      "severity": "High",
+      "file": "/workspaces/do-codeguardian/src/ml/training_data.rs",
+      "line": 132,
+      "column": null,
+      "message": "BUG comment found",
+      "description": "Line contains a bug comment that should be resolved before production",
+      "suggestion": "Resolve the issue or create a proper issue tracker entry",
+      "metadata": {
+        "comment_type": "bug"
+      }
+    },
+    {
+      "id": "non_production_d",
+      "analyzer": "non_production",
+      "rule": "debug_statement",
+      "severity": "Medium",
+      "file": "/workspaces/do-codeguardian/src/ml/training_data.rs",
+      "line": 132,
+      "column": null,
+      "message": "Debug statement found",
+      "description": "Debug statements should not be present in production code",
+      "suggestion": "Remove debug statements or replace with proper logging",
+      "metadata": {}
+    },
+    {
+      "id": "non_production_t",
+      "analyzer": "non_production",
+      "rule": "todo_comment",
+      "severity": "High",
+      "file": "/workspaces/do-codeguardian/src/ml/training_data.rs",
+      "line": 186,
+      "column": null,
+      "message": "BUG comment found",
+      "description": "Line contains a bug comment that should be resolved before production",
+      "suggestion": "Resolve the issue or create a proper issue tracker entry",
+      "metadata": {
+        "comment_type": "bug"
+      }
+    },
+    {
+      "id": "non_production_d",
+      "analyzer": "non_production",
+      "rule": "debug_statement",
+      "severity": "Medium",
+      "file": "/workspaces/do-codeguardian/src/ml/training_data.rs",
+      "line": 186,
+      "column": null,
+      "message": "Debug statement found",
+      "description": "Debug statements should not be present in production code",
+      "suggestion": "Remove debug statements or replace with proper logging",
+      "metadata": {}
+    },
+    {
+      "id": "non_production_t",
+      "analyzer": "non_production",
+      "rule": "todo_comment",
+      "severity": "Low",
+      "file": "/workspaces/do-codeguardian/src/ml/training_data.rs",
+      "line": 272,
+      "column": null,
+      "message": "TODO comment found",
+      "description": "Line contains a todo comment that should be resolved before production",
+      "suggestion": "Resolve the issue or create a proper issue tracker entry",
+      "metadata": {
+        "comment_type": "todo"
+      }
+    },
+    {
+      "id": "non_production_t",
+      "analyzer": "non_production",
+      "rule": "todo_comment",
+      "severity": "High",
+      "file": "/workspaces/do-codeguardian/src/ml/training_data.rs",
+      "line": 278,
+      "column": null,
+      "message": "BUG comment found",
+      "description": "Line contains a bug comment that should be resolved before production",
+      "suggestion": "Resolve the issue or create a proper issue tracker entry",
+      "metadata": {
+        "comment_type": "bug"
+      }
+    },
+    {
+      "id": "non_production_d",
+      "analyzer": "non_production",
+      "rule": "debug_statement",
+      "severity": "Medium",
+      "file": "/workspaces/do-codeguardian/src/ml/training_data.rs",
+      "line": 278,
+      "column": null,
+      "message": "Debug statement found",
+      "description": "Debug statements should not be present in production code",
+      "suggestion": "Remove debug statements or replace with proper logging",
+      "metadata": {}
+    },
+    {
+      "id": "performance_nest",
+      "analyzer": "performance",
+      "rule": "nested_loops",
+      "severity": "Medium",
+      "file": "/workspaces/do-codeguardian/src/ml/training_data.rs",
+      "line": 6,
+      "column": null,
+      "message": "Potential nested loop detected",
+      "description": "Nested loops can lead to O(n^2) or higher time complexity. Consider optimizing the algorithm.",
+      "suggestion": "Review the algorithm for potential optimizations, such as using hash maps or breaking early.",
+      "metadata": {}
+    },
+    {
+      "id": "non_production_t",
+      "analyzer": "non_production",
+      "rule": "todo_comment",
+      "severity": "High",
+      "file": "/workspaces/do-codeguardian/src/ml/mod.rs",
+      "line": 187,
+      "column": null,
+      "message": "BUG comment found",
+      "description": "Line contains a bug comment that should be resolved before production",
+      "suggestion": "Resolve the issue or create a proper issue tracker entry",
+      "metadata": {
+        "comment_type": "bug"
+      }
+    },
+    {
+      "id": "non_production_d",
+      "analyzer": "non_production",
+      "rule": "debug_statement",
+      "severity": "Medium",
+      "file": "/workspaces/do-codeguardian/src/ml/mod.rs",
+      "line": 187,
+      "column": null,
+      "message": "Debug statement found",
+      "description": "Debug statements should not be present in production code",
+      "suggestion": "Remove debug statements or replace with proper logging",
+      "metadata": {}
+    },
+    {
+      "id": "performance_nest",
+      "analyzer": "performance",
+      "rule": "nested_loops",
+      "severity": "Medium",
+      "file": "/workspaces/do-codeguardian/src/ml/mod.rs",
+      "line": 12,
+      "column": null,
+      "message": "Potential nested loop detected",
+      "description": "Nested loops can lead to O(n^2) or higher time complexity. Consider optimizing the algorithm.",
+      "suggestion": "Review the algorithm for potential optimizations, such as using hash maps or breaking early.",
+      "metadata": {}
+    },
+    {
+      "id": "non_production_t",
+      "analyzer": "non_production",
+      "rule": "todo_comment",
+      "severity": "High",
+      "file": "/workspaces/do-codeguardian/src/ml/fann_classifier.rs",
+      "line": 23,
+      "column": null,
+      "message": "BUG comment found",
+      "description": "Line contains a bug comment that should be resolved before production",
+      "suggestion": "Resolve the issue or create a proper issue tracker entry",
+      "metadata": {
+        "comment_type": "bug"
+      }
+    },
+    {
+      "id": "non_production_d",
+      "analyzer": "non_production",
+      "rule": "debug_statement",
+      "severity": "Medium",
+      "file": "/workspaces/do-codeguardian/src/ml/fann_classifier.rs",
+      "line": 23,
+      "column": null,
+      "message": "Debug statement found",
+      "description": "Debug statements should not be present in production code",
+      "suggestion": "Remove debug statements or replace with proper logging",
+      "metadata": {}
+    },
+    {
+      "id": "non_production_t",
+      "analyzer": "non_production",
+      "rule": "todo_comment",
+      "severity": "High",
+      "file": "/workspaces/do-codeguardian/src/ml/fann_classifier.rs",
+      "line": 197,
+      "column": null,
+      "message": "BUG comment found",
+      "description": "Line contains a bug comment that should be resolved before production",
+      "suggestion": "Resolve the issue or create a proper issue tracker entry",
+      "metadata": {
+        "comment_type": "bug"
+      }
+    },
+    {
+      "id": "non_production_d",
+      "analyzer": "non_production",
+      "rule": "debug_statement",
+      "severity": "Medium",
+      "file": "/workspaces/do-codeguardian/src/ml/fann_classifier.rs",
+      "line": 197,
+      "column": null,
+      "message": "Debug statement found",
+      "description": "Debug statements should not be present in production code",
+      "suggestion": "Remove debug statements or replace with proper logging",
+      "metadata": {}
+    },
+    {
+      "id": "performance_nest",
+      "analyzer": "performance",
+      "rule": "nested_loops",
+      "severity": "Medium",
+      "file": "/workspaces/do-codeguardian/src/ml/fann_classifier.rs",
+      "line": 79,
+      "column": null,
+      "message": "Potential nested loop detected",
+      "description": "Nested loops can lead to O(n^2) or higher time complexity. Consider optimizing the algorithm.",
+      "suggestion": "Review the algorithm for potential optimizations, such as using hash maps or breaking early.",
+      "metadata": {}
+    },
+    {
+      "id": "non_production_t",
+      "analyzer": "non_production",
+      "rule": "todo_comment",
+      "severity": "High",
+      "file": "/workspaces/do-codeguardian/src/cache/optimized_cache.rs",
+      "line": 16,
+      "column": null,
+      "message": "BUG comment found",
+      "description": "Line contains a bug comment that should be resolved before production",
+      "suggestion": "Resolve the issue or create a proper issue tracker entry",
+      "metadata": {
+        "comment_type": "bug"
+      }
+    },
+    {
+      "id": "non_production_d",
+      "analyzer": "non_production",
+      "rule": "debug_statement",
+      "severity": "Medium",
+      "file": "/workspaces/do-codeguardian/src/cache/optimized_cache.rs",
+      "line": 16,
+      "column": null,
+      "message": "Debug statement found",
+      "description": "Debug statements should not be present in production code",
+      "suggestion": "Remove debug statements or replace with proper logging",
+      "metadata": {}
+    },
+    {
+      "id": "non_production_t",
+      "analyzer": "non_production",
+      "rule": "todo_comment",
+      "severity": "High",
+      "file": "/workspaces/do-codeguardian/src/cache/optimized_cache.rs",
+      "line": 93,
+      "column": null,
+      "message": "BUG comment found",
+      "description": "Line contains a bug comment that should be resolved before production",
+      "suggestion": "Resolve the issue or create a proper issue tracker entry",
+      "metadata": {
+        "comment_type": "bug"
+      }
+    },
+    {
+      "id": "non_production_d",
+      "analyzer": "non_production",
+      "rule": "debug_statement",
+      "severity": "Medium",
+      "file": "/workspaces/do-codeguardian/src/cache/optimized_cache.rs",
+      "line": 93,
+      "column": null,
+      "message": "Debug statement found",
+      "description": "Debug statements should not be present in production code",
+      "suggestion": "Remove debug statements or replace with proper logging",
+      "metadata": {}
+    },
+    {
+      "id": "non_production_t",
+      "analyzer": "non_production",
+      "rule": "todo_comment",
+      "severity": "High",
+      "file": "/workspaces/do-codeguardian/src/cache/optimized_cache.rs",
+      "line": 368,
+      "column": null,
+      "message": "BUG comment found",
+      "description": "Line contains a bug comment that should be resolved before production",
+      "suggestion": "Resolve the issue or create a proper issue tracker entry",
+      "metadata": {
+        "comment_type": "bug"
+      }
+    },
+    {
+      "id": "non_production_d",
+      "analyzer": "non_production",
+      "rule": "debug_statement",
+      "severity": "Medium",
+      "file": "/workspaces/do-codeguardian/src/cache/optimized_cache.rs",
+      "line": 368,
+      "column": null,
+      "message": "Debug statement found",
+      "description": "Debug statements should not be present in production code",
+      "suggestion": "Remove debug statements or replace with proper logging",
+      "metadata": {}
+    },
+    {
+      "id": "non_production_t",
+      "analyzer": "non_production",
+      "rule": "todo_comment",
+      "severity": "High",
+      "file": "/workspaces/do-codeguardian/src/cache/optimized_cache.rs",
+      "line": 425,
+      "column": null,
+      "message": "BUG comment found",
+      "description": "Line contains a bug comment that should be resolved before production",
+      "suggestion": "Resolve the issue or create a proper issue tracker entry",
+      "metadata": {
+        "comment_type": "bug"
+      }
+    },
+    {
+      "id": "non_production_d",
+      "analyzer": "non_production",
+      "rule": "debug_statement",
+      "severity": "Medium",
+      "file": "/workspaces/do-codeguardian/src/cache/optimized_cache.rs",
+      "line": 425,
+      "column": null,
+      "message": "Debug statement found",
+      "description": "Debug statements should not be present in production code",
+      "suggestion": "Remove debug statements or replace with proper logging",
+      "metadata": {}
+    },
+    {
+      "id": "non_production_d",
+      "analyzer": "non_production",
+      "rule": "debug_statement",
+      "severity": "Medium",
+      "file": "/workspaces/do-codeguardian/src/cache/optimized_cache.rs",
+      "line": 514,
+      "column": null,
+      "message": "Debug statement found",
+      "description": "Debug statements should not be present in production code",
+      "suggestion": "Remove debug statements or replace with proper logging",
+      "metadata": {}
+    },
+    {
+      "id": "performance_nest",
+      "analyzer": "performance",
+      "rule": "nested_loops",
+      "severity": "Medium",
+      "file": "/workspaces/do-codeguardian/src/cache/optimized_cache.rs",
+      "line": 1,
+      "column": null,
+      "message": "Potential nested loop detected",
+      "description": "Nested loops can lead to O(n^2) or higher time complexity. Consider optimizing the algorithm.",
+      "suggestion": "Review the algorithm for potential optimizations, such as using hash maps or breaking early.",
+      "metadata": {}
+    },
+    {
+      "id": "non_production_d",
+      "analyzer": "non_production",
+      "rule": "debug_statement",
+      "severity": "Medium",
+      "file": "/workspaces/do-codeguardian/src/lib.rs",
+      "line": 22,
+      "column": null,
+      "message": "Debug statement found",
+      "description": "Debug statements should not be present in production code",
+      "suggestion": "Remove debug statements or replace with proper logging",
+      "metadata": {}
+    },
+    {
+      "id": "non_production_d",
+      "analyzer": "non_production",
+      "rule": "debug_statement",
+      "severity": "Medium",
+      "file": "/workspaces/do-codeguardian/src/lib.rs",
+      "line": 80,
+      "column": null,
+      "message": "Debug statement found",
+      "description": "Debug statements should not be present in production code",
+      "suggestion": "Remove debug statements or replace with proper logging",
+      "metadata": {}
+    },
+    {
+      "id": "non_production_d",
+      "analyzer": "non_production",
+      "rule": "debug_statement",
+      "severity": "Medium",
+      "file": "/workspaces/do-codeguardian/src/lib.rs",
+      "line": 122,
+      "column": null,
+      "message": "Debug statement found",
+      "description": "Debug statements should not be present in production code",
+      "suggestion": "Remove debug statements or replace with proper logging",
+      "metadata": {}
+    },
+    {
+      "id": "non_production_t",
+      "analyzer": "non_production",
+      "rule": "todo_comment",
+      "severity": "High",
+      "file": "/workspaces/do-codeguardian/src/performance/optimizer.rs",
+      "line": 15,
+      "column": null,
+      "message": "BUG comment found",
+      "description": "Line contains a bug comment that should be resolved before production",
+      "suggestion": "Resolve the issue or create a proper issue tracker entry",
+      "metadata": {
+        "comment_type": "bug"
+      }
+    },
+    {
+      "id": "non_production_d",
+      "analyzer": "non_production",
+      "rule": "debug_statement",
+      "severity": "Medium",
+      "file": "/workspaces/do-codeguardian/src/performance/optimizer.rs",
+      "line": 15,
+      "column": null,
+      "message": "Debug statement found",
+      "description": "Debug statements should not be present in production code",
+      "suggestion": "Remove debug statements or replace with proper logging",
+      "metadata": {}
+    },
+    {
+      "id": "non_production_t",
+      "analyzer": "non_production",
+      "rule": "todo_comment",
+      "severity": "High",
+      "file": "/workspaces/do-codeguardian/src/performance/optimizer.rs",
+      "line": 110,
+      "column": null,
+      "message": "BUG comment found",
+      "description": "Line contains a bug comment that should be resolved before production",
+      "suggestion": "Resolve the issue or create a proper issue tracker entry",
+      "metadata": {
+        "comment_type": "bug"
+      }
+    },
+    {
+      "id": "non_production_d",
+      "analyzer": "non_production",
+      "rule": "debug_statement",
+      "severity": "Medium",
+      "file": "/workspaces/do-codeguardian/src/performance/optimizer.rs",
+      "line": 110,
+      "column": null,
+      "message": "Debug statement found",
+      "description": "Debug statements should not be present in production code",
+      "suggestion": "Remove debug statements or replace with proper logging",
+      "metadata": {}
+    },
+    {
+      "id": "non_production_t",
+      "analyzer": "non_production",
+      "rule": "todo_comment",
+      "severity": "High",
+      "file": "/workspaces/do-codeguardian/src/performance/optimizer.rs",
+      "line": 117,
+      "column": null,
+      "message": "BUG comment found",
+      "description": "Line contains a bug comment that should be resolved before production",
+      "suggestion": "Resolve the issue or create a proper issue tracker entry",
+      "metadata": {
+        "comment_type": "bug"
+      }
+    },
+    {
+      "id": "non_production_d",
+      "analyzer": "non_production",
+      "rule": "debug_statement",
+      "severity": "Medium",
+      "file": "/workspaces/do-codeguardian/src/performance/optimizer.rs",
+      "line": 117,
+      "column": null,
+      "message": "Debug statement found",
+      "description": "Debug statements should not be present in production code",
+      "suggestion": "Remove debug statements or replace with proper logging",
+      "metadata": {}
+    },
+    {
+      "id": "non_production_t",
+      "analyzer": "non_production",
+      "rule": "todo_comment",
+      "severity": "High",
+      "file": "/workspaces/do-codeguardian/src/performance/memory_pool.rs",
+      "line": 155,
+      "column": null,
+      "message": "BUG comment found",
+      "description": "Line contains a bug comment that should be resolved before production",
+      "suggestion": "Resolve the issue or create a proper issue tracker entry",
+      "metadata": {
+        "comment_type": "bug"
+      }
+    },
+    {
+      "id": "non_production_d",
+      "analyzer": "non_production",
+      "rule": "debug_statement",
+      "severity": "Medium",
+      "file": "/workspaces/do-codeguardian/src/performance/memory_pool.rs",
+      "line": 155,
+      "column": null,
+      "message": "Debug statement found",
+      "description": "Debug statements should not be present in production code",
+      "suggestion": "Remove debug statements or replace with proper logging",
+      "metadata": {}
+    },
+    {
+      "id": "non_production_t",
+      "analyzer": "non_production",
+      "rule": "todo_comment",
+      "severity": "High",
+      "file": "/workspaces/do-codeguardian/src/performance/memory_pool.rs",
+      "line": 331,
+      "column": null,
+      "message": "BUG comment found",
+      "description": "Line contains a bug comment that should be resolved before production",
+      "suggestion": "Resolve the issue or create a proper issue tracker entry",
+      "metadata": {
+        "comment_type": "bug"
+      }
+    },
+    {
+      "id": "non_production_d",
+      "analyzer": "non_production",
+      "rule": "debug_statement",
+      "severity": "Medium",
+      "file": "/workspaces/do-codeguardian/src/performance/memory_pool.rs",
+      "line": 331,
+      "column": null,
+      "message": "Debug statement found",
+      "description": "Debug statements should not be present in production code",
+      "suggestion": "Remove debug statements or replace with proper logging",
+      "metadata": {}
+    },
+    {
+      "id": "non_production_d",
+      "analyzer": "non_production",
+      "rule": "debug_statement",
+      "severity": "Medium",
+      "file": "/workspaces/do-codeguardian/src/performance/memory_pool.rs",
+      "line": 455,
+      "column": null,
+      "message": "Debug statement found",
+      "description": "Debug statements should not be present in production code",
+      "suggestion": "Remove debug statements or replace with proper logging",
+      "metadata": {}
+    },
+    {
+      "id": "performance_nest",
+      "analyzer": "performance",
+      "rule": "nested_loops",
+      "severity": "Medium",
+      "file": "/workspaces/do-codeguardian/src/performance/memory_pool.rs",
+      "line": 1,
+      "column": null,
+      "message": "Potential nested loop detected",
+      "description": "Nested loops can lead to O(n^2) or higher time complexity. Consider optimizing the algorithm.",
+      "suggestion": "Review the algorithm for potential optimizations, such as using hash maps or breaking early.",
+      "metadata": {}
+    },
+    {
+      "id": "non_production_t",
+      "analyzer": "non_production",
+      "rule": "todo_comment",
+      "severity": "High",
+      "file": "/workspaces/do-codeguardian/src/performance/profiler.rs",
+      "line": 14,
+      "column": null,
+      "message": "BUG comment found",
+      "description": "Line contains a bug comment that should be resolved before production",
+      "suggestion": "Resolve the issue or create a proper issue tracker entry",
+      "metadata": {
+        "comment_type": "bug"
+      }
+    },
+    {
+      "id": "non_production_d",
+      "analyzer": "non_production",
+      "rule": "debug_statement",
+      "severity": "Medium",
+      "file": "/workspaces/do-codeguardian/src/performance/profiler.rs",
+      "line": 14,
+      "column": null,
+      "message": "Debug statement found",
+      "description": "Debug statements should not be present in production code",
+      "suggestion": "Remove debug statements or replace with proper logging",
+      "metadata": {}
+    },
+    {
+      "id": "performance_nest",
+      "analyzer": "performance",
+      "rule": "nested_loops",
+      "severity": "Medium",
+      "file": "/workspaces/do-codeguardian/src/performance/profiler.rs",
+      "line": 1,
+      "column": null,
+      "message": "Potential nested loop detected",
+      "description": "Nested loops can lead to O(n^2) or higher time complexity. Consider optimizing the algorithm.",
+      "suggestion": "Review the algorithm for potential optimizations, such as using hash maps or breaking early.",
+      "metadata": {}
+    },
+    {
+      "id": "non_production_t",
+      "analyzer": "non_production",
+      "rule": "todo_comment",
+      "severity": "High",
+      "file": "/workspaces/do-codeguardian/src/performance/mod.rs",
+      "line": 15,
+      "column": null,
+      "message": "BUG comment found",
+      "description": "Line contains a bug comment that should be resolved before production",
+      "suggestion": "Resolve the issue or create a proper issue tracker entry",
+      "metadata": {
+        "comment_type": "bug"
+      }
+    },
+    {
+      "id": "non_production_d",
+      "analyzer": "non_production",
+      "rule": "debug_statement",
+      "severity": "Medium",
+      "file": "/workspaces/do-codeguardian/src/performance/mod.rs",
+      "line": 15,
+      "column": null,
+      "message": "Debug statement found",
+      "description": "Debug statements should not be present in production code",
+      "suggestion": "Remove debug statements or replace with proper logging",
+      "metadata": {}
+    },
+    {
+      "id": "non_production_t",
+      "analyzer": "non_production",
+      "rule": "todo_comment",
+      "severity": "High",
+      "file": "/workspaces/do-codeguardian/src/performance/mod.rs",
+      "line": 119,
+      "column": null,
+      "message": "BUG comment found",
+      "description": "Line contains a bug comment that should be resolved before production",
+      "suggestion": "Resolve the issue or create a proper issue tracker entry",
+      "metadata": {
+        "comment_type": "bug"
+      }
+    },
+    {
+      "id": "non_production_d",
+      "analyzer": "non_production",
+      "rule": "debug_statement",
+      "severity": "Medium",
+      "file": "/workspaces/do-codeguardian/src/performance/mod.rs",
+      "line": 119,
+      "column": null,
+      "message": "Debug statement found",
+      "description": "Debug statements should not be present in production code",
+      "suggestion": "Remove debug statements or replace with proper logging",
+      "metadata": {}
+    },
+    {
+      "id": "non_production_t",
+      "analyzer": "non_production",
+      "rule": "todo_comment",
+      "severity": "High",
+      "file": "/workspaces/do-codeguardian/src/performance/mod.rs",
+      "line": 128,
+      "column": null,
+      "message": "BUG comment found",
+      "description": "Line contains a bug comment that should be resolved before production",
+      "suggestion": "Resolve the issue or create a proper issue tracker entry",
+      "metadata": {
+        "comment_type": "bug"
+      }
+    },
+    {
+      "id": "non_production_d",
+      "analyzer": "non_production",
+      "rule": "debug_statement",
+      "severity": "Medium",
+      "file": "/workspaces/do-codeguardian/src/performance/mod.rs",
+      "line": 128,
+      "column": null,
+      "message": "Debug statement found",
+      "description": "Debug statements should not be present in production code",
+      "suggestion": "Remove debug statements or replace with proper logging",
+      "metadata": {}
+    },
+    {
+      "id": "non_production_t",
+      "analyzer": "non_production",
+      "rule": "todo_comment",
+      "severity": "High",
+      "file": "/workspaces/do-codeguardian/src/performance/mod.rs",
+      "line": 138,
+      "column": null,
+      "message": "BUG comment found",
+      "description": "Line contains a bug comment that should be resolved before production",
+      "suggestion": "Resolve the issue or create a proper issue tracker entry",
+      "metadata": {
+        "comment_type": "bug"
+      }
+    },
+    {
+      "id": "non_production_d",
+      "analyzer": "non_production",
+      "rule": "debug_statement",
+      "severity": "Medium",
+      "file": "/workspaces/do-codeguardian/src/performance/mod.rs",
+      "line": 138,
+      "column": null,
+      "message": "Debug statement found",
+      "description": "Debug statements should not be present in production code",
+      "suggestion": "Remove debug statements or replace with proper logging",
+      "metadata": {}
+    },
+    {
+      "id": "non_production_t",
+      "analyzer": "non_production",
+      "rule": "todo_comment",
+      "severity": "High",
+      "file": "/workspaces/do-codeguardian/src/performance/mod.rs",
+      "line": 146,
+      "column": null,
+      "message": "BUG comment found",
+      "description": "Line contains a bug comment that should be resolved before production",
+      "suggestion": "Resolve the issue or create a proper issue tracker entry",
+      "metadata": {
+        "comment_type": "bug"
+      }
+    },
+    {
+      "id": "non_production_d",
+      "analyzer": "non_production",
+      "rule": "debug_statement",
+      "severity": "Medium",
+      "file": "/workspaces/do-codeguardian/src/performance/mod.rs",
+      "line": 146,
+      "column": null,
+      "message": "Debug statement found",
+      "description": "Debug statements should not be present in production code",
+      "suggestion": "Remove debug statements or replace with proper logging",
+      "metadata": {}
+    },
+    {
+      "id": "non_production_t",
+      "analyzer": "non_production",
+      "rule": "todo_comment",
+      "severity": "High",
+      "file": "/workspaces/do-codeguardian/src/main.rs",
+      "line": 35,
+      "column": null,
+      "message": "BUG comment found",
+      "description": "Line contains a BUG comment that should be resolved before production",
+      "suggestion": "Resolve the issue or create a proper issue tracker entry",
+      "metadata": {
+        "comment_type": "BUG"
+      }
+    },
+    {
+      "id": "non_production_d",
+      "analyzer": "non_production",
+      "rule": "debug_statement",
+      "severity": "Medium",
+      "file": "/workspaces/do-codeguardian/src/main.rs",
+      "line": 35,
+      "column": null,
+      "message": "Debug statement found",
+      "description": "Debug statements should not be present in production code",
+      "suggestion": "Remove debug statements or replace with proper logging",
+      "metadata": {}
+    },
+    {
+      "id": "non_production_t",
+      "analyzer": "non_production",
+      "rule": "todo_comment",
+      "severity": "High",
+      "file": "/workspaces/do-codeguardian/src/github_api.rs",
+      "line": 20,
+      "column": null,
+      "message": "BUG comment found",
+      "description": "Line contains a bug comment that should be resolved before production",
+      "suggestion": "Resolve the issue or create a proper issue tracker entry",
+      "metadata": {
+        "comment_type": "bug"
+      }
+    },
+    {
+      "id": "non_production_d",
+      "analyzer": "non_production",
+      "rule": "debug_statement",
+      "severity": "Medium",
+      "file": "/workspaces/do-codeguardian/src/github_api.rs",
+      "line": 20,
+      "column": null,
+      "message": "Debug statement found",
+      "description": "Debug statements should not be present in production code",
+      "suggestion": "Remove debug statements or replace with proper logging",
+      "metadata": {}
+    },
+    {
+      "id": "non_production_t",
+      "analyzer": "non_production",
+      "rule": "todo_comment",
+      "severity": "High",
+      "file": "/workspaces/do-codeguardian/src/github_api.rs",
+      "line": 28,
+      "column": null,
+      "message": "BUG comment found",
+      "description": "Line contains a bug comment that should be resolved before production",
+      "suggestion": "Resolve the issue or create a proper issue tracker entry",
+      "metadata": {
+        "comment_type": "bug"
+      }
+    },
+    {
+      "id": "non_production_d",
+      "analyzer": "non_production",
+      "rule": "debug_statement",
+      "severity": "Medium",
+      "file": "/workspaces/do-codeguardian/src/github_api.rs",
+      "line": 28,
+      "column": null,
+      "message": "Debug statement found",
+      "description": "Debug statements should not be present in production code",
+      "suggestion": "Remove debug statements or replace with proper logging",
+      "metadata": {}
+    },
+    {
+      "id": "non_production_t",
+      "analyzer": "non_production",
+      "rule": "todo_comment",
+      "severity": "High",
+      "file": "/workspaces/do-codeguardian/src/cache.rs",
+      "line": 12,
+      "column": null,
+      "message": "BUG comment found",
+      "description": "Line contains a bug comment that should be resolved before production",
+      "suggestion": "Resolve the issue or create a proper issue tracker entry",
+      "metadata": {
+        "comment_type": "bug"
+      }
+    },
+    {
+      "id": "non_production_d",
+      "analyzer": "non_production",
+      "rule": "debug_statement",
+      "severity": "Medium",
+      "file": "/workspaces/do-codeguardian/src/cache.rs",
+      "line": 12,
+      "column": null,
+      "message": "Debug statement found",
+      "description": "Debug statements should not be present in production code",
+      "suggestion": "Remove debug statements or replace with proper logging",
+      "metadata": {}
+    },
+    {
+      "id": "non_production_t",
+      "analyzer": "non_production",
+      "rule": "todo_comment",
+      "severity": "High",
+      "file": "/workspaces/do-codeguardian/src/cache.rs",
+      "line": 23,
+      "column": null,
+      "message": "BUG comment found",
+      "description": "Line contains a bug comment that should be resolved before production",
+      "suggestion": "Resolve the issue or create a proper issue tracker entry",
+      "metadata": {
+        "comment_type": "bug"
+      }
+    },
+    {
+      "id": "non_production_d",
+      "analyzer": "non_production",
+      "rule": "debug_statement",
+      "severity": "Medium",
+      "file": "/workspaces/do-codeguardian/src/cache.rs",
+      "line": 23,
+      "column": null,
+      "message": "Debug statement found",
+      "description": "Debug statements should not be present in production code",
+      "suggestion": "Remove debug statements or replace with proper logging",
+      "metadata": {}
+    },
+    {
+      "id": "non_production_t",
+      "analyzer": "non_production",
+      "rule": "todo_comment",
+      "severity": "High",
+      "file": "/workspaces/do-codeguardian/src/cache.rs",
+      "line": 155,
+      "column": null,
+      "message": "BUG comment found",
+      "description": "Line contains a bug comment that should be resolved before production",
+      "suggestion": "Resolve the issue or create a proper issue tracker entry",
+      "metadata": {
+        "comment_type": "bug"
+      }
+    },
+    {
+      "id": "non_production_d",
+      "analyzer": "non_production",
+      "rule": "debug_statement",
+      "severity": "Medium",
+      "file": "/workspaces/do-codeguardian/src/cache.rs",
+      "line": 155,
+      "column": null,
+      "message": "Debug statement found",
+      "description": "Debug statements should not be present in production code",
+      "suggestion": "Remove debug statements or replace with proper logging",
+      "metadata": {}
+    },
+    {
+      "id": "performance_nest",
+      "analyzer": "performance",
+      "rule": "nested_loops",
+      "severity": "Medium",
+      "file": "/workspaces/do-codeguardian/src/cache.rs",
+      "line": 29,
+      "column": null,
+      "message": "Potential nested loop detected",
+      "description": "Nested loops can lead to O(n^2) or higher time complexity. Consider optimizing the algorithm.",
+      "suggestion": "Review the algorithm for potential optimizations, such as using hash maps or breaking early.",
+      "metadata": {}
+    },
+    {
+      "id": "non_production_t",
+      "analyzer": "non_production",
+      "rule": "todo_comment",
+      "severity": "High",
+      "file": "/workspaces/do-codeguardian/src/types.rs",
+      "line": 32,
+      "column": null,
+      "message": "BUG comment found",
+      "description": "Line contains a bug comment that should be resolved before production",
+      "suggestion": "Resolve the issue or create a proper issue tracker entry",
+      "metadata": {
+        "comment_type": "bug"
+      }
+    },
+    {
+      "id": "non_production_d",
+      "analyzer": "non_production",
+      "rule": "debug_statement",
+      "severity": "Medium",
+      "file": "/workspaces/do-codeguardian/src/types.rs",
+      "line": 32,
+      "column": null,
+      "message": "Debug statement found",
+      "description": "Debug statements should not be present in production code",
+      "suggestion": "Remove debug statements or replace with proper logging",
+      "metadata": {}
+    },
+    {
+      "id": "non_production_t",
+      "analyzer": "non_production",
+      "rule": "todo_comment",
+      "severity": "High",
+      "file": "/workspaces/do-codeguardian/src/types.rs",
+      "line": 42,
+      "column": null,
+      "message": "BUG comment found",
+      "description": "Line contains a bug comment that should be resolved before production",
+      "suggestion": "Resolve the issue or create a proper issue tracker entry",
+      "metadata": {
+        "comment_type": "bug"
+      }
+    },
+    {
+      "id": "non_production_d",
+      "analyzer": "non_production",
+      "rule": "debug_statement",
+      "severity": "Medium",
+      "file": "/workspaces/do-codeguardian/src/types.rs",
+      "line": 42,
+      "column": null,
+      "message": "Debug statement found",
+      "description": "Debug statements should not be present in production code",
+      "suggestion": "Remove debug statements or replace with proper logging",
+      "metadata": {}
+    },
+    {
+      "id": "non_production_t",
+      "analyzer": "non_production",
+      "rule": "todo_comment",
+      "severity": "High",
+      "file": "/workspaces/do-codeguardian/src/types.rs",
+      "line": 50,
+      "column": null,
+      "message": "BUG comment found",
+      "description": "Line contains a bug comment that should be resolved before production",
+      "suggestion": "Resolve the issue or create a proper issue tracker entry",
+      "metadata": {
+        "comment_type": "bug"
+      }
+    },
+    {
+      "id": "non_production_d",
+      "analyzer": "non_production",
+      "rule": "debug_statement",
+      "severity": "Medium",
+      "file": "/workspaces/do-codeguardian/src/types.rs",
+      "line": 50,
+      "column": null,
+      "message": "Debug statement found",
+      "description": "Debug statements should not be present in production code",
+      "suggestion": "Remove debug statements or replace with proper logging",
+      "metadata": {}
+    },
+    {
+      "id": "non_production_t",
+      "analyzer": "non_production",
+      "rule": "todo_comment",
+      "severity": "High",
+      "file": "/workspaces/do-codeguardian/src/types.rs",
+      "line": 65,
+      "column": null,
+      "message": "BUG comment found",
+      "description": "Line contains a bug comment that should be resolved before production",
+      "suggestion": "Resolve the issue or create a proper issue tracker entry",
+      "metadata": {
+        "comment_type": "bug"
+      }
+    },
+    {
+      "id": "non_production_d",
+      "analyzer": "non_production",
+      "rule": "debug_statement",
+      "severity": "Medium",
+      "file": "/workspaces/do-codeguardian/src/types.rs",
+      "line": 65,
+      "column": null,
+      "message": "Debug statement found",
+      "description": "Debug statements should not be present in production code",
+      "suggestion": "Remove debug statements or replace with proper logging",
+      "metadata": {}
+    },
+    {
+      "id": "non_production_t",
+      "analyzer": "non_production",
+      "rule": "todo_comment",
+      "severity": "High",
+      "file": "/workspaces/do-codeguardian/src/types.rs",
+      "line": 74,
+      "column": null,
+      "message": "BUG comment found",
+      "description": "Line contains a bug comment that should be resolved before production",
+      "suggestion": "Resolve the issue or create a proper issue tracker entry",
+      "metadata": {
+        "comment_type": "bug"
+      }
+    },
+    {
+      "id": "non_production_d",
+      "analyzer": "non_production",
+      "rule": "debug_statement",
+      "severity": "Medium",
+      "file": "/workspaces/do-codeguardian/src/types.rs",
+      "line": 74,
+      "column": null,
+      "message": "Debug statement found",
+      "description": "Debug statements should not be present in production code",
+      "suggestion": "Remove debug statements or replace with proper logging",
+      "metadata": {}
+    },
+    {
+      "id": "performance_nest",
+      "analyzer": "performance",
+      "rule": "nested_loops",
+      "severity": "Medium",
+      "file": "/workspaces/do-codeguardian/src/security.rs",
+      "line": 3,
+      "column": null,
+      "message": "Potential nested loop detected",
+      "description": "Nested loops can lead to O(n^2) or higher time complexity. Consider optimizing the algorithm.",
+      "suggestion": "Review the algorithm for potential optimizations, such as using hash maps or breaking early.",
+      "metadata": {}
+    },
+    {
+      "id": "non_production_t",
+      "analyzer": "non_production",
+      "rule": "todo_comment",
+      "severity": "High",
+      "file": "/workspaces/do-codeguardian/src/cli.rs",
+      "line": 294,
+      "column": null,
+      "message": "BUG comment found",
+      "description": "Line contains a bug comment that should be resolved before production",
+      "suggestion": "Resolve the issue or create a proper issue tracker entry",
+      "metadata": {
+        "comment_type": "bug"
+      }
+    },
+    {
+      "id": "non_production_d",
+      "analyzer": "non_production",
+      "rule": "debug_statement",
+      "severity": "Medium",
+      "file": "/workspaces/do-codeguardian/src/cli.rs",
+      "line": 294,
+      "column": null,
+      "message": "Debug statement found",
+      "description": "Debug statements should not be present in production code",
+      "suggestion": "Remove debug statements or replace with proper logging",
+      "metadata": {}
+    },
+    {
+      "id": "non_production_t",
+      "analyzer": "non_production",
+      "rule": "todo_comment",
+      "severity": "High",
+      "file": "/workspaces/do-codeguardian/src/cli.rs",
+      "line": 304,
+      "column": null,
+      "message": "BUG comment found",
+      "description": "Line contains a bug comment that should be resolved before production",
+      "suggestion": "Resolve the issue or create a proper issue tracker entry",
+      "metadata": {
+        "comment_type": "bug"
+      }
+    },
+    {
+      "id": "non_production_d",
+      "analyzer": "non_production",
+      "rule": "debug_statement",
+      "severity": "Medium",
+      "file": "/workspaces/do-codeguardian/src/cli.rs",
+      "line": 304,
+      "column": null,
+      "message": "Debug statement found",
+      "description": "Debug statements should not be present in production code",
+      "suggestion": "Remove debug statements or replace with proper logging",
+      "metadata": {}
+    },
+    {
+      "id": "non_production_t",
+      "analyzer": "non_production",
+      "rule": "todo_comment",
+      "severity": "High",
+      "file": "/workspaces/do-codeguardian/src/cli.rs",
+      "line": 314,
+      "column": null,
+      "message": "BUG comment found",
+      "description": "Line contains a bug comment that should be resolved before production",
+      "suggestion": "Resolve the issue or create a proper issue tracker entry",
+      "metadata": {
+        "comment_type": "bug"
+      }
+    },
+    {
+      "id": "non_production_d",
+      "analyzer": "non_production",
+      "rule": "debug_statement",
+      "severity": "Medium",
+      "file": "/workspaces/do-codeguardian/src/cli.rs",
+      "line": 314,
+      "column": null,
+      "message": "Debug statement found",
+      "description": "Debug statements should not be present in production code",
+      "suggestion": "Remove debug statements or replace with proper logging",
+      "metadata": {}
+    },
+    {
+      "id": "performance_nest",
+      "analyzer": "performance",
+      "rule": "nested_loops",
+      "severity": "Medium",
+      "file": "/workspaces/do-codeguardian/src/cli.rs",
+      "line": 16,
+      "column": null,
+      "message": "Potential nested loop detected",
+      "description": "Nested loops can lead to O(n^2) or higher time complexity. Consider optimizing the algorithm.",
+      "suggestion": "Review the algorithm for potential optimizations, such as using hash maps or breaking early.",
+      "metadata": {}
+    },
+    {
+      "id": "performance_nest",
+      "analyzer": "performance",
+      "rule": "nested_loops",
+      "severity": "Medium",
+      "file": "/workspaces/do-codeguardian/src/cli/report.rs",
+      "line": 10,
+      "column": null,
+      "message": "Potential nested loop detected",
+      "description": "Nested loops can lead to O(n^2) or higher time complexity. Consider optimizing the algorithm.",
+      "suggestion": "Review the algorithm for potential optimizations, such as using hash maps or breaking early.",
+      "metadata": {}
+    },
+    {
+      "id": "non_production_t",
+      "analyzer": "non_production",
+      "rule": "todo_comment",
+      "severity": "Low",
+      "file": "/workspaces/do-codeguardian/src/cli/check.rs",
+      "line": 19,
+      "column": null,
+      "message": "TODO comment found",
+      "description": "Line contains a TODO comment that should be resolved before production",
+      "suggestion": "Resolve the issue or create a proper issue tracker entry",
+      "metadata": {
+        "comment_type": "TODO"
+      }
+    },
+    {
+      "id": "non_production_t",
+      "analyzer": "non_production",
+      "rule": "todo_comment",
+      "severity": "Low",
+      "file": "/workspaces/do-codeguardian/src/cli/check.rs",
+      "line": 24,
+      "column": null,
+      "message": "TODO comment found",
+      "description": "Line contains a TODO comment that should be resolved before production",
+      "suggestion": "Resolve the issue or create a proper issue tracker entry",
+      "metadata": {
+        "comment_type": "TODO"
+      }
+    },
+    {
+      "id": "performance_nest",
+      "analyzer": "performance",
+      "rule": "nested_loops",
+      "severity": "Medium",
+      "file": "/workspaces/do-codeguardian/src/cli/check.rs",
+      "line": 15,
+      "column": null,
+      "message": "Potential nested loop detected",
+      "description": "Nested loops can lead to O(n^2) or higher time complexity. Consider optimizing the algorithm.",
+      "suggestion": "Review the algorithm for potential optimizations, such as using hash maps or breaking early.",
+      "metadata": {}
+    },
+    {
+      "id": "performance_nest",
+      "analyzer": "performance",
+      "rule": "nested_loops",
+      "severity": "Medium",
+      "file": "/workspaces/do-codeguardian/src/cli/gh_issue.rs",
+      "line": 9,
+      "column": null,
+      "message": "Potential nested loop detected",
+      "description": "Nested loops can lead to O(n^2) or higher time complexity. Consider optimizing the algorithm.",
+      "suggestion": "Review the algorithm for potential optimizations, such as using hash maps or breaking early.",
+      "metadata": {}
+    },
+    {
+      "id": "performance_nest",
+      "analyzer": "performance",
+      "rule": "nested_loops",
+      "severity": "Medium",
+      "file": "/workspaces/do-codeguardian/src/cli/train.rs",
+      "line": 28,
+      "column": null,
+      "message": "Potential nested loop detected",
+      "description": "Nested loops can lead to O(n^2) or higher time complexity. Consider optimizing the algorithm.",
+      "suggestion": "Review the algorithm for potential optimizations, such as using hash maps or breaking early.",
+      "metadata": {}
+    },
+    {
+      "id": "non_production_t",
+      "analyzer": "non_production",
+      "rule": "todo_comment",
+      "severity": "High",
+      "file": "/workspaces/do-codeguardian/src/git.rs",
+      "line": 16,
+      "column": null,
+      "message": "BUG comment found",
+      "description": "Line contains a bug comment that should be resolved before production",
+      "suggestion": "Resolve the issue or create a proper issue tracker entry",
+      "metadata": {
+        "comment_type": "bug"
+      }
+    },
+    {
+      "id": "non_production_d",
+      "analyzer": "non_production",
+      "rule": "debug_statement",
+      "severity": "Medium",
+      "file": "/workspaces/do-codeguardian/src/git.rs",
+      "line": 16,
+      "column": null,
+      "message": "Debug statement found",
+      "description": "Debug statements should not be present in production code",
+      "suggestion": "Remove debug statements or replace with proper logging",
+      "metadata": {}
+    },
+    {
+      "id": "non_production_t",
+      "analyzer": "non_production",
+      "rule": "todo_comment",
+      "severity": "High",
+      "file": "/workspaces/do-codeguardian/src/git.rs",
+      "line": 61,
+      "column": null,
+      "message": "BUG comment found",
+      "description": "Line contains a bug comment that should be resolved before production",
+      "suggestion": "Resolve the issue or create a proper issue tracker entry",
+      "metadata": {
+        "comment_type": "bug"
+      }
+    },
+    {
+      "id": "non_production_d",
+      "analyzer": "non_production",
+      "rule": "debug_statement",
+      "severity": "Medium",
+      "file": "/workspaces/do-codeguardian/src/git.rs",
+      "line": 61,
+      "column": null,
+      "message": "Debug statement found",
+      "description": "Debug statements should not be present in production code",
+      "suggestion": "Remove debug statements or replace with proper logging",
+      "metadata": {}
+    },
+    {
+      "id": "non_production_t",
+      "analyzer": "non_production",
+      "rule": "todo_comment",
+      "severity": "High",
+      "file": "/workspaces/do-codeguardian/src/git.rs",
+      "line": 87,
+      "column": null,
+      "message": "BUG comment found",
+      "description": "Line contains a bug comment that should be resolved before production",
+      "suggestion": "Resolve the issue or create a proper issue tracker entry",
+      "metadata": {
+        "comment_type": "bug"
+      }
+    },
+    {
+      "id": "non_production_d",
+      "analyzer": "non_production",
+      "rule": "debug_statement",
+      "severity": "Medium",
+      "file": "/workspaces/do-codeguardian/src/git.rs",
+      "line": 87,
+      "column": null,
+      "message": "Debug statement found",
+      "description": "Debug statements should not be present in production code",
+      "suggestion": "Remove debug statements or replace with proper logging",
+      "metadata": {}
+    },
+    {
+      "id": "performance_nest",
+      "analyzer": "performance",
+      "rule": "nested_loops",
+      "severity": "Medium",
+      "file": "/workspaces/do-codeguardian/src/git.rs",
+      "line": 3,
+      "column": null,
+      "message": "Potential nested loop detected",
+      "description": "Nested loops can lead to O(n^2) or higher time complexity. Consider optimizing the algorithm.",
+      "suggestion": "Review the algorithm for potential optimizations, such as using hash maps or breaking early.",
+      "metadata": {}
+    },
+    {
+      "id": "non_production_t",
+      "analyzer": "non_production",
+      "rule": "todo_comment",
+      "severity": "High",
+      "file": "/workspaces/do-codeguardian/src/core/parallel_file_processor.rs",
+      "line": 13,
+      "column": null,
+      "message": "BUG comment found",
+      "description": "Line contains a bug comment that should be resolved before production",
+      "suggestion": "Resolve the issue or create a proper issue tracker entry",
+      "metadata": {
+        "comment_type": "bug"
+      }
+    },
+    {
+      "id": "non_production_d",
+      "analyzer": "non_production",
+      "rule": "debug_statement",
+      "severity": "Medium",
+      "file": "/workspaces/do-codeguardian/src/core/parallel_file_processor.rs",
+      "line": 13,
+      "column": null,
+      "message": "Debug statement found",
+      "description": "Debug statements should not be present in production code",
+      "suggestion": "Remove debug statements or replace with proper logging",
+      "metadata": {}
+    },
+    {
+      "id": "non_production_t",
+      "analyzer": "non_production",
+      "rule": "todo_comment",
+      "severity": "High",
+      "file": "/workspaces/do-codeguardian/src/core/parallel_file_processor.rs",
+      "line": 44,
+      "column": null,
+      "message": "BUG comment found",
+      "description": "Line contains a bug comment that should be resolved before production",
+      "suggestion": "Resolve the issue or create a proper issue tracker entry",
+      "metadata": {
+        "comment_type": "bug"
+      }
+    },
+    {
+      "id": "non_production_d",
+      "analyzer": "non_production",
+      "rule": "debug_statement",
+      "severity": "Medium",
+      "file": "/workspaces/do-codeguardian/src/core/parallel_file_processor.rs",
+      "line": 44,
+      "column": null,
+      "message": "Debug statement found",
+      "description": "Debug statements should not be present in production code",
+      "suggestion": "Remove debug statements or replace with proper logging",
+      "metadata": {}
+    },
+    {
+      "id": "non_production_t",
+      "analyzer": "non_production",
+      "rule": "todo_comment",
+      "severity": "High",
+      "file": "/workspaces/do-codeguardian/src/core/parallel_file_processor.rs",
+      "line": 70,
+      "column": null,
+      "message": "BUG comment found",
+      "description": "Line contains a bug comment that should be resolved before production",
+      "suggestion": "Resolve the issue or create a proper issue tracker entry",
+      "metadata": {
+        "comment_type": "bug"
+      }
+    },
+    {
+      "id": "non_production_d",
+      "analyzer": "non_production",
+      "rule": "debug_statement",
+      "severity": "Medium",
+      "file": "/workspaces/do-codeguardian/src/core/parallel_file_processor.rs",
+      "line": 70,
+      "column": null,
+      "message": "Debug statement found",
+      "description": "Debug statements should not be present in production code",
+      "suggestion": "Remove debug statements or replace with proper logging",
+      "metadata": {}
+    },
+    {
+      "id": "non_production_t",
+      "analyzer": "non_production",
+      "rule": "todo_comment",
+      "severity": "High",
+      "file": "/workspaces/do-codeguardian/src/core/parallel_file_processor.rs",
+      "line": 128,
+      "column": null,
+      "message": "BUG comment found",
+      "description": "Line contains a bug comment that should be resolved before production",
+      "suggestion": "Resolve the issue or create a proper issue tracker entry",
+      "metadata": {
+        "comment_type": "bug"
+      }
+    },
+    {
+      "id": "non_production_d",
+      "analyzer": "non_production",
+      "rule": "debug_statement",
+      "severity": "Medium",
+      "file": "/workspaces/do-codeguardian/src/core/parallel_file_processor.rs",
+      "line": 128,
+      "column": null,
+      "message": "Debug statement found",
+      "description": "Debug statements should not be present in production code",
+      "suggestion": "Remove debug statements or replace with proper logging",
+      "metadata": {}
+    },
+    {
+      "id": "non_production_t",
+      "analyzer": "non_production",
+      "rule": "todo_comment",
+      "severity": "High",
+      "file": "/workspaces/do-codeguardian/src/core/parallel_file_processor.rs",
+      "line": 148,
+      "column": null,
+      "message": "BUG comment found",
+      "description": "Line contains a bug comment that should be resolved before production",
+      "suggestion": "Resolve the issue or create a proper issue tracker entry",
+      "metadata": {
+        "comment_type": "bug"
+      }
+    },
+    {
+      "id": "non_production_d",
+      "analyzer": "non_production",
+      "rule": "debug_statement",
+      "severity": "Medium",
+      "file": "/workspaces/do-codeguardian/src/core/parallel_file_processor.rs",
+      "line": 148,
+      "column": null,
+      "message": "Debug statement found",
+      "description": "Debug statements should not be present in production code",
+      "suggestion": "Remove debug statements or replace with proper logging",
+      "metadata": {}
+    },
+    {
+      "id": "non_production_t",
+      "analyzer": "non_production",
+      "rule": "todo_comment",
+      "severity": "High",
+      "file": "/workspaces/do-codeguardian/src/core/parallel_file_processor.rs",
+      "line": 218,
+      "column": null,
+      "message": "BUG comment found",
+      "description": "Line contains a bug comment that should be resolved before production",
+      "suggestion": "Resolve the issue or create a proper issue tracker entry",
+      "metadata": {
+        "comment_type": "bug"
+      }
+    },
+    {
+      "id": "non_production_d",
+      "analyzer": "non_production",
+      "rule": "debug_statement",
+      "severity": "Medium",
+      "file": "/workspaces/do-codeguardian/src/core/parallel_file_processor.rs",
+      "line": 218,
+      "column": null,
+      "message": "Debug statement found",
+      "description": "Debug statements should not be present in production code",
+      "suggestion": "Remove debug statements or replace with proper logging",
+      "metadata": {}
+    },
+    {
+      "id": "performance_nest",
+      "analyzer": "performance",
+      "rule": "nested_loops",
+      "severity": "Medium",
+      "file": "/workspaces/do-codeguardian/src/core/parallel_file_processor.rs",
+      "line": 1,
+      "column": null,
+      "message": "Potential nested loop detected",
+      "description": "Nested loops can lead to O(n^2) or higher time complexity. Consider optimizing the algorithm.",
+      "suggestion": "Review the algorithm for potential optimizations, such as using hash maps or breaking early.",
+      "metadata": {}
+    },
+    {
+      "id": "non_production_t",
+      "analyzer": "non_production",
+      "rule": "todo_comment",
+      "severity": "High",
+      "file": "/workspaces/do-codeguardian/src/error.rs",
+      "line": 22,
+      "column": null,
+      "message": "BUG comment found",
+      "description": "Line contains a bug comment that should be resolved before production",
+      "suggestion": "Resolve the issue or create a proper issue tracker entry",
+      "metadata": {
+        "comment_type": "bug"
+      }
+    },
+    {
+      "id": "non_production_d",
+      "analyzer": "non_production",
+      "rule": "debug_statement",
+      "severity": "Medium",
+      "file": "/workspaces/do-codeguardian/src/error.rs",
+      "line": 22,
+      "column": null,
+      "message": "Debug statement found",
+      "description": "Debug statements should not be present in production code",
+      "suggestion": "Remove debug statements or replace with proper logging",
+      "metadata": {}
+    },
+    {
+      "id": "non_production_t",
+      "analyzer": "non_production",
+      "rule": "todo_comment",
+      "severity": "High",
+      "file": "/workspaces/do-codeguardian/src/commands/turbo.rs",
+      "line": 19,
+      "column": null,
+      "message": "BUG comment found",
+      "description": "Line contains a bug comment that should be resolved before production",
+      "suggestion": "Resolve the issue or create a proper issue tracker entry",
+      "metadata": {
+        "comment_type": "bug"
+      }
+    },
+    {
+      "id": "non_production_d",
+      "analyzer": "non_production",
+      "rule": "debug_statement",
+      "severity": "Medium",
+      "file": "/workspaces/do-codeguardian/src/commands/turbo.rs",
+      "line": 19,
+      "column": null,
+      "message": "Debug statement found",
+      "description": "Debug statements should not be present in production code",
+      "suggestion": "Remove debug statements or replace with proper logging",
+      "metadata": {}
+    },
+    {
+      "id": "non_production_t",
+      "analyzer": "non_production",
+      "rule": "todo_comment",
+      "severity": "High",
+      "file": "/workspaces/do-codeguardian/src/commands/turbo.rs",
+      "line": 165,
+      "column": null,
+      "message": "BUG comment found",
+      "description": "Line contains a bug comment that should be resolved before production",
+      "suggestion": "Resolve the issue or create a proper issue tracker entry",
+      "metadata": {
+        "comment_type": "bug"
+      }
+    },
+    {
+      "id": "non_production_d",
+      "analyzer": "non_production",
+      "rule": "debug_statement",
+      "severity": "Medium",
+      "file": "/workspaces/do-codeguardian/src/commands/turbo.rs",
+      "line": 165,
+      "column": null,
+      "message": "Debug statement found",
+      "description": "Debug statements should not be present in production code",
+      "suggestion": "Remove debug statements or replace with proper logging",
+      "metadata": {}
+    },
+    {
+      "id": "performance_nest",
+      "analyzer": "performance",
+      "rule": "nested_loops",
+      "severity": "Medium",
+      "file": "/workspaces/do-codeguardian/src/commands/turbo.rs",
+      "line": 3,
+      "column": null,
+      "message": "Potential nested loop detected",
+      "description": "Nested loops can lead to O(n^2) or higher time complexity. Consider optimizing the algorithm.",
+      "suggestion": "Review the algorithm for potential optimizations, such as using hash maps or breaking early.",
+      "metadata": {}
+    },
+    {
+      "id": "non_production_t",
+      "analyzer": "non_production",
+      "rule": "todo_comment",
+      "severity": "High",
+      "file": "/workspaces/do-codeguardian/src/commands/git_commit.rs",
+      "line": 16,
+      "column": null,
+      "message": "BUG comment found",
+      "description": "Line contains a bug comment that should be resolved before production",
+      "suggestion": "Resolve the issue or create a proper issue tracker entry",
+      "metadata": {
+        "comment_type": "bug"
+      }
+    },
+    {
+      "id": "non_production_d",
+      "analyzer": "non_production",
+      "rule": "debug_statement",
+      "severity": "Medium",
+      "file": "/workspaces/do-codeguardian/src/commands/git_commit.rs",
+      "line": 16,
+      "column": null,
+      "message": "Debug statement found",
+      "description": "Debug statements should not be present in production code",
+      "suggestion": "Remove debug statements or replace with proper logging",
+      "metadata": {}
+    },
+    {
+      "id": "non_production_t",
+      "analyzer": "non_production",
+      "rule": "todo_comment",
+      "severity": "High",
+      "file": "/workspaces/do-codeguardian/src/commands/git_commit.rs",
+      "line": 74,
+      "column": null,
+      "message": "BUG comment found",
+      "description": "Line contains a bug comment that should be resolved before production",
+      "suggestion": "Resolve the issue or create a proper issue tracker entry",
+      "metadata": {
+        "comment_type": "bug"
+      }
+    },
+    {
+      "id": "non_production_d",
+      "analyzer": "non_production",
+      "rule": "debug_statement",
+      "severity": "Medium",
+      "file": "/workspaces/do-codeguardian/src/commands/git_commit.rs",
+      "line": 74,
+      "column": null,
+      "message": "Debug statement found",
+      "description": "Debug statements should not be present in production code",
+      "suggestion": "Remove debug statements or replace with proper logging",
+      "metadata": {}
+    },
+    {
+      "id": "non_production_t",
+      "analyzer": "non_production",
+      "rule": "todo_comment",
+      "severity": "High",
+      "file": "/workspaces/do-codeguardian/src/commands/git_commit.rs",
+      "line": 100,
+      "column": null,
+      "message": "BUG comment found",
+      "description": "Line contains a bug comment that should be resolved before production",
+      "suggestion": "Resolve the issue or create a proper issue tracker entry",
+      "metadata": {
+        "comment_type": "bug"
+      }
+    },
+    {
+      "id": "non_production_d",
+      "analyzer": "non_production",
+      "rule": "debug_statement",
+      "severity": "Medium",
+      "file": "/workspaces/do-codeguardian/src/commands/git_commit.rs",
+      "line": 100,
+      "column": null,
+      "message": "Debug statement found",
+      "description": "Debug statements should not be present in production code",
+      "suggestion": "Remove debug statements or replace with proper logging",
+      "metadata": {}
+    },
+    {
+      "id": "performance_nest",
+      "analyzer": "performance",
+      "rule": "nested_loops",
+      "severity": "Medium",
+      "file": "/workspaces/do-codeguardian/src/commands/git_commit.rs",
+      "line": 8,
+      "column": null,
+      "message": "Potential nested loop detected",
+      "description": "Nested loops can lead to O(n^2) or higher time complexity. Consider optimizing the algorithm.",
+      "suggestion": "Review the algorithm for potential optimizations, such as using hash maps or breaking early.",
+      "metadata": {}
+    },
+    {
+      "id": "non_production_t",
+      "analyzer": "non_production",
+      "rule": "todo_comment",
+      "severity": "High",
+      "file": "/workspaces/do-codeguardian/src/core.rs",
+      "line": 378,
+      "column": null,
+      "message": "BUG comment found",
+      "description": "Line contains a bug comment that should be resolved before production",
+      "suggestion": "Resolve the issue or create a proper issue tracker entry",
+      "metadata": {
+        "comment_type": "bug"
+      }
+    },
+    {
+      "id": "non_production_d",
+      "analyzer": "non_production",
+      "rule": "debug_statement",
+      "severity": "Medium",
+      "file": "/workspaces/do-codeguardian/src/core.rs",
+      "line": 378,
+      "column": null,
+      "message": "Debug statement found",
+      "description": "Debug statements should not be present in production code",
+      "suggestion": "Remove debug statements or replace with proper logging",
+      "metadata": {}
+    },
+    {
+      "id": "performance_nest",
+      "analyzer": "performance",
+      "rule": "nested_loops",
+      "severity": "Medium",
+      "file": "/workspaces/do-codeguardian/src/core.rs",
+      "line": 18,
+      "column": null,
+      "message": "Potential nested loop detected",
+      "description": "Nested loops can lead to O(n^2) or higher time complexity. Consider optimizing the algorithm.",
+      "suggestion": "Review the algorithm for potential optimizations, such as using hash maps or breaking early.",
+      "metadata": {}
+    },
+    {
+      "id": "performance_nest",
+      "analyzer": "performance",
+      "rule": "nested_loops",
+      "severity": "Medium",
+      "file": "/workspaces/do-codeguardian/src/streaming.rs",
+      "line": 8,
+      "column": null,
+      "message": "Potential nested loop detected",
+      "description": "Nested loops can lead to O(n^2) or higher time complexity. Consider optimizing the algorithm.",
+      "suggestion": "Review the algorithm for potential optimizations, such as using hash maps or breaking early.",
+      "metadata": {}
+    },
+    {
+      "id": "non_production_t",
+      "analyzer": "non_production",
+      "rule": "todo_comment",
+      "severity": "High",
+      "file": "/workspaces/do-codeguardian/src/config.rs",
+      "line": 23,
+      "column": null,
+      "message": "BUG comment found",
+      "description": "Line contains a bug comment that should be resolved before production",
+      "suggestion": "Resolve the issue or create a proper issue tracker entry",
+      "metadata": {
+        "comment_type": "bug"
+      }
+    },
+    {
+      "id": "non_production_d",
+      "analyzer": "non_production",
+      "rule": "debug_statement",
+      "severity": "Medium",
+      "file": "/workspaces/do-codeguardian/src/config.rs",
+      "line": 23,
+      "column": null,
+      "message": "Debug statement found",
+      "description": "Debug statements should not be present in production code",
+      "suggestion": "Remove debug statements or replace with proper logging",
+      "metadata": {}
+    },
+    {
+      "id": "non_production_t",
+      "analyzer": "non_production",
+      "rule": "todo_comment",
+      "severity": "High",
+      "file": "/workspaces/do-codeguardian/src/config.rs",
+      "line": 73,
+      "column": null,
+      "message": "BUG comment found",
+      "description": "Line contains a bug comment that should be resolved before production",
+      "suggestion": "Resolve the issue or create a proper issue tracker entry",
+      "metadata": {
+        "comment_type": "bug"
+      }
+    },
+    {
+      "id": "non_production_d",
+      "analyzer": "non_production",
+      "rule": "debug_statement",
+      "severity": "Medium",
+      "file": "/workspaces/do-codeguardian/src/config.rs",
+      "line": 73,
+      "column": null,
+      "message": "Debug statement found",
+      "description": "Debug statements should not be present in production code",
+      "suggestion": "Remove debug statements or replace with proper logging",
+      "metadata": {}
+    },
+    {
+      "id": "non_production_t",
+      "analyzer": "non_production",
+      "rule": "todo_comment",
+      "severity": "High",
+      "file": "/workspaces/do-codeguardian/src/config.rs",
+      "line": 118,
+      "column": null,
+      "message": "BUG comment found",
+      "description": "Line contains a bug comment that should be resolved before production",
+      "suggestion": "Resolve the issue or create a proper issue tracker entry",
+      "metadata": {
+        "comment_type": "bug"
+      }
+    },
+    {
+      "id": "non_production_d",
+      "analyzer": "non_production",
+      "rule": "debug_statement",
+      "severity": "Medium",
+      "file": "/workspaces/do-codeguardian/src/config.rs",
+      "line": 118,
+      "column": null,
+      "message": "Debug statement found",
+      "description": "Debug statements should not be present in production code",
+      "suggestion": "Remove debug statements or replace with proper logging",
+      "metadata": {}
+    },
+    {
+      "id": "non_production_p",
+      "analyzer": "non_production",
+      "rule": "potential_secret",
+      "severity": "Critical",
+      "file": "/workspaces/do-codeguardian/src/config.rs",
+      "line": 164,
+      "column": null,
+      "message": "Potential hardcoded secret detected",
+      "description": "Line may contain hardcoded credentials or API keys",
+      "suggestion": "Move secrets to environment variables or secure configuration",
+      "metadata": {}
+    },
+    {
+      "id": "non_production_p",
+      "analyzer": "non_production",
+      "rule": "potential_secret",
+      "severity": "Critical",
+      "file": "/workspaces/do-codeguardian/src/config.rs",
+      "line": 165,
+      "column": null,
+      "message": "Potential hardcoded secret detected",
+      "description": "Line may contain hardcoded credentials or API keys",
+      "suggestion": "Move secrets to environment variables or secure configuration",
+      "metadata": {}
+    },
+    {
+      "id": "non_production_p",
+      "analyzer": "non_production",
+      "rule": "potential_secret",
+      "severity": "Critical",
+      "file": "/workspaces/do-codeguardian/src/config.rs",
+      "line": 166,
+      "column": null,
+      "message": "Potential hardcoded secret detected",
+      "description": "Line may contain hardcoded credentials or API keys",
+      "suggestion": "Move secrets to environment variables or secure configuration",
+      "metadata": {}
+    },
+    {
+      "id": "non_production_t",
+      "analyzer": "non_production",
+      "rule": "todo_comment",
+      "severity": "High",
+      "file": "/workspaces/do-codeguardian/src/config.rs",
+      "line": 177,
+      "column": null,
+      "message": "BUG comment found",
+      "description": "Line contains a bug comment that should be resolved before production",
+      "suggestion": "Resolve the issue or create a proper issue tracker entry",
+      "metadata": {
+        "comment_type": "bug"
+      }
+    },
+    {
+      "id": "non_production_d",
+      "analyzer": "non_production",
+      "rule": "debug_statement",
+      "severity": "Medium",
+      "file": "/workspaces/do-codeguardian/src/config.rs",
+      "line": 177,
+      "column": null,
+      "message": "Debug statement found",
+      "description": "Debug statements should not be present in production code",
+      "suggestion": "Remove debug statements or replace with proper logging",
+      "metadata": {}
+    },
+    {
+      "id": "non_production_t",
+      "analyzer": "non_production",
+      "rule": "todo_comment",
+      "severity": "High",
+      "file": "/workspaces/do-codeguardian/src/config.rs",
+      "line": 198,
+      "column": null,
+      "message": "BUG comment found",
+      "description": "Line contains a bug comment that should be resolved before production",
+      "suggestion": "Resolve the issue or create a proper issue tracker entry",
+      "metadata": {
+        "comment_type": "bug"
+      }
+    },
+    {
+      "id": "non_production_d",
+      "analyzer": "non_production",
+      "rule": "debug_statement",
+      "severity": "Medium",
+      "file": "/workspaces/do-codeguardian/src/config.rs",
+      "line": 198,
+      "column": null,
+      "message": "Debug statement found",
+      "description": "Debug statements should not be present in production code",
+      "suggestion": "Remove debug statements or replace with proper logging",
+      "metadata": {}
+    },
+    {
+      "id": "non_production_t",
+      "analyzer": "non_production",
+      "rule": "todo_comment",
+      "severity": "High",
+      "file": "/workspaces/do-codeguardian/src/config.rs",
+      "line": 234,
+      "column": null,
+      "message": "BUG comment found",
+      "description": "Line contains a bug comment that should be resolved before production",
+      "suggestion": "Resolve the issue or create a proper issue tracker entry",
+      "metadata": {
+        "comment_type": "bug"
+      }
+    },
+    {
+      "id": "non_production_d",
+      "analyzer": "non_production",
+      "rule": "debug_statement",
+      "severity": "Medium",
+      "file": "/workspaces/do-codeguardian/src/config.rs",
+      "line": 234,
+      "column": null,
+      "message": "Debug statement found",
+      "description": "Debug statements should not be present in production code",
+      "suggestion": "Remove debug statements or replace with proper logging",
+      "metadata": {}
+    },
+    {
+      "id": "non_production_t",
+      "analyzer": "non_production",
+      "rule": "todo_comment",
+      "severity": "High",
+      "file": "/workspaces/do-codeguardian/src/config.rs",
+      "line": 253,
+      "column": null,
+      "message": "BUG comment found",
+      "description": "Line contains a bug comment that should be resolved before production",
+      "suggestion": "Resolve the issue or create a proper issue tracker entry",
+      "metadata": {
+        "comment_type": "bug"
+      }
+    },
+    {
+      "id": "non_production_d",
+      "analyzer": "non_production",
+      "rule": "debug_statement",
+      "severity": "Medium",
+      "file": "/workspaces/do-codeguardian/src/config.rs",
+      "line": 253,
+      "column": null,
+      "message": "Debug statement found",
+      "description": "Debug statements should not be present in production code",
+      "suggestion": "Remove debug statements or replace with proper logging",
+      "metadata": {}
+    },
+    {
+      "id": "non_production_t",
+      "analyzer": "non_production",
+      "rule": "todo_comment",
+      "severity": "High",
+      "file": "/workspaces/do-codeguardian/src/config.rs",
+      "line": 289,
+      "column": null,
+      "message": "BUG comment found",
+      "description": "Line contains a bug comment that should be resolved before production",
+      "suggestion": "Resolve the issue or create a proper issue tracker entry",
+      "metadata": {
+        "comment_type": "bug"
+      }
+    },
+    {
+      "id": "non_production_d",
+      "analyzer": "non_production",
+      "rule": "debug_statement",
+      "severity": "Medium",
+      "file": "/workspaces/do-codeguardian/src/config.rs",
+      "line": 289,
+      "column": null,
+      "message": "Debug statement found",
+      "description": "Debug statements should not be present in production code",
+      "suggestion": "Remove debug statements or replace with proper logging",
+      "metadata": {}
+    },
+    {
+      "id": "non_production_t",
+      "analyzer": "non_production",
+      "rule": "todo_comment",
+      "severity": "High",
+      "file": "/workspaces/do-codeguardian/src/config.rs",
+      "line": 320,
+      "column": null,
+      "message": "BUG comment found",
+      "description": "Line contains a bug comment that should be resolved before production",
+      "suggestion": "Resolve the issue or create a proper issue tracker entry",
+      "metadata": {
+        "comment_type": "bug"
+      }
+    },
+    {
+      "id": "non_production_d",
+      "analyzer": "non_production",
+      "rule": "debug_statement",
+      "severity": "Medium",
+      "file": "/workspaces/do-codeguardian/src/config.rs",
+      "line": 320,
+      "column": null,
+      "message": "Debug statement found",
+      "description": "Debug statements should not be present in production code",
+      "suggestion": "Remove debug statements or replace with proper logging",
+      "metadata": {}
+    },
+    {
+      "id": "non_production_t",
+      "analyzer": "non_production",
+      "rule": "todo_comment",
+      "severity": "Low",
+      "file": "/workspaces/do-codeguardian/src/config.rs",
+      "line": 340,
+      "column": null,
+      "message": "TODO comment found",
+      "description": "Line contains a todo comment that should be resolved before production",
+      "suggestion": "Resolve the issue or create a proper issue tracker entry",
+      "metadata": {
+        "comment_type": "todo"
+      }
+    },
+    {
+      "id": "non_production_t",
+      "analyzer": "non_production",
+      "rule": "todo_comment",
+      "severity": "High",
+      "file": "/workspaces/do-codeguardian/src/config.rs",
+      "line": 346,
+      "column": null,
+      "message": "BUG comment found",
+      "description": "Line contains a bug comment that should be resolved before production",
+      "suggestion": "Resolve the issue or create a proper issue tracker entry",
+      "metadata": {
+        "comment_type": "bug"
+      }
+    },
+    {
+      "id": "non_production_d",
+      "analyzer": "non_production",
+      "rule": "debug_statement",
+      "severity": "Medium",
+      "file": "/workspaces/do-codeguardian/src/config.rs",
+      "line": 346,
+      "column": null,
+      "message": "Debug statement found",
+      "description": "Debug statements should not be present in production code",
+      "suggestion": "Remove debug statements or replace with proper logging",
+      "metadata": {}
+    },
+    {
+      "id": "non_production_t",
+      "analyzer": "non_production",
+      "rule": "todo_comment",
+      "severity": "High",
+      "file": "/workspaces/do-codeguardian/src/config.rs",
+      "line": 355,
+      "column": null,
+      "message": "BUG comment found",
+      "description": "Line contains a bug comment that should be resolved before production",
+      "suggestion": "Resolve the issue or create a proper issue tracker entry",
+      "metadata": {
+        "comment_type": "bug"
+      }
+    },
+    {
+      "id": "non_production_d",
+      "analyzer": "non_production",
+      "rule": "debug_statement",
+      "severity": "Medium",
+      "file": "/workspaces/do-codeguardian/src/config.rs",
+      "line": 355,
+      "column": null,
+      "message": "Debug statement found",
+      "description": "Debug statements should not be present in production code",
+      "suggestion": "Remove debug statements or replace with proper logging",
+      "metadata": {}
+    },
+    {
+      "id": "non_production_t",
+      "analyzer": "non_production",
+      "rule": "todo_comment",
+      "severity": "High",
+      "file": "/workspaces/do-codeguardian/src/config.rs",
+      "line": 366,
+      "column": null,
+      "message": "BUG comment found",
+      "description": "Line contains a bug comment that should be resolved before production",
+      "suggestion": "Resolve the issue or create a proper issue tracker entry",
+      "metadata": {
+        "comment_type": "bug"
+      }
+    },
+    {
+      "id": "non_production_d",
+      "analyzer": "non_production",
+      "rule": "debug_statement",
+      "severity": "Medium",
+      "file": "/workspaces/do-codeguardian/src/config.rs",
+      "line": 366,
+      "column": null,
+      "message": "Debug statement found",
+      "description": "Debug statements should not be present in production code",
+      "suggestion": "Remove debug statements or replace with proper logging",
+      "metadata": {}
+    },
+    {
+      "id": "non_production_t",
+      "analyzer": "non_production",
+      "rule": "todo_comment",
+      "severity": "High",
+      "file": "/workspaces/do-codeguardian/src/config.rs",
+      "line": 405,
+      "column": null,
+      "message": "BUG comment found",
+      "description": "Line contains a bug comment that should be resolved before production",
+      "suggestion": "Resolve the issue or create a proper issue tracker entry",
+      "metadata": {
+        "comment_type": "bug"
+      }
+    },
+    {
+      "id": "non_production_d",
+      "analyzer": "non_production",
+      "rule": "debug_statement",
+      "severity": "Medium",
+      "file": "/workspaces/do-codeguardian/src/config.rs",
+      "line": 405,
+      "column": null,
+      "message": "Debug statement found",
+      "description": "Debug statements should not be present in production code",
+      "suggestion": "Remove debug statements or replace with proper logging",
+      "metadata": {}
+    },
+    {
+      "id": "non_production_t",
+      "analyzer": "non_production",
+      "rule": "todo_comment",
+      "severity": "High",
+      "file": "/workspaces/do-codeguardian/src/config.rs",
+      "line": 447,
+      "column": null,
+      "message": "BUG comment found",
+      "description": "Line contains a bug comment that should be resolved before production",
+      "suggestion": "Resolve the issue or create a proper issue tracker entry",
+      "metadata": {
+        "comment_type": "bug"
+      }
+    },
+    {
+      "id": "non_production_d",
+      "analyzer": "non_production",
+      "rule": "debug_statement",
+      "severity": "Medium",
+      "file": "/workspaces/do-codeguardian/src/config.rs",
+      "line": 447,
+      "column": null,
+      "message": "Debug statement found",
+      "description": "Debug statements should not be present in production code",
+      "suggestion": "Remove debug statements or replace with proper logging",
+      "metadata": {}
+    },
+    {
+      "id": "non_production_t",
+      "analyzer": "non_production",
+      "rule": "todo_comment",
+      "severity": "High",
+      "file": "/workspaces/do-codeguardian/src/config.rs",
+      "line": 486,
+      "column": null,
+      "message": "BUG comment found",
+      "description": "Line contains a bug comment that should be resolved before production",
+      "suggestion": "Resolve the issue or create a proper issue tracker entry",
+      "metadata": {
+        "comment_type": "bug"
+      }
+    },
+    {
+      "id": "non_production_d",
+      "analyzer": "non_production",
+      "rule": "debug_statement",
+      "severity": "Medium",
+      "file": "/workspaces/do-codeguardian/src/config.rs",
+      "line": 486,
+      "column": null,
+      "message": "Debug statement found",
+      "description": "Debug statements should not be present in production code",
+      "suggestion": "Remove debug statements or replace with proper logging",
+      "metadata": {}
+    },
+    {
+      "id": "non_production_t",
+      "analyzer": "non_production",
+      "rule": "todo_comment",
+      "severity": "High",
+      "file": "/workspaces/do-codeguardian/src/config.rs",
+      "line": 534,
+      "column": null,
+      "message": "BUG comment found",
+      "description": "Line contains a bug comment that should be resolved before production",
+      "suggestion": "Resolve the issue or create a proper issue tracker entry",
+      "metadata": {
+        "comment_type": "bug"
+      }
+    },
+    {
+      "id": "non_production_d",
+      "analyzer": "non_production",
+      "rule": "debug_statement",
+      "severity": "Medium",
+      "file": "/workspaces/do-codeguardian/src/config.rs",
+      "line": 534,
+      "column": null,
+      "message": "Debug statement found",
+      "description": "Debug statements should not be present in production code",
+      "suggestion": "Remove debug statements or replace with proper logging",
+      "metadata": {}
+    },
+    {
+      "id": "non_production_t",
+      "analyzer": "non_production",
+      "rule": "todo_comment",
+      "severity": "High",
+      "file": "/workspaces/do-codeguardian/src/config.rs",
+      "line": 604,
+      "column": null,
+      "message": "BUG comment found",
+      "description": "Line contains a bug comment that should be resolved before production",
+      "suggestion": "Resolve the issue or create a proper issue tracker entry",
+      "metadata": {
+        "comment_type": "bug"
+      }
+    },
+    {
+      "id": "non_production_d",
+      "analyzer": "non_production",
+      "rule": "debug_statement",
+      "severity": "Medium",
+      "file": "/workspaces/do-codeguardian/src/config.rs",
+      "line": 604,
+      "column": null,
+      "message": "Debug statement found",
+      "description": "Debug statements should not be present in production code",
+      "suggestion": "Remove debug statements or replace with proper logging",
+      "metadata": {}
+    },
+    {
+      "id": "non_production_t",
+      "analyzer": "non_production",
+      "rule": "todo_comment",
+      "severity": "High",
+      "file": "/workspaces/do-codeguardian/src/config.rs",
+      "line": 631,
+      "column": null,
+      "message": "BUG comment found",
+      "description": "Line contains a bug comment that should be resolved before production",
+      "suggestion": "Resolve the issue or create a proper issue tracker entry",
+      "metadata": {
+        "comment_type": "bug"
+      }
+    },
+    {
+      "id": "non_production_d",
+      "analyzer": "non_production",
+      "rule": "debug_statement",
+      "severity": "Medium",
+      "file": "/workspaces/do-codeguardian/src/config.rs",
+      "line": 631,
+      "column": null,
+      "message": "Debug statement found",
+      "description": "Debug statements should not be present in production code",
+      "suggestion": "Remove debug statements or replace with proper logging",
+      "metadata": {}
+    },
+    {
+      "id": "non_production_t",
+      "analyzer": "non_production",
+      "rule": "todo_comment",
+      "severity": "High",
+      "file": "/workspaces/do-codeguardian/src/config.rs",
+      "line": 640,
+      "column": null,
+      "message": "BUG comment found",
+      "description": "Line contains a bug comment that should be resolved before production",
+      "suggestion": "Resolve the issue or create a proper issue tracker entry",
+      "metadata": {
+        "comment_type": "bug"
+      }
+    },
+    {
+      "id": "non_production_d",
+      "analyzer": "non_production",
+      "rule": "debug_statement",
+      "severity": "Medium",
+      "file": "/workspaces/do-codeguardian/src/config.rs",
+      "line": 640,
+      "column": null,
+      "message": "Debug statement found",
+      "description": "Debug statements should not be present in production code",
+      "suggestion": "Remove debug statements or replace with proper logging",
+      "metadata": {}
+    },
+    {
+      "id": "non_production_t",
+      "analyzer": "non_production",
+      "rule": "todo_comment",
+      "severity": "High",
+      "file": "/workspaces/do-codeguardian/src/config.rs",
+      "line": 673,
+      "column": null,
+      "message": "BUG comment found",
+      "description": "Line contains a bug comment that should be resolved before production",
+      "suggestion": "Resolve the issue or create a proper issue tracker entry",
+      "metadata": {
+        "comment_type": "bug"
+      }
+    },
+    {
+      "id": "non_production_d",
+      "analyzer": "non_production",
+      "rule": "debug_statement",
+      "severity": "Medium",
+      "file": "/workspaces/do-codeguardian/src/config.rs",
+      "line": 673,
+      "column": null,
+      "message": "Debug statement found",
+      "description": "Debug statements should not be present in production code",
+      "suggestion": "Remove debug statements or replace with proper logging",
+      "metadata": {}
+    },
+    {
+      "id": "non_production_t",
+      "analyzer": "non_production",
+      "rule": "todo_comment",
+      "severity": "High",
+      "file": "/workspaces/do-codeguardian/src/config.rs",
+      "line": 706,
+      "column": null,
+      "message": "BUG comment found",
+      "description": "Line contains a bug comment that should be resolved before production",
+      "suggestion": "Resolve the issue or create a proper issue tracker entry",
+      "metadata": {
+        "comment_type": "bug"
+      }
+    },
+    {
+      "id": "non_production_d",
+      "analyzer": "non_production",
+      "rule": "debug_statement",
+      "severity": "Medium",
+      "file": "/workspaces/do-codeguardian/src/config.rs",
+      "line": 706,
+      "column": null,
+      "message": "Debug statement found",
+      "description": "Debug statements should not be present in production code",
+      "suggestion": "Remove debug statements or replace with proper logging",
+      "metadata": {}
+    },
+    {
+      "id": "non_production_t",
+      "analyzer": "non_production",
+      "rule": "todo_comment",
+      "severity": "High",
+      "file": "/workspaces/do-codeguardian/src/config.rs",
+      "line": 742,
+      "column": null,
+      "message": "BUG comment found",
+      "description": "Line contains a bug comment that should be resolved before production",
+      "suggestion": "Resolve the issue or create a proper issue tracker entry",
+      "metadata": {
+        "comment_type": "bug"
+      }
+    },
+    {
+      "id": "non_production_d",
+      "analyzer": "non_production",
+      "rule": "debug_statement",
+      "severity": "Medium",
+      "file": "/workspaces/do-codeguardian/src/config.rs",
+      "line": 742,
+      "column": null,
+      "message": "Debug statement found",
+      "description": "Debug statements should not be present in production code",
+      "suggestion": "Remove debug statements or replace with proper logging",
+      "metadata": {}
+    },
+    {
+      "id": "non_production_t",
+      "analyzer": "non_production",
+      "rule": "todo_comment",
+      "severity": "High",
+      "file": "/workspaces/do-codeguardian/src/config.rs",
+      "line": 781,
+      "column": null,
+      "message": "BUG comment found",
+      "description": "Line contains a bug comment that should be resolved before production",
+      "suggestion": "Resolve the issue or create a proper issue tracker entry",
+      "metadata": {
+        "comment_type": "bug"
+      }
+    },
+    {
+      "id": "non_production_d",
+      "analyzer": "non_production",
+      "rule": "debug_statement",
+      "severity": "Medium",
+      "file": "/workspaces/do-codeguardian/src/config.rs",
+      "line": 781,
+      "column": null,
+      "message": "Debug statement found",
+      "description": "Debug statements should not be present in production code",
+      "suggestion": "Remove debug statements or replace with proper logging",
+      "metadata": {}
+    },
+    {
+      "id": "non_production_t",
+      "analyzer": "non_production",
+      "rule": "todo_comment",
+      "severity": "High",
+      "file": "/workspaces/do-codeguardian/src/config.rs",
+      "line": 805,
+      "column": null,
+      "message": "BUG comment found",
+      "description": "Line contains a bug comment that should be resolved before production",
+      "suggestion": "Resolve the issue or create a proper issue tracker entry",
+      "metadata": {
+        "comment_type": "bug"
+      }
+    },
+    {
+      "id": "non_production_d",
+      "analyzer": "non_production",
+      "rule": "debug_statement",
+      "severity": "Medium",
+      "file": "/workspaces/do-codeguardian/src/config.rs",
+      "line": 805,
+      "column": null,
+      "message": "Debug statement found",
+      "description": "Debug statements should not be present in production code",
+      "suggestion": "Remove debug statements or replace with proper logging",
+      "metadata": {}
+    },
+    {
+      "id": "performance_nest",
+      "analyzer": "performance",
+      "rule": "nested_loops",
+      "severity": "Medium",
+      "file": "/workspaces/do-codeguardian/src/config.rs",
+      "line": 3,
+      "column": null,
+      "message": "Potential nested loop detected",
+      "description": "Nested loops can lead to O(n^2) or higher time complexity. Consider optimizing the algorithm.",
+      "suggestion": "Review the algorithm for potential optimizations, such as using hash maps or breaking early.",
+      "metadata": {}
+    },
+    {
+      "id": "non_production_d",
+      "analyzer": "non_production",
+      "rule": "debug_statement",
+      "severity": "Medium",
+      "file": "/workspaces/do-codeguardian/build.rs",
+      "line": 5,
+      "column": null,
+      "message": "Debug statement found",
+      "description": "Debug statements should not be present in production code",
+      "suggestion": "Remove debug statements or replace with proper logging",
+      "metadata": {}
+    },
+    {
+      "id": "non_production_d",
+      "analyzer": "non_production",
+      "rule": "debug_statement",
+      "severity": "Medium",
+      "file": "/workspaces/do-codeguardian/build.rs",
+      "line": 6,
+      "column": null,
+      "message": "Debug statement found",
+      "description": "Debug statements should not be present in production code",
+      "suggestion": "Remove debug statements or replace with proper logging",
+      "metadata": {}
+    },
+    {
+      "id": "non_production_d",
+      "analyzer": "non_production",
+      "rule": "debug_statement",
+      "severity": "Medium",
+      "file": "/workspaces/do-codeguardian/build.rs",
+      "line": 29,
+      "column": null,
+      "message": "Debug statement found",
+      "description": "Debug statements should not be present in production code",
+      "suggestion": "Remove debug statements or replace with proper logging",
+      "metadata": {}
+    },
+    {
+      "id": "non_production_d",
+      "analyzer": "non_production",
+      "rule": "debug_statement",
+      "severity": "Medium",
+      "file": "/workspaces/do-codeguardian/build.rs",
+      "line": 40,
+      "column": null,
+      "message": "Debug statement found",
+      "description": "Debug statements should not be present in production code",
+      "suggestion": "Remove debug statements or replace with proper logging",
+      "metadata": {}
+    },
+    {
+      "id": "performance_nest",
+      "analyzer": "performance",
+      "rule": "nested_loops",
+      "severity": "Medium",
+      "file": "/workspaces/do-codeguardian/tests/e2e_cli_tests.rs",
+      "line": 7,
+      "column": null,
+      "message": "Potential nested loop detected",
+      "description": "Nested loops can lead to O(n^2) or higher time complexity. Consider optimizing the algorithm.",
+      "suggestion": "Review the algorithm for potential optimizations, such as using hash maps or breaking early.",
+      "metadata": {}
+    },
+    {
+      "id": "performance_nest",
+      "analyzer": "performance",
+      "rule": "nested_loops",
+      "severity": "Medium",
+      "file": "/workspaces/do-codeguardian/tests/e2e_error_scenarios.rs",
+      "line": 28,
+      "column": null,
+      "message": "Potential nested loop detected",
+      "description": "Nested loops can lead to O(n^2) or higher time complexity. Consider optimizing the algorithm.",
+      "suggestion": "Review the algorithm for potential optimizations, such as using hash maps or breaking early.",
+      "metadata": {}
+    },
+    {
+      "id": "performance_nest",
+      "analyzer": "performance",
+      "rule": "nested_loops",
+      "severity": "Medium",
+      "file": "/workspaces/do-codeguardian/tests/e2e_performance_tests.rs",
+      "line": 8,
+      "column": null,
+      "message": "Potential nested loop detected",
+      "description": "Nested loops can lead to O(n^2) or higher time complexity. Consider optimizing the algorithm.",
+      "suggestion": "Review the algorithm for potential optimizations, such as using hash maps or breaking early.",
+      "metadata": {}
+    },
+    {
+      "id": "performance_nest",
+      "analyzer": "performance",
+      "rule": "nested_loops",
+      "severity": "Medium",
+      "file": "/workspaces/do-codeguardian/tests/performance_regression_tests.rs",
+      "line": 2,
+      "column": null,
+      "message": "Potential nested loop detected",
+      "description": "Nested loops can lead to O(n^2) or higher time complexity. Consider optimizing the algorithm.",
+      "suggestion": "Review the algorithm for potential optimizations, such as using hash maps or breaking early.",
+      "metadata": {}
+    },
+    {
+      "id": "performance_nest",
+      "analyzer": "performance",
+      "rule": "nested_loops",
+      "severity": "Medium",
+      "file": "/workspaces/do-codeguardian/tests/performance_regression_tests.rs",
+      "line": 209,
+      "column": null,
+      "message": "Potential nested loop detected",
+      "description": "Nested loops can lead to O(n^2) or higher time complexity. Consider optimizing the algorithm.",
+      "suggestion": "Review the algorithm for potential optimizations, such as using hash maps or breaking early.",
+      "metadata": {}
+    },
+    {
+      "id": "performance_inef",
+      "analyzer": "performance",
+      "rule": "inefficient_string_ops",
+      "severity": "Medium",
+      "file": "/workspaces/do-codeguardian/tests/performance_regression_tests.rs",
+      "line": 213,
+      "column": null,
+      "message": "Inefficient string operation detected",
+      "description": "String concatenation in loops can be inefficient due to reallocations.",
+      "suggestion": "Use String::with_capacity or collect into a Vec and join for better performance.",
+      "metadata": {}
+    },
+    {
+      "id": "performance_inef",
+      "analyzer": "performance",
+      "rule": "inefficient_string_ops",
+      "severity": "Medium",
+      "file": "/workspaces/do-codeguardian/tests/performance_regression_tests.rs",
+      "line": 213,
+      "column": null,
+      "message": "Inefficient string operation detected",
+      "description": "String concatenation in loops can be inefficient due to reallocations.",
+      "suggestion": "Use String::with_capacity or collect into a Vec and join for better performance.",
+      "metadata": {}
+    },
+    {
+      "id": "performance_bloc",
+      "analyzer": "performance",
+      "rule": "blocking_io",
+      "severity": "High",
+      "file": "/workspaces/do-codeguardian/tests/performance_regression_tests.rs",
+      "line": 217,
+      "column": null,
+      "message": "Blocking I/O operation detected",
+      "description": "Blocking I/O can cause performance issues in async contexts.",
+      "suggestion": "Use async equivalents like tokio::fs or spawn blocking operations.",
+      "metadata": {}
+    },
+    {
+      "id": "performance_algo",
+      "analyzer": "performance",
+      "rule": "algorithmic_inefficiency",
+      "severity": "Medium",
+      "file": "/workspaces/do-codeguardian/tests/performance_regression_tests.rs",
+      "line": 221,
+      "column": null,
+      "message": "Potential algorithmic inefficiency detected",
+      "description": "Code pattern suggests potential inefficiency, such as unnecessary collections.",
+      "suggestion": "Review the algorithm for optimizations, e.g., avoid collect().iter() chains.",
+      "metadata": {}
+    },
+    {
+      "id": "performance_nest",
+      "analyzer": "performance",
+      "rule": "nested_loops",
+      "severity": "Medium",
+      "file": "/workspaces/do-codeguardian/tests/e2e_integration_tests.rs",
+      "line": 7,
+      "column": null,
+      "message": "Potential nested loop detected",
+      "description": "Nested loops can lead to O(n^2) or higher time complexity. Consider optimizing the algorithm.",
+      "suggestion": "Review the algorithm for potential optimizations, such as using hash maps or breaking early.",
+      "metadata": {}
+    },
+    {
+      "id": "non_production_d",
+      "analyzer": "non_production",
+      "rule": "debug_statement",
+      "severity": "Medium",
+      "file": "/workspaces/do-codeguardian/benches/optimization_benchmarks.rs",
+      "line": 25,
+      "column": null,
+      "message": "Debug statement found",
+      "description": "Debug statements should not be present in production code",
+      "suggestion": "Remove debug statements or replace with proper logging",
+      "metadata": {}
+    },
+    {
+      "id": "non_production_d",
+      "analyzer": "non_production",
+      "rule": "debug_statement",
+      "severity": "Medium",
+      "file": "/workspaces/do-codeguardian/benches/optimization_benchmarks.rs",
+      "line": 48,
+      "column": null,
+      "message": "Debug statement found",
+      "description": "Debug statements should not be present in production code",
+      "suggestion": "Remove debug statements or replace with proper logging",
+      "metadata": {}
+    },
+    {
+      "id": "performance_nest",
+      "analyzer": "performance",
+      "rule": "nested_loops",
+      "severity": "Medium",
+      "file": "/workspaces/do-codeguardian/benches/optimization_benchmarks.rs",
+      "line": 4,
+      "column": null,
+      "message": "Potential nested loop detected",
+      "description": "Nested loops can lead to O(n^2) or higher time complexity. Consider optimizing the algorithm.",
+      "suggestion": "Review the algorithm for potential optimizations, such as using hash maps or breaking early.",
+      "metadata": {}
+    },
+    {
+      "id": "non_production_p",
+      "analyzer": "non_production",
+      "rule": "potential_secret",
+      "severity": "Critical",
+      "file": "/workspaces/do-codeguardian/benches/comprehensive_performance_benchmark.rs",
+      "line": 19,
+      "column": null,
+      "message": "Potential hardcoded secret detected",
+      "description": "Line may contain hardcoded credentials or API keys",
+      "suggestion": "Move secrets to environment variables or secure configuration",
+      "metadata": {}
+    },
+    {
+      "id": "non_production_p",
+      "analyzer": "non_production",
+      "rule": "potential_secret",
+      "severity": "Critical",
+      "file": "/workspaces/do-codeguardian/benches/comprehensive_performance_benchmark.rs",
+      "line": 112,
+      "column": null,
+      "message": "Potential hardcoded secret detected",
+      "description": "Line may contain hardcoded credentials or API keys",
+      "suggestion": "Move secrets to environment variables or secure configuration",
+      "metadata": {}
+    },
+    {
+      "id": "non_production_p",
+      "analyzer": "non_production",
+      "rule": "potential_secret",
+      "severity": "Critical",
+      "file": "/workspaces/do-codeguardian/benches/comprehensive_performance_benchmark.rs",
+      "line": 116,
+      "column": null,
+      "message": "Potential hardcoded secret detected",
+      "description": "Line may contain hardcoded credentials or API keys",
+      "suggestion": "Move secrets to environment variables or secure configuration",
+      "metadata": {}
+    },
+    {
+      "id": "non_production_p",
+      "analyzer": "non_production",
+      "rule": "potential_secret",
+      "severity": "Critical",
+      "file": "/workspaces/do-codeguardian/benches/comprehensive_performance_benchmark.rs",
+      "line": 120,
+      "column": null,
+      "message": "Potential hardcoded secret detected",
+      "description": "Line may contain hardcoded credentials or API keys",
+      "suggestion": "Move secrets to environment variables or secure configuration",
+      "metadata": {}
+    },
+    {
+      "id": "performance_nest",
+      "analyzer": "performance",
+      "rule": "nested_loops",
+      "severity": "Medium",
+      "file": "/workspaces/do-codeguardian/benches/comprehensive_performance_benchmark.rs",
+      "line": 3,
+      "column": null,
+      "message": "Potential nested loop detected",
+      "description": "Nested loops can lead to O(n^2) or higher time complexity. Consider optimizing the algorithm.",
+      "suggestion": "Review the algorithm for potential optimizations, such as using hash maps or breaking early.",
+      "metadata": {}
+    },
+    {
+      "id": "non_production_d",
+      "analyzer": "non_production",
+      "rule": "debug_statement",
+      "severity": "Medium",
+      "file": "/workspaces/do-codeguardian/benches/performance_benchmark.rs",
+      "line": 24,
+      "column": null,
+      "message": "Debug statement found",
+      "description": "Debug statements should not be present in production code",
+      "suggestion": "Remove debug statements or replace with proper logging",
+      "metadata": {}
+    },
+    {
+      "id": "non_production_t",
+      "analyzer": "non_production",
+      "rule": "todo_comment",
+      "severity": "High",
+      "file": "/workspaces/do-codeguardian/benches/performance_benchmark.rs",
+      "line": 32,
+      "column": null,
+      "message": "BUG comment found",
+      "description": "Line contains a bug comment that should be resolved before production",
+      "suggestion": "Resolve the issue or create a proper issue tracker entry",
+      "metadata": {
+        "comment_type": "bug"
+      }
+    },
+    {
+      "id": "non_production_d",
+      "analyzer": "non_production",
+      "rule": "debug_statement",
+      "severity": "Medium",
+      "file": "/workspaces/do-codeguardian/benches/performance_benchmark.rs",
+      "line": 32,
+      "column": null,
+      "message": "Debug statement found",
+      "description": "Debug statements should not be present in production code",
+      "suggestion": "Remove debug statements or replace with proper logging",
+      "metadata": {}
+    },
+    {
+      "id": "non_production_d",
+      "analyzer": "non_production",
+      "rule": "debug_statement",
+      "severity": "Medium",
+      "file": "/workspaces/do-codeguardian/benches/performance_benchmark.rs",
+      "line": 44,
+      "column": null,
+      "message": "Debug statement found",
+      "description": "Debug statements should not be present in production code",
+      "suggestion": "Remove debug statements or replace with proper logging",
+      "metadata": {}
+    },
+    {
+      "id": "non_production_d",
+      "analyzer": "non_production",
+      "rule": "debug_statement",
+      "severity": "Medium",
+      "file": "/workspaces/do-codeguardian/benches/performance_benchmark.rs",
+      "line": 45,
+      "column": null,
+      "message": "Debug statement found",
+      "description": "Debug statements should not be present in production code",
+      "suggestion": "Remove debug statements or replace with proper logging",
+      "metadata": {}
+    },
+    {
+      "id": "non_production_d",
+      "analyzer": "non_production",
+      "rule": "debug_statement",
+      "severity": "Medium",
+      "file": "/workspaces/do-codeguardian/benches/performance_benchmark.rs",
+      "line": 46,
+      "column": null,
+      "message": "Debug statement found",
+      "description": "Debug statements should not be present in production code",
+      "suggestion": "Remove debug statements or replace with proper logging",
+      "metadata": {}
+    },
+    {
+      "id": "non_production_t",
+      "analyzer": "non_production",
+      "rule": "todo_comment",
+      "severity": "High",
+      "file": "/workspaces/do-codeguardian/benches/performance_benchmark.rs",
+      "line": 59,
+      "column": null,
+      "message": "BUG comment found",
+      "description": "Line contains a bug comment that should be resolved before production",
+      "suggestion": "Resolve the issue or create a proper issue tracker entry",
+      "metadata": {
+        "comment_type": "bug"
+      }
+    },
+    {
+      "id": "non_production_d",
+      "analyzer": "non_production",
+      "rule": "debug_statement",
+      "severity": "Medium",
+      "file": "/workspaces/do-codeguardian/benches/performance_benchmark.rs",
+      "line": 59,
+      "column": null,
+      "message": "Debug statement found",
+      "description": "Debug statements should not be present in production code",
+      "suggestion": "Remove debug statements or replace with proper logging",
+      "metadata": {}
+    },
+    {
+      "id": "non_production_d",
+      "analyzer": "non_production",
+      "rule": "debug_statement",
+      "severity": "Medium",
+      "file": "/workspaces/do-codeguardian/benches/performance_benchmark.rs",
+      "line": 218,
+      "column": null,
+      "message": "Debug statement found",
+      "description": "Debug statements should not be present in production code",
+      "suggestion": "Remove debug statements or replace with proper logging",
+      "metadata": {}
+    }
+  ],
+  "summary": {
+    "total_files_scanned": 202,
+    "total_findings": 237,
+    "findings_by_severity": {
+      "Critical": 7,
+      "High": 85,
+      "Low": 5,
+      "Medium": 140
+    },
+    "findings_by_analyzer": {
+      "performance": 43,
+      "non_production": 194
+    },
+    "scan_duration_ms": 0
+  },
+  "config_hash": "472c6da11e5b00f1",
+  "timestamp": "2025-09-01T15:32:13.727737805Z"
+}

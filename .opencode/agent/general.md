@@ -19,7 +19,7 @@ description: >-
       This task requires searching and aggregating information, making it suitable for the general agent to handle autonomously.
       </commentary>
   </example>
-mode: subagent
+mode: all
 permission:
   edit: allow
   bash: allow

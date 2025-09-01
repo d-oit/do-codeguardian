@@ -41,7 +41,7 @@ pub async fn run(mut args: CheckArgs, mut config: Config) -> Result<()> {
     }
 
     // Initialize progress reporter (TTY-aware)
-    let progress = ProgressReporter::new(!args.quiet && atty::is(atty::Stream::Stdout));
+    let progress = ProgressReporter::new(!args.quiet && std::io::stdout().is_terminal());
 
     // Initialize the Guardian engine
     let mut engine = GuardianEngine::new(config, progress).await?;
