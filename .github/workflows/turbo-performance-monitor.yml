@@ -1,6 +1,6 @@
 name: 📊 Turbo Performance Monitor
 
-"on":
+on:
   schedule:
     - cron: '0 6 * * *'  # Run performance monitoring daily at 6 AM UTC
   workflow_dispatch:
@@ -91,11 +91,20 @@ jobs:
         # Benchmark standard analysis
         echo "🐌 Standard Analysis..."
         START_STANDARD=$(date +%s.%N)
-        timeout 300s ./target/release/codeguardian check test-codebase \
-          --format json --out standard-bench.json 2>/dev/null || {
-          echo "Standard analysis timed out"
-          STANDARD_TIMEOUT=true
-        }
+        if command -v timeout >/dev/null 2>&1; then
+          timeout 300s ./target/release/codeguardian check test-codebase \
+            --format json --out standard-bench.json 2>/dev/null || {
+            echo "Standard analysis timed out"
+            STANDARD_TIMEOUT=true
+          }
+        else
+          echo "timeout command not available, running without timeout"
+          ./target/release/codeguardian check test-codebase \
+            --format json --out standard-bench.json 2>/dev/null || {
+            echo "Standard analysis failed"
+            STANDARD_TIMEOUT=true
+          }
+        fi
         END_STANDARD=$(date +%s.%N)
         STANDARD_DURATION=$(echo "$END_STANDARD - $START_STANDARD" | bc -l)
         

@@ -36,6 +36,7 @@ pub mod github;
 pub mod github_api;
 #[cfg(feature = "ml")]
 pub mod ml;
+pub mod performance;
 pub mod report;
 pub mod security;
 pub mod streaming;

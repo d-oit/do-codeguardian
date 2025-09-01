@@ -1,6 +1,6 @@
 name: 🔍 Turbo PR Analysis
 
-"on":
+on:
   pull_request:
     types: [opened, synchronize, reopened]
     branches: [main, develop]
@@ -57,10 +57,10 @@ jobs:
           if [ "$CHANGED_COUNT" -gt 10 ]; then
             echo "... and $((CHANGED_COUNT - 10)) more"
           fi
-        fi
-    
+         fi
+
     - name: 🚀 Turbo Analysis on Changed Files
-      if: steps.changed-files.outputs.changed_count > 0
+      if: steps.changed-files.outputs.changed_count != '0'
       id: turbo-scan
       run: |
         echo "🚀 Running Turbo analysis on changed files..."
@@ -200,10 +200,10 @@ jobs:
             owner: context.repo.owner,
             repo: context.repo.repo,
             body: comment
-          });
-    
+           });
+
     - name: 🚨 Fail on Critical Issues
-      if: steps.results.outputs.critical_findings > 0
+      if: steps.results.outputs.critical_findings != '0'
       run: |
         echo "🚨 CRITICAL SECURITY ISSUES DETECTED"
         echo "====================================="

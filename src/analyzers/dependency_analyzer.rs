@@ -154,6 +154,24 @@ impl DependencyAnalyzer {
 
         Ok(findings)
     }
+
+    /// Check if a license is considered problematic for enterprise use
+    pub fn is_problematic_license(&self, license: &str) -> bool {
+        match license {
+            // GPL licenses require derivative works to be GPL
+            "GPL-2.0" | "GPL-2.0+" | "GPL-3.0" | "GPL-3.0+" => true,
+            // LGPL licenses have linking restrictions
+            "LGPL-2.1" | "LGPL-2.1+" | "LGPL-3.0" | "LGPL-3.0+" => true,
+            // AGPL requires network service source disclosure
+            "AGPL-3.0" | "AGPL-3.0+" => true,
+            // Copyleft licenses
+            "OSL-3.0" | "EPL-1.0" | "EPL-2.0" => true,
+            // Permissive licenses are generally safe
+            "MIT" | "Apache-2.0" | "BSD-2-Clause" | "BSD-3-Clause" | "ISC" => false,
+            // Unknown licenses should be reviewed
+            _ => true,
+        }
+    }
 }
 
 impl Analyzer for DependencyAnalyzer {

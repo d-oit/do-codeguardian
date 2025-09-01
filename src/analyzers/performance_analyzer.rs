@@ -25,17 +25,21 @@ impl PerformanceAnalyzer {
         Self {
             nested_loop_patterns: vec![
                 // Detect nested for loops (simple heuristic)
-                Regex::new(r"for\s+.*\{\s*for\s+.*\{").unwrap(),
+                Regex::new(r"for\s+.*\{[\s\S]*?for\s+.*\{").unwrap(),
                 // Detect nested while loops
-                Regex::new(r"while\s+.*\{\s*while\s+.*\{").unwrap(),
+                Regex::new(r"while\s+.*\{[\s\S]*?while\s+.*\{").unwrap(),
                 // Detect for inside while or vice versa
-                Regex::new(r"(for\s+.*\{|while\s+.*\{).*?(for\s+.*\{|while\s+.*\{)").unwrap(),
+                Regex::new(r"(for\s+.*\{[\s\S]*?while\s+.*\{|while\s+.*\{[\s\S]*?for\s+.*\{)")
+                    .unwrap(),
             ],
             inefficient_string_patterns: vec![
-                // String concatenation in loops using +
-                Regex::new(r"(for\s+.*\{|while\s+.*\{).*?(\w+)\s*\+=\s*.*").unwrap(),
-                // Repeated string concatenation
-                Regex::new(r"(\w+)\s*=\s*(\w+)\s*\+\s*.*").unwrap(),
+                // String concatenation in loops using +=
+                Regex::new(
+                    r"(for\s+.*\{[\s\S]*?(\w+)\s*\+=\s*.*|while\s+.*\{[\s\S]*?(\w+)\s*\+=\s*.*)",
+                )
+                .unwrap(),
+                // Direct string concatenation with +=
+                Regex::new(r"(\w+)\s*\+=\s*&?(format!|String::)").unwrap(),
             ],
             blocking_io_patterns: vec![
                 // Synchronous file operations in async functions
@@ -58,6 +62,34 @@ impl PerformanceAnalyzer {
     /// Detects nested loops that may indicate algorithmic inefficiencies.
     fn detect_nested_loops(&self, content: &str, file_path: &Path) -> Vec<Finding> {
         let mut findings = Vec::new();
+
+        // Check the entire content for nested patterns, not just line by line
+        for pattern in &self.nested_loop_patterns {
+            if pattern.is_match(content) {
+                // Find the line number where the pattern occurs
+                let line_num = content
+                    .lines()
+                    .position(|line| line.contains("for"))
+                    .unwrap_or(0);
+                findings.push(
+                    Finding::new(
+                        "performance",
+                        "nested_loops",
+                        Severity::Medium,
+                        file_path.to_path_buf(),
+                        (line_num + 1) as u32,
+                        "Potential nested loop detected".to_string(),
+                    )
+                    .with_description(
+                        "Nested loops can lead to O(n^2) or higher time complexity. Consider optimizing the algorithm.".to_string()
+                    )
+                    .with_suggestion("Review the algorithm for potential optimizations, such as using hash maps or breaking early.".to_string()),
+                );
+                break; // Only report once per file
+            }
+        }
+
+        // Also check line by line for simpler patterns
         for (line_num, line) in content.lines().enumerate() {
             for pattern in &self.nested_loop_patterns {
                 if pattern.is_match(line) {

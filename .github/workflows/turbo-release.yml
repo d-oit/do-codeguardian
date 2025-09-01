@@ -1,6 +1,6 @@
 name: 🚀 Turbo Release Validation
 
-"on":
+on:
   release:
     types: [published]
   workflow_dispatch:
@@ -56,7 +56,7 @@ jobs:
         echo "================================================"
         
         # Set binary path based on OS
-        if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
+        if [ "${{ matrix.os }}" = "windows-latest" ]; then
           BINARY="./target/${{ matrix.target }}/release/codeguardian.exe"
         else
           BINARY="./target/${{ matrix.target }}/release/codeguardian"

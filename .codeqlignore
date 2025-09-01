@@ -1,0 +1,28 @@
+# Exclude build artifacts and generated files
+target/
+Cargo.lock
+
+# Exclude test and benchmark files
+benches/
+tests/
+
+# Exclude documentation and configuration files
+**/*.md
+**/*.json
+**/*.toml
+**/*.yml
+**/*.yaml
+**/*.sh
+**/*.txt
+
+# Exclude example and result files
+examples/
+codeguardian-results/
+
+# Exclude temporary files
+tmp_*
+*.tmp
+
+# Exclude cache files
+.cache/
+.codeguardian-cache.json

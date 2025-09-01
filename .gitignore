@@ -53,3 +53,10 @@ codeguardian_full_report.json
 codeguardian_report.md
 .codeguardian-cache.json
 codeguardian-results/
+
+# Code coverage reports
+coverage/
+*.profraw
+cobertura.xml
+tarpaulin-report.html
+tarpaulin-report.json

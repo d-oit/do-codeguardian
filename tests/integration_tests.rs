@@ -1,4 +1,4 @@
-use codeguardian::{analyze_files, Config};
+use do_codeguardian::{analyze_files, Config};
 use std::io::Write;
 use std::path::PathBuf;
 use tempfile::NamedTempFile;

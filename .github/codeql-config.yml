@@ -1,0 +1,37 @@
+name: "CodeQL Configuration"
+
+disable-default-queries: false
+
+queries:
+  - uses: security-and-quality
+
+paths-ignore:
+  - target/
+  - benches/
+  - tests/fixtures/
+  - examples/
+  - codeguardian-results/
+  - "**/*.md"
+  - "**/*.json"
+  - "**/*.toml"
+  - "**/*.yml"
+  - "**/*.yaml"
+  - "**/*.sh"
+  - "**/*.txt"
+
+paths:
+  - src/
+
+query-filters:
+  - exclude:
+      problem.severity:
+        - recommendation
+        - warning
+
+rust:
+  build-mode: manual
+  build-commands:
+    - "cargo build --release --all-features"
+    - "cargo build --all-targets --all-features"
+    - "cargo check --all-features --all-targets"
+  extract-all-files: true

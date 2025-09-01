@@ -1,6 +1,7 @@
 use crate::analyzers::AnalyzerRegistry;
 use crate::cache::FileCache;
 use crate::config::Config;
+use crate::core::parallel_file_processor::ParallelFileProcessor;
 use crate::streaming::StreamingAnalyzer;
 use crate::types::{AnalysisResults, Finding};
 use crate::utils::progress::ProgressReporter;
@@ -11,6 +12,8 @@ use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
 use std::time::Instant;
 use walkdir::WalkDir;
+
+pub mod parallel_file_processor;
 
 // Constants for file processing
 const PROGRESS_UPDATE_INTERVAL: u32 = 10000; // Update progress every 10k lines

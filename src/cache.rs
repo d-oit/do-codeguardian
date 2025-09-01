@@ -5,6 +5,8 @@ use sha2::{Digest, Sha256};
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::time::SystemTime;
+
+pub mod optimized_cache;
 use tokio::fs;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

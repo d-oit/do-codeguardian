@@ -1,6 +1,6 @@
 name: 🌙 Nightly Turbo Analysis
 
-"on":
+on:
   schedule:
     # Run comprehensive nightly analysis at 1 AM UTC
     - cron: '0 1 * * *'

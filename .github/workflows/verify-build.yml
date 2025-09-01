@@ -1,0 +1,46 @@
+name: Verify Build for CodeQL
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  verify-build:
+    name: Verify Build
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Setup Rust
+      uses: dtolnay/rust-toolchain@stable
+
+    - name: Cache Cargo dependencies
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+          target
+        key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-cargo-
+
+    - name: Verify build with all features
+      run: |
+        cargo build --release --all-features
+        cargo build --all-targets --all-features
+        cargo check --all-features --all-targets
+        cargo test --all-features --no-run
+
+    - name: Verify CodeQL configuration
+      run: |
+        if [ -f ".github/codeql-config.yml" ]; then
+          echo "CodeQL configuration file exists"
+        else
+          echo "CodeQL configuration file missing"
+          exit 1
+        fi

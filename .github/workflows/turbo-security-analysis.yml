@@ -1,6 +1,6 @@
 name: 🚀 Turbo Security Analysis
 
-"on":
+on:
   push:
     branches: [main, develop]
   pull_request:

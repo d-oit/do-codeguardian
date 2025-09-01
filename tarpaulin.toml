@@ -1,0 +1,34 @@
+# Tarpaulin configuration for CodeGuardian code coverage
+[tool.tarpaulin.coverage]
+# Coverage targets - these will be enforced in CI
+line = 85.0
+branch = 80.0
+function = 90.0
+
+[tool.tarpaulin.report]
+# Multiple output formats for different use cases
+out = ["Html", "Xml", "Json", "Stdout"]
+output-dir = "coverage/"
+
+[tool.tarpaulin.run]
+# Test execution configuration
+timeout = 120
+follow-exec = true
+post-args = ["--", "--test-threads=1"]
+
+# Include tests in coverage calculation
+include-tests = false
+count = true
+all = true
+
+# Exclude files that shouldn't be covered
+exclude = [
+    "target/*",
+    "tests/fixtures/*", 
+    "benches/*",
+    "examples/*",
+    "tmp_*"
+]
+
+# Test with all features enabled
+features = "full"
