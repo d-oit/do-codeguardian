@@ -1,28 +1,84 @@
-# CodeGuardian Agent Guide
+# AGENTS.md
 
-## Repository Information
+## Project Overview
+CodeGuardian is a Rust-based security analysis platform with integrated machine learning capabilities for automated code analysis, vulnerability detection, and performance optimization. It combines traditional static analysis with ML-powered false positive reduction using RUV-FANN neural networks.
 
-Repository information is available in `.opencode/agent-config.json` or can be obtained dynamically:
+## Setup Commands
+- **Install Rust toolchain**: `curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh`
+- **Install dependencies**: `cargo build`
+- **Run development server**: `cargo run -- --help`
+- **Run tests**: `cargo test`
+- **Format code**: `cargo fmt`
+- **Lint code**: `cargo clippy -- -D warnings`
 
-```bash
-# Get repository URL from git remote
-git remote get-url origin
+## Code Style
+- **Rust 2021 Edition** with strict compiler settings
+- **Naming**: snake_case for functions/variables, PascalCase for types/structs, SCREAMING_SNAKE_CASE for constants
+- **Error Handling**: Use `anyhow::Result<T>` for application errors, `thiserror::Error` for library error types
+- **Security-First**: Always validate inputs, use safe defaults, prevent resource exhaustion
+- **Memory Safety**: Leverage Rust's ownership system, avoid unsafe code unless absolutely necessary
+- **Performance**: Use async/await patterns, parallel processing where appropriate, memory pooling
+- **Code Size**: Keep functions under 50-100 lines, files under 300-700 lines
 
-# Or use the helper script
-./.opencode/get-repo-info.sh github             # Returns GitHub URL
-./.opencode/get-repo-info.sh issues             # Returns issues URL
-./.opencode/get-repo-info.sh docs               # Returns documentation URL
-./.opencode/get-repo-info.sh ci-badge           # Returns CI badge URL
-./.opencode/get-repo-info.sh codecov-badge      # Returns codecov badge URL
-./.opencode/get-repo-info.sh downloads-badge    # Returns downloads badge URL
-./.opencode/get-repo-info.sh contributors-badge # Returns contributors badge URL
-./.opencode/get-repo-info.sh last-commit-badge  # Returns last commit badge URL
-./.opencode/get-repo-info.sh actions            # Returns GitHub Actions URL
-```
+## Testing Instructions
+- **Unit Tests**: Run `cargo test` for all tests, `cargo test <test_name>` for specific tests
+- **Integration Tests**: Use `cargo test --test <integration_test>` for end-to-end testing
+- **Performance Benchmarks**: Run `cargo bench` or use `./scripts/performance_analysis.sh`
+- **Security Testing**: Focus on input validation, path traversal, and resource limits
+- **ML Testing**: Validate model accuracy, false positive rates, and training data integrity
+- **CI Testing**: All tests must pass before merging, including security and performance checks
+
+## Security Considerations
+- **Input Validation**: Always validate file paths, sizes, and content before processing
+- **Resource Limits**: Implement file size limits (10MB default), memory bounds, and timeout handling
+- **Path Security**: Use canonical paths, prevent directory traversal attacks
+- **Data Handling**: Secure ML training data, avoid exposing sensitive information
+- **Audit Trails**: Log all analysis operations for compliance and debugging
+- **Configuration Security**: Validate configuration files, use secure defaults
+
+## Agent Development Guidelines
+
+### Setup and Development Environment
+- **Rust Toolchain**: Use Rust 2021 Edition with latest stable compiler (1.70+)
+- **Key Dependencies**: Tokio 1.40 for async, Clap 4.5 for CLI, Serde for serialization, git2 0.19 for Git integration, RUV-FANN for ML
+- **Development Workflow**: Use `cargo build` for development, `cargo build --release` for production
+- **ML Integration**: RUV-FANN neural networks for false positive reduction, online learning capabilities
+- **Security Features**: BLAKE3 hashing for integrity, configuration drift detection, enhanced secret scanning
+
+### Code Style and Conventions
+- **Rust 2021 Patterns**: Use modern async/await, pattern matching, and ownership semantics
+- **Security-First Coding**: Validate all inputs, implement resource limits, use safe memory practices
+- **Memory Safety**: Leverage Rust's borrow checker, avoid unsafe blocks, use smart pointers appropriately
+- **Error Handling**: Comprehensive error handling with `anyhow` for application code, `thiserror` for libraries
+- **Performance Guidelines**: Optimize for CI/CD environments (<30s analysis time), target <100MB memory usage
+- **Code Organization**: Modular structure with clear separation between analyzers, ML components, and utilities
+
+### Testing and Quality Assurance
+- **Unit Testing**: Test individual analyzers (src/analyzers/) with mock data and edge cases
+- **Integration Testing**: Test ML pipeline (src/ml/) with real training data and validation
+- **Performance Benchmarking**: Use benches/ directory for comprehensive performance testing
+- **Security Testing**: Validate input sanitization, path security, and resource exhaustion prevention
+- **Quality Assurance**: Run clippy lints, format checks, and comprehensive test suites before commits
+
+### CI/CD and Deployment
+- **GitHub Actions**: Use workflows in .github/workflows/ for automated testing and releases
+- **Release Management**: Automated versioning with cargo-release, security scanning in CI
+- **Performance Monitoring**: Track analysis speed, memory usage, and accuracy metrics in CI
+- **Deployment**: Cross-platform builds for Linux, macOS, Windows with optimized binaries
+
+### Security and Compliance
+- **Secure Coding**: Input validation, path canonicalization, resource limits, audit logging
+- **ML Data Handling**: Secure training data management, model validation, privacy protection
+- **Audit Requirements**: Comprehensive logging, deterministic results, compliance reporting
+- **Vulnerability Management**: Regular dependency updates, security scanning, patch management
+
+### Performance Optimization
+- **Memory Usage**: Target <100MB peak usage, use memory pools in src/performance/memory_pool.rs
+- **Parallel Processing**: Leverage src/core/parallel_file_processor.rs for concurrent analysis
+- **Caching Strategies**: Intelligent caching in src/cache/ with result persistence
+- **Streaming Analysis**: Use src/streaming.rs for large file processing without full memory load
 
 ## Available Agents
-
-The CodeGuardian project includes specialized AI agents for various development and management tasks. These agents are located in the `.opencode/agent/` directory and follow a standardized format for integration with development workflows.
 
 ### Core Development Agents
 - **github-discussions-manager**: Manages GitHub Discussions, including creation, moderation, and community engagement using GitHub CLI
@@ -44,7 +100,6 @@ The CodeGuardian project includes specialized AI agents for various development 
 - **clean-code-developer**: Ensures code adheres to clean code principles and Rust conventions
 - **code-consolidator**: Consolidates and refactors code for better maintainability
 - **code-research**: Researches end-to-end execution flows and complex interactions
-
 - **configuration-agent**: Manages configuration files and optimization
 - **configuration-validator**: Validates codeguardian.toml and configuration integrity
 - **debug-findings-analyst**: Analyzes systematic investigation findings for debugging
@@ -60,7 +115,6 @@ The CodeGuardian project includes specialized AI agents for various development 
 - **documentation-specialist**: Enhanced Documentation Specialist - generates and maintains comprehensive documentation
 - **github-docs-specialist**: Maintains GitHub repository documentation
 
-
 ### Utility Agents
 - **general**: General-purpose agent for research and multi-step tasks
 - **orchestrator**: Enhanced Orchestrator - provides analysis and recommendations for coordinating complex multi-agent workflows
@@ -68,95 +122,7 @@ The CodeGuardian project includes specialized AI agents for various development 
 - **analyzer-orchestrator**: Coordinates multiple CodeGuardian analyzers for comprehensive code analysis
 - **ai-persona-creation-specialist**: Creates specialized AI personas (manual activation only)
 
-Each agent includes detailed specifications, usage examples, and integration protocols. Agents can be invoked through the Task tool with appropriate parameters for their specific domain expertise.
-
-## Build, Lint, and Test Commands
-
-### Primary Commands
-- **Build**: `cargo build --release`
-- **Build debug**: `cargo build`
-- **Run all tests**: `cargo test`
-- **Run specific test**: `cargo test <test_name>`
-- **Format code**: `cargo fmt`
-- **Lint with clippy**: `cargo clippy -- -D warnings`
-
-### Single Test Execution
-```bash
-cargo test test_function_name  # Run specific test function
-cargo test --test <test_file>  # Run tests in specific file
-```
-
-## Code Style Guidelines
-
-### General Conventions
-- **Edition**: Rust 2021 Edition
-- **Naming**: snake_case for functions/variables, PascalCase for types/structs, SCREAMING_SNAKE_CASE for constants
-- **Error Handling**: Use `anyhow::Result<T>` for application errors, `thiserror::Error` for library error types
-
-### Imports and Organization
-```rust
-// Standard library imports first
-use std::path::{Path, PathBuf};
-use std::sync::{Arc, Mutex};
-
-// External crate imports (alphabetized)
-use anyhow::Result;
-use serde::{Deserialize, Serialize};
-use tokio::fs;
-
-// Internal module imports
-use crate::config::Config;
-use crate::types::{AnalysisResults, Finding};
-```
-
-### Error Handling Patterns
-```rust
-// Use anyhow::Result for application code
-pub async fn analyze_files(&self, files: &[PathBuf]) -> Result<AnalysisResults> {
-    // Implementation
-    Ok(results)
-}
-```
-
-### Security-First Patterns
-```rust
-// Always validate paths and check file sizes
-pub fn should_analyze_file(&self, path: &Path) -> bool {
-    // Skip hidden files (except specific ones)
-    if let Some(name) = path.file_name().and_then(|n| n.to_str()) {
-        if name.starts_with('.') && name != ".gitignore" {
-            return false;
-        }
-    }
-
-    // Check file size limits (security: prevent huge files)
-    if let Ok(metadata) = path.metadata() {
-        if metadata.len() > 10 * 1024 * 1024 { // 10MB limit
-            return false;
-        }
-    }
-
-    true
-}
-```
-
-### Testing Patterns
-```rust
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use tempfile::tempdir;
-
-    #[test]
-    fn test_analyze_file() {
-        let temp_dir = tempdir().unwrap();
-        let file_path = temp_dir.path().join("test.rs");
-        assert!(result.is_ok());
-    }
-}
-```
-
-## Agent Selection Decision Framework
+## Agent Selection Framework
 
 ### Decision Matrix for Agent Selection
 
@@ -173,180 +139,12 @@ mod tests {
 | Documentation | Complex | documentation-specialist + codebase-doc-updater | Comprehensive documentation maintenance |
 
 ### Selection Criteria
-
 - **Task Complexity**: Simple (single file/component), Complex (multiple components), Critical (security/safety impact)
 - **Domain Expertise**: Match agent specialization to task requirements
 - **Resource Constraints**: Consider computational resources and time budgets
 - **Risk Level**: Higher risk tasks require multiple agents for validation
 
-### Single Agent vs. Swarm Usage
-
-- **Single Agent**: Use for focused, well-defined tasks with clear success criteria
-- **Agent Swarm**: Use for complex, multi-faceted tasks requiring diverse expertise or cross-validation
-
-## Agent Architecture Limitations
-
-### Parallel Processing Constraints
-
-**Important**: Individual agents cannot invoke other agents or execute tasks in parallel. The agent system is designed for single-agent invocations where each agent provides analysis, recommendations, or performs specific tasks independently.
-
-**To achieve parallel processing:**
-1. The main assistant must make multiple `Task` tool calls in a single response
-2. Each `Task` call invokes a separate agent with a specific subagent_type
-3. Results from parallel agents are collected and synthesized by the main assistant
-4. Orchestrator agents provide strategic guidance but cannot execute parallel operations themselves
-
-**Example of actual parallel execution:**
-```bash
-# Main assistant makes multiple concurrent Task calls:
-Task(description="Security audit", prompt="Audit file for vulnerabilities", subagent_type="security-auditor")
-Task(description="Performance analysis", prompt="Analyze performance bottlenecks", subagent_type="performance-optimizer")
-Task(description="Code quality review", prompt="Review code quality", subagent_type="code-quality-reviewer")
-```
-
-## Swarm Patterns and Coordination
-
-### Coordination Patterns
-
-#### Parallel Execution
-- Agents work simultaneously on independent subtasks
-- Best for: Large-scale analysis, multiple file reviews, parallel testing
-- Example: Multiple code-quality-reviewer agents analyzing different modules
-
-#### Sequential Execution
-- Agents process tasks in a defined order with data dependencies
-- Best for: Pipeline workflows, dependency analysis, incremental improvements
-- Example: code-research → security-auditor → performance-optimizer
-
-#### Competitive Execution
-- Multiple agents compete to solve the same problem
-- Best for: Optimization problems, alternative solution generation
-- Example: Multiple performance-optimizer agents proposing different optimization strategies
-
-### Optimal Agent Combinations
-
-| Scenario | Agent Combination | Coordination Pattern |
-|----------|-------------------|---------------------|
-| Security Code Review | security-auditor + code-quality-reviewer | Parallel |
-| Performance Audit | performance-optimizer + benchmark-agent | Sequential |
-| Release Preparation | release-agent + testing-engineer + documentation-specialist | Sequential |
-| Bug Investigation | debug-findings-analyst + code-research | Parallel |
-
-### Resource Allocation Guidelines
-
-- **Load Balancing**: Distribute tasks based on agent capacity and current workload
-- **Priority Queuing**: Critical tasks get higher priority in agent scheduling
-- **Resource Monitoring**: Track agent resource usage and adjust allocation dynamically
-- **Failover Planning**: Design redundant agents for critical operations
-
-## False Positive Prevention Strategies
-
-### Validation Agent Usage
-
-- **Pre-Analysis Validation**: Use validation-agent to verify input data integrity
-- **Cross-Verification Requirements**: For critical findings, require confirmation from multiple agents
-- **Confidence Scoring**: Implement scoring system for findings reliability
-
-### Cross-Verification Protocols
-
-| Finding Type | Required Verification | Minimum Confidence Threshold |
-|--------------|----------------------|------------------------------|
-| Security Vulnerability | 2+ agents | 85% |
-| Performance Issue | 1+ benchmark validation | 75% |
-| Code Quality Issue | Peer review agent | 70% |
-| Configuration Error | 2+ configuration agents | 80% |
-
-### Confidence Scoring Guidelines
-
-- **High Confidence (85-100%)**: Multiple corroborating sources, extensive testing
-- **Medium Confidence (70-84%)**: Single strong indicator with supporting evidence
-- **Low Confidence (<70%)**: Requires manual review and additional validation
-
-## Parallel Processing Guidelines
-
-### Best Practices for Concurrent Execution
-
-- **Dependency Management**: Map task dependencies before parallel execution
-- **Conflict Resolution**: Implement locking mechanisms for shared resources
-- **Resource Pooling**: Use connection pools and resource limits to prevent exhaustion
-- **Timeout Handling**: Set appropriate timeouts for long-running parallel tasks
-
-### Performance Optimization Tips
-
-- **Batch Processing**: Group similar tasks for efficient processing
-- **Caching Strategies**: Cache intermediate results to reduce redundant computations
-- **Asynchronous Patterns**: Use async/await for non-blocking operations
-- **Memory Management**: Monitor and limit memory usage in parallel operations
-
-## Performance and Optimization
-
-### Agent Performance Metrics
-
-- **Response Time**: Average time to complete tasks
-- **Throughput**: Number of tasks processed per unit time
-- **Resource Utilization**: CPU, memory, and I/O usage patterns
-- **Accuracy Rate**: Percentage of correct findings vs. false positives
-
-### Benchmarking Guidelines
-
-- **Standard Benchmarks**: Use consistent test suites for performance comparison
-- **Load Testing**: Simulate high-load scenarios to identify bottlenecks
-- **Profiling**: Use profiling tools to identify performance hotspots
-- **Regression Testing**: Monitor performance changes over time
-
-### Caching Strategies
-
-- **Result Caching**: Cache analysis results for unchanged files
-- **Configuration Caching**: Cache parsed configuration data
-- **Model Caching**: Cache ML models and training data
-- **Dependency Caching**: Cache resolved dependencies and metadata
-
-### Health Monitoring and Failover
-
-- **Health Checks**: Regular monitoring of agent responsiveness and resource usage
-- **Automatic Failover**: Switch to backup agents when primary agents fail
-- **Circuit Breakers**: Temporarily disable failing agents to prevent cascade failures
-- **Recovery Procedures**: Automated recovery and state synchronization
-
-## Integration Patterns
-
-### Agent Collaboration Workflows
-
-#### Pipeline Pattern
-```
-Input → Agent A → Agent B → Agent C → Output
-```
-- Best for: Sequential processing with data transformation
-- Example: Code parsing → Security analysis → Report generation
-
-#### Fan-Out/Fan-In Pattern
-```
-Input → Agent A → ┌─ Agent B
-                  ├─ Agent C
-                  └─ Agent D → Aggregator → Output
-```
-- Best for: Parallel processing with result aggregation
-- Example: Multi-aspect code analysis with consolidated reporting
-
-#### Mediator Pattern
-```
-Agents ↔ Mediator ↔ Shared Resources
-```
-- Best for: Complex interactions between multiple agents
-- Example: Orchestrator coordinating specialized agents
-
-### Communication Protocols
-
-- **Message Passing**: Use standardized message formats for inter-agent communication
-- **Event-Driven**: Agents respond to events and emit completion events
-- **Shared State**: Use shared data stores for coordination (with proper locking)
-- **API Contracts**: Define clear interfaces for agent interactions
-
-### Error Handling and Recovery
-
-- **Graceful Degradation**: Continue operation with reduced functionality when agents fail
-- **Retry Mechanisms**: Implement exponential backoff for transient failures
-- **Compensation Actions**: Rollback changes when operations fail
-- **Logging and Alerting**: Comprehensive logging for debugging and monitoring
+## Repository Information
+Repository information is available in `.opencode/agent-config.json` or can be obtained dynamically using helper scripts in `.opencode/get-repo-info.sh`.
 
 Remember: This is a security-focused codebase. Always prioritize secure defaults, validate inputs, and handle errors gracefully.

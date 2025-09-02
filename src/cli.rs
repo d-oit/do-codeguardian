@@ -130,6 +130,26 @@ pub struct CheckArgs {
     /// ML threshold for anomaly detection (0.0-1.0)
     #[arg(long, value_name = "THRESHOLD")]
     pub ml_threshold: Option<f64>,
+
+    /// Enable all broken file detection
+    #[arg(long)]
+    pub detect_broken_files: bool,
+
+    /// Detect git merge conflicts
+    #[arg(long)]
+    pub detect_conflicts: bool,
+
+    /// Detect AI-generated placeholders
+    #[arg(long)]
+    pub detect_placeholders: bool,
+
+    /// Detect duplicate code
+    #[arg(long)]
+    pub detect_duplicates: bool,
+
+    /// Fail fast on merge conflicts (CI/CD)
+    #[arg(long)]
+    pub fail_on_conflicts: bool,
 }
 
 #[derive(Parser)]

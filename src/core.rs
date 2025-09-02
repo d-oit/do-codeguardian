@@ -30,10 +30,11 @@ pub struct GuardianEngine {
 impl GuardianEngine {
     pub async fn new(config: Config, progress: ProgressReporter) -> Result<Self> {
         let cache = Arc::new(Mutex::new(FileCache::load().await?));
+        let analyzer_registry = AnalyzerRegistry::with_config(&config);
 
         Ok(Self {
             config,
-            analyzer_registry: AnalyzerRegistry::new(),
+            analyzer_registry,
             progress,
             cache,
             streaming_analyzer: StreamingAnalyzer::new(),

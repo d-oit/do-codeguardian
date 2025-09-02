@@ -1,0 +1,28 @@
+repos:
+  # General pre-commit hooks for file formatting and cleanup
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.4.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-added-large-files
+      - id: check-merge-conflict
+
+  # Rust-specific hooks using doublify/pre-commit-rust for current stable versions
+  - repo: https://github.com/doublify/pre-commit-rust
+    rev: v0.3.0
+    hooks:
+      - id: fmt
+        name: Check Rust code formatting
+        files: \.rs$
+        description: "Runs 'rustfmt --check' to verify Rust code formatting without modifying files"
+      - id: clippy
+        name: Check Rust code with clippy
+        args: [-- -D warnings]
+        files: \.rs$
+        description: "Runs 'cargo clippy -- -D warnings' to check for linting issues and treat warnings as errors"
+      - id: cargo-check
+        name: Verify Rust compilation
+        files: \.rs$
+        description: "Runs 'cargo check' to verify that the code compiles without building the full project"

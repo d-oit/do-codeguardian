@@ -31,6 +31,33 @@ pub async fn run(mut args: CheckArgs, mut config: Config) -> Result<()> {
         config.analysis.max_workers = args.parallel as u32;
     }
 
+    // Override broken files detection settings
+    if args.detect_broken_files {
+        config.analyzers.broken_files.enabled = true;
+        config.analyzers.broken_files.detect_merge_conflicts = true;
+        config.analyzers.broken_files.detect_ai_placeholders = true;
+        config.analyzers.broken_files.detect_duplicates = true;
+    }
+
+    if args.detect_conflicts {
+        config.analyzers.broken_files.enabled = true;
+        config.analyzers.broken_files.detect_merge_conflicts = true;
+    }
+
+    if args.detect_placeholders {
+        config.analyzers.broken_files.enabled = true;
+        config.analyzers.broken_files.detect_ai_placeholders = true;
+    }
+
+    if args.detect_duplicates {
+        config.analyzers.broken_files.enabled = true;
+        config.analyzers.broken_files.detect_duplicates = true;
+    }
+
+    if args.fail_on_conflicts {
+        config.analyzers.broken_files.conflicts.fail_on_conflicts = true;
+    }
+
     // Use configured output directory if default output path is used
     if args.out == PathBuf::from("results.json") {
         args.out = PathBuf::from(&output_dir).join("results.json");
@@ -135,6 +162,18 @@ pub async fn run(mut args: CheckArgs, mut config: Config) -> Result<()> {
     // Print summary to stdout if not quiet
     if !args.quiet {
         print_summary(&results);
+    }
+
+    // Check for conflicts if fail_on_conflicts is enabled
+    if args.fail_on_conflicts || config.analyzers.broken_files.conflicts.fail_on_conflicts {
+        let has_conflicts = results.findings.iter().any(|f| {
+            f.analyzer == "git_conflict" && matches!(f.severity, crate::types::Severity::Critical)
+        });
+        
+        if has_conflicts {
+            tracing::error!("🚨 Git merge conflicts detected! Failing as requested.");
+            std::process::exit(3); // Different exit code for conflicts
+        }
     }
 
     // Determine exit code

@@ -21,7 +21,7 @@ fn main() {
 
     for feature in features {
         let status = Command::new("cargo")
-            .args(&["check", "--features", feature, "--all-targets"])
+            .args(["check", "--features", feature, "--all-targets"])
             .status();
 
         if let Ok(exit_status) = status {
@@ -32,7 +32,7 @@ fn main() {
     }
 
     // Generate version information
-    let output = Command::new("git").args(&["rev-parse", "HEAD"]).output();
+    let output = Command::new("git").args(["rev-parse", "HEAD"]).output();
 
     if let Ok(output) = output {
         if output.status.success() {

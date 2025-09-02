@@ -247,6 +247,8 @@ pub struct AnalyzerConfigs {
     pub security_analyzer: SecurityAnalyzerConfig,
     /// Code quality analysis
     pub code_quality: CodeQualityConfig,
+    /// Broken files detection
+    pub broken_files: BrokenFilesConfig,
 }
 
 /// File integrity configuration
@@ -821,6 +823,114 @@ impl Default for EarlyTerminationConfig {
             max_analysis_time_seconds: 30,
             max_lines_per_file: 10000,
             skip_large_files_bytes: 52428800, // 50MB
+        }
+    }
+}
+
+/// Broken files detection configuration
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct BrokenFilesConfig {
+    /// Enable broken files detection
+    pub enabled: bool,
+    /// Detect merge conflicts
+    pub detect_merge_conflicts: bool,
+    /// Detect AI placeholders
+    pub detect_ai_placeholders: bool,
+    /// Detect duplicates
+    pub detect_duplicates: bool,
+    /// Git conflict detection settings
+    pub conflicts: ConflictDetectionConfig,
+    /// AI placeholder detection settings
+    pub placeholders: PlaceholderDetectionConfig,
+    /// Duplicate detection settings
+    pub duplicates: DuplicateDetectionConfig,
+}
+
+impl Default for BrokenFilesConfig {
+    fn default() -> Self {
+        Self {
+            enabled: true,
+            detect_merge_conflicts: true,
+            detect_ai_placeholders: true,
+            detect_duplicates: false, // Opt-in for performance
+            conflicts: ConflictDetectionConfig::default(),
+            placeholders: PlaceholderDetectionConfig::default(),
+            duplicates: DuplicateDetectionConfig::default(),
+        }
+    }
+}
+
+/// Git conflict detection configuration
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ConflictDetectionConfig {
+    /// Fail on conflicts
+    pub fail_on_conflicts: bool,
+    /// Validate syntax
+    pub validate_syntax: bool,
+    /// Check git status
+    pub check_git_status: bool,
+}
+
+impl Default for ConflictDetectionConfig {
+    fn default() -> Self {
+        Self {
+            fail_on_conflicts: true,
+            validate_syntax: true,
+            check_git_status: true,
+        }
+    }
+}
+
+/// AI placeholder detection configuration
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PlaceholderDetectionConfig {
+    /// Severity level for placeholder findings
+    pub severity: String,
+    /// Built-in patterns to detect
+    pub patterns: Vec<String>,
+    /// Custom patterns to detect
+    pub custom_patterns: Vec<String>,
+}
+
+impl Default for PlaceholderDetectionConfig {
+    fn default() -> Self {
+        Self {
+            severity: "medium".to_string(),
+            patterns: vec![
+                "add content here".to_string(),
+                "implement this".to_string(),
+                "your code here".to_string(),
+                "placeholder".to_string(),
+                "todo: implement".to_string(),
+                "fill in the details".to_string(),
+                "complete this".to_string(),
+                "add your logic".to_string(),
+            ],
+            custom_patterns: Vec::new(),
+        }
+    }
+}
+
+/// Duplicate detection configuration
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct DuplicateDetectionConfig {
+    /// Minimum lines for duplicate detection
+    pub min_lines: usize,
+    /// Focus on security-relevant code
+    pub focus_security: bool,
+    /// Ignore test files
+    pub ignore_test_files: bool,
+    /// Maximum files to compare (performance limit)
+    pub max_files_to_compare: usize,
+}
+
+impl Default for DuplicateDetectionConfig {
+    fn default() -> Self {
+        Self {
+            min_lines: 10,
+            focus_security: true,
+            ignore_test_files: true,
+            max_files_to_compare: 1000,
         }
     }
 }
