@@ -11,22 +11,22 @@ jobs:
     name: 🔍 Comprehensive Nightly Analysis
     runs-on: ubuntu-latest
     timeout-minutes: 60
-    
+
     steps:
     - name: 📥 Checkout repository
       uses: actions/checkout@v4
       with:
         fetch-depth: 0
-    
+
     - name: 🦀 Setup Rust
       uses: actions-rust-lang/setup-rust-toolchain@v1
       with:
         toolchain: stable
         cache: true
-    
+
     - name: 🔨 Build CodeGuardian
       run: cargo build --release --quiet
-    
+
     - name: 🚀 Full Turbo Analysis
       run: |
         echo "🚀 Running comprehensive nightly analysis..."
@@ -38,7 +38,7 @@ jobs:
           --format json \
           --output nightly-analysis.json \
           --metrics
-    
+
     - name: 📊 Generate Nightly Report
       run: |
         echo "📊 Nightly Analysis Report - $(date)" > nightly-report.md
@@ -70,7 +70,7 @@ jobs:
             "- \(.severity): \(.message) (\(.file | split("/") | last):\(.line))"' \
             nightly-analysis.json | head -10 >> nightly-report.md
         fi
-    
+
     - name: 📤 Upload Nightly Results
       uses: actions/upload-artifact@v4
       with:

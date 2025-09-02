@@ -48,7 +48,7 @@ codeguardian check large-repo/
 
 # RUV-FANN classification (actual)
 codeguardian check large-repo/
-# Analysis: 2m 15s  
+# Analysis: 2m 15s
 # ML Classification: 0.3s (FANN inference)
 # Total: 2m 15s
 # Memory: 512MB peak
@@ -103,7 +103,7 @@ fann = "1.1"           # <1MB
 // RUV-FANN works everywhere:
 // ✅ Raspberry Pi
 // ✅ Docker containers
-// ✅ Lambda functions  
+// ✅ Lambda functions
 // ✅ GitHub Actions runners
 // ✅ Developer laptops
 // ✅ Enterprise servers
@@ -146,7 +146,7 @@ ml_classifier.record_feedback(&finding, is_true_positive)?;
 ml_classifier.train_incremental(&features, target)?;
 ```
 
-### **Feature Engineering** 
+### **Feature Engineering**
 ```rust
 // Smart feature extraction beats complex models:
 pub fn extract_features(finding: &Finding) -> Vec<f32> {
@@ -263,7 +263,7 @@ BERT Function:
 
 RUV-FANN Function:
 ├── Memory: 512MB
-├── Duration: 2s average  
+├── Duration: 2s average
 ├── Cost per invocation: $0.002
 └── Monthly cost (1000 runs): $2 (22x cheaper!)
 ```

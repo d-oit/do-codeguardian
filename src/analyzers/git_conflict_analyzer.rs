@@ -47,7 +47,7 @@ impl GitConflictAnalyzer {
                     if self.conflict_start_pattern.is_match(line) {
                         conflict_state = ConflictState::InConflict;
                         conflict_start_line = line_number;
-                        
+
                         findings.push(
                             Finding::new(
                                 "git_conflict",
@@ -65,7 +65,7 @@ impl GitConflictAnalyzer {
                 ConflictState::InConflict => {
                     if self.conflict_separator_pattern.is_match(line) {
                         conflict_state = ConflictState::InSeparator;
-                        
+
                         findings.push(
                             Finding::new(
                                 "git_conflict",
@@ -83,7 +83,7 @@ impl GitConflictAnalyzer {
                 ConflictState::InSeparator => {
                     if self.conflict_end_pattern.is_match(line) {
                         conflict_state = ConflictState::None;
-                        
+
                         findings.push(
                             Finding::new(
                                 "git_conflict",
@@ -127,7 +127,7 @@ impl GitConflictAnalyzer {
         }
 
         let mut findings = Vec::new();
-        
+
         // Basic syntax validation for common file types
         if let Some(ext) = file_path.extension().and_then(|e| e.to_str()) {
             match ext {
@@ -175,16 +175,24 @@ impl GitConflictAnalyzer {
     }
 
     /// Detect structural issues that might indicate merge conflicts
-    fn detect_structural_issues(&self, content: &str, file_path: &Path, findings: &mut Vec<Finding>) {
+    fn detect_structural_issues(
+        &self,
+        content: &str,
+        file_path: &Path,
+        findings: &mut Vec<Finding>,
+    ) {
         let lines: Vec<&str> = content.lines().collect();
-        
+
         // Check for suspicious patterns that might indicate unresolved conflicts
         for (line_num, line) in lines.iter().enumerate() {
             let line_number = (line_num + 1) as u32;
-            
+
             // Look for repeated identical lines (common in conflicts)
             if line_num > 0 && line_num < lines.len() - 1 {
-                if lines[line_num - 1] == *line && lines[line_num + 1] == *line && !line.trim().is_empty() {
+                if lines[line_num - 1] == *line
+                    && lines[line_num + 1] == *line
+                    && !line.trim().is_empty()
+                {
                     findings.push(
                         Finding::new(
                             "git_conflict",
@@ -231,7 +239,30 @@ impl Analyzer for GitConflictAnalyzer {
     fn supports_file(&self, file_path: &Path) -> bool {
         // Support all text files - conflicts can appear in any file type
         if let Some(ext) = file_path.extension().and_then(|e| e.to_str()) {
-            !matches!(ext, "exe" | "bin" | "so" | "dll" | "dylib" | "a" | "lib" | "obj" | "o" | "png" | "jpg" | "jpeg" | "gif" | "ico" | "svg" | "pdf" | "zip" | "tar" | "gz" | "bz2" | "xz")
+            !matches!(
+                ext,
+                "exe"
+                    | "bin"
+                    | "so"
+                    | "dll"
+                    | "dylib"
+                    | "a"
+                    | "lib"
+                    | "obj"
+                    | "o"
+                    | "png"
+                    | "jpg"
+                    | "jpeg"
+                    | "gif"
+                    | "ico"
+                    | "svg"
+                    | "pdf"
+                    | "zip"
+                    | "tar"
+                    | "gz"
+                    | "bz2"
+                    | "xz"
+            )
         } else {
             // Files without extensions might still be text files
             true
@@ -256,10 +287,14 @@ version 2
 >>>>>>> branch
 more code
 "#;
-        let findings = analyzer.analyze(Path::new("test.rs"), content.as_bytes()).unwrap();
+        let findings = analyzer
+            .analyze(Path::new("test.rs"), content.as_bytes())
+            .unwrap();
         assert_eq!(findings.len(), 3); // start, separator, end
         assert!(findings.iter().any(|f| f.rule_id == "merge_conflict_start"));
-        assert!(findings.iter().any(|f| f.rule_id == "merge_conflict_separator"));
+        assert!(findings
+            .iter()
+            .any(|f| f.rule_id == "merge_conflict_separator"));
         assert!(findings.iter().any(|f| f.rule_id == "merge_conflict_end"));
     }
 
@@ -274,7 +309,9 @@ version 1
 version 2
 more code without end marker
 "#;
-        let findings = analyzer.analyze(Path::new("test.rs"), content.as_bytes()).unwrap();
+        let findings = analyzer
+            .analyze(Path::new("test.rs"), content.as_bytes())
+            .unwrap();
         assert!(findings.iter().any(|f| f.rule_id == "malformed_conflict"));
     }
 
@@ -285,7 +322,9 @@ more code without end marker
 normal code
 no conflicts here
 "#;
-        let findings = analyzer.analyze(Path::new("test.rs"), content.as_bytes()).unwrap();
+        let findings = analyzer
+            .analyze(Path::new("test.rs"), content.as_bytes())
+            .unwrap();
         assert_eq!(findings.len(), 0);
     }
 
@@ -293,7 +332,9 @@ no conflicts here
     fn test_json_syntax_validation() {
         let analyzer = GitConflictAnalyzer::new();
         let invalid_json = r#"{"key": "value"#; // Missing closing brace
-        let findings = analyzer.analyze(Path::new("test.json"), invalid_json.as_bytes()).unwrap();
+        let findings = analyzer
+            .analyze(Path::new("test.json"), invalid_json.as_bytes())
+            .unwrap();
         assert!(findings.iter().any(|f| f.rule_id == "syntax_error"));
     }
 

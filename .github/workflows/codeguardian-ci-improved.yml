@@ -21,26 +21,26 @@ jobs:
       contents: read
       issues: write
       pull-requests: write
-    
+
     steps:
     - uses: actions/checkout@v4
       with:
         fetch-depth: 0  # Need full history for diff
-    
+
     - name: Setup Rust
       uses: actions-rust-lang/setup-rust-toolchain@v1
       with:
         toolchain: stable
         cache: true
-    
+
     - name: Clean stale locks
       run: |
         rm -f target/debug/.cargo-lock target/release/.cargo-lock
-    
+
     - name: Build CodeGuardian
       run: |
         cargo build --release
-    
+
     - name: Run CodeGuardian (PR diff-only)
       run: |
         # Diff-only mode for PRs - fast and focused feedback
@@ -56,7 +56,7 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         GITHUB_REPOSITORY: ${{ github.repository }}
-    
+
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
       if: always()
@@ -72,24 +72,24 @@ jobs:
     permissions:
       contents: read
       issues: write
-    
+
     steps:
     - uses: actions/checkout@v4
-    
+
     - name: Setup Rust
       uses: actions-rust-lang/setup-rust-toolchain@v1
       with:
         toolchain: stable
         cache: true
-    
+
     - name: Clean stale locks
       run: |
         rm -f target/debug/.cargo-lock target/release/.cargo-lock
-    
+
     - name: Build CodeGuardian
       run: |
         cargo build --release
-    
+
     - name: Run CodeGuardian (Full scan)
       run: |
         # Full repository scan for scheduled jobs and main branch pushes
@@ -105,7 +105,7 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         GITHUB_REPOSITORY: ${{ github.repository }}
-    
+
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
       if: always()
@@ -120,24 +120,24 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-    
+
     steps:
     - uses: actions/checkout@v4
-    
+
     - name: Setup Rust
       uses: actions-rust-lang/setup-rust-toolchain@v1
       with:
         toolchain: stable
         cache: true
-    
+
     - name: Clean stale locks
       run: |
         rm -f target/debug/.cargo-lock target/release/.cargo-lock
-    
+
     - name: Build CodeGuardian
       run: |
         cargo build --release
-    
+
     - name: Update baseline
       run: |
         ./target/release/codeguardian check . \

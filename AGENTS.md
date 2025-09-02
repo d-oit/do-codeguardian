@@ -19,6 +19,18 @@ CodeGuardian is a Rust-based security analysis platform with integrated machine 
 - **Memory Safety**: Leverage Rust's ownership system, avoid unsafe code unless absolutely necessary
 - **Performance**: Use async/await patterns, parallel processing where appropriate, memory pooling
 - **Code Size**: Keep functions under 50-100 lines, files under 300-700 lines
+- **Single Responsibility Principle**: Each file should have one clear purpose
+- **Bounded Contexts**: Divide large systems into smaller, focused contexts
+- **Extract Class/Method**: Use refactoring techniques to break down large files
+- **Module splitting**: Split large modules into focused, cohesive units
+
+### Duplicate Code Avoidance
+- **Extract Method**: Move duplicated code fragments into reusable methods
+- **Extract Class**: Create new classes for shared functionality
+- **Extract Superclass**: Use inheritance for common behavior
+- **Template Method pattern**: Define algorithm skeletons in base classes
+- **Trait-based extraction**: Use Rust traits for code reuse across agent types
+- **Component composition**: Build reusable React components to avoid duplication
 
 ## Testing Instructions
 - **Unit Tests**: Run `cargo test` for all tests, `cargo test <test_name>` for specific tests
@@ -143,6 +155,12 @@ CodeGuardian is a Rust-based security analysis platform with integrated machine 
 - **Domain Expertise**: Match agent specialization to task requirements
 - **Resource Constraints**: Consider computational resources and time budgets
 - **Risk Level**: Higher risk tasks require multiple agents for validation
+- **Agent Hierarchy**: Prefer specialized agents for domain-specific tasks; use the general agent only for truly cross-domain research or when no specialist exists
+
+### Agent Selection Guidance
+The orchestrator should always prioritize specialized agents over the general agent for domain-specific tasks. Specialized agents provide deeper expertise, better accuracy, and more efficient processing for their designated domains. Only recommend the general agent for truly cross-cutting research tasks that span multiple domains without fitting into any specialist category, or when no appropriate specialist exists.
+
+This ensures optimal performance and quality by leveraging the right tool for each job.
 
 ## Repository Information
 Repository information is available in `.opencode/agent-config.json` or can be obtained dynamically using helper scripts in `.opencode/get-repo-info.sh`.

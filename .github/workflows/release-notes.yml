@@ -22,19 +22,19 @@ jobs:
         with:
           script: |
             const { execSync } = require('child_process');
-            
+
             // Get current release info
             const release = context.payload.release;
             const currentTag = release.tag_name;
-            
+
             // Get previous release tag
             const previousTag = execSync('git describe --tags --abbrev=0 HEAD~1 2>/dev/null || echo ""', { encoding: 'utf8' }).trim();
-            
+
             if (!previousTag) {
               console.log('No previous tag found, skipping changelog generation');
               return;
             }
-            
+
             // Get PRs merged between tags
             const prs = await github.rest.pulls.list({
               owner: context.repo.owner,
@@ -44,14 +44,14 @@ jobs:
               direction: 'desc',
               per_page: 100
             });
-            
+
             // Filter PRs merged between previous and current tag
-            const mergedPRs = prs.data.filter(pr => 
-              pr.merged_at && 
-              pr.merged_at > new Date(previousTag) && 
+            const mergedPRs = prs.data.filter(pr =>
+              pr.merged_at &&
+              pr.merged_at > new Date(previousTag) &&
               pr.merged_at <= new Date(release.published_at)
             );
-            
+
             // Categorize PRs by labels
             const categories = {
               '🚀 Features': [],
@@ -64,7 +64,7 @@ jobs:
               '🔄 Refactoring': [],
               '📦 Dependencies': []
             };
-            
+
             mergedPRs.forEach(pr => {
               let categorized = false;
               pr.labels.forEach(label => {
@@ -95,17 +95,17 @@ jobs:
                   categorized = true;
                 }
               });
-              
+
               // If not categorized, put in maintenance
               if (!categorized) {
                 categories['🔧 Maintenance'].push(pr);
               }
             });
-            
+
             // Generate markdown
             let notes = `# Release ${currentTag}\n\n`;
             notes += `**Full Changelog**: https://github.com/${context.repo.owner}/${context.repo.repo}/compare/${previousTag}...${currentTag}\n\n`;
-            
+
             for (const [category, prList] of Object.entries(categories)) {
               if (prList.length > 0) {
                 notes += `## ${category}\n\n`;
@@ -115,7 +115,7 @@ jobs:
                 notes += '\n';
               }
             }
-            
+
             // Set output for next step
             core.setOutput('release-notes', notes);
 

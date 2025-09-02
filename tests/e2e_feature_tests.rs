@@ -20,7 +20,7 @@ const TEST_KEY = "test_key_12345";
 #[cfg(test)]
 mod tests {
     const MOCK_SECRET = "mock_secret_abcdef"; // Test context
-    
+
     #[test]
     fn test_function() {
         assert_eq!(2 + 2, 4);
@@ -169,7 +169,7 @@ patterns = ["CUSTOM_TODO", "CUSTOM_FIXME", "CUSTOM_DEBUG"]
 fn main() {
     let secret = "CUSTOM_SECRET_ABCDEF1234"; // Should be detected
     let api_key = "MY_API_KEY_abcdef1234567890abcdef1234567890"; // Should be detected
-    
+
     // CUSTOM_TODO: This should be flagged
     println!("Secret: {}, API: {}", secret, api_key);
 }

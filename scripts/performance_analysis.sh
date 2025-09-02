@@ -23,10 +23,10 @@ echo -e "${BLUE}Running performance benchmarks...${NC}"
 if cargo bench --list >/dev/null 2>&1; then
     echo -e "${GREEN}Running comprehensive benchmarks...${NC}"
     cargo bench --bench comprehensive_performance_benchmark
-    
+
     echo -e "${GREEN}Running hashing benchmarks...${NC}"
     cargo bench --bench hashing_benchmark
-    
+
     echo -e "${GREEN}Running existing performance benchmarks...${NC}"
     cargo bench --bench performance_benchmark
 else

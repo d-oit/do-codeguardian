@@ -24,7 +24,7 @@ all = true
 # Exclude files that shouldn't be covered
 exclude = [
     "target/*",
-    "tests/fixtures/*", 
+    "tests/fixtures/*",
     "benches/*",
     "examples/*",
     "tmp_*"

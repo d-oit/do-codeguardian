@@ -15,14 +15,14 @@ updates:
         update-types:
           - "minor"
           - "patch"
-     commit-message:
-       prefix: "deps"
-       prefix-development: "deps-dev"
-       include: "scope"
-     reviewers:
-       - "d-oit"  # Replace with actual team/user
-     assignees:
-       - "d-oit"  # Replace with actual team/user
+    commit-message:
+      prefix: "deps"
+      prefix-development: "deps-dev"
+      include: "scope"
+    reviewers:
+      - "d-oit"  # Replace with actual team/user
+    assignees:
+      - "d-oit"  # Replace with actual team/user
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
@@ -30,10 +30,10 @@ updates:
       time: "09:00"
       timezone: "UTC"
     open-pull-requests-limit: 5
-     commit-message:
-       prefix: "ci"
-       include: "scope"
-     reviewers:
-       - "d-oit"  # Replace with actual team/user
-     assignees:
-       - "d-oit"  # Replace with actual team/user
+    commit-message:
+      prefix: "ci"
+      include: "scope"
+    reviewers:
+      - "d-oit"  # Replace with actual team/user
+    assignees:
+      - "d-oit"  # Replace with actual team/user

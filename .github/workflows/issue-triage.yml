@@ -49,7 +49,7 @@ jobs:
                            "status: needs triage","status: in progress",
                            "status: needs review","status: duplicate",
                            "status: wontfix"];
-            
+
             const prompt = `Classify this GitHub issue into labels from: ${labels.join(', ')}
               Title: "${issue.title}"
               Body: "${issue.body}"

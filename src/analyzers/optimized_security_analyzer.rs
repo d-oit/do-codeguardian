@@ -1,5 +1,5 @@
 //! Optimized Security Analyzer with pre-compiled regex patterns
-//! 
+//!
 //! This version uses lazy_static for regex pre-compilation, providing
 //! 50-80% performance improvement over the original implementation.
 
@@ -18,21 +18,21 @@ lazy_static! {
     static ref SQL_UNION_PATTERN: Regex = Regex::new(r#"UNION\s+SELECT"#).unwrap();
     static ref SQL_COMMENT_PATTERN: Regex = Regex::new(r#"--\s*$"#).unwrap();
     static ref SQL_DROP_PATTERN: Regex = Regex::new(r#";\s*DROP\s+TABLE"#).unwrap();
-    
+
     // XSS patterns
     static ref XSS_SCRIPT_PATTERN: Regex = Regex::new(r#"<script[^>]*>.*?</script>"#).unwrap();
     static ref XSS_JAVASCRIPT_PATTERN: Regex = Regex::new(r#"javascript:\s*["'][^"']*["']"#).unwrap();
     static ref XSS_EVENT_PATTERN: Regex = Regex::new(r#"\bon\w+\s*=\s*["'][^"']*["']"#).unwrap();
     static ref XSS_IFRAME_PATTERN: Regex = Regex::new(r#"<iframe[^>]*src\s*=\s*["'][^"']*["'][^>]*>"#).unwrap();
     static ref XSS_OBJECT_PATTERN: Regex = Regex::new(r#"<object[^>]*data\s*=\s*["'][^"']*["'][^>]*>"#).unwrap();
-    
+
     // Command injection patterns
     static ref CMD_DANGEROUS_PATTERN: Regex = Regex::new(r#";\s*(rm|del|format|shutdown)"#).unwrap();
     static ref CMD_PIPE_PATTERN: Regex = Regex::new(r#"\|\s*(cat|ls|dir)"#).unwrap();
     static ref CMD_BACKTICK_PATTERN: Regex = Regex::new(r#"`[^`]*`"#).unwrap();
     static ref CMD_DOLLAR_PATTERN: Regex = Regex::new(r#"\$\([^)]*\)"#).unwrap();
     static ref CMD_SYSTEM_PATTERN: Regex = Regex::new(r#"system\s*\("#).unwrap();
-    
+
     // Secret patterns
     static ref SECRET_API_KEY_PATTERN: Regex = Regex::new(r#"API_KEY\s*=\s*["']sk-[^"']*["']"#).unwrap();
     static ref SECRET_PASSWORD_PATTERN: Regex = Regex::new(r#"PASSWORD\s*=\s*["'][^"']*["']"#).unwrap();
@@ -40,35 +40,35 @@ lazy_static! {
     static ref SECRET_TOKEN_PATTERN: Regex = Regex::new(r#"TOKEN\s*=\s*["'][^"']*["']"#).unwrap();
     static ref SECRET_AWS_ACCESS_PATTERN: Regex = Regex::new(r#"aws_access_key_id\s*=\s*["'][^"']*["']"#).unwrap();
     static ref SECRET_AWS_SECRET_PATTERN: Regex = Regex::new(r#"aws_secret_access_key\s*=\s*["'][^"']*["']"#).unwrap();
-    
+
     // Vulnerability patterns
     static ref VULN_UNSAFE_PATTERN: Regex = Regex::new(r#"unsafe\s*\{"#).unwrap();
     static ref VULN_TRANSMUTE_PATTERN: Regex = Regex::new(r#"std::mem::transmute"#).unwrap();
     static ref VULN_NULL_PATTERN: Regex = Regex::new(r#"std::ptr::null"#).unwrap();
     static ref VULN_CSTR_PATTERN: Regex = Regex::new(r#"std::ffi::CStr::from_ptr"#).unwrap();
     static ref VULN_EVAL_PATTERN: Regex = Regex::new(r#"eval\s*\("#).unwrap();
-    
+
     // Combined patterns for single-pass analysis
     static ref ALL_SQL_PATTERNS: Vec<&'static Regex> = vec![
-        &SQL_OR_PATTERN, &SQL_AND_PATTERN, &SQL_UNION_PATTERN, 
+        &SQL_OR_PATTERN, &SQL_AND_PATTERN, &SQL_UNION_PATTERN,
         &SQL_COMMENT_PATTERN, &SQL_DROP_PATTERN
     ];
-    
+
     static ref ALL_XSS_PATTERNS: Vec<&'static Regex> = vec![
         &XSS_SCRIPT_PATTERN, &XSS_JAVASCRIPT_PATTERN, &XSS_EVENT_PATTERN,
         &XSS_IFRAME_PATTERN, &XSS_OBJECT_PATTERN
     ];
-    
+
     static ref ALL_CMD_PATTERNS: Vec<&'static Regex> = vec![
         &CMD_DANGEROUS_PATTERN, &CMD_PIPE_PATTERN, &CMD_BACKTICK_PATTERN,
         &CMD_DOLLAR_PATTERN, &CMD_SYSTEM_PATTERN
     ];
-    
+
     static ref ALL_SECRET_PATTERNS: Vec<&'static Regex> = vec![
         &SECRET_API_KEY_PATTERN, &SECRET_PASSWORD_PATTERN, &SECRET_SECRET_PATTERN,
         &SECRET_TOKEN_PATTERN, &SECRET_AWS_ACCESS_PATTERN, &SECRET_AWS_SECRET_PATTERN
     ];
-    
+
     static ref ALL_VULN_PATTERNS: Vec<&'static Regex> = vec![
         &VULN_UNSAFE_PATTERN, &VULN_TRANSMUTE_PATTERN, &VULN_NULL_PATTERN,
         &VULN_CSTR_PATTERN, &VULN_EVAL_PATTERN
@@ -91,7 +91,7 @@ impl OptimizedSecurityAnalyzer {
     /// Optimized SQL injection detection with pre-compiled patterns
     fn detect_sql_injection(&self, content: &str, file_path: &Path) -> Vec<Finding> {
         let mut findings = Vec::new();
-        
+
         for (line_num, line) in content.lines().enumerate() {
             for pattern in ALL_SQL_PATTERNS.iter() {
                 if pattern.is_match(line) {
@@ -118,7 +118,7 @@ impl OptimizedSecurityAnalyzer {
     /// Optimized XSS detection with pre-compiled patterns
     fn detect_xss(&self, content: &str, file_path: &Path) -> Vec<Finding> {
         let mut findings = Vec::new();
-        
+
         for (line_num, line) in content.lines().enumerate() {
             for pattern in ALL_XSS_PATTERNS.iter() {
                 if pattern.is_match(line) {
@@ -146,7 +146,7 @@ impl OptimizedSecurityAnalyzer {
     fn detect_command_injection(&self, content: &str, file_path: &Path) -> Vec<Finding> {
         let mut findings = Vec::new();
         let is_rust = self.is_rust_file(file_path);
-        
+
         for (line_num, line) in content.lines().enumerate() {
             for pattern in ALL_CMD_PATTERNS.iter() {
                 // Skip backtick pattern for Rust files
@@ -196,7 +196,7 @@ impl OptimizedSecurityAnalyzer {
     /// Optimized secret detection with pre-compiled patterns
     fn scan_hardcoded_secrets(&self, content: &str, file_path: &Path) -> Vec<Finding> {
         let mut findings = Vec::new();
-        
+
         for (line_num, line) in content.lines().enumerate() {
             for pattern in ALL_SECRET_PATTERNS.iter() {
                 if pattern.is_match(line) {
@@ -227,7 +227,7 @@ impl OptimizedSecurityAnalyzer {
     /// Optimized vulnerability analysis with pre-compiled patterns
     fn analyze_vulnerabilities(&self, content: &str, file_path: &Path) -> Vec<Finding> {
         let mut findings = Vec::new();
-        
+
         for (line_num, line) in content.lines().enumerate() {
             for pattern in ALL_VULN_PATTERNS.iter() {
                 if pattern.is_match(line) {
@@ -431,21 +431,24 @@ mod tests {
     #[test]
     fn test_performance_improvement() {
         use std::time::Instant;
-        
+
         let analyzer = OptimizedSecurityAnalyzer::new();
         let test_content = r#"
             let api_key = "sk-1234567890abcdef";
             unsafe { transmute(ptr) }
             ' OR 1=1
         "#;
-        
+
         let start = Instant::now();
         for _ in 0..1000 {
             let _ = analyzer.analyze(&PathBuf::from("test.rs"), test_content.as_bytes());
         }
         let duration = start.elapsed();
-        
+
         // Should complete 1000 iterations quickly with pre-compiled regex
-        assert!(duration.as_millis() < 1000, "Performance regression detected");
+        assert!(
+            duration.as_millis() < 1000,
+            "Performance regression detected"
+        );
     }
 }

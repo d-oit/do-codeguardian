@@ -8,7 +8,7 @@ The broken files detection feature includes 5 comprehensive test files covering 
 
 ### 1. `broken_files_integration_tests.rs` - Integration Tests
 - **Git Conflict Tests**: Complete merge conflict detection scenarios
-- **AI Content Tests**: AI-generated content and placeholder detection  
+- **AI Content Tests**: AI-generated content and placeholder detection
 - **Duplicate Analyzer Tests**: Security-focused duplicate code detection
 - **Cross-Analyzer Integration**: Multiple analyzers working together
 - **Real File Analysis**: End-to-end file processing workflows
@@ -58,7 +58,7 @@ cargo test broken_files
 ### Individual Test Categories
 ```bash
 cargo test broken_files_integration_tests
-cargo test broken_files_unit_tests  
+cargo test broken_files_unit_tests
 cargo test broken_files_config_tests
 cargo test broken_files_performance_tests
 cargo test broken_files_e2e_tests
@@ -75,7 +75,7 @@ cargo test broken_files_e2e_tests
 
 ### Performance Coverage
 - ✅ Small files (<1KB): <100ms
-- ✅ Medium files (1-100KB): <500ms  
+- ✅ Medium files (1-100KB): <500ms
 - ✅ Large files (>100KB): <1s
 - ✅ Memory usage: <100MB peak
 

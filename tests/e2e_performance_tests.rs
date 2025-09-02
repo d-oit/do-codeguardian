@@ -31,7 +31,7 @@ pub fn function_{}() -> i32 {{
 #[cfg(test)]
 mod tests {{
     use super::*;
-    
+
     #[test]
     fn test_function_{}() {{
         assert_eq!(function_{}(), {});
@@ -151,7 +151,7 @@ fn test_concurrent_analysis_performance() {
 pub fn process_data_{}() {{
     let secret = "key-{}-secret"; // Each file has a finding
     println!("Processing with secret: {{}}", secret);
-    
+
     // Some computation
     for j in 0..100 {{
         let result = {} * j;

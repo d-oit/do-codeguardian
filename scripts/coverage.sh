@@ -41,12 +41,12 @@ cargo tarpaulin \
 # Check if coverage was generated successfully
 if [ $? -eq 0 ]; then
     echo -e "${GREEN}✅ Coverage analysis completed successfully!${NC}"
-    
+
     # Extract coverage percentage from JSON report
     if [ -f "coverage/tarpaulin-report.json" ]; then
         COVERAGE=$(cat coverage/tarpaulin-report.json | grep -o '"coverage":[0-9.]*' | cut -d':' -f2)
         echo -e "${BLUE}📊 Overall Coverage: ${COVERAGE}%${NC}"
-        
+
         # Coverage quality gate
         THRESHOLD=80
         if (( $(echo "$COVERAGE >= $THRESHOLD" | bc -l) )); then
@@ -56,12 +56,12 @@ if [ $? -eq 0 ]; then
             echo -e "${YELLOW}Consider adding more tests to improve coverage${NC}"
         fi
     fi
-    
+
     echo -e "${BLUE}📁 Coverage reports generated in: coverage/${NC}"
     echo -e "${BLUE}   - HTML Report: coverage/tarpaulin-report.html${NC}"
     echo -e "${BLUE}   - XML Report: coverage/cobertura.xml${NC}"
     echo -e "${BLUE}   - JSON Report: coverage/tarpaulin-report.json${NC}"
-    
+
     # Open HTML report if on macOS or Linux with display
     if [[ "$OSTYPE" == "darwin"* ]]; then
         echo -e "${BLUE}Opening HTML report...${NC}"
@@ -70,7 +70,7 @@ if [ $? -eq 0 ]; then
         echo -e "${BLUE}Opening HTML report...${NC}"
         xdg-open coverage/tarpaulin-report.html 2>/dev/null || true
     fi
-    
+
 else
     echo -e "${RED}❌ Coverage analysis failed${NC}"
     exit 1

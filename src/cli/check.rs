@@ -169,7 +169,7 @@ pub async fn run(mut args: CheckArgs, mut config: Config) -> Result<()> {
         let has_conflicts = results.findings.iter().any(|f| {
             f.analyzer == "git_conflict" && matches!(f.severity, crate::types::Severity::Critical)
         });
-        
+
         if has_conflicts {
             tracing::error!("🚨 Git merge conflicts detected! Failing as requested.");
             std::process::exit(3); // Different exit code for conflicts

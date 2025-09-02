@@ -1,8 +1,11 @@
-use codeguardian::analyzers::{git_conflict_analyzer::GitConflictAnalyzer, ai_content_analyzer::AiContentAnalyzer, duplicate_analyzer::DuplicateAnalyzer, Analyzer};
+use codeguardian::analyzers::{
+    ai_content_analyzer::AiContentAnalyzer, duplicate_analyzer::DuplicateAnalyzer,
+    git_conflict_analyzer::GitConflictAnalyzer, Analyzer,
+};
 use codeguardian::types::Severity;
+use std::io::Write;
 use std::path::Path;
 use tempfile::NamedTempFile;
-use std::io::Write;
 
 #[cfg(test)]
 mod git_conflict_tests {
@@ -14,7 +17,7 @@ mod git_conflict_tests {
         let content = r#"
 fn main() {
     println!("Starting application");
-    
+
 <<<<<<< HEAD
     let version = "1.0.0";
     println!("Version: {}", version);
@@ -22,19 +25,23 @@ fn main() {
     let version = "2.0.0";
     println!("App version: {}", version);
 >>>>>>> feature-branch
-    
+
     println!("Application started");
 }
 "#;
-        
-        let findings = analyzer.analyze(Path::new("test.rs"), content.as_bytes()).unwrap();
-        
+
+        let findings = analyzer
+            .analyze(Path::new("test.rs"), content.as_bytes())
+            .unwrap();
+
         // Should detect start, separator, and end markers
         assert_eq!(findings.len(), 3);
         assert!(findings.iter().any(|f| f.rule_id == "merge_conflict_start"));
-        assert!(findings.iter().any(|f| f.rule_id == "merge_conflict_separator"));
+        assert!(findings
+            .iter()
+            .any(|f| f.rule_id == "merge_conflict_separator"));
         assert!(findings.iter().any(|f| f.rule_id == "merge_conflict_end"));
-        
+
         // All conflict findings should be critical severity
         for finding in &findings {
             assert_eq!(finding.severity, Severity::Critical);
@@ -54,9 +61,11 @@ fn main() {
     // Missing end marker
 }
 "#;
-        
-        let findings = analyzer.analyze(Path::new("test.rs"), content.as_bytes()).unwrap();
-        
+
+        let findings = analyzer
+            .analyze(Path::new("test.rs"), content.as_bytes())
+            .unwrap();
+
         // Should detect malformed conflict
         assert!(findings.iter().any(|f| f.rule_id == "malformed_conflict"));
         assert!(findings.iter().any(|f| f.severity == Severity::Critical));
@@ -66,9 +75,11 @@ fn main() {
     fn test_json_syntax_validation() {
         let analyzer = GitConflictAnalyzer::new();
         let invalid_json = r#"{"key": "value", "incomplete": "#; // Missing closing
-        
-        let findings = analyzer.analyze(Path::new("test.json"), invalid_json.as_bytes()).unwrap();
-        
+
+        let findings = analyzer
+            .analyze(Path::new("test.json"), invalid_json.as_bytes())
+            .unwrap();
+
         assert!(findings.iter().any(|f| f.rule_id == "syntax_error"));
         assert!(findings.iter().any(|f| f.severity == Severity::High));
     }
@@ -82,21 +93,23 @@ fn main() {
     let version = "1.0.0";
 }
 "#;
-        
-        let findings = analyzer.analyze(Path::new("test.rs"), clean_content.as_bytes()).unwrap();
+
+        let findings = analyzer
+            .analyze(Path::new("test.rs"), clean_content.as_bytes())
+            .unwrap();
         assert_eq!(findings.len(), 0);
     }
 
     #[test]
     fn test_file_type_support() {
         let analyzer = GitConflictAnalyzer::new();
-        
+
         // Should support text files
         assert!(analyzer.supports_file(Path::new("test.rs")));
         assert!(analyzer.supports_file(Path::new("test.js")));
         assert!(analyzer.supports_file(Path::new("test.json")));
         assert!(analyzer.supports_file(Path::new("README.md")));
-        
+
         // Should not support binary files
         assert!(!analyzer.supports_file(Path::new("test.exe")));
         assert!(!analyzer.supports_file(Path::new("test.png")));
@@ -115,7 +128,7 @@ mod ai_content_tests {
 fn main() {
     // TODO: implement this function
     println!("add content here");
-    
+
     // This needs to be completed
     placeholder_function();
 }
@@ -125,13 +138,17 @@ fn placeholder_function() {
     unimplemented!()
 }
 "#;
-        
-        let findings = analyzer.analyze(Path::new("test.rs"), content.as_bytes()).unwrap();
-        
+
+        let findings = analyzer
+            .analyze(Path::new("test.rs"), content.as_bytes())
+            .unwrap();
+
         // Should detect multiple placeholder patterns
         assert!(!findings.is_empty());
         assert!(findings.iter().any(|f| f.rule_id == "placeholder_content"));
-        assert!(findings.iter().any(|f| f.rule_id == "incomplete_implementation"));
+        assert!(findings
+            .iter()
+            .any(|f| f.rule_id == "incomplete_implementation"));
     }
 
     #[test]
@@ -148,9 +165,11 @@ fn another_function() {
     // Powered by AI
 }
 "#;
-        
-        let findings = analyzer.analyze(Path::new("test.rs"), content.as_bytes()).unwrap();
-        
+
+        let findings = analyzer
+            .analyze(Path::new("test.rs"), content.as_bytes())
+            .unwrap();
+
         assert!(findings.iter().any(|f| f.rule_id == "ai_generated_marker"));
         assert!(findings.iter().any(|f| f.severity == Severity::Info));
     }
@@ -171,11 +190,15 @@ fn process_data(input: &str) {
     // Generic processing
 }
 "#;
-        
-        let findings = analyzer.analyze(Path::new("src/main.rs"), content.as_bytes()).unwrap();
-        
+
+        let findings = analyzer
+            .analyze(Path::new("src/main.rs"), content.as_bytes())
+            .unwrap();
+
         // Should detect generic function names (but not in test files)
-        assert!(findings.iter().any(|f| f.rule_id == "generic_function_name"));
+        assert!(findings
+            .iter()
+            .any(|f| f.rule_id == "generic_function_name"));
         assert!(findings.iter().any(|f| f.severity == Severity::Low));
     }
 
@@ -187,20 +210,26 @@ fn do_something() {
     // This is in a test file, should be ignored for generic names
 }
 "#;
-        
-        let findings = analyzer.analyze(Path::new("tests/test_example.rs"), content.as_bytes()).unwrap();
-        
+
+        let findings = analyzer
+            .analyze(Path::new("tests/test_example.rs"), content.as_bytes())
+            .unwrap();
+
         // Generic function names should be ignored in test files
-        assert!(!findings.iter().any(|f| f.rule_id == "generic_function_name"));
+        assert!(!findings
+            .iter()
+            .any(|f| f.rule_id == "generic_function_name"));
     }
 
     #[test]
     fn test_skip_documentation_files() {
         let analyzer = AiContentAnalyzer::new();
         let content = "# TODO: implement this feature\nAdd content here for documentation.";
-        
-        let findings = analyzer.analyze(Path::new("README.md"), content.as_bytes()).unwrap();
-        
+
+        let findings = analyzer
+            .analyze(Path::new("README.md"), content.as_bytes())
+            .unwrap();
+
         // Should skip .md files entirely
         assert_eq!(findings.len(), 0);
     }
@@ -208,17 +237,21 @@ fn do_something() {
     #[test]
     fn test_custom_patterns() {
         let custom_patterns = vec!["custom placeholder".to_string(), "fix me later".to_string()];
-        let analyzer = AiContentAnalyzer::new().with_custom_patterns(custom_patterns).unwrap();
-        
+        let analyzer = AiContentAnalyzer::new()
+            .with_custom_patterns(custom_patterns)
+            .unwrap();
+
         let content = r#"
 fn main() {
     // This is a custom placeholder in the code
     println!("fix me later");
 }
 "#;
-        
-        let findings = analyzer.analyze(Path::new("test.rs"), content.as_bytes()).unwrap();
-        
+
+        let findings = analyzer
+            .analyze(Path::new("test.rs"), content.as_bytes())
+            .unwrap();
+
         assert!(findings.iter().any(|f| f.rule_id == "placeholder_content"));
     }
 
@@ -234,19 +267,20 @@ fn todo_implementation() {
     // TODO: implement this
 }
 "#;
-        
-        let findings = analyzer.analyze(Path::new("test.rs"), content.as_bytes()).unwrap();
-        
+
+        let findings = analyzer
+            .analyze(Path::new("test.rs"), content.as_bytes())
+            .unwrap();
+
         // unimplemented! should be high severity
-        let unimpl_finding = findings.iter().find(|f| 
-            f.rule_id == "incomplete_implementation" && f.line == 3
-        ).unwrap();
+        let unimpl_finding = findings
+            .iter()
+            .find(|f| f.rule_id == "incomplete_implementation" && f.line == 3)
+            .unwrap();
         assert_eq!(unimpl_finding.severity, Severity::High);
-        
+
         // TODO should be medium severity
-        let todo_finding = findings.iter().find(|f| 
-            f.rule_id == "placeholder_content"
-        );
+        let todo_finding = findings.iter().find(|f| f.rule_id == "placeholder_content");
         if let Some(finding) = todo_finding {
             assert_eq!(finding.severity, Severity::Medium);
         }
@@ -289,35 +323,43 @@ fn log_authentication_attempt(username: &str, success: bool) {
     println!("Auth attempt for {}: {}", username, success);
 }
 "#;
-        
-        let findings = analyzer.analyze(Path::new("auth.rs"), content.as_bytes()).unwrap();
-        
+
+        let findings = analyzer
+            .analyze(Path::new("auth.rs"), content.as_bytes())
+            .unwrap();
+
         // Should detect duplicate authentication functions
         assert!(findings.iter().any(|f| f.rule_id == "internal_duplication"));
-        
+
         // Should be high severity due to security relevance
-        let duplicate_finding = findings.iter().find(|f| f.rule_id == "internal_duplication").unwrap();
-        assert!(matches!(duplicate_finding.severity, Severity::High | Severity::Medium));
+        let duplicate_finding = findings
+            .iter()
+            .find(|f| f.rule_id == "internal_duplication")
+            .unwrap();
+        assert!(matches!(
+            duplicate_finding.severity,
+            Severity::High | Severity::Medium
+        ));
     }
 
     #[test]
     fn test_security_relevance_detection() {
         let analyzer = DuplicateAnalyzer::new();
-        
+
         // Security-relevant code block
         let security_block = codeguardian::analyzers::duplicate_analyzer::CodeBlock {
             lines: vec!["authenticate_user".to_string(), "hash_password".to_string()],
             start_line: 1,
             end_line: 2,
         };
-        
+
         // Non-security code block
         let normal_block = codeguardian::analyzers::duplicate_analyzer::CodeBlock {
             lines: vec!["println!".to_string(), "format!".to_string()],
             start_line: 1,
             end_line: 2,
         };
-        
+
         // Note: This test would require exposing the is_security_relevant method
         // For now, we'll test through the full analysis
         let security_content = r#"
@@ -328,8 +370,10 @@ fn authenticate_user_copy() {
     // Security function
 }
 "#;
-        
-        let findings = analyzer.analyze(Path::new("security.rs"), security_content.as_bytes()).unwrap();
+
+        let findings = analyzer
+            .analyze(Path::new("security.rs"), security_content.as_bytes())
+            .unwrap();
         // The analyzer should focus on security-relevant duplicates
     }
 
@@ -349,9 +393,11 @@ fn test_another_duplicate() {
     assert_eq!(3, 3);
 }
 "#;
-        
-        let findings = analyzer.analyze(Path::new("tests/test_auth.rs"), content.as_bytes()).unwrap();
-        
+
+        let findings = analyzer
+            .analyze(Path::new("tests/test_auth.rs"), content.as_bytes())
+            .unwrap();
+
         // Should ignore duplicates in test files by default
         assert_eq!(findings.len(), 0);
     }
@@ -359,7 +405,7 @@ fn test_another_duplicate() {
     #[test]
     fn test_similarity_calculation() {
         let analyzer = DuplicateAnalyzer::new();
-        
+
         // This test would require exposing the calculate_similarity method
         // For integration testing, we verify through actual analysis results
         let identical_content = r#"
@@ -377,9 +423,11 @@ fn function_b() {
     println!("{}", z);
 }
 "#;
-        
-        let findings = analyzer.analyze(Path::new("similar.rs"), identical_content.as_bytes()).unwrap();
-        
+
+        let findings = analyzer
+            .analyze(Path::new("similar.rs"), identical_content.as_bytes())
+            .unwrap();
+
         // Should detect high similarity
         if !findings.is_empty() {
             let finding = &findings[0];
@@ -399,9 +447,11 @@ fn short_b() {
     println!("short");
 }
 "#;
-        
-        let findings = analyzer.analyze(Path::new("short.rs"), short_duplicate.as_bytes()).unwrap();
-        
+
+        let findings = analyzer
+            .analyze(Path::new("short.rs"), short_duplicate.as_bytes())
+            .unwrap();
+
         // Should not detect duplicates below minimum line threshold
         assert_eq!(findings.len(), 0);
     }
@@ -409,13 +459,13 @@ fn short_b() {
     #[test]
     fn test_file_type_support() {
         let analyzer = DuplicateAnalyzer::new();
-        
+
         // Should support source code files
         assert!(analyzer.supports_file(Path::new("test.rs")));
         assert!(analyzer.supports_file(Path::new("test.js")));
         assert!(analyzer.supports_file(Path::new("test.py")));
         assert!(analyzer.supports_file(Path::new("test.java")));
-        
+
         // Should not support non-source files
         assert!(!analyzer.supports_file(Path::new("test.txt")));
         assert!(!analyzer.supports_file(Path::new("test.md")));
@@ -426,26 +476,26 @@ fn short_b() {
 #[cfg(test)]
 mod integration_tests {
     use super::*;
-    use tempfile::TempDir;
     use std::fs;
+    use tempfile::TempDir;
 
     #[test]
     fn test_analyzer_registry_integration() {
         // This test would require access to the analyzer registry
         // For now, we test that analyzers can be created and used independently
-        
+
         let git_analyzer = GitConflictAnalyzer::new();
         let ai_analyzer = AiContentAnalyzer::new();
         let dup_analyzer = DuplicateAnalyzer::new();
-        
+
         let test_content = b"fn main() { println!(\"test\"); }";
         let test_path = Path::new("test.rs");
-        
+
         // All analyzers should be able to process the same file
         let git_findings = git_analyzer.analyze(test_path, test_content).unwrap();
         let ai_findings = ai_analyzer.analyze(test_path, test_content).unwrap();
         let dup_findings = dup_analyzer.analyze(test_path, test_content).unwrap();
-        
+
         // Clean code should produce no findings
         assert_eq!(git_findings.len(), 0);
         assert_eq!(ai_findings.len(), 0);
@@ -455,20 +505,20 @@ mod integration_tests {
     #[test]
     fn test_real_file_analysis() -> std::io::Result<()> {
         let temp_dir = TempDir::new()?;
-        
+
         // Create a test file with various issues
         let test_file = temp_dir.path().join("problematic.rs");
         let content = r#"
 // Generated by AI assistant
 fn main() {
     println!("Starting app");
-    
+
 <<<<<<< HEAD
     let config = load_config_v1();
 =======
     let config = load_config_v2();
 >>>>>>> feature
-    
+
     // TODO: implement proper error handling
     do_something();
 }
@@ -492,68 +542,68 @@ fn simple_hash(input: &str) -> &'static str {
     "hashed"
 }
 "#;
-        
+
         fs::write(&test_file, content)?;
-        
+
         // Test each analyzer
         let git_analyzer = GitConflictAnalyzer::new();
         let ai_analyzer = AiContentAnalyzer::new();
         let dup_analyzer = DuplicateAnalyzer::new().with_min_lines(3);
-        
+
         let file_content = fs::read(&test_file)?;
-        
+
         let git_findings = git_analyzer.analyze(&test_file, &file_content).unwrap();
         let ai_findings = ai_analyzer.analyze(&test_file, &file_content).unwrap();
         let dup_findings = dup_analyzer.analyze(&test_file, &file_content).unwrap();
-        
+
         // Should detect git conflicts
         assert!(!git_findings.is_empty());
         assert!(git_findings.iter().any(|f| f.analyzer == "git_conflict"));
-        
+
         // Should detect AI content and placeholders
         assert!(!ai_findings.is_empty());
         assert!(ai_findings.iter().any(|f| f.analyzer == "ai_content"));
-        
+
         // Should detect duplicate authentication functions
         assert!(!dup_findings.is_empty());
         assert!(dup_findings.iter().any(|f| f.analyzer == "duplicate"));
-        
+
         Ok(())
     }
 
     #[test]
     fn test_performance_with_large_content() {
         use std::time::Instant;
-        
+
         // Generate large content
         let mut large_content = String::new();
         for i in 0..1000 {
             large_content.push_str(&format!(
-                "fn function_{}() {{\n    println!(\"Function {}\");\n}}\n\n", 
+                "fn function_{}() {{\n    println!(\"Function {}\");\n}}\n\n",
                 i, i
             ));
         }
-        
+
         let analyzers = vec![
             Box::new(GitConflictAnalyzer::new()) as Box<dyn Analyzer>,
             Box::new(AiContentAnalyzer::new()) as Box<dyn Analyzer>,
             Box::new(DuplicateAnalyzer::new()) as Box<dyn Analyzer>,
         ];
-        
+
         for analyzer in analyzers {
             let start = Instant::now();
-            let _findings = analyzer.analyze(
-                Path::new("large_test.rs"), 
-                large_content.as_bytes()
-            ).unwrap();
+            let _findings = analyzer
+                .analyze(Path::new("large_test.rs"), large_content.as_bytes())
+                .unwrap();
             let duration = start.elapsed();
-            
+
             // Should complete within reasonable time (adjust threshold as needed)
-            assert!(duration.as_secs() < 5, 
-                "Analyzer {} took too long: {:?}", 
-                analyzer.name(), duration
+            assert!(
+                duration.as_secs() < 5,
+                "Analyzer {} took too long: {:?}",
+                analyzer.name(),
+                duration
             );
         }
     }
 }
-"

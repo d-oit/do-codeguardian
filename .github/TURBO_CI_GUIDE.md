@@ -87,25 +87,25 @@ jobs:
     - uses: actions/checkout@v4
       with:
         fetch-depth: 0
-    
+
     - name: Get changed files
       id: changes
       run: |
         git diff --name-only origin/${{ github.base_ref }}..HEAD > changed.txt
         echo "files=$(cat changed.txt | tr '\n' ' ')" >> $GITHUB_OUTPUT
-    
+
     - name: Setup CodeGuardian
       run: |
         # Add your CodeGuardian setup here
         cargo build --release
-    
+
     - name: Quick Turbo Scan
       run: |
         ./target/release/codeguardian turbo ${{ steps.changes.outputs.files }} \
           --format json \
           --output pr-security.json \
           --metrics
-    
+
     - name: Comment Results
       uses: actions/github-script@v6
       with:
@@ -113,13 +113,13 @@ jobs:
           const fs = require('fs');
           const report = JSON.parse(fs.readFileSync('pr-security.json'));
           const comment = `## 🚀 Turbo Security Analysis
-          
+
           **Files analyzed:** ${report.summary.total_files_scanned}
           **Findings:** ${report.summary.total_findings}
           **Duration:** ${report.summary.scan_duration_ms}ms
-          
+
           ${report.summary.total_findings > 0 ? '⚠️ Issues found - please review' : '✅ No issues detected'}`;
-          
+
           github.rest.issues.createComment({
             issue_number: context.issue.number,
             owner: context.repo.owner,
@@ -141,10 +141,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
-    
+
     - name: Setup CodeGuardian
       run: cargo build --release
-    
+
     - name: Comprehensive Analysis
       run: |
         ./target/release/codeguardian turbo . \
@@ -154,13 +154,13 @@ jobs:
           --format json \
           --output nightly-security.json \
           --metrics
-    
+
     - name: Upload Results
       uses: actions/upload-artifact@v3
       with:
         name: nightly-security-report
         path: nightly-security.json
-    
+
     - name: Notify on Critical Issues
       if: contains(fromJson(steps.scan.outputs.result), '"Critical"')
       run: |
@@ -181,10 +181,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
-    
+
     - name: Setup CodeGuardian
       run: cargo build --release
-    
+
     - name: Full Security Validation
       run: |
         ./target/release/codeguardian turbo . \
@@ -194,7 +194,7 @@ jobs:
           --format json \
           --output release-security.json \
           --metrics
-    
+
     - name: Security Gate
       run: |
         CRITICAL=$(jq '[.findings[] | select(.severity == "Critical")] | length' release-security.json)

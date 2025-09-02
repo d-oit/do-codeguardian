@@ -15,7 +15,7 @@ echo "Setting up GitHub Discussions categories for $OWNER/$REPO..."
 create_category() {
     local name="$1"
     local description="$2"
-    
+
     echo "Creating category: $name"
     gh api repos/$OWNER/$REPO/discussion-categories \
         --method POST \

@@ -53,6 +53,9 @@ pub enum Commands {
     /// Perform enhanced git commit with security analysis
     GitCommit(GitCommitArgs),
 
+    /// Perform enhanced git commit and push with security analysis
+    GitCommitPush(GitCommitPushArgs),
+
     /// Run high-performance parallel analysis (turbo mode)
     Turbo(TurboArgs),
 
@@ -226,6 +229,25 @@ pub struct GitCommitArgs {
     /// Custom commit message
     #[arg(short, long)]
     pub message: Option<String>,
+}
+
+#[derive(Parser)]
+pub struct GitCommitPushArgs {
+    /// Custom commit message
+    #[arg(short, long)]
+    pub message: Option<String>,
+
+    /// Amend the last commit instead of creating a new one
+    #[arg(long)]
+    pub amend: bool,
+
+    /// Push to remote after committing
+    #[arg(long)]
+    pub push: bool,
+
+    /// Skip pre-commit hooks
+    #[arg(long)]
+    pub no_verify: bool,
 }
 
 #[derive(Parser)]

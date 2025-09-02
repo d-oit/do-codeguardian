@@ -40,7 +40,7 @@ check_cargo_processes() {
         print_warning "Found running cargo processes: $cargo_pids"
         print_warning "Waiting for them to complete..."
         sleep 5
-        
+
         # Check again
         cargo_pids=$(pgrep -f "cargo" | grep -v $$ | head -5)
         if [ ! -z "$cargo_pids" ]; then
@@ -55,17 +55,17 @@ check_cargo_processes() {
 run_test() {
     local test_name="$1"
     local test_command="$2"
-    
+
     print_status "Running $test_name..."
-    
+
     # Check for conflicting processes before starting
     if ! check_cargo_processes; then
         print_error "$test_name skipped due to running cargo processes"
         return 1
     fi
-    
+
     start_time=$(date +%s)
-    
+
     if eval "$test_command"; then
         end_time=$(date +%s)
         duration=$((end_time - start_time))
@@ -221,7 +221,7 @@ echo ""
 if [[ "$1" == "--benchmark" ]]; then
     echo "📊 Phase 7: Benchmark Tests"
     echo "--------------------------"
-    
+
     if run_test "Benchmark Tests" "cargo test benchmark_tests --release"; then
         ((passed_tests++))
     else
@@ -229,7 +229,7 @@ if [[ "$1" == "--benchmark" ]]; then
         print_warning "Benchmark tests failed - performance may need optimization"
     fi
     ((total_tests++))
-    
+
     echo ""
 fi
 

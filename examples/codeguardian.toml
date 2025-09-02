@@ -15,7 +15,7 @@ parallel_workers = 0
 # Paths to ignore (glob patterns)
 ignore_paths = [
     ".git/**",
-    "node_modules/**", 
+    "node_modules/**",
     "target/**",
     "dist/**",
     "build/**",
@@ -25,7 +25,7 @@ ignore_paths = [
 
 # File extensions to always include
 include_extensions = [
-    "rs", "js", "ts", "jsx", "tsx", "py", "java", 
+    "rs", "js", "ts", "jsx", "tsx", "py", "java",
     "cpp", "c", "h", "hpp", "go", "rb", "php"
 ]
 

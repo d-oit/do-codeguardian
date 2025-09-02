@@ -21,6 +21,7 @@ use do_codeguardian::cli::init;
 use do_codeguardian::cli::report;
 use do_codeguardian::cli::{Cli, Commands};
 use do_codeguardian::commands::git_commit;
+use do_codeguardian::commands::git_commit_push;
 use do_codeguardian::commands::turbo;
 use do_codeguardian::{CodeGuardianError, Config};
 
@@ -74,6 +75,12 @@ async fn main() -> Result<()> {
             git_commit::execute_git_commit(args.message.as_deref(), &config).await?;
             if !cli.quiet {
                 tracing::info!("Commit successful");
+            }
+        }
+        Commands::GitCommitPush(args) => {
+            git_commit_push::execute_git_commit_push(args, &config).await?;
+            if !cli.quiet {
+                tracing::info!("Commit and push successful");
             }
         }
         Commands::Turbo(args) => {

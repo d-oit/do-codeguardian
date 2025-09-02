@@ -38,7 +38,7 @@ use std::env;
 fn main() {
     let api_key = "sk-test123456789abcdef"; // Hardcoded secret
     println!("Starting application with key: {}", api_key);
-    
+
     // Complex nested loops (performance issue)
     for i in 0..10 {
         for j in 0..10 {
@@ -63,7 +63,7 @@ pub fn calculate(x: i32, y: i32) -> i32 {
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     #[test]
     fn test_calculate() {
         assert_eq!(calculate(2, 2), 4);
@@ -118,7 +118,7 @@ const apiKey = process.env.API_KEY || "default-key-123";
 app.get('/user/:id', (req, res) => {
     // SQL injection vulnerability
     const query = "SELECT * FROM users WHERE id = " + req.params.id;
-    
+
     // XSS vulnerability
     res.send("<h1>User: " + req.query.name + "</h1>");
 });

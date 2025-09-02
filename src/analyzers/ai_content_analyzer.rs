@@ -60,7 +60,13 @@ impl AiContentAnalyzer {
         for pattern in patterns {
             match Regex::new(&pattern) {
                 Ok(regex) => self.placeholder_patterns.push(regex),
-                Err(e) => return Err(anyhow::anyhow!("Invalid regex pattern '{}': {}", pattern, e)),
+                Err(e) => {
+                    return Err(anyhow::anyhow!(
+                        "Invalid regex pattern '{}': {}",
+                        pattern,
+                        e
+                    ))
+                }
             }
         }
         Ok(self)
@@ -169,7 +175,9 @@ impl AiContentAnalyzer {
 
             for pattern in &self.incomplete_patterns {
                 if pattern.is_match(line) {
-                    let severity = if line.contains("unimplemented!") || line.contains("NotImplementedException") {
+                    let severity = if line.contains("unimplemented!")
+                        || line.contains("NotImplementedException")
+                    {
                         Severity::High
                     } else {
                         Severity::Medium
@@ -197,17 +205,17 @@ impl AiContentAnalyzer {
     /// Check if line is legitimate documentation
     fn is_legitimate_documentation(&self, line: &str) -> bool {
         let trimmed = line.trim();
-        
+
         // Skip documentation comments
         if trimmed.starts_with("///") || trimmed.starts_with("//!") {
             return true;
         }
-        
+
         // Skip markdown documentation
         if trimmed.starts_with("# ") || trimmed.starts_with("## ") || trimmed.starts_with("### ") {
             return true;
         }
-        
+
         // Skip JSDoc or similar
         if trimmed.starts_with("/**") || trimmed.starts_with("* ") {
             return true;
@@ -219,26 +227,34 @@ impl AiContentAnalyzer {
     /// Check if file is a test or example file
     fn is_test_or_example_file(&self, file_path: &Path) -> bool {
         let path_str = file_path.to_string_lossy().to_lowercase();
-        
+
         // Check for test directories or files
-        if path_str.contains("/test") || path_str.contains("\\test") ||
-           path_str.contains("/tests") || path_str.contains("\\tests") ||
-           path_str.contains("_test.") || path_str.contains(".test.") ||
-           path_str.contains("/example") || path_str.contains("\\example") ||
-           path_str.contains("/examples") || path_str.contains("\\examples") ||
-           path_str.contains("_example.") || path_str.contains(".example.") {
+        if path_str.contains("/test")
+            || path_str.contains("\\test")
+            || path_str.contains("/tests")
+            || path_str.contains("\\tests")
+            || path_str.contains("_test.")
+            || path_str.contains(".test.")
+            || path_str.contains("/example")
+            || path_str.contains("\\example")
+            || path_str.contains("/examples")
+            || path_str.contains("\\examples")
+            || path_str.contains("_example.")
+            || path_str.contains(".example.")
+        {
             return true;
         }
 
         // Check filename
         if let Some(filename) = file_path.file_name().and_then(|n| n.to_str()) {
             let filename_lower = filename.to_lowercase();
-            if filename_lower.starts_with("test_") || 
-               filename_lower.starts_with("example_") ||
-               filename_lower.ends_with("_test.rs") ||
-               filename_lower.ends_with("_example.rs") ||
-               filename_lower == "tests.rs" ||
-               filename_lower == "examples.rs" {
+            if filename_lower.starts_with("test_")
+                || filename_lower.starts_with("example_")
+                || filename_lower.ends_with("_test.rs")
+                || filename_lower.ends_with("_example.rs")
+                || filename_lower == "tests.rs"
+                || filename_lower == "examples.rs"
+            {
                 return true;
             }
         }
@@ -252,16 +268,20 @@ impl AiContentAnalyzer {
         if let Some(ext) = file_path.extension().and_then(|e| e.to_str()) {
             match ext.to_lowercase().as_str() {
                 "md" | "txt" | "rst" | "adoc" => return true, // Documentation files
-                "template" | "tmpl" | "tpl" => return true,    // Template files
+                "template" | "tmpl" | "tpl" => return true,   // Template files
                 _ => {}
             }
         }
 
         // Skip configuration and template directories
         let path_str = file_path.to_string_lossy().to_lowercase();
-        if path_str.contains("/template") || path_str.contains("\\template") ||
-           path_str.contains("/templates") || path_str.contains("\\templates") ||
-           path_str.contains("/.github") || path_str.contains("\\.github") {
+        if path_str.contains("/template")
+            || path_str.contains("\\template")
+            || path_str.contains("/templates")
+            || path_str.contains("\\templates")
+            || path_str.contains("/.github")
+            || path_str.contains("\\.github")
+        {
             return true;
         }
 
@@ -296,10 +316,35 @@ impl Analyzer for AiContentAnalyzer {
         if let Some(ext) = file_path.extension().and_then(|e| e.to_str()) {
             matches!(
                 ext.to_lowercase().as_str(),
-                "rs" | "js" | "ts" | "py" | "java" | "cpp" | "c" | "h" | "hpp" | 
-                "go" | "php" | "rb" | "cs" | "swift" | "kt" | "scala" | "dart" |
-                "html" | "css" | "scss" | "less" | "vue" | "jsx" | "tsx" |
-                "json" | "yaml" | "yml" | "toml" | "xml" | "sql"
+                "rs" | "js"
+                    | "ts"
+                    | "py"
+                    | "java"
+                    | "cpp"
+                    | "c"
+                    | "h"
+                    | "hpp"
+                    | "go"
+                    | "php"
+                    | "rb"
+                    | "cs"
+                    | "swift"
+                    | "kt"
+                    | "scala"
+                    | "dart"
+                    | "html"
+                    | "css"
+                    | "scss"
+                    | "less"
+                    | "vue"
+                    | "jsx"
+                    | "tsx"
+                    | "json"
+                    | "yaml"
+                    | "yml"
+                    | "toml"
+                    | "xml"
+                    | "sql"
             )
         } else {
             false
@@ -321,7 +366,9 @@ fn main() {
     println!("add content here");
 }
 "#;
-        let findings = analyzer.analyze(Path::new("test.rs"), content.as_bytes()).unwrap();
+        let findings = analyzer
+            .analyze(Path::new("test.rs"), content.as_bytes())
+            .unwrap();
         assert!(findings.iter().any(|f| f.rule_id == "placeholder_content"));
     }
 
@@ -334,7 +381,9 @@ fn example() {
     println!("Hello");
 }
 "#;
-        let findings = analyzer.analyze(Path::new("test.rs"), content.as_bytes()).unwrap();
+        let findings = analyzer
+            .analyze(Path::new("test.rs"), content.as_bytes())
+            .unwrap();
         assert!(findings.iter().any(|f| f.rule_id == "ai_generated_marker"));
     }
 
@@ -346,8 +395,12 @@ fn do_something() {
     println!("Generic function");
 }
 "#;
-        let findings = analyzer.analyze(Path::new("test.rs"), content.as_bytes()).unwrap();
-        assert!(findings.iter().any(|f| f.rule_id == "generic_function_name"));
+        let findings = analyzer
+            .analyze(Path::new("test.rs"), content.as_bytes())
+            .unwrap();
+        assert!(findings
+            .iter()
+            .any(|f| f.rule_id == "generic_function_name"));
     }
 
     #[test]
@@ -358,8 +411,12 @@ fn incomplete() {
     unimplemented!()
 }
 "#;
-        let findings = analyzer.analyze(Path::new("test.rs"), content.as_bytes()).unwrap();
-        assert!(findings.iter().any(|f| f.rule_id == "incomplete_implementation"));
+        let findings = analyzer
+            .analyze(Path::new("test.rs"), content.as_bytes())
+            .unwrap();
+        assert!(findings
+            .iter()
+            .any(|f| f.rule_id == "incomplete_implementation"));
     }
 
     #[test]
@@ -370,16 +427,22 @@ fn do_something() {
     // This is in a test file, should be ignored
 }
 "#;
-        let findings = analyzer.analyze(Path::new("tests/test_example.rs"), content.as_bytes()).unwrap();
+        let findings = analyzer
+            .analyze(Path::new("tests/test_example.rs"), content.as_bytes())
+            .unwrap();
         // Generic function names should be ignored in test files
-        assert!(!findings.iter().any(|f| f.rule_id == "generic_function_name"));
+        assert!(!findings
+            .iter()
+            .any(|f| f.rule_id == "generic_function_name"));
     }
 
     #[test]
     fn test_skip_documentation_files() {
         let analyzer = AiContentAnalyzer::new();
         let content = "# TODO: implement this feature\nAdd content here for documentation.";
-        let findings = analyzer.analyze(Path::new("README.md"), content.as_bytes()).unwrap();
+        let findings = analyzer
+            .analyze(Path::new("README.md"), content.as_bytes())
+            .unwrap();
         assert_eq!(findings.len(), 0); // Should skip .md files
     }
 
@@ -396,9 +459,13 @@ fn do_something() {
     #[test]
     fn test_custom_patterns() {
         let custom_patterns = vec!["custom placeholder".to_string()];
-        let analyzer = AiContentAnalyzer::new().with_custom_patterns(custom_patterns).unwrap();
+        let analyzer = AiContentAnalyzer::new()
+            .with_custom_patterns(custom_patterns)
+            .unwrap();
         let content = "This is a custom placeholder in the code";
-        let findings = analyzer.analyze(Path::new("test.rs"), content.as_bytes()).unwrap();
+        let findings = analyzer
+            .analyze(Path::new("test.rs"), content.as_bytes())
+            .unwrap();
         assert!(findings.iter().any(|f| f.rule_id == "placeholder_content"));
     }
 }

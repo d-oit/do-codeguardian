@@ -80,7 +80,7 @@ impl GitHubApiClient {
     async fn execute_gh_command(&mut self, args: &[&str]) -> Result<String> {
         // Wait if approaching rate limit
         self.rate_limiter.wait_if_needed().await;
-        
+
         // Retry with exponential backoff on failures
         for attempt in 1..=max_retries {
             match self.try_command(args).await {
@@ -189,7 +189,7 @@ codeguardian check . --format json --out results.json
   # Cache hit rate: 96% for typical PRs
 
 # Full Repository Scan
-- name: CodeGuardian Full Scan  
+- name: CodeGuardian Full Scan
   run: codeguardian check . --fail-on-issues
   # Before: 12m 45s
   # After:  1m 18s on warm cache (90% faster)
@@ -242,7 +242,7 @@ The optimized CodeGuardian delivers:
 
 These optimizations make CodeGuardian suitable for:
 - ✅ Large enterprise monorepos
-- ✅ High-frequency CI/CD pipelines  
+- ✅ High-frequency CI/CD pipelines
 - ✅ Resource-constrained environments
 - ✅ Distributed development teams
 - ✅ Compliance and security workflows

@@ -8,7 +8,7 @@ This directory contains specialized AI agents for CodeGuardian development and m
 
 ## Agent Categories
 - Core Development Agents
-- Specialized Agents  
+- Specialized Agents
 - Development Support Agents
 - Infrastructure & CI/CD Agents
 - Utility Agents

@@ -62,7 +62,7 @@ output-dir = "coverage/"
 timeout = 120
 exclude = [
     "target/*",
-    "tests/fixtures/*", 
+    "tests/fixtures/*",
     "benches/*",
     "examples/*",
     "tmp_*"

@@ -36,10 +36,10 @@ print_error() {
 run_test() {
     local test_name="$1"
     local test_command="$2"
-    
+
     print_status "Running $test_name..."
     start_time=$(date +%s)
-    
+
     if eval "$test_command"; then
         end_time=$(date +%s)
         duration=$((end_time - start_time))
@@ -191,7 +191,7 @@ echo ""
 if [[ "$1" == "--benchmark" ]]; then
     echo "📊 Phase 7: Benchmark Tests"
     echo "--------------------------"
-    
+
     if run_test "Benchmark Tests" "cargo test benchmark_tests --release"; then
         ((passed_tests++))
     else
@@ -199,7 +199,7 @@ if [[ "$1" == "--benchmark" ]]; then
         print_warning "Benchmark tests failed - performance may need optimization"
     fi
     ((total_tests++))
-    
+
     echo ""
 fi
 

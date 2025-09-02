@@ -70,7 +70,7 @@ impl DuplicateAnalyzer {
     /// Normalize a line for comparison (remove whitespace, comments)
     fn normalize_line(&self, line: &str) -> String {
         let mut normalized = line.trim().to_string();
-        
+
         // Remove single-line comments
         if let Some(pos) = normalized.find("//") {
             normalized = normalized[..pos].trim().to_string();
@@ -81,10 +81,10 @@ impl DuplicateAnalyzer {
                 normalized = normalized[..pos].trim().to_string();
             }
         }
-        
+
         // Remove extra whitespace
         normalized = normalized.split_whitespace().collect::<Vec<_>>().join(" ");
-        
+
         normalized
     }
 
@@ -93,7 +93,7 @@ impl DuplicateAnalyzer {
         let before = &line[..pos];
         let single_quotes = before.matches('\'').count();
         let double_quotes = before.matches('"').count();
-        
+
         // Simple heuristic: if we have an odd number of quotes before this position,
         // we're likely inside a string
         (single_quotes % 2 == 1) || (double_quotes % 2 == 1)
@@ -101,14 +101,15 @@ impl DuplicateAnalyzer {
 
     /// Extract meaningful code blocks from content
     fn extract_code_blocks(&self, content: &str) -> Vec<CodeBlock> {
-        let lines: Vec<String> = content.lines()
+        let lines: Vec<String> = content
+            .lines()
             .map(|line| self.normalize_line(line))
             .collect();
-        
+
         let mut blocks = Vec::new();
         let mut current_block = Vec::new();
         let mut start_line = 0;
-        
+
         for (line_num, line) in lines.iter().enumerate() {
             if line.is_empty() || line.starts_with("//") || line.starts_with('#') {
                 if current_block.len() >= self.min_duplicate_lines {
@@ -124,7 +125,7 @@ impl DuplicateAnalyzer {
                 current_block.push(line.clone());
             }
         }
-        
+
         // Don't forget the last block
         if current_block.len() >= self.min_duplicate_lines {
             blocks.push(CodeBlock {
@@ -133,7 +134,7 @@ impl DuplicateAnalyzer {
                 end_line: lines.len(),
             });
         }
-        
+
         blocks
     }
 
@@ -142,15 +143,15 @@ impl DuplicateAnalyzer {
         if !self.focus_security {
             return true; // If not focusing on security, all blocks are relevant
         }
-        
+
         let block_text = block.lines.join(" ").to_lowercase();
-        
+
         for pattern in &self.security_function_patterns {
             if pattern.is_match(&block_text) {
                 return true;
             }
         }
-        
+
         false
     }
 
@@ -159,18 +160,18 @@ impl DuplicateAnalyzer {
         if block1.lines.is_empty() || block2.lines.is_empty() {
             return 0.0;
         }
-        
+
         let mut matching_lines = 0;
         let max_lines = block1.lines.len().max(block2.lines.len());
         let min_lines = block1.lines.len().min(block2.lines.len());
-        
+
         // Compare line by line
         for i in 0..min_lines {
             if block1.lines[i] == block2.lines[i] {
                 matching_lines += 1;
             }
         }
-        
+
         // Calculate similarity as percentage of matching lines
         matching_lines as f64 / max_lines as f64
     }
@@ -179,11 +180,11 @@ impl DuplicateAnalyzer {
     fn find_internal_duplicates(&self, file_path: &Path, content: &str) -> Vec<Finding> {
         let mut findings = Vec::new();
         let blocks = self.extract_code_blocks(content);
-        
+
         for i in 0..blocks.len() {
             for j in (i + 1)..blocks.len() {
                 let similarity = self.calculate_similarity(&blocks[i], &blocks[j]);
-                
+
                 if similarity >= 0.8 && self.is_security_relevant(&blocks[i]) {
                     let severity = if similarity >= 0.95 {
                         Severity::High
@@ -192,7 +193,7 @@ impl DuplicateAnalyzer {
                     } else {
                         Severity::Low
                     };
-                    
+
                     findings.push(
                         Finding::new(
                             "duplicate",
@@ -213,7 +214,7 @@ impl DuplicateAnalyzer {
                 }
             }
         }
-        
+
         findings
     }
 
@@ -222,51 +223,58 @@ impl DuplicateAnalyzer {
         if self.ignore_test_files && self.is_test_file(file_path) {
             return true;
         }
-        
+
         // Ignore generated files
         let path_str = file_path.to_string_lossy().to_lowercase();
-        if path_str.contains("generated") || 
-           path_str.contains("target/") ||
-           path_str.contains("build/") ||
-           path_str.contains("dist/") ||
-           path_str.contains("node_modules/") {
+        if path_str.contains("generated")
+            || path_str.contains("target/")
+            || path_str.contains("build/")
+            || path_str.contains("dist/")
+            || path_str.contains("node_modules/")
+        {
             return true;
         }
-        
+
         false
     }
 
     /// Check if file is a test file
     fn is_test_file(&self, file_path: &Path) -> bool {
         let path_str = file_path.to_string_lossy().to_lowercase();
-        
-        path_str.contains("/test") || path_str.contains("\\test") ||
-        path_str.contains("/tests") || path_str.contains("\\tests") ||
-        path_str.ends_with("_test.rs") || path_str.ends_with(".test.js") ||
-        path_str.ends_with("_test.py") || path_str.ends_with("test.go")
+
+        path_str.contains("/test")
+            || path_str.contains("\\test")
+            || path_str.contains("/tests")
+            || path_str.contains("\\tests")
+            || path_str.ends_with("_test.rs")
+            || path_str.ends_with(".test.js")
+            || path_str.ends_with("_test.py")
+            || path_str.ends_with("test.go")
     }
 
     /// Get security risk level for duplicate code
     fn get_security_risk_level(&self, block: &CodeBlock) -> Severity {
         let block_text = block.lines.join(" ").to_lowercase();
-        
+
         // High risk patterns
-        if block_text.contains("password") || 
-           block_text.contains("secret") ||
-           block_text.contains("encrypt") ||
-           block_text.contains("decrypt") ||
-           block_text.contains("authenticate") {
+        if block_text.contains("password")
+            || block_text.contains("secret")
+            || block_text.contains("encrypt")
+            || block_text.contains("decrypt")
+            || block_text.contains("authenticate")
+        {
             return Severity::High;
         }
-        
+
         // Medium risk patterns
-        if block_text.contains("validate") ||
-           block_text.contains("authorize") ||
-           block_text.contains("permission") ||
-           block_text.contains("session") {
+        if block_text.contains("validate")
+            || block_text.contains("authorize")
+            || block_text.contains("permission")
+            || block_text.contains("session")
+        {
             return Severity::Medium;
         }
-        
+
         Severity::Low
     }
 }
@@ -287,13 +295,13 @@ impl Analyzer for DuplicateAnalyzer {
         if self.should_ignore_file(file_path) {
             return Ok(Vec::new());
         }
-        
+
         let content_str = String::from_utf8_lossy(content);
-        
+
         // For now, only analyze internal duplicates within the same file
         // Cross-file analysis would require coordination between analyzer calls
         let findings = self.find_internal_duplicates(file_path, &content_str);
-        
+
         Ok(findings)
     }
 
@@ -301,8 +309,22 @@ impl Analyzer for DuplicateAnalyzer {
         if let Some(ext) = file_path.extension().and_then(|e| e.to_str()) {
             matches!(
                 ext.to_lowercase().as_str(),
-                "rs" | "js" | "ts" | "py" | "java" | "cpp" | "c" | "h" | "hpp" |
-                "go" | "php" | "rb" | "cs" | "swift" | "kt" | "scala" | "dart"
+                "rs" | "js"
+                    | "ts"
+                    | "py"
+                    | "java"
+                    | "cpp"
+                    | "c"
+                    | "h"
+                    | "hpp"
+                    | "go"
+                    | "php"
+                    | "rb"
+                    | "cs"
+                    | "swift"
+                    | "kt"
+                    | "scala"
+                    | "dart"
             )
         } else {
             false
@@ -331,15 +353,23 @@ fn authenticate_admin(username: &str, password: &str) -> bool {
     hashed == stored
 }
 "#;
-        let findings = analyzer.analyze(Path::new("auth.rs"), content.as_bytes()).unwrap();
+        let findings = analyzer
+            .analyze(Path::new("auth.rs"), content.as_bytes())
+            .unwrap();
         assert!(findings.iter().any(|f| f.rule_id == "internal_duplication"));
     }
 
     #[test]
     fn test_normalize_line() {
         let analyzer = DuplicateAnalyzer::new();
-        assert_eq!(analyzer.normalize_line("  let x = 5;  // comment"), "let x = 5;");
-        assert_eq!(analyzer.normalize_line("    if condition {"), "if condition {");
+        assert_eq!(
+            analyzer.normalize_line("  let x = 5;  // comment"),
+            "let x = 5;"
+        );
+        assert_eq!(
+            analyzer.normalize_line("    if condition {"),
+            "if condition {"
+        );
     }
 
     #[test]
@@ -355,7 +385,7 @@ fn authenticate_admin(username: &str, password: &str) -> bool {
             start_line: 1,
             end_line: 2,
         };
-        
+
         assert!(analyzer.is_security_relevant(&security_block));
         assert!(!analyzer.is_security_relevant(&normal_block));
     }
@@ -372,21 +402,33 @@ fn authenticate_admin(username: &str, password: &str) -> bool {
     fn test_calculate_similarity() {
         let analyzer = DuplicateAnalyzer::new();
         let block1 = CodeBlock {
-            lines: vec!["line1".to_string(), "line2".to_string(), "line3".to_string()],
+            lines: vec![
+                "line1".to_string(),
+                "line2".to_string(),
+                "line3".to_string(),
+            ],
             start_line: 1,
             end_line: 3,
         };
         let block2 = CodeBlock {
-            lines: vec!["line1".to_string(), "line2".to_string(), "line3".to_string()],
+            lines: vec![
+                "line1".to_string(),
+                "line2".to_string(),
+                "line3".to_string(),
+            ],
             start_line: 5,
             end_line: 7,
         };
         let block3 = CodeBlock {
-            lines: vec!["line1".to_string(), "different".to_string(), "line3".to_string()],
+            lines: vec![
+                "line1".to_string(),
+                "different".to_string(),
+                "line3".to_string(),
+            ],
             start_line: 9,
             end_line: 11,
         };
-        
+
         assert_eq!(analyzer.calculate_similarity(&block1, &block2), 1.0);
         assert!((analyzer.calculate_similarity(&block1, &block3) - 0.666).abs() < 0.01);
     }

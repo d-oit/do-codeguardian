@@ -20,7 +20,7 @@ jobs:
     name: 🎯 Release Validation
     runs-on: ${{ matrix.os }}
     timeout-minutes: 30
-    
+
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
@@ -31,58 +31,58 @@ jobs:
             target: x86_64-pc-windows-msvc
           - os: macos-latest
             target: x86_64-apple-darwin
-    
+
     steps:
     - name: 📥 Checkout repository
       uses: actions/checkout@v4
-    
+
     - name: 🦀 Setup Rust
       uses: actions-rust-lang/setup-rust-toolchain@v1
       with:
         toolchain: stable
         target: ${{ matrix.target }}
         cache: true
-    
+
     - name: 🔨 Build Release Binary
       run: |
         echo "🔨 Building CodeGuardian for ${{ matrix.target }}"
         cargo build --release --target ${{ matrix.target }}
         echo "✅ Build complete"
-    
+
     - name: 🧪 Comprehensive Turbo Testing
       shell: bash
       run: |
         echo "🧪 Comprehensive Turbo Testing on ${{ matrix.os }}"
         echo "================================================"
-        
+
         # Set binary path based on OS
         if [ "${{ matrix.os }}" = "windows-latest" ]; then
           BINARY="./target/${{ matrix.target }}/release/codeguardian.exe"
         else
           BINARY="./target/${{ matrix.target }}/release/codeguardian"
         fi
-        
+
         # Test 1: Basic functionality
         echo "🔍 Test 1: Basic Turbo functionality"
         $BINARY turbo --help > /dev/null
         echo "✅ Help command works"
-        
+
         # Test 2: Self-analysis
         echo "🔍 Test 2: Self-analysis performance"
         START_TIME=$(date +%s 2>/dev/null || python -c "import time; print(int(time.time()))")
-        
+
         $BINARY turbo . \
           --max-parallel 4 \
           --memory-limit 512 \
           --format json \
           --output release-test.json \
           --metrics
-        
+
         END_TIME=$(date +%s 2>/dev/null || python -c "import time; print(int(time.time()))")
         DURATION=$((END_TIME - START_TIME))
-        
+
         echo "✅ Self-analysis completed in ${DURATION}s"
-        
+
         # Test 3: Validate results
         echo "🔍 Test 3: Results validation"
         if [[ -f "release-test.json" ]]; then
@@ -98,7 +98,7 @@ jobs:
           echo "❌ Results file not generated"
           exit 1
         fi
-        
+
         # Test 4: Performance validation
         echo "🔍 Test 4: Performance validation"
         if [[ $DURATION -lt 30 ]]; then
@@ -106,7 +106,7 @@ jobs:
         else
           echo "⚠️ Performance slower than expected: ${DURATION}s"
         fi
-    
+
     - name: 📤 Upload Release Artifacts
       uses: actions/upload-artifact@v4
       with:
@@ -119,14 +119,14 @@ jobs:
     name: 📈 Release Performance Report
     runs-on: ubuntu-latest
     needs: release-validation
-    
+
     steps:
     - name: 📥 Download validation results
       uses: actions/download-artifact@v4
       with:
         pattern: release-validation-*
         merge-multiple: true
-    
+
     - name: 📊 Generate Performance Report
       run: |
         echo "📊 CodeGuardian Release Performance Report"
@@ -134,7 +134,7 @@ jobs:
         echo ""
         echo "🚀 **Turbo Mode Performance Validation**"
         echo ""
-        
+
         echo "✅ **All platforms validated successfully**"
         echo ""
         echo "🎯 **Key Achievements:**"

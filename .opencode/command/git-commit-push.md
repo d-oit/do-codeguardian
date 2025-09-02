@@ -41,13 +41,12 @@ opencode git-commit-push [OPTIONS] [MESSAGE]
 ### Basic Usage
 ```bash
 # Commit and push with auto-generated message
-opencode git-commit-push
-
+opencode run "/git-commit-push" --model "opencode/grok-code"
 # Commit and push with custom message
-opencode git-commit-push "Fix authentication vulnerability"
+opencode run "git-commit-push 'Fix authentication vulnerability'"
 
 # Dry run to see what would be committed and pushed
-opencode git-commit-push --dry-run
+opencode run "/git-commit-push --dry-run"
 ```
 
 ### Advanced Usage

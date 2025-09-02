@@ -337,11 +337,11 @@ mod tests {
                     println!("Not empty");
                 }
             }
-            
+
             struct MyStruct {
                 field: i32,
             }
-            
+
             unsafe fn dangerous_function() {
                 // Unsafe code here
             }

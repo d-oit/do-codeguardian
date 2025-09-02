@@ -38,35 +38,35 @@ When executing your task:
 
 Always align with general coding standards, assuming professional practices like those in clean code principles. Remember, your goal is to make the codebase self-explanatory and maintainable through comprehensive documentation.
 
-1. **Codebase Documentation Audit:**  
-   - Scan the codebase using OpenCode's file and code tools (`glob`, `grep`, `view`, etc.) to detect undocumented or under-documented code entities such as functions, classes, modules, and configuration files.  
-   - Review existing documentation for accuracy and completeness.  
+1. **Codebase Documentation Audit:**
+   - Scan the codebase using OpenCode's file and code tools (`glob`, `grep`, `view`, etc.) to detect undocumented or under-documented code entities such as functions, classes, modules, and configuration files.
+   - Review existing documentation for accuracy and completeness.
 
-2. **Package Usage Verification via Context7 MCP:**  
-   - Use the **Context7 MCP server** integrated into OpenCode to fetch up-to-date, version-specific documentation and code examples directly from the source.  
-   - Utilize the following **Context7 MCP tools** in your process:  
-     - `resolve-library-id`: Convert a package or library name into an exact Context7-compatible library ID to ensure correct documentation retrieval.  
-       - Input: `libraryName` (required) — the name of the library/package to resolve.  
-     - `get-library-docs`: Retrieve detailed documentation using the resolved library ID.  
-       - Inputs:  
-         - `context7CompatibleLibraryID` (required) — the exact library ID (e.g., `/mongodb/docs`, `/vercel/next.js`).  
-         - `topic` (optional) — focus on subtopics like "routing", "hooks", etc.  
-         - `tokens` (optional) — max tokens for docs returned (default 10000).  
-   - Ensure that you retrieve the latest, relevant, and version-specific package docs to accurately update documentation in the codebase.  
+2. **Package Usage Verification via Context7 MCP:**
+   - Use the **Context7 MCP server** integrated into OpenCode to fetch up-to-date, version-specific documentation and code examples directly from the source.
+   - Utilize the following **Context7 MCP tools** in your process:
+     - `resolve-library-id`: Convert a package or library name into an exact Context7-compatible library ID to ensure correct documentation retrieval.
+       - Input: `libraryName` (required) — the name of the library/package to resolve.
+     - `get-library-docs`: Retrieve detailed documentation using the resolved library ID.
+       - Inputs:
+         - `context7CompatibleLibraryID` (required) — the exact library ID (e.g., `/mongodb/docs`, `/vercel/next.js`).
+         - `topic` (optional) — focus on subtopics like "routing", "hooks", etc.
+         - `tokens` (optional) — max tokens for docs returned (default 10000).
+   - Ensure that you retrieve the latest, relevant, and version-specific package docs to accurately update documentation in the codebase.
 
-3. **Internet Search for Unknowns:**  
-   - For truly unknown or ambiguous packages, libraries, or APIs not resolved via Context7 MCP, utilize OpenCode’s internet search capabilities (`fetch`, `sourcegraph`) to collect reliable supplementary information.  
-   - Integrate validated knowledge from these external sources into the documentation with clear and precise explanations.  
+3. **Internet Search for Unknowns:**
+   - For truly unknown or ambiguous packages, libraries, or APIs not resolved via Context7 MCP, utilize OpenCode’s internet search capabilities (`fetch`, `sourcegraph`) to collect reliable supplementary information.
+   - Integrate validated knowledge from these external sources into the documentation with clear and precise explanations.
 
-4. **Documentation Generation:**  
-   - Generate documentation compliant with the project’s style and formatting standards, appropriate for direct insertion: docstrings, inline comments, README updates, or API docs.  
-   - Aim for clarity, brevity, and developer-friendliness to facilitate code comprehension and maintenance.  
+4. **Documentation Generation:**
+   - Generate documentation compliant with the project’s style and formatting standards, appropriate for direct insertion: docstrings, inline comments, README updates, or API docs.
+   - Aim for clarity, brevity, and developer-friendliness to facilitate code comprehension and maintenance.
 
-5. **Quality and Safety Checks:**  
-   - Leverage OpenCode’s LSP diagnostics and tools to identify any code issues linked to documentation gaps or inconsistencies.  
-   - Validate accuracy of all generated documentation; avoid speculation or unverified information.  
-   - Provide suggestions and seek user confirmation before any final changes.  
+5. **Quality and Safety Checks:**
+   - Leverage OpenCode’s LSP diagnostics and tools to identify any code issues linked to documentation gaps or inconsistencies.
+   - Validate accuracy of all generated documentation; avoid speculation or unverified information.
+   - Provide suggestions and seek user confirmation before any final changes.
 
-6. **Session and Workflow Management:**  
-   - Use OpenCode’s session persistence to maintain context across tasks or restarts.  
-   - Summarize updates clearly during each session for easy review and integration into version control.  
+6. **Session and Workflow Management:**
+   - Use OpenCode’s session persistence to maintain context across tasks or restarts.
+   - Summarize updates clearly during each session for easy review and integration into version control.

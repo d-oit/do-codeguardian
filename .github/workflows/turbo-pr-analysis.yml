@@ -13,19 +13,19 @@ jobs:
     name: ⚡ Quick Turbo Scan
     runs-on: ubuntu-latest
     timeout-minutes: 5
-    
+
     steps:
     - name: 📥 Checkout PR
       uses: actions/checkout@v4
       with:
         fetch-depth: 0
-    
+
     - name: 🦀 Setup Rust
       uses: actions-rust-lang/setup-rust-toolchain@v1
       with:
         toolchain: stable
         cache: true
-    
+
     - name: 📦 Cache dependencies
       uses: actions/cache@v4
       with:
@@ -34,22 +34,22 @@ jobs:
           ~/.cargo/git
           target/
         key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-    
+
     - name: 🔨 Build CodeGuardian
       run: cargo build --release --quiet
-    
+
     - name: 🎯 Get Changed Files
       id: changed-files
       run: |
         # Get list of changed files in this PR
         git diff --name-only origin/${{ github.base_ref }}..HEAD > changed_files.txt
-        
+
         # Filter for supported file types
         grep -E '\.(rs|js|jsx|ts|tsx|py|java|cpp|cc|cxx|c|go|php|rb|json|toml|yaml|yml)$' changed_files.txt > analyzable_files.txt || true
-        
+
         CHANGED_COUNT=$(wc -l < analyzable_files.txt)
         echo "changed_count=${CHANGED_COUNT}" >> $GITHUB_OUTPUT
-        
+
         echo "📁 Changed files to analyze: $CHANGED_COUNT"
         if [ "$CHANGED_COUNT" -gt 0 ]; then
           echo "Files:"
@@ -64,10 +64,10 @@ jobs:
       id: turbo-scan
       run: |
         echo "🚀 Running Turbo analysis on changed files..."
-        
+
         # Create temporary directory for changed files
         mkdir -p changed_files_analysis
-        
+
         # Copy changed files to analysis directory (preserving structure)
         while IFS= read -r file; do
           if [ -f "$file" ]; then
@@ -75,23 +75,23 @@ jobs:
             cp "$file" "changed_files_analysis/$file"
           fi
         done < analyzable_files.txt
-        
+
         # Run turbo analysis on changed files only
         START_TIME=$(date +%s.%N)
-        
+
         ./target/release/codeguardian turbo changed_files_analysis \
           --max-parallel 4 \
           --memory-limit 256 \
           --format json \
           --output pr-analysis.json \
           --metrics
-        
+
         END_TIME=$(date +%s.%N)
         DURATION=$(echo "$END_TIME - $START_TIME" | bc -l)
-        
+
         echo "duration=${DURATION}" >> $GITHUB_OUTPUT
         echo "✅ Analysis completed in ${DURATION}s"
-    
+
     - name: 📊 Analyze Results
       if: steps.changed-files.outputs.changed_count > 0
       id: results
@@ -102,22 +102,22 @@ jobs:
           CRITICAL_FINDINGS=$(jq '[.findings[] | select(.severity == "Critical")] | length' pr-analysis.json)
           HIGH_FINDINGS=$(jq '[.findings[] | select(.severity == "High")] | length' pr-analysis.json)
           MEDIUM_FINDINGS=$(jq '[.findings[] | select(.severity == "Medium")] | length' pr-analysis.json)
-          
+
           echo "total_findings=${TOTAL_FINDINGS}" >> $GITHUB_OUTPUT
           echo "critical_findings=${CRITICAL_FINDINGS}" >> $GITHUB_OUTPUT
           echo "high_findings=${HIGH_FINDINGS}" >> $GITHUB_OUTPUT
           echo "medium_findings=${MEDIUM_FINDINGS}" >> $GITHUB_OUTPUT
-          
+
           # Create findings summary for new issues
-          jq -r '.findings[] | select(.severity == "Critical" or .severity == "High") | 
+          jq -r '.findings[] | select(.severity == "Critical" or .severity == "High") |
             "🔴 **\(.severity)**: \(.message) (\(.file | split("/") | last):\(.line))"' pr-analysis.json > critical_high_findings.txt
-          
+
           echo "📊 PR Analysis Results:"
           echo "  🔍 Total findings: $TOTAL_FINDINGS"
           echo "  🔴 Critical: $CRITICAL_FINDINGS"
           echo "  🟠 High: $HIGH_FINDINGS"
           echo "  🟡 Medium: $MEDIUM_FINDINGS"
-          
+
           # Set status for PR checks
           if [ "$CRITICAL_FINDINGS" -gt 0 ]; then
             echo "status=critical" >> $GITHUB_OUTPUT
@@ -133,14 +133,14 @@ jobs:
           echo "status=success" >> $GITHUB_OUTPUT
           echo "message=No analyzable files changed" >> $GITHUB_OUTPUT
         fi
-    
+
     - name: 💬 Comment on PR
       if: steps.changed-files.outputs.changed_count > 0
       uses: actions/github-script@v7
       with:
         script: |
           const fs = require('fs');
-          
+
           // Determine status emoji and message
           const status = '${{ steps.results.outputs.status }}';
           const statusEmoji = {
@@ -148,13 +148,13 @@ jobs:
             'warning': '⚠️',
             'success': '✅'
           }[status] || '📊';
-          
+
           const statusMessage = {
             'critical': '**Action Required**: Critical security issues found',
-            'warning': '**Review Recommended**: High severity issues found', 
+            'warning': '**Review Recommended**: High severity issues found',
             'success': '**Passed**: No critical security issues detected'
           }[status] || 'Analysis completed';
-          
+
           // Read critical/high findings if they exist
           let criticalHighFindings = '';
           if (fs.existsSync('critical_high_findings.txt')) {
@@ -166,9 +166,9 @@ jobs:
           `;
             }
           }
-          
+
           const comment = `## ${statusEmoji} Turbo Security Analysis - PR Review
-          
+
           ### 📊 Quick Scan Results
           - **Files analyzed**: ${{ steps.changed-files.outputs.changed_count }} changed files
           - **Analysis time**: ${{ steps.turbo-scan.outputs.duration }}s
@@ -176,25 +176,25 @@ jobs:
           - **High severity**: ${{ steps.results.outputs.high_findings }}
           - **Medium severity**: ${{ steps.results.outputs.medium_findings }}
           - **Total findings**: ${{ steps.results.outputs.total_findings }}
-          
+
           ### 🎯 Status
           ${statusMessage}
           ${criticalHighFindings}
-          
+
           <details>
           <summary>🚀 Performance Metrics</summary>
-          
+
           - **Analysis speed**: Ultra-fast PR scanning
           - **Scope**: Only changed files analyzed
           - **Duration**: ${{ steps.turbo-scan.outputs.duration }}s
           - **Mode**: Optimized for CI/CD
-          
+
           </details>
-          
+
           ---
           *Powered by CodeGuardian Turbo Mode* ⚡
           `;
-          
+
           github.rest.issues.createComment({
             issue_number: context.issue.number,
             owner: context.repo.owner,
@@ -215,7 +215,7 @@ jobs:
         echo ""
         echo "💡 Tip: Run 'codeguardian turbo . --aggressive' locally to see all issues"
         exit 1
-    
+
     - name: 📄 Upload PR Analysis Report
       if: steps.changed-files.outputs.changed_count > 0
       uses: actions/upload-artifact@v4

@@ -13,16 +13,16 @@ jobs:
   coverage:
     name: Code Coverage
     runs-on: ubuntu-latest
-    
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-      
+
     - name: Install Rust toolchain
       uses: dtolnay/rust-toolchain@stable
       with:
         components: llvm-tools-preview
-        
+
     - name: Cache cargo registry
       uses: actions/cache@v4
       with:
@@ -34,10 +34,10 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-cargo-coverage-
           ${{ runner.os }}-cargo-
-          
+
     - name: Install cargo-tarpaulin
       run: cargo install cargo-tarpaulin
-      
+
     - name: Generate coverage report
       run: |
         cargo tarpaulin \
@@ -48,7 +48,7 @@ jobs:
           --out xml \
           --output-dir coverage/ \
           --exclude-files 'target/*' 'tests/fixtures/*' 'benches/*' 'examples/*' 'tmp_*'
-          
+
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v4
       with:
@@ -56,34 +56,34 @@ jobs:
         flags: unittests
         name: codecov-umbrella
         fail_ci_if_error: false
-        
+
     - name: Archive coverage results
       uses: actions/upload-artifact@v4
       with:
         name: code-coverage-report
         path: coverage/
-        
+
     - name: Coverage Summary
       run: |
         echo "## Code Coverage Report" >> $GITHUB_STEP_SUMMARY
         echo "Coverage report has been generated and uploaded." >> $GITHUB_STEP_SUMMARY
         echo "Check the artifacts for detailed HTML report." >> $GITHUB_STEP_SUMMARY
-        
+
   coverage-check:
     name: Coverage Quality Gate
     runs-on: ubuntu-latest
     needs: coverage
-    
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-      
+
     - name: Install Rust toolchain
       uses: dtolnay/rust-toolchain@stable
-      
+
     - name: Install cargo-tarpaulin
       run: cargo install cargo-tarpaulin
-      
+
     - name: Check coverage thresholds
       run: |
         # Generate coverage and check against thresholds
@@ -95,7 +95,7 @@ jobs:
           --output-dir coverage/ \
           --exclude-files 'target/*' 'tests/fixtures/*' 'benches/*' 'examples/*' 'tmp_*' \
           --fail-under 80
-          
+
     - name: Quality Gate Status
       run: |
         echo "✅ Coverage quality gate passed!" >> $GITHUB_STEP_SUMMARY
