@@ -30,7 +30,7 @@ mod tests {
     )
     .unwrap();
 
-    let mut cmd = Command::cargo_bin("codeguardian").unwrap();
+    let mut cmd = Command::cargo_bin("do-codeguardian").unwrap();
     cmd.arg("check")
         .arg(temp_dir.path())
         .arg("--ml-threshold")
@@ -58,7 +58,7 @@ fn main() {
     .unwrap();
 
     // First run - should populate cache
-    let mut cmd1 = Command::cargo_bin("codeguardian").unwrap();
+    let mut cmd1 = Command::cargo_bin("do-codeguardian").unwrap();
     cmd1.arg("check")
         .arg(temp_dir.path())
         .arg("--format")
@@ -70,7 +70,7 @@ fn main() {
     let duration1 = start1.elapsed();
 
     // Second run - should use cache (faster)
-    let mut cmd2 = Command::cargo_bin("codeguardian").unwrap();
+    let mut cmd2 = Command::cargo_bin("do-codeguardian").unwrap();
     cmd2.arg("check")
         .arg(temp_dir.path())
         .arg("--format")
@@ -109,7 +109,7 @@ fn main() {
     .unwrap();
 
     // Run analysis to detect issues (simulating GitHub issue creation)
-    let mut cmd = Command::cargo_bin("codeguardian").unwrap();
+    let mut cmd = Command::cargo_bin("do-codeguardian").unwrap();
     cmd.arg("check")
         .arg(temp_dir.path().join("issue_file.rs"))
         .arg("--format")
@@ -132,7 +132,7 @@ fn test_streaming_analysis() {
         .join("\n");
     fs::write(temp_dir.path().join("large_stream.rs"), large_content).unwrap();
 
-    let mut cmd = Command::cargo_bin("codeguardian").unwrap();
+    let mut cmd = Command::cargo_bin("do-codeguardian").unwrap();
     cmd.arg("check")
         .arg(temp_dir.path())
         .arg("--streaming") // Enable streaming mode
@@ -177,7 +177,7 @@ fn main() {
     )
     .unwrap();
 
-    let mut cmd = Command::cargo_bin("codeguardian").unwrap();
+    let mut cmd = Command::cargo_bin("do-codeguardian").unwrap();
     cmd.arg("check")
         .arg(temp_dir.path())
         .arg("--format")
@@ -205,7 +205,7 @@ fn main() {
     .unwrap();
 
     // First run to establish baseline
-    let mut baseline_cmd = Command::cargo_bin("codeguardian").unwrap();
+    let mut baseline_cmd = Command::cargo_bin("do-codeguardian").unwrap();
     baseline_cmd
         .arg("check")
         .arg(temp_dir.path())
@@ -229,7 +229,7 @@ fn new_function() {
     .unwrap();
 
     // Second run should only report new issues
-    let mut diff_cmd = Command::cargo_bin("codeguardian").unwrap();
+    let mut diff_cmd = Command::cargo_bin("do-codeguardian").unwrap();
     diff_cmd
         .arg("check")
         .arg(temp_dir.path())

@@ -286,7 +286,7 @@ impl OptimizedCache {
         let paths_to_remove: Vec<PathBuf> = self
             .entries
             .iter()
-            .filter(|(_, entry)| entry.age_seconds() > max_age_seconds)
+            .filter(|(_, entry)| entry.age_seconds() >= max_age_seconds)
             .map(|(path, _)| path.clone())
             .collect();
 

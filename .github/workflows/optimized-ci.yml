@@ -124,7 +124,7 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: codeguardian-binary
-        path: target/release/codeguardian
+        path: target/release/do-codeguardian
 
   # Performance monitoring job
   performance:

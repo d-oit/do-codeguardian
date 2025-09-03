@@ -9,7 +9,7 @@ use tempfile::TempDir;
 
 #[test]
 fn test_cli_help_command() {
-    let mut cmd = Command::cargo_bin("codeguardian").unwrap();
+    let mut cmd = Command::cargo_bin("do-codeguardian").unwrap();
     cmd.arg("--help");
 
     cmd.assert()
@@ -23,7 +23,7 @@ fn test_cli_help_command() {
 
 #[test]
 fn test_cli_version_command() {
-    let mut cmd = Command::cargo_bin("codeguardian").unwrap();
+    let mut cmd = Command::cargo_bin("do-codeguardian").unwrap();
     cmd.arg("--version");
 
     cmd.assert()
@@ -69,7 +69,7 @@ fn test_cli_git_commit_command() {
         .output()
         .unwrap();
 
-    let mut cmd = Command::cargo_bin("codeguardian").unwrap();
+    let mut cmd = Command::cargo_bin("do-codeguardian").unwrap();
     cmd.arg("git-commit")
         .arg("--message")
         .arg("Test commit")
@@ -84,7 +84,7 @@ fn test_cli_git_commit_command() {
 fn test_cli_check_empty_directory() {
     let temp_dir = TempDir::new().unwrap();
 
-    let mut cmd = Command::cargo_bin("codeguardian").unwrap();
+    let mut cmd = Command::cargo_bin("do-codeguardian").unwrap();
     cmd.arg("check").arg(temp_dir.path());
 
     cmd.assert()
@@ -104,7 +104,7 @@ fn test_cli_check_with_security_issues() {
     )
     .unwrap();
 
-    let mut cmd = Command::cargo_bin("codeguardian").unwrap();
+    let mut cmd = Command::cargo_bin("do-codeguardian").unwrap();
     cmd.arg("check")
         .arg(&test_file)
         .arg("--format")
@@ -127,7 +127,7 @@ fn test_cli_check_with_multiple_files() {
     fs::write(&lib_file, "pub fn test() {}").unwrap();
     fs::write(&config_file, "[package]\nname = \"test\"").unwrap();
 
-    let mut cmd = Command::cargo_bin("codeguardian").unwrap();
+    let mut cmd = Command::cargo_bin("do-codeguardian").unwrap();
     cmd.arg("check")
         .arg(&main_file)
         .arg(&lib_file)
@@ -157,7 +157,7 @@ fn test_cli_check_output() {
     let test_file = temp_dir.path().join("test.rs");
     fs::write(&test_file, "fn test() {}").unwrap();
 
-    let mut cmd = Command::cargo_bin("codeguardian").unwrap();
+    let mut cmd = Command::cargo_bin("do-codeguardian").unwrap();
     cmd.arg("check").arg(&test_file);
 
     cmd.assert()
@@ -171,7 +171,7 @@ fn test_cli_check_output_detailed() {
     let test_file = temp_dir.path().join("test.rs");
     fs::write(&test_file, "fn test() {}").unwrap();
 
-    let mut cmd = Command::cargo_bin("codeguardian").unwrap();
+    let mut cmd = Command::cargo_bin("do-codeguardian").unwrap();
     cmd.arg("check").arg(&test_file);
 
     cmd.assert()
@@ -211,7 +211,7 @@ log_to_file = false
     let test_file = temp_dir.path().join("test.rs");
     fs::write(&test_file, "fn main() {}").unwrap();
 
-    let mut cmd = Command::cargo_bin("codeguardian").unwrap();
+    let mut cmd = Command::cargo_bin("do-codeguardian").unwrap();
     cmd.arg("--config")
         .arg(&config_file)
         .arg("check")
@@ -233,7 +233,7 @@ fn test_cli_check_multiple_files() {
     fs::write(&debug_file, "fn debug() {}").unwrap();
     fs::write(&main_file, "fn main() {}").unwrap();
 
-    let mut cmd = Command::cargo_bin("codeguardian").unwrap();
+    let mut cmd = Command::cargo_bin("do-codeguardian").unwrap();
     cmd.arg("check").arg(&main_file).arg(&debug_file);
 
     cmd.assert()
@@ -253,7 +253,7 @@ fn test_cli_check_various_files() {
     fs::write(&js_file, "console.log('test');").unwrap();
     fs::write(&txt_file, "This is a readme").unwrap();
 
-    let mut cmd = Command::cargo_bin("codeguardian").unwrap();
+    let mut cmd = Command::cargo_bin("do-codeguardian").unwrap();
     cmd.arg("check").arg(&main_file).arg(&js_file);
 
     cmd.assert()
@@ -264,7 +264,7 @@ fn test_cli_check_various_files() {
 
 #[test]
 fn test_cli_error_handling_invalid_path() {
-    let mut cmd = Command::cargo_bin("codeguardian").unwrap();
+    let mut cmd = Command::cargo_bin("do-codeguardian").unwrap();
     cmd.arg("check")
         .arg("/nonexistent/path/that/does/not/exist");
 
@@ -285,7 +285,7 @@ fn test_cli_error_handling_invalid_config() {
     let test_file = temp_dir.path().join("test.rs");
     fs::write(&test_file, "fn main() {}").unwrap();
 
-    let mut cmd = Command::cargo_bin("codeguardian").unwrap();
+    let mut cmd = Command::cargo_bin("do-codeguardian").unwrap();
     cmd.arg("--config")
         .arg(&config_file)
         .arg("check")
@@ -319,7 +319,7 @@ fn test_cli_performance_multiple_files() {
 
     let start = std::time::Instant::now();
 
-    let mut cmd = Command::cargo_bin("codeguardian").unwrap();
+    let mut cmd = Command::cargo_bin("do-codeguardian").unwrap();
     cmd.arg("check");
     for path in &file_paths {
         cmd.arg(path);
@@ -344,7 +344,7 @@ fn test_cli_check_output_format() {
     let test_file = temp_dir.path().join("test.rs");
     fs::write(&test_file, "fn test() {}").unwrap();
 
-    let mut cmd = Command::cargo_bin("codeguardian").unwrap();
+    let mut cmd = Command::cargo_bin("do-codeguardian").unwrap();
     cmd.arg("check").arg(&test_file);
 
     cmd.assert()
@@ -358,7 +358,7 @@ fn test_cli_verbose_output() {
     let test_file = temp_dir.path().join("test.rs");
     fs::write(&test_file, "fn test() {}").unwrap();
 
-    let mut cmd = Command::cargo_bin("codeguardian").unwrap();
+    let mut cmd = Command::cargo_bin("do-codeguardian").unwrap();
     cmd.arg("--verbose").arg("check").arg(&test_file);
 
     cmd.assert()

@@ -22,7 +22,7 @@ fn test_permission_denied_handling() {
         fs::set_permissions(&test_file, perms).unwrap();
     }
 
-    let mut cmd = Command::cargo_bin("codeguardian").unwrap();
+    let mut cmd = Command::cargo_bin("do-codeguardian").unwrap();
     cmd.arg("check")
         .arg(temp_dir.path())
         .arg("--format")
@@ -42,7 +42,7 @@ fn test_corrupted_file_handling() {
     fs::write(temp_dir.path().join("empty.rs"), "").unwrap(); // Empty file
     fs::write(temp_dir.path().join("invalid_utf8.rs"), &[0xFF, 0xFE, 0xFD]).unwrap(); // Invalid UTF-8
 
-    let mut cmd = Command::cargo_bin("codeguardian").unwrap();
+    let mut cmd = Command::cargo_bin("do-codeguardian").unwrap();
     cmd.arg("check")
         .arg(temp_dir.path())
         .arg("--format")
@@ -61,7 +61,7 @@ fn test_very_large_file_handling() {
     let large_content = "// Large file\n".repeat(100_000); // ~1.3MB
     fs::write(temp_dir.path().join("huge.rs"), large_content).unwrap();
 
-    let mut cmd = Command::cargo_bin("codeguardian").unwrap();
+    let mut cmd = Command::cargo_bin("do-codeguardian").unwrap();
     cmd.arg("check")
         .arg(temp_dir.path())
         .arg("--format")
@@ -97,7 +97,7 @@ fn test_deep_directory_structure() {
         .unwrap();
     }
 
-    let mut cmd = Command::cargo_bin("codeguardian").unwrap();
+    let mut cmd = Command::cargo_bin("do-codeguardian").unwrap();
     cmd.arg("check")
         .arg(temp_dir.path())
         .arg("--format")
@@ -123,7 +123,7 @@ fn test_symlink_handling() {
         std::os::unix::fs::symlink(&original, &symlink).unwrap();
     }
 
-    let mut cmd = Command::cargo_bin("codeguardian").unwrap();
+    let mut cmd = Command::cargo_bin("do-codeguardian").unwrap();
     cmd.arg("check")
         .arg(temp_dir.path())
         .arg("--format")
@@ -156,7 +156,7 @@ pub fn function_{}() {{
     }
 
     // Run analysis with timeout to simulate interruption
-    let mut cmd = Command::cargo_bin("codeguardian").unwrap();
+    let mut cmd = Command::cargo_bin("do-codeguardian").unwrap();
     cmd.arg("check")
         .arg(temp_dir.path())
         .arg("--format")

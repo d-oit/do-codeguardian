@@ -88,7 +88,7 @@ jobs:
         # Run analysis with timing
         START_TIME=$(date +%s.%N)
 
-        timeout ${{ matrix.mode.timeout }} ./target/release/codeguardian turbo . \
+        timeout ${{ matrix.mode.timeout }} ./target/release/do-codeguardian turbo . \
           ${{ matrix.mode.args }} \
           $EXTRA_ARGS \
           --format json \

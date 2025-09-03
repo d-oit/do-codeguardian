@@ -41,7 +41,7 @@ opencode git-commit-push [OPTIONS] [MESSAGE]
 ### Basic Usage
 ```bash
 # Commit and push with auto-generated message
-opencode run "/git-commit-push" --model "opencode/grok-code"
+opencode run "/git-commit-push"
 # Commit and push with custom message
 opencode run "git-commit-push 'Fix authentication vulnerability'"
 

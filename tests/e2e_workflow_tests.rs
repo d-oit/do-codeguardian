@@ -11,7 +11,7 @@ fn test_complete_analysis_workflow() {
     let temp_dir = TempDir::new().unwrap();
 
     // Step 1: Initialize configuration
-    let mut init_cmd = Command::cargo_bin("codeguardian").unwrap();
+    let mut init_cmd = Command::cargo_bin("do-codeguardian").unwrap();
     init_cmd.arg("init").current_dir(temp_dir.path());
     init_cmd.assert().success();
 
@@ -31,7 +31,7 @@ fn main() {
     .unwrap();
 
     // Step 3: Run analysis
-    let mut check_cmd = Command::cargo_bin("codeguardian").unwrap();
+    let mut check_cmd = Command::cargo_bin("do-codeguardian").unwrap();
     check_cmd
         .arg("check")
         .arg(temp_dir.path())
@@ -50,7 +50,7 @@ fn main() {
     assert!(results_content.contains("hardcoded_secret"));
 
     // Step 5: Convert to markdown report
-    let mut report_cmd = Command::cargo_bin("codeguardian").unwrap();
+    let mut report_cmd = Command::cargo_bin("do-codeguardian").unwrap();
     report_cmd
         .arg("report")
         .arg("--from")
@@ -100,7 +100,7 @@ if __name__ == "__main__":
     .unwrap();
 
     // Run in CI mode (should be faster, less verbose)
-    let mut cmd = Command::cargo_bin("codeguardian").unwrap();
+    let mut cmd = Command::cargo_bin("do-codeguardian").unwrap();
     cmd.arg("check")
         .arg(temp_dir.path())
         .arg("--format")

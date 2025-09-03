@@ -25,51 +25,51 @@ This guide covers all the ways to install CodeGuardian on your system, from pre-
 
 #### Installation
 ```bash
-cargo install codeguardian
+cargo install do-do-codeguardian
 ```
 
 #### Verification
 ```bash
-codeguardian --version
+do-codeguardian --version
 ```
 
 ### Method 2: Pre-built Binaries
 
-Download binaries from [GitHub Releases](https://github.com/d-oit/codeguardian/releases):
+Download binaries from [GitHub Releases](https://github.com/d-oit/do-codeguardian/releases):
 
 #### Linux
 ```bash
 # Download latest release
-curl -L -o codeguardian.tar.gz https://github.com/d-oit/codeguardian/releases/latest/download/codeguardian-linux-x64.tar.gz
-tar -xzf codeguardian.tar.gz
-sudo mv codeguardian /usr/local/bin/
+curl -L -o do-codeguardian.tar.gz https://github.com/d-oit/do-codeguardian/releases/latest/download/do-codeguardian-linux-x64.tar.gz
+tar -xzf do-codeguardian.tar.gz
+sudo mv do-codeguardian /usr/local/bin/
 
 # Verify installation
-codeguardian --version
+do-codeguardian --version
 ```
 
 #### macOS (Intel)
 ```bash
-curl -L -o codeguardian.tar.gz https://github.com/d-oit/codeguardian/releases/latest/download/codeguardian-macos-x64.tar.gz
-tar -xzf codeguardian.tar.gz
-sudo mv codeguardian /usr/local/bin/
+curl -L -o do-codeguardian.tar.gz https://github.com/d-oit/do-codeguardian/releases/latest/download/do-codeguardian-macos-x64.tar.gz
+tar -xzf do-codeguardian.tar.gz
+sudo mv do-codeguardian /usr/local/bin/
 ```
 
 #### macOS (Apple Silicon)
 ```bash
-curl -L -o codeguardian.tar.gz https://github.com/d-oit/codeguardian/releases/latest/download/codeguardian-macos-arm64.tar.gz
-tar -xzf codeguardian.tar.gz
-sudo mv codeguardian /usr/local/bin/
+curl -L -o do-codeguardian.tar.gz https://github.com/d-oit/do-codeguardian/releases/latest/download/do-codeguardian-macos-arm64.tar.gz
+tar -xzf do-codeguardian.tar.gz
+sudo mv do-codeguardian /usr/local/bin/
 ```
 
 #### Windows (PowerShell)
 ```powershell
 # Download the latest release
-Invoke-WebRequest -Uri "https://github.com/d-oit/codeguardian/releases/latest/download/codeguardian-windows-x64.zip" -OutFile "codeguardian.zip"
+Invoke-WebRequest -Uri "https://github.com/d-oit/do-codeguardian/releases/latest/download/do-codeguardian-windows-x64.zip" -OutFile "do-codeguardian.zip"
 
 # Extract and move to PATH
-Expand-Archive -Path "codeguardian.zip" -DestinationPath "."
-Move-Item -Path "codeguardian.exe" -Destination "C:\Windows\System32\"
+Expand-Archive -Path "do-codeguardian.zip" -DestinationPath "."
+Move-Item -Path "do-codeguardian.exe" -Destination "C:\Windows\System32\"
 ```
 
 ### Method 3: Docker
@@ -79,28 +79,28 @@ Move-Item -Path "codeguardian.exe" -Destination "C:\Windows\System32\"
 
 #### Pull Official Image
 ```bash
-docker pull codeguardian/codeguardian:latest
+docker pull do-codeguardian/do-codeguardian:latest
 ```
 
 #### Usage
 ```bash
 # Run analysis on current directory
-docker run --rm -v $(pwd):/workspace codeguardian/codeguardian check /workspace
+docker run --rm -v $(pwd):/workspace do-codeguardian/do-codeguardian check /workspace
 
 # With custom configuration
-docker run --rm -v $(pwd):/workspace -v $(pwd)/codeguardian.toml:/etc/codeguardian.toml codeguardian/codeguardian check /workspace
+docker run --rm -v $(pwd):/workspace -v $(pwd)/do-codeguardian.toml:/etc/do-codeguardian.toml do-codeguardian/do-codeguardian check /workspace
 ```
 
 #### Building Custom Docker Image
 ```dockerfile
-FROM codeguardian/codeguardian:latest
+FROM do-codeguardian/do-codeguardian:latest
 
 # Add custom tools or configurations
-COPY custom-rules.json /etc/codeguardian/rules.json
-COPY custom-config.toml /etc/codeguardian.toml
+COPY custom-rules.json /etc/do-codeguardian/rules.json
+COPY custom-config.toml /etc/do-codeguardian.toml
 
 # Set environment variables
-ENV CODEGUARDIAN_CONFIG=/etc/codeguardian.toml
+ENV CODEGUARDIAN_CONFIG=/etc/do-codeguardian.toml
 ```
 
 ### Method 4: Package Managers
@@ -108,39 +108,39 @@ ENV CODEGUARDIAN_CONFIG=/etc/codeguardian.toml
 #### Homebrew (macOS/Linux)
 ```bash
 # Add tap
-brew tap codeguardian/tap
+brew tap do-codeguardian/tap
 
 # Install
-brew install codeguardian
+brew install do-codeguardian
 
 # Update
-brew upgrade codeguardian
+brew upgrade do-codeguardian
 ```
 
 #### APT (Ubuntu/Debian)
 ```bash
 # Add repository
-curl -fsSL https://apt.codeguardian.dev/gpg.key | sudo gpg --dearmor -o /usr/share/keyrings/codeguardian-archive-keyring.gpg
-echo "deb [signed-by=/usr/share/keyrings/codeguardian-archive-keyring.gpg] https://apt.codeguardian.dev stable main" | sudo tee /etc/apt/sources.list.d/codeguardian.list
+curl -fsSL https://apt.do-codeguardian.dev/gpg.key | sudo gpg --dearmor -o /usr/share/keyrings/do-codeguardian-archive-keyring.gpg
+echo "deb [signed-by=/usr/share/keyrings/do-codeguardian-archive-keyring.gpg] https://apt.do-codeguardian.dev stable main" | sudo tee /etc/apt/sources.list.d/do-codeguardian.list
 
 # Install
 sudo apt update
-sudo apt install codeguardian
+sudo apt install do-codeguardian
 ```
 
 #### Chocolatey (Windows)
 ```powershell
-choco install codeguardian
+choco install do-codeguardian
 ```
 
 #### AUR (Arch Linux)
 ```bash
 # Using yay
-yay -S codeguardian
+yay -S do-codeguardian
 
 # Or using pacman with AUR helper
-git clone https://aur.archlinux.org/codeguardian.git
-cd codeguardian
+git clone https://aur.archlinux.org/do-codeguardian.git
+cd do-codeguardian
 makepkg -si
 ```
 
@@ -154,8 +154,8 @@ makepkg -si
 #### Clone and Build
 ```bash
 # Clone repository
-git clone https://github.com/d-oit/codeguardian
-cd codeguardian
+git clone https://github.com/d-oit/do-codeguardian
+cd do-codeguardian
 
 # Build in debug mode
 cargo build
@@ -170,8 +170,8 @@ cargo install --path .
 #### Development Build
 ```bash
 # Clone with submodules if any
-git clone --recursive https://github.com/d-oit/codeguardian
-cd codeguardian
+git clone --recursive https://github.com/d-oit/do-codeguardian
+cd do-codeguardian
 
 # Run tests during build
 cargo build --release --tests
@@ -185,25 +185,25 @@ cargo install --path . --debug
 ### 1. Verify Installation
 ```bash
 # Check version
-codeguardian --version
+do-codeguardian --version
 
 # View help
-codeguardian --help
+do-codeguardian --help
 
 # Test basic functionality
-codeguardian check --help
+do-codeguardian check --help
 ```
 
 ### 2. Initialize Configuration
 ```bash
 # Create basic configuration
-codeguardian init
+do-codeguardian init
 
 # Create security-focused configuration
-codeguardian init --template security
+do-codeguardian init --template security
 
 # Create CI-optimized configuration
-codeguardian init --template ci
+do-codeguardian init --template ci
 ```
 
 ### 3. Set Up Environment Variables (Optional)
@@ -212,7 +212,7 @@ codeguardian init --template ci
 export GITHUB_TOKEN=your_github_token_here
 
 # For custom configuration
-export CODEGUARDIAN_CONFIG=/path/to/codeguardian.toml
+export CODEGUARDIAN_CONFIG=/path/to/do-codeguardian.toml
 
 # For ML model path
 export CODEGUARDIAN_ML_MODEL=/path/to/model.fann
@@ -221,16 +221,16 @@ export CODEGUARDIAN_ML_MODEL=/path/to/model.fann
 ### 4. Configure Shell Completion (Optional)
 ```bash
 # Bash
-codeguardian --completion bash >> ~/.bashrc
+do-codeguardian --completion bash >> ~/.bashrc
 
 # Zsh
-codeguardian --completion zsh >> ~/.zshrc
+do-codeguardian --completion zsh >> ~/.zshrc
 
 # Fish
-codeguardian --completion fish > ~/.config/fish/completions/codeguardian.fish
+do-codeguardian --completion fish > ~/.config/fish/completions/do-codeguardian.fish
 
 # PowerShell
-codeguardian --completion powershell >> $PROFILE
+do-codeguardian --completion powershell >> $PROFILE
 ```
 
 ## Platform-Specific Notes
@@ -269,10 +269,10 @@ source ~/.cargo/env
 **"Permission denied" on Linux/macOS**
 ```bash
 # Install to user directory
-cargo install --root ~/.local codeguardian
+cargo install --root ~/.local do-codeguardian
 
 # Or use sudo for system installation
-sudo cargo install codeguardian
+sudo cargo install do-do-codeguardian
 ```
 
 **"SSL certificate error"**
@@ -298,13 +298,13 @@ cargo build --release
 ### Getting Help
 ```bash
 # Check installation logs
-cargo install codeguardian --verbose
+cargo install do-do-codeguardian --verbose
 
 # Verify system compatibility
-codeguardian doctor
+do-codeguardian doctor
 
 # Get detailed help
-codeguardian --help
+do-codeguardian --help
 ```
 
 ## Next Steps

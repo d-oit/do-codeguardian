@@ -31,7 +31,7 @@ jobs:
       run: |
         echo "🚀 Running comprehensive nightly analysis..."
 
-        ./target/release/codeguardian turbo . \
+        ./target/release/do-codeguardian turbo . \
           --aggressive \
           --max-parallel 16 \
           --memory-limit 2048 \

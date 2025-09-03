@@ -27,7 +27,7 @@ jobs:
       run: cargo build --release
     - name: Turbo Security Analysis
       run: |
-        ./target/release/codeguardian turbo . \
+        ./target/release/do-codeguardian turbo . \
           --max-parallel 4 \
           --memory-limit 512 \
           --format json \
@@ -101,7 +101,7 @@ jobs:
 
     - name: Quick Turbo Scan
       run: |
-        ./target/release/codeguardian turbo ${{ steps.changes.outputs.files }} \
+        ./target/release/do-codeguardian turbo ${{ steps.changes.outputs.files }} \
           --format json \
           --output pr-security.json \
           --metrics
@@ -147,7 +147,7 @@ jobs:
 
     - name: Comprehensive Analysis
       run: |
-        ./target/release/codeguardian turbo . \
+        ./target/release/do-codeguardian turbo . \
           --aggressive \
           --max-parallel 16 \
           --memory-limit 2048 \
@@ -187,7 +187,7 @@ jobs:
 
     - name: Full Security Validation
       run: |
-        ./target/release/codeguardian turbo . \
+        ./target/release/do-codeguardian turbo . \
           --aggressive \
           --max-parallel 8 \
           --memory-limit 1024 \

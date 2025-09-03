@@ -7,19 +7,19 @@ This directory contains practical examples and configuration templates to help y
 ### Basic Security Analysis
 ```bash
 # Quick security scan of current directory
-codeguardian check .
+do-codeguardian check .
 
 # Analyze with JSON output
-codeguardian check . --format json --out results.json
+do-codeguardian check . --format json --out results.json
 
 # Generate human-readable report
-codeguardian report --from results.json --md security-report.md
+do-codeguardian report --from results.json --md security-report.md
 ```
 
 ### CI/CD Integration
 ```bash
 # PR analysis with GitHub integration
-codeguardian check . \
+do-codeguardian check . \
   --diff origin/main..HEAD \
   --format json \
   --out pr-results.json \
@@ -31,7 +31,7 @@ codeguardian check . \
 ### High-Performance Analysis
 ```bash
 # Turbo mode for large codebases
-codeguardian turbo . \
+do-codeguardian turbo . \
   --max-parallel 16 \
   --memory-limit 2048 \
   --metrics \
@@ -76,31 +76,31 @@ codeguardian turbo . \
 ### 1. Development Workflow
 ```bash
 # Pre-commit analysis
-codeguardian check . --format json --out pre-commit-results.json
+do-codeguardian check . --format json --out pre-commit-results.json
 
 # Quick security check
-codeguardian check . --analyzer security --fail-on-issues
+do-codeguardian check . --analyzer security --fail-on-issues
 
 # Full analysis with ML
-codeguardian check . --ml-model enhanced-model.fann --ml-threshold 0.8
+do-codeguardian check . --ml-model enhanced-model.fann --ml-threshold 0.8
 ```
 
 ### 2. Pull Request Analysis
 ```bash
 # Analyze only changed files
-codeguardian check . --diff origin/main..HEAD --format json --out pr-analysis.json
+do-codeguardian check . --diff origin/main..HEAD --format json --out pr-analysis.json
 
 # Create GitHub issues for findings
-codeguardian gh-issue --from pr-analysis.json --repo owner/repo --mode checklist
+do-codeguardian gh-issue --from pr-analysis.json --repo owner/repo --mode checklist
 
 # Generate PR comment
-codeguardian report --from pr-analysis.json --md pr-comment.md
+do-codeguardian report --from pr-analysis.json --md pr-comment.md
 ```
 
 ### 3. Security Audit
 ```bash
 # Comprehensive security audit
-codeguardian check . \
+do-codeguardian check . \
   --config security-audit.toml \
   --format json \
   --out security-audit.json \
@@ -113,13 +113,13 @@ codeguardian check . \
 ### 4. Performance Optimization
 ```bash
 # Performance analysis
-codeguardian turbo . \
+do-codeguardian turbo . \
   --metrics \
   --format json \
   --output performance-analysis.json
 
 # Memory usage analysis
-codeguardian check . \
+do-codeguardian check . \
   --memory-limit 1024 \
   --streaming-threshold 5 \
   --format json \
@@ -129,7 +129,7 @@ codeguardian check . \
 ### 5. Enterprise Integration
 ```bash
 # Enterprise-scale analysis
-codeguardian turbo . \
+do-codeguardian turbo . \
   --max-parallel 32 \
   --memory-limit 8192 \
   --streaming-threshold 10 \
@@ -138,7 +138,7 @@ codeguardian turbo . \
   --output enterprise-analysis.json
 
 # Custom reporting
-codeguardian report \
+do-codeguardian report \
   --from enterprise-analysis.json \
   --template enterprise-template.md \
   --md enterprise-report.md \
@@ -149,7 +149,7 @@ codeguardian report \
 
 ### Configuration Examples
 
-#### `codeguardian.security.toml`
+#### `do-codeguardian.security.toml`
 ```toml
 [general]
 max_file_size = 10485760
@@ -169,7 +169,7 @@ model_path = "enhanced-model.fann"
 confidence_threshold = 0.8
 ```
 
-#### `codeguardian.ci.toml`
+#### `do-codeguardian.ci.toml`
 ```toml
 [general]
 max_file_size = 5242880
@@ -199,7 +199,7 @@ if [ -z "$GITHUB_TOKEN" ]; then
 fi
 
 # Analyze changed files
-codeguardian check . \
+do-codeguardian check . \
   --diff origin/main..HEAD \
   --format json \
   --out pr-results.json \
@@ -223,14 +223,14 @@ fi
 echo "Starting security audit..."
 
 # Run analysis
-codeguardian check . \
+do-codeguardian check . \
   --config security-audit.toml \
   --format json \
   --out security-audit.json \
   --emit-md security-report.md
 
 # Generate compliance report
-codeguardian report \
+do-codeguardian report \
   --from security-audit.json \
   --template compliance-template.md \
   --md compliance-report.md
@@ -248,20 +248,20 @@ echo "Security audit completed. Reports generated."
 
 #### `Dockerfile`
 ```dockerfile
-FROM codeguardian/codeguardian:latest
+FROM do-codeguardian/do-codeguardian:latest
 
 # Copy custom configuration
-COPY codeguardian.toml /etc/codeguardian.toml
+COPY do-codeguardian.toml /etc/do-codeguardian.toml
 
 # Copy custom rules
-COPY custom-rules.json /etc/codeguardian/rules.json
+COPY custom-rules.json /etc/do-codeguardian/rules.json
 
 # Copy ML model
-COPY enhanced-model.fann /etc/codeguardian/model.fann
+COPY enhanced-model.fann /etc/do-codeguardian/model.fann
 
 # Set environment
-ENV CODEGUARDIAN_CONFIG=/etc/codeguardian.toml
-ENV CODEGUARDIAN_ML_MODEL=/etc/codeguardian/model.fann
+ENV CODEGUARDIAN_CONFIG=/etc/do-codeguardian.toml
+ENV CODEGUARDIAN_ML_MODEL=/etc/do-codeguardian/model.fann
 
 # Run analysis
 CMD ["check", "/workspace", "--format", "json", "--out", "/workspace/results.json"]
@@ -271,11 +271,11 @@ CMD ["check", "/workspace", "--format", "json", "--out", "/workspace/results.jso
 ```yaml
 version: '3.8'
 services:
-  codeguardian:
-    image: codeguardian/codeguardian:latest
+  do-codeguardian:
+    image: do-codeguardian/do-codeguardian:latest
     volumes:
       - .:/workspace
-      - ./codeguardian.toml:/etc/codeguardian.toml
+      - ./do-codeguardian.toml:/etc/do-codeguardian.toml
     environment:
       - CODEGUARDIAN_MEMORY_LIMIT_MB=2048
       - GITHUB_TOKEN=${GITHUB_TOKEN}
@@ -373,7 +373,7 @@ jobs:
           fetch-depth: 0
 
       - name: Run CodeGuardian
-        uses: d-oit/codeguardian-action@v1
+        uses: d-oit/do-codeguardian-action@v1
         with:
           args: |
             check . \
@@ -392,19 +392,19 @@ jobs:
 stages:
   - security
 
-codeguardian:
+do-codeguardian:
   stage: security
-  image: codeguardian/codeguardian:latest
+  image: do-codeguardian/do-codeguardian:latest
   script:
     - |
       if [ -n "$CI_MERGE_REQUEST_TARGET_BRANCH_NAME" ]; then
-        codeguardian check . \
+        do-codeguardian check . \
           --diff origin/$CI_MERGE_REQUEST_TARGET_BRANCH_NAME..HEAD \
           --format json \
           --out results.json \
           --emit-md report.md
       else
-        codeguardian check . \
+        do-codeguardian check . \
           --format json \
           --out results.json \
           --emit-md report.md
@@ -420,7 +420,7 @@ codeguardian:
 pipeline {
     agent {
         docker {
-            image 'codeguardian/codeguardian:latest'
+            image 'do-codeguardian/do-codeguardian:latest'
             args '-v $WORKSPACE:/workspace -w /workspace'
         }
     }
@@ -428,7 +428,7 @@ pipeline {
         stage('Security Analysis') {
             steps {
                 sh '''
-                    codeguardian check . \
+                    do-codeguardian check . \
                       --format json \
                       --out results.json \
                       --emit-md report.md \
@@ -449,8 +449,8 @@ pipeline {
 
 ### Custom Analyzer Development
 ```rust
-use codeguardian::analyzers::{Analyzer, Finding, FindingSeverity};
-use codeguardian::types::FileInfo;
+use do-codeguardian::analyzers::{Analyzer, Finding, FindingSeverity};
+use do-codeguardian::types::FileInfo;
 
 pub struct CustomSecurityAnalyzer;
 
@@ -492,7 +492,7 @@ impl Analyzer for CustomSecurityAnalyzer {
 ### ML Model Training
 ```bash
 # Prepare training data
-codeguardian train \
+do-codeguardian train \
   --model-path custom-model.fann \
   --epochs 5000 \
   --learning-rate 0.001 \
@@ -500,7 +500,7 @@ codeguardian train \
   --validation-split 0.2
 
 # Use trained model
-codeguardian check . \
+do-codeguardian check . \
   --ml-model custom-model.fann \
   --ml-threshold 0.8 \
   --online-learning
@@ -509,14 +509,14 @@ codeguardian check . \
 ### Performance Benchmarking
 ```bash
 # Run performance benchmarks
-codeguardian turbo . \
+do-codeguardian turbo . \
   --metrics \
   --format json \
   --output benchmark-results.json \
   --max-parallel 16
 
 # Compare with baseline
-codeguardian benchmark compare \
+do-codeguardian benchmark compare \
   --baseline baseline-results.json \
   --current benchmark-results.json \
   --output comparison-report.md

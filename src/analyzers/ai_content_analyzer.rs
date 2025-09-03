@@ -355,7 +355,6 @@ impl Analyzer for AiContentAnalyzer {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::path::PathBuf;
 
     #[test]
     fn test_detect_placeholder_content() {
@@ -369,7 +368,7 @@ fn main() {
         let findings = analyzer
             .analyze(Path::new("test.rs"), content.as_bytes())
             .unwrap();
-        assert!(findings.iter().any(|f| f.rule_id == "placeholder_content"));
+        assert!(findings.iter().any(|f| f.rule == "placeholder_content"));
     }
 
     #[test]
@@ -384,7 +383,7 @@ fn example() {
         let findings = analyzer
             .analyze(Path::new("test.rs"), content.as_bytes())
             .unwrap();
-        assert!(findings.iter().any(|f| f.rule_id == "ai_generated_marker"));
+        assert!(findings.iter().any(|f| f.rule == "ai_generated_marker"));
     }
 
     #[test]
@@ -398,9 +397,7 @@ fn do_something() {
         let findings = analyzer
             .analyze(Path::new("test.rs"), content.as_bytes())
             .unwrap();
-        assert!(findings
-            .iter()
-            .any(|f| f.rule_id == "generic_function_name"));
+        assert!(findings.iter().any(|f| f.rule == "generic_function_name"));
     }
 
     #[test]
@@ -416,7 +413,7 @@ fn incomplete() {
             .unwrap();
         assert!(findings
             .iter()
-            .any(|f| f.rule_id == "incomplete_implementation"));
+            .any(|f| f.rule == "incomplete_implementation"));
     }
 
     #[test]
@@ -431,9 +428,7 @@ fn do_something() {
             .analyze(Path::new("tests/test_example.rs"), content.as_bytes())
             .unwrap();
         // Generic function names should be ignored in test files
-        assert!(!findings
-            .iter()
-            .any(|f| f.rule_id == "generic_function_name"));
+        assert!(!findings.iter().any(|f| f.rule == "generic_function_name"));
     }
 
     #[test]
@@ -466,6 +461,6 @@ fn do_something() {
         let findings = analyzer
             .analyze(Path::new("test.rs"), content.as_bytes())
             .unwrap();
-        assert!(findings.iter().any(|f| f.rule_id == "placeholder_content"));
+        assert!(findings.iter().any(|f| f.rule == "placeholder_content"));
     }
 }

@@ -9,24 +9,24 @@ This section provides detailed documentation for CodeGuardian's programmatic int
 All commands support these global options:
 
 ```bash
-codeguardian [OPTIONS] <COMMAND>
+do-codeguardian [OPTIONS] <COMMAND>
 ```
 
 | Option | Description | Example |
 |--------|-------------|---------|
-| `-h, --help` | Print help information | `codeguardian --help` |
-| `-V, --version` | Print version information | `codeguardian --version` |
-| `--config <FILE>` | Use specific config file | `codeguardian --config custom.toml check .` |
-| `--verbose` | Enable verbose output | `codeguardian --verbose check .` |
-| `--quiet` | Suppress non-error output | `codeguardian --quiet check .` |
-| `--no-color` | Disable colored output | `codeguardian --no-color check .` |
+| `-h, --help` | Print help information | `do-codeguardian --help` |
+| `-V, --version` | Print version information | `do-codeguardian --version` |
+| `--config <FILE>` | Use specific config file | `do-codeguardian --config custom.toml check .` |
+| `--verbose` | Enable verbose output | `do-codeguardian --verbose check .` |
+| `--quiet` | Suppress non-error output | `do-codeguardian --quiet check .` |
+| `--no-color` | Disable colored output | `do-codeguardian --no-color check .` |
 
 ### Core Commands
 
 #### `check` - Primary Analysis Command
 
 ```bash
-codeguardian check [OPTIONS] [PATH]
+do-codeguardian check [OPTIONS] [PATH]
 ```
 
 **Description**: Run comprehensive security, performance, and code quality analysis on the specified path.
@@ -90,22 +90,22 @@ codeguardian check [OPTIONS] [PATH]
 **Examples**:
 ```bash
 # Basic analysis
-codeguardian check .
+do-codeguardian check .
 
 # JSON output with ML filtering
-codeguardian check . --format json --out results.json --ml-model model.fann
+do-codeguardian check . --format json --out results.json --ml-model model.fann
 
 # PR analysis with GitHub integration
-codeguardian check . --diff origin/main..HEAD --emit-gh --repo myorg/myrepo
+do-codeguardian check . --diff origin/main..HEAD --emit-gh --repo myorg/myrepo
 
 # High-performance analysis
-codeguardian check . --max-parallel 16 --memory-limit 2048 --streaming-threshold 10
+do-codeguardian check . --max-parallel 16 --memory-limit 2048 --streaming-threshold 10
 ```
 
 #### `report` - Generate Reports
 
 ```bash
-codeguardian report [OPTIONS] --from <INPUT>
+do-codeguardian report [OPTIONS] --from <INPUT>
 ```
 
 **Description**: Convert analysis results to different output formats.
@@ -127,16 +127,16 @@ codeguardian report [OPTIONS] --from <INPUT>
 **Examples**:
 ```bash
 # Generate multiple report formats
-codeguardian report --from results.json --md report.md --html report.html --sarif report.sarif
+do-codeguardian report --from results.json --md report.md --html report.html --sarif report.sarif
 
 # Use custom template
-codeguardian report --from results.json --template custom-template.md --out custom-report.md
+do-codeguardian report --from results.json --template custom-template.md --out custom-report.md
 ```
 
 #### `init` - Initialize Configuration
 
 ```bash
-codeguardian init [OPTIONS]
+do-codeguardian init [OPTIONS]
 ```
 
 **Description**: Initialize CodeGuardian configuration with presets.
@@ -152,19 +152,19 @@ codeguardian init [OPTIONS]
 **Examples**:
 ```bash
 # Create security-focused configuration
-codeguardian init --template security
+do-codeguardian init --template security
 
 # Interactive setup
-codeguardian init --interactive
+do-codeguardian init --interactive
 
 # List available templates
-codeguardian init --list
+do-codeguardian init --list
 ```
 
 #### `gh-issue` - GitHub Issue Management
 
 ```bash
-codeguardian gh-issue [OPTIONS] --from <INPUT> --repo <REPOSITORY>
+do-codeguardian gh-issue [OPTIONS] --from <INPUT> --repo <REPOSITORY>
 ```
 
 **Description**: Create and manage GitHub issues from analysis results.
@@ -190,16 +190,16 @@ codeguardian gh-issue [OPTIONS] --from <INPUT> --repo <REPOSITORY>
 **Examples**:
 ```bash
 # Create checklist-style issues
-codeguardian gh-issue --from results.json --repo myorg/myrepo --mode checklist
+do-codeguardian gh-issue --from results.json --repo myorg/myrepo --mode checklist
 
 # Assign issues to specific users
-codeguardian gh-issue --from results.json --repo myorg/myrepo --assignees alice,bob
+do-codeguardian gh-issue --from results.json --repo myorg/myrepo --assignees alice,bob
 ```
 
 #### `train` - ML Model Training
 
 ```bash
-codeguardian train [OPTIONS]
+do-codeguardian train [OPTIONS]
 ```
 
 **Description**: Train ML models for improved false positive detection.
@@ -218,16 +218,16 @@ codeguardian train [OPTIONS]
 **Examples**:
 ```bash
 # Train with default settings
-codeguardian train
+do-codeguardian train
 
 # Custom training configuration
-codeguardian train --model-path custom-model.fann --epochs 5000 --learning-rate 0.001
+do-codeguardian train --model-path custom-model.fann --epochs 5000 --learning-rate 0.001
 ```
 
 #### `turbo` - High-Performance Analysis
 
 ```bash
-codeguardian turbo [OPTIONS] [PATH]
+do-codeguardian turbo [OPTIONS] [PATH]
 ```
 
 **Description**: Run high-performance analysis optimized for large codebases.
@@ -249,10 +249,10 @@ codeguardian turbo [OPTIONS] [PATH]
 **Examples**:
 ```bash
 # Turbo analysis with maximum performance
-codeguardian turbo . --max-parallel 32 --memory-limit 8192 --aggressive
+do-codeguardian turbo . --max-parallel 32 --memory-limit 8192 --aggressive
 
 # Turbo analysis with metrics
-codeguardian turbo . --metrics --format json --output performance-results.json
+do-codeguardian turbo . --metrics --format json --output performance-results.json
 ```
 
 ## Configuration API
@@ -267,8 +267,8 @@ max_file_size = 10485760
 parallel_workers = 4
 memory_limit_mb = 1024
 streaming_threshold_mb = 5
-cache_dir = "~/.cache/codeguardian"
-temp_dir = "/tmp/codeguardian"
+cache_dir = "~/.cache/do-codeguardian"
+temp_dir = "/tmp/do-codeguardian"
 log_level = "info"
 tty_output = true
 progress_interval = 2
@@ -380,7 +380,7 @@ close_resolved = true
 default_format = "human"
 color_output = true
 pretty_print = true
-output_dir = "./codeguardian-results"
+output_dir = "./do-codeguardian-results"
 overwrite_existing = false
 compress_output = false
 generate_summary = true
@@ -394,7 +394,7 @@ custom_templates = ["security-report.md", "performance-report.html"]
 
 | Variable | Description | Example |
 |----------|-------------|---------|
-| `CODEGUARDIAN_CONFIG` | Configuration file path | `/etc/codeguardian.toml` |
+| `CODEGUARDIAN_CONFIG` | Configuration file path | `/etc/do-codeguardian.toml` |
 | `CODEGUARDIAN_MAX_FILE_SIZE` | Maximum file size | `20971520` |
 | `CODEGUARDIAN_MEMORY_LIMIT_MB` | Memory limit | `2048` |
 | `CODEGUARDIAN_LOG_LEVEL` | Log level | `debug` |
@@ -477,7 +477,7 @@ Security-focused format for integration with security tools:
         "driver": {
           "name": "CodeGuardian",
           "version": "1.2.0",
-          "informationUri": "https://github.com/d-oit/codeguardian",
+          "informationUri": "https://github.com/d-oit/do-codeguardian",
           "rules": [...]
         }
       },
@@ -506,7 +506,7 @@ Security-focused format for integration with security tools:
 
 ```yaml
 - name: Run CodeGuardian
-  uses: d-oit/codeguardian-action@v1
+  uses: d-oit/do-codeguardian-action@v1
   with:
     args: |
       check . \
@@ -527,8 +527,8 @@ Security-focused format for integration with security tools:
 ```bash
 docker run --rm \
   -v $(pwd):/workspace \
-  -v $(pwd)/codeguardian.toml:/etc/codeguardian.toml \
-  codeguardian/codeguardian \
+  -v $(pwd)/do-codeguardian.toml:/etc/do-codeguardian.toml \
+  do-codeguardian/do-codeguardian \
   check /workspace --format json --out /workspace/results.json
 ```
 
@@ -537,7 +537,7 @@ docker run --rm \
 ```bash
 #!/bin/bash
 # Run analysis and check results
-codeguardian check . --format json --out results.json
+do-codeguardian check . --format json --out results.json
 
 # Check if issues were found
 if [ $? -eq 4 ]; then
@@ -546,7 +546,7 @@ if [ $? -eq 4 ]; then
 fi
 
 # Generate report
-codeguardian report --from results.json --md report.md
+do-codeguardian report --from results.json --md report.md
 ```
 
 ## Error Handling
@@ -567,10 +567,10 @@ Enable verbose logging for troubleshooting:
 
 ```bash
 # Enable debug logging
-CODEGUARDIAN_LOG_LEVEL=debug codeguardian check .
+CODEGUARDIAN_LOG_LEVEL=debug do-codeguardian check .
 
 # Save logs to file
-codeguardian check . --verbose 2>&1 | tee analysis.log
+do-codeguardian check . --verbose 2>&1 | tee analysis.log
 ```
 
 ## Next Steps

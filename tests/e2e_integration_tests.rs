@@ -73,7 +73,7 @@ mod tests {
     )
     .unwrap();
 
-    let mut cmd = Command::cargo_bin("codeguardian").unwrap();
+    let mut cmd = Command::cargo_bin("do-codeguardian").unwrap();
     cmd.arg("check")
         .arg(temp_dir.path().join("src/main.rs"))
         .arg(temp_dir.path().join("src/lib.rs"))
@@ -128,7 +128,7 @@ app.listen(3000);
     )
     .unwrap();
 
-    let mut cmd = Command::cargo_bin("codeguardian").unwrap();
+    let mut cmd = Command::cargo_bin("do-codeguardian").unwrap();
     cmd.arg("check")
         .arg(temp_dir.path().join("app.js"))
         .arg("--format")

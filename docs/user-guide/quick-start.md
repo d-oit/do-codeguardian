@@ -15,14 +15,14 @@ Before you begin, ensure you have:
 ### Option 1: Install from Crates.io (Recommended)
 
 ```bash
-cargo install codeguardian
+cargo install do-do-codeguardian
 ```
 
 ### Option 2: Install from Source
 
 ```bash
-git clone https://github.com/d-oit/codeguardian
-cd codeguardian
+git clone https://github.com/d-oit/do-codeguardian
+cd do-codeguardian
 cargo build --release
 cargo install --path .
 ```
@@ -30,7 +30,7 @@ cargo install --path .
 ### Option 3: Using Docker
 
 ```bash
-docker pull codeguardian/codeguardian:latest
+docker pull do-codeguardian/do-codeguardian:latest
 ```
 
 ## Basic Usage
@@ -40,23 +40,23 @@ docker pull codeguardian/codeguardian:latest
 Create a basic configuration file with security-focused defaults:
 
 ```bash
-codeguardian init --template security
+do-codeguardian init --template security
 ```
 
-This creates a `codeguardian.toml` file with recommended settings for security analysis.
+This creates a `do-codeguardian.toml` file with recommended settings for security analysis.
 
 ### 2. Run Your First Analysis
 
 Analyze your current directory:
 
 ```bash
-codeguardian check .
+do-codeguardian check .
 ```
 
 For more detailed output with JSON results:
 
 ```bash
-codeguardian check . --format json --out results.json
+do-codeguardian check . --format json --out results.json
 ```
 
 ### 3. Generate a Report
@@ -64,7 +64,7 @@ codeguardian check . --format json --out results.json
 Create a human-readable Markdown report:
 
 ```bash
-codeguardian report --from results.json --md security-report.md
+do-codeguardian report --from results.json --md security-report.md
 ```
 
 ### 4. View Results
@@ -83,10 +83,10 @@ Train and use ML models for better accuracy:
 
 ```bash
 # Train a model (one-time setup)
-codeguardian train --model-path enhanced-model.fann --epochs 2000
+do-codeguardian train --model-path enhanced-model.fann --epochs 2000
 
 # Use ML-enhanced analysis
-codeguardian check . --ml-model enhanced-model.fann --ml-threshold 0.8
+do-codeguardian check . --ml-model enhanced-model.fann --ml-threshold 0.8
 ```
 
 ### Set Up GitHub Integration
@@ -94,7 +94,7 @@ codeguardian check . --ml-model enhanced-model.fann --ml-threshold 0.8
 Automatically create GitHub issues for findings:
 
 ```bash
-codeguardian check . --emit-gh --repo your-org/your-repo
+do-codeguardian check . --emit-gh --repo your-org/your-repo
 ```
 
 ### Analyze Pull Requests
@@ -102,7 +102,7 @@ codeguardian check . --emit-gh --repo your-org/your-repo
 Focus analysis on changed files in a PR:
 
 ```bash
-codeguardian check . --diff origin/main..HEAD --format json --out pr-results.json
+do-codeguardian check . --diff origin/main..HEAD --format json --out pr-results.json
 ```
 
 ## Understanding Results
@@ -152,7 +152,7 @@ streaming_threshold_mb = 5
 ### Common Issues
 
 **"Command not found"**
-- Ensure CodeGuardian is installed: `cargo install codeguardian`
+- Ensure CodeGuardian is installed: `cargo install do-do-codeguardian`
 - Check your PATH includes Cargo's bin directory
 
 **"Permission denied"**
@@ -168,11 +168,11 @@ streaming_threshold_mb = 5
 
 ```bash
 # View all available commands
-codeguardian --help
+do-codeguardian --help
 
 # Get help for specific commands
-codeguardian check --help
-codeguardian init --help
+do-codeguardian check --help
+do-codeguardian init --help
 ```
 
 ## What's Next?

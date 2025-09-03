@@ -38,14 +38,14 @@ jobs:
       run: |
         rm -f target/debug/.cargo-lock target/release/.cargo-lock
 
-  - name: Build CodeGuardian
-       run: |
-         cargo build --release --quiet
+    - name: Build CodeGuardian
+      run: |
+        cargo build --release --quiet
 
-  - name: Run CodeGuardian (PR diff-only)
+    - name: Run CodeGuardian (PR diff-only)
       run: |
         # Diff-only mode for PRs - fast and focused feedback
-        ./target/release/codeguardian check . \
+        ./target/release/do-codeguardian check . \
           --diff origin/main..HEAD \
           --format json \
           --out results.json \
@@ -88,14 +88,14 @@ jobs:
       run: |
         rm -f target/debug/.cargo-lock target/release/.cargo-lock
 
-  - name: Build CodeGuardian
-       run: |
-         cargo build --release --quiet
-
-  - name: Run CodeGuardian (Full scan)
+    - name: Build CodeGuardian
       run: |
-        # Full repository scan for scheduled jobs and main branch pushes
-        ./target/release/codeguardian check . \
+        cargo build --release --quiet
+
+    - name: Run CodeGuardian (Full scan)
+      run: |
+        # Full scan for main branch pushes
+        ./target/release/do-codeguardian check . \
           --format json \
           --out results.json \
           --emit-md report.md \
@@ -137,13 +137,13 @@ jobs:
       run: |
         rm -f target/debug/.cargo-lock target/release/.cargo-lock
 
-  - name: Build CodeGuardian
-       run: |
-         cargo build --release --quiet
-
-  - name: Update baseline
+    - name: Build CodeGuardian
       run: |
-        ./target/release/codeguardian check . \
+        cargo build --release --quiet
+
+    - name: Update baseline
+      run: |
+        ./target/release/do-codeguardian check . \
           --format json \
           --out baseline.json
 

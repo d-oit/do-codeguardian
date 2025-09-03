@@ -273,7 +273,6 @@ impl Analyzer for GitConflictAnalyzer {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::path::PathBuf;
 
     #[test]
     fn test_detect_complete_conflict() {
@@ -291,11 +290,11 @@ more code
             .analyze(Path::new("test.rs"), content.as_bytes())
             .unwrap();
         assert_eq!(findings.len(), 3); // start, separator, end
-        assert!(findings.iter().any(|f| f.rule_id == "merge_conflict_start"));
+        assert!(findings.iter().any(|f| f.rule == "merge_conflict_start"));
         assert!(findings
             .iter()
-            .any(|f| f.rule_id == "merge_conflict_separator"));
-        assert!(findings.iter().any(|f| f.rule_id == "merge_conflict_end"));
+            .any(|f| f.rule == "merge_conflict_separator"));
+        assert!(findings.iter().any(|f| f.rule == "merge_conflict_end"));
     }
 
     #[test]
@@ -312,7 +311,7 @@ more code without end marker
         let findings = analyzer
             .analyze(Path::new("test.rs"), content.as_bytes())
             .unwrap();
-        assert!(findings.iter().any(|f| f.rule_id == "malformed_conflict"));
+        assert!(findings.iter().any(|f| f.rule == "malformed_conflict"));
     }
 
     #[test]
@@ -335,7 +334,7 @@ no conflicts here
         let findings = analyzer
             .analyze(Path::new("test.json"), invalid_json.as_bytes())
             .unwrap();
-        assert!(findings.iter().any(|f| f.rule_id == "syntax_error"));
+        assert!(findings.iter().any(|f| f.rule == "syntax_error"));
     }
 
     #[test]

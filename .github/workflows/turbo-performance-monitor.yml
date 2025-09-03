@@ -92,14 +92,14 @@ jobs:
         echo "🐌 Standard Analysis..."
         START_STANDARD=$(date +%s.%N)
         if command -v timeout >/dev/null 2>&1; then
-          timeout 300s ./target/release/codeguardian check test-codebase \
+          timeout 300s ./target/release/do-codeguardian check test-codebase \
             --format json --out standard-bench.json 2>/dev/null || {
             echo "Standard analysis timed out"
             STANDARD_TIMEOUT=true
           }
         else
           echo "timeout command not available, running without timeout"
-          ./target/release/codeguardian check test-codebase \
+          ./target/release/do-codeguardian check test-codebase \
             --format json --out standard-bench.json 2>/dev/null || {
             echo "Standard analysis failed"
             STANDARD_TIMEOUT=true
@@ -111,7 +111,7 @@ jobs:
         # Benchmark turbo analysis
         echo "🚀 Turbo Analysis..."
         START_TURBO=$(date +%s.%N)
-        ./target/release/codeguardian turbo test-codebase \
+        ./target/release/do-codeguardian turbo test-codebase \
           --format json --output turbo-bench.json --metrics
         END_TURBO=$(date +%s.%N)
         TURBO_DURATION=$(echo "$END_TURBO - $START_TURBO" | bc -l)

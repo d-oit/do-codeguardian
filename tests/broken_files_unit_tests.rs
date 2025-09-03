@@ -1,8 +1,8 @@
-use codeguardian::analyzers::{
+use do_codeguardian::analyzers::{
     ai_content_analyzer::AiContentAnalyzer, duplicate_analyzer::DuplicateAnalyzer,
     git_conflict_analyzer::GitConflictAnalyzer, Analyzer,
 };
-use codeguardian::types::Severity;
+use do_codeguardian::types::Severity;
 use std::path::Path;
 
 #[cfg(test)]
@@ -72,11 +72,11 @@ fn main() {
 
         // Should detect all conflict markers
         assert!(findings.len() >= 4); // At least 4 markers
-        assert!(findings.iter().any(|f| f.rule_id == "merge_conflict_start"));
+        assert!(findings.iter().any(|f| f.rule == "merge_conflict_start"));
         assert!(findings
             .iter()
-            .any(|f| f.rule_id == "merge_conflict_separator"));
-        assert!(findings.iter().any(|f| f.rule_id == "merge_conflict_end"));
+            .any(|f| f.rule == "merge_conflict_separator"));
+        assert!(findings.iter().any(|f| f.rule == "merge_conflict_end"));
     }
 
     #[test]
@@ -89,7 +89,7 @@ fn main() {
             .unwrap();
 
         // Should not report syntax errors when validation is disabled
-        assert!(!findings.iter().any(|f| f.rule_id == "syntax_error"));
+        assert!(!findings.iter().any(|f| f.rule == "syntax_error"));
     }
 
     #[test]
@@ -104,7 +104,7 @@ key = "missing bracket"
             .analyze(Path::new("test.toml"), invalid_toml.as_bytes())
             .unwrap();
 
-        assert!(findings.iter().any(|f| f.rule_id == "syntax_error"));
+        assert!(findings.iter().any(|f| f.rule == "syntax_error"));
         assert!(findings.iter().any(|f| f.severity == Severity::High));
     }
 
@@ -125,9 +125,7 @@ fn main() {
             .unwrap();
 
         // Should detect suspicious duplication
-        assert!(findings
-            .iter()
-            .any(|f| f.rule_id == "suspicious_duplication"));
+        assert!(findings.iter().any(|f| f.rule == "suspicious_duplication"));
         assert!(findings.iter().any(|f| f.severity == Severity::Medium));
     }
 
@@ -139,11 +137,13 @@ fn main() {
         let text_extensions = vec!["rs", "js", "py", "txt", "md", "json"];
 
         for ext in binary_extensions {
+            let file_name = format!("test.{}", ext);
             let path = Path::new(&format!("test.{}", ext));
             assert!(!analyzer.supports_file(path), "Should not support .{}", ext);
         }
 
         for ext in text_extensions {
+            let file_name = format!("test.{}", ext);
             let path = Path::new(&format!("test.{}", ext));
             assert!(analyzer.supports_file(path), "Should support .{}", ext);
         }
@@ -210,7 +210,7 @@ mod ai_content_unit_tests {
                 .analyze(Path::new("test.rs"), content.as_bytes())
                 .unwrap();
 
-            let has_placeholder = findings.iter().any(|f| f.rule_id == "placeholder_content");
+            let has_placeholder = findings.iter().any(|f| f.rule == "placeholder_content");
             assert_eq!(has_placeholder, should_detect, "Text: '{}'", text);
         }
     }
@@ -235,7 +235,7 @@ mod ai_content_unit_tests {
                 .unwrap();
 
             assert!(
-                findings.iter().any(|f| f.rule_id == "ai_generated_marker"),
+                findings.iter().any(|f| f.rule == "ai_generated_marker"),
                 "Should detect AI marker: {}",
                 marker
             );
@@ -263,9 +263,7 @@ mod ai_content_unit_tests {
                 .unwrap();
 
             assert!(
-                findings
-                    .iter()
-                    .any(|f| f.rule_id == "generic_function_name"),
+                findings.iter().any(|f| f.rule == "generic_function_name"),
                 "Should detect generic function: {}",
                 func
             );
@@ -292,9 +290,9 @@ mod ai_content_unit_tests {
                 .analyze(Path::new("test.rs"), content.as_bytes())
                 .unwrap();
 
-            let incomplete_finding = findings.iter().find(|f| {
-                f.rule_id == "incomplete_implementation" || f.rule_id == "placeholder_content"
-            });
+            let incomplete_finding = findings
+                .iter()
+                .find(|f| f.rule == "incomplete_implementation" || f.rule == "placeholder_content");
 
             assert!(
                 incomplete_finding.is_some(),
@@ -337,7 +335,7 @@ fn normal_function() {
         // Should only detect the non-documentation TODO
         let placeholder_findings: Vec<_> = findings
             .iter()
-            .filter(|f| f.rule_id == "placeholder_content")
+            .filter(|f| f.rule == "placeholder_content")
             .collect();
 
         assert_eq!(placeholder_findings.len(), 1);
@@ -371,9 +369,7 @@ fn handle_this() {
 
             // Generic function names should be ignored in test/example files
             assert!(
-                !findings
-                    .iter()
-                    .any(|f| f.rule_id == "generic_function_name"),
+                !findings.iter().any(|f| f.rule == "generic_function_name"),
                 "Should ignore generic functions in: {}",
                 path
             );
@@ -408,7 +404,7 @@ fn test() {
         assert_eq!(
             findings
                 .iter()
-                .filter(|f| f.rule_id == "placeholder_content")
+                .filter(|f| f.rule == "placeholder_content")
                 .count(),
             3
         );
@@ -530,7 +526,7 @@ fn {}_copy() {{
 
             // Should detect security-relevant duplicates
             if !findings.is_empty() {
-                assert!(findings.iter().any(|f| f.rule_id == "internal_duplication"));
+                assert!(findings.iter().any(|f| f.rule == "internal_duplication"));
                 // Security duplicates should have higher severity
                 assert!(findings
                     .iter()
@@ -816,7 +812,7 @@ fn function_three() {
 
         // Should extract code blocks and detect similarity between function_one and function_three
         if !findings.is_empty() {
-            assert!(findings.iter().any(|f| f.rule_id == "internal_duplication"));
+            assert!(findings.iter().any(|f| f.rule == "internal_duplication"));
         }
     }
 
@@ -854,7 +850,7 @@ fn test_b() {
 
         // Should handle whitespace correctly and still detect duplicates
         if !findings.is_empty() {
-            assert!(findings.iter().any(|f| f.rule_id == "internal_duplication"));
+            assert!(findings.iter().any(|f| f.rule == "internal_duplication"));
         }
     }
 
@@ -885,11 +881,13 @@ fn test_b() {
         let unsupported_extensions = vec!["txt", "md", "json", "xml", "html", "css", "png", "jpg"];
 
         for ext in supported_extensions {
+            let file_name = format!("test.{}", ext);
             let path = Path::new(&format!("test.{}", ext));
             assert!(analyzer.supports_file(path), "Should support .{}", ext);
         }
 
         for ext in unsupported_extensions {
+            let file_name = format!("test.{}", ext);
             let path = Path::new(&format!("test.{}", ext));
             assert!(!analyzer.supports_file(path), "Should not support .{}", ext);
         }

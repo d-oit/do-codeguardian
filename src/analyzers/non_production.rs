@@ -20,9 +20,16 @@ impl Default for NonProductionAnalyzer {
 impl NonProductionAnalyzer {
     pub fn new() -> Self {
         Self {
-            todo_pattern: Regex::new(r"(?i)(todo|fixme|hack|xxx|bug)").unwrap(),
-            debug_pattern: Regex::new(r"(?i)(debug|debugger|console\.log|print\(|println!)")
-                .unwrap(),
+            // Enhanced pattern to catch TODO/FIXME in comments with proper delimiters
+            todo_pattern: Regex::new(
+                r"(?i)(?://|#|/\*)\s*(TODO|FIXME|HACK|XXX|BUG|NOTE|REVIEW)(?:\s*:|\s+)",
+            )
+            .unwrap(),
+            // Enhanced debug pattern for multiple languages and contexts
+            debug_pattern: Regex::new(
+                r"(?i)(debug|debugger|console\.log|print\(|println!|dbg!|log\.|logger\.)",
+            )
+            .unwrap(),
             console_pattern: Regex::new(r"console\.(log|debug|info|warn|error)").unwrap(),
         }
     }
@@ -42,11 +49,11 @@ impl NonProductionAnalyzer {
 
             // Check for TODO/FIXME comments
             if let Some(captures) = self.todo_pattern.captures(line) {
-                let keyword = captures.get(1).unwrap().as_str();
+                let keyword = captures.get(1).map(|m| m.as_str()).unwrap_or("TODO");
                 let severity = match keyword.to_lowercase().as_str() {
                     "bug" | "xxx" => Severity::High,
-                    "fixme" | "hack" => Severity::Medium,
-                    "todo" => Severity::Low,
+                    "fixme" | "hack" | "review" => Severity::Medium,
+                    "todo" | "note" => Severity::Low,
                     _ => Severity::Info,
                 };
 
@@ -73,8 +80,8 @@ impl NonProductionAnalyzer {
                 );
             }
 
-            // Check for debug statements
-            if self.debug_pattern.is_match(line) {
+            // Check for debug statements (more comprehensive)
+            if self.debug_pattern.is_match(line) || self.console_pattern.is_match(line) {
                 let severity = if line.contains("debugger") {
                     Severity::High
                 } else {

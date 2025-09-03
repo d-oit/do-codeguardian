@@ -64,8 +64,8 @@ This documentation follows these standards:
 If you can't find what you're looking for:
 
 1. Check the [Troubleshooting Guide](troubleshooting/index.md)
-2. Search existing [GitHub Issues](https://github.com/d-oit/do-codeguardian/issues)
-3. Ask in [GitHub Discussions](https://github.com/d-oit/do-codeguardian/discussions)
+2. Search existing [GitHub Issues](https://github.com/d-oit/do-do-codeguardian/issues)
+3. Ask in [GitHub Discussions](https://github.com/d-oit/do-do-codeguardian/discussions)
 4. Review the [FAQ](troubleshooting/faq.md)
 
 ## 📝 Contributing to Documentation
@@ -81,6 +81,6 @@ We welcome documentation contributions! See our [Contributing Guide](../CONTRIBU
 
 <div align="center">
 
-**[🏠 Back to Main README](../README.md)** | **[🐛 Report Documentation Issues](https://github.com/d-oit/do-codeguardian/issues/new?labels=documentation)** | **[💬 Discuss Documentation](https://github.com/d-oit/do-codeguardian/discussions/categories/documentation)**
+**[🏠 Back to Main README](../README.md)** | **[🐛 Report Documentation Issues](https://github.com/d-oit/do-do-codeguardian/issues/new?labels=documentation)** | **[💬 Discuss Documentation](https://github.com/d-oit/do-do-codeguardian/discussions/categories/documentation)**
 
 </div>

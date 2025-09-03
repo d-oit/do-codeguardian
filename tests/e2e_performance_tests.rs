@@ -50,7 +50,7 @@ mod tests {{
 
     let start = Instant::now();
 
-    let mut cmd = Command::cargo_bin("codeguardian").unwrap();
+    let mut cmd = Command::cargo_bin("do-codeguardian").unwrap();
     cmd.arg("turbo") // Use turbo mode for performance
         .arg(temp_dir.path())
         .arg("--format")
@@ -126,7 +126,7 @@ impl LargeStruct_{} {{
         .unwrap();
     }
 
-    let mut cmd = Command::cargo_bin("codeguardian").unwrap();
+    let mut cmd = Command::cargo_bin("do-codeguardian").unwrap();
     cmd.arg("check")
         .arg(temp_dir.path())
         .arg("--format")
@@ -167,7 +167,7 @@ pub fn process_data_{}() {{
 
     let start = Instant::now();
 
-    let mut cmd = Command::cargo_bin("codeguardian").unwrap();
+    let mut cmd = Command::cargo_bin("do-codeguardian").unwrap();
     cmd.arg("check")
         .arg(temp_dir.path())
         .arg("--parallel")

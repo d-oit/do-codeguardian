@@ -79,7 +79,7 @@ jobs:
         # Run turbo analysis on changed files only
         START_TIME=$(date +%s.%N)
 
-        ./target/release/codeguardian turbo changed_files_analysis \
+        ./target/release/do-codeguardian turbo changed_files_analysis \
           --max-parallel 4 \
           --memory-limit 256 \
           --format json \

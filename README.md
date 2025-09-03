@@ -56,7 +56,7 @@ cargo build --release
 
 #### Using Cargo
 ```bash
-cargo install codeguardian
+cargo install do-codeguardian
 ```
 
 #### Docker

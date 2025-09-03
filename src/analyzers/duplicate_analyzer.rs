@@ -337,7 +337,6 @@ impl Analyzer for DuplicateAnalyzer {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::path::PathBuf;
 
     #[test]
     fn test_detect_internal_duplicates() {
@@ -358,7 +357,7 @@ fn authenticate_admin(username: &str, password: &str) -> bool {
         let findings = analyzer
             .analyze(Path::new("auth.rs"), content.as_bytes())
             .unwrap();
-        assert!(findings.iter().any(|f| f.rule_id == "internal_duplication"));
+        assert!(findings.iter().any(|f| f.rule == "internal_duplication"));
     }
 
     #[test]

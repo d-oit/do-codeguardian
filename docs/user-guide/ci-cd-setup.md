@@ -10,7 +10,7 @@ CodeGuardian uses a sophisticated CI/CD pipeline with multiple specialized workf
 
 ### Core Workflows
 
-#### 1. CodeGuardian CI (`codeguardian-ci.yml`)
+#### 1. CodeGuardian CI (`do-codeguardian-ci.yml`)
 **Purpose**: Main CI pipeline for code analysis and quality checks
 
 **Triggers**:
@@ -19,9 +19,9 @@ CodeGuardian uses a sophisticated CI/CD pipeline with multiple specialized workf
 - Weekly full scans (Mondays at 2 AM UTC)
 
 **Jobs**:
-- `codeguardian-pr`: Fast diff-only analysis for PRs
-- `codeguardian-full`: Comprehensive analysis for main branch and scheduled runs
-- `codeguardian-baseline`: Updates baseline for regression detection
+- `do-codeguardian-pr`: Fast diff-only analysis for PRs
+- `do-codeguardian-full`: Comprehensive analysis for main branch and scheduled runs
+- `do-codeguardian-baseline`: Updates baseline for regression detection
 
 **Key Features**:
 - **PR Mode**: Analyzes only changed files for fast feedback
@@ -179,7 +179,7 @@ fix bug
 ```
 
 #### PR Preparation
-- Run `codeguardian turbo . --aggressive` locally before pushing
+- Run `do-codeguardian turbo . --aggressive` locally before pushing
 - Address critical and high-severity issues before requesting review
 - Include performance impact assessment for significant changes
 
@@ -251,10 +251,10 @@ gh workflow run <workflow-name> --ref <branch>
 ```bash
 # Test turbo analysis locally
 cargo build --release
-./target/release/codeguardian turbo . --format json --output test.json
+./target/release/do-do-codeguardian turbo . --format json --output test.json
 
 # Validate configuration
-./target/release/codeguardian check --help
+./target/release/do-do-codeguardian check --help
 ```
 
 #### Log Analysis

@@ -1,6 +1,6 @@
 # Configuration Guide
 
-CodeGuardian works out of the box with sensible defaults, but can be customized via `codeguardian.toml`:
+CodeGuardian works out of the box with sensible defaults, but can be customized via `do-codeguardian.toml`:
 
 ## Basic Configuration
 
@@ -81,13 +81,13 @@ Full analysis suite with maximum security coverage and detailed reporting.
 
 ```bash
 # Use preset configuration
-codeguardian init --template security
+do-codeguardian init --template security
 
 # List available templates
-codeguardian init --list
+do-codeguardian init --list
 
 # Create custom configuration
-codeguardian init --interactive
+do-codeguardian init --interactive
 ```
 
 ## Configuration Sections
@@ -279,7 +279,7 @@ sarif_file = "results.sarif"
 ```toml
 [logging]
 level = "info"                     # trace, debug, info, warn, error
-file = "codeguardian.log"
+file = "do-codeguardian.log"
 console = true
 structured = false
 max_file_size_mb = 10
@@ -315,13 +315,13 @@ Validate your configuration:
 
 ```bash
 # Validate configuration file
-codeguardian validate --config codeguardian.toml
+do-codeguardian validate --config do-codeguardian.toml
 
 # Check environment compatibility
-codeguardian doctor
+do-codeguardian doctor
 
 # Show current configuration
-codeguardian config --show
+do-codeguardian config --show
 ```
 
 ### Configuration Examples
@@ -408,10 +408,10 @@ dry_run = false
 ### Common Configuration Issues
 
 1. **Configuration file not found**
-   - Ensure `codeguardian.toml` exists in the current directory or specify path with `--config`
+   - Ensure `do-codeguardian.toml` exists in the current directory or specify path with `--config`
 
 2. **Invalid configuration values**
-   - Use `codeguardian validate --config codeguardian.toml` to check for errors
+   - Use `do-codeguardian validate --config do-codeguardian.toml` to check for errors
 
 3. **Performance issues**
    - Reduce `parallel_workers` if memory usage is too high

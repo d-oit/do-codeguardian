@@ -12,7 +12,7 @@ readme = "README.md"
 keywords = ["security", "analysis", "git", "cli", "code-quality", "ai", "validation", "production"]
 categories = ["command-line-utilities", "development-tools", "security"]
 exclude = ["target/", "benches/", "tests/fixtures/", "examples/ml-training-example.rs"]
-build = "build_fixed.rs"
+build = "build.rs"
 
 [features]
 default = ["git", "security", "logging"]

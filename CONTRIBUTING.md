@@ -449,7 +449,7 @@ cargo install flamegraph
 cargo flamegraph --bin codeguardian
 
 # Profile with perf
-perf record target/release/codeguardian check .
+perf record target/release/do-codeguardian check .
 perf report
 ```
 

@@ -44,10 +44,20 @@ impl SecurityAnalyzer {
                 Regex::new(r#"system\s*\("#).unwrap(),
             ],
             secret_patterns: vec![
-                Regex::new(r#"API_KEY\s*=\s*["']sk-[^"']*["']"#).unwrap(),
-                Regex::new(r#"PASSWORD\s*=\s*["'][^"']*["']"#).unwrap(),
-                Regex::new(r#"SECRET\s*=\s*["'][^"']*["']"#).unwrap(),
-                Regex::new(r#"TOKEN\s*=\s*["'][^"']*["']"#).unwrap(),
+                // Case-insensitive patterns for real-world variable names
+                Regex::new(r#"(?i)(api_key|apikey)\s*=\s*["'][^"']{8,}["']"#).unwrap(),
+                Regex::new(r#"(?i)(password|passwd|pwd)\s*=\s*["'][^"']{6,}["']"#).unwrap(),
+                Regex::new(r#"(?i)(secret|secret_key)\s*=\s*["'][^"']{8,}["']"#).unwrap(),
+                Regex::new(r#"(?i)(token|access_token|auth_token)\s*=\s*["'][^"']{10,}["']"#)
+                    .unwrap(),
+                // Common API key patterns
+                Regex::new(r#"["']sk-[a-zA-Z0-9]{20,}["']"#).unwrap(),
+                Regex::new(r#"["']pk_[a-zA-Z0-9]{20,}["']"#).unwrap(),
+                Regex::new(r#"["']AIza[a-zA-Z0-9]{35}["']"#).unwrap(),
+                // AWS patterns
+                Regex::new(r#"["']AKIA[A-Z0-9]{16}["']"#).unwrap(),
+                // GitHub tokens
+                Regex::new(r#"["']ghp_[a-zA-Z0-9]{36}["']"#).unwrap(),
                 Regex::new(r#"aws_access_key_id\s*=\s*["'][^"']*["']"#).unwrap(),
                 Regex::new(r#"aws_secret_access_key\s*=\s*["'][^"']*["']"#).unwrap(),
             ],
@@ -241,15 +251,19 @@ impl SecurityAnalyzer {
 
     /// Check if a secret pattern match is likely a false positive
     fn is_likely_secret_false_positive(&self, line: &str, _pattern: &str) -> bool {
-        // Skip patterns in comments
-        if line.trim().starts_with("//")
-            || line.trim().starts_with("#")
-            || line.trim().starts_with("/*")
-        {
+        let trimmed = line.trim();
+
+        // Skip only obvious documentation/comments (be more selective)
+        if trimmed.starts_with("///") || trimmed.starts_with("//!") {
             return true;
         }
 
-        // Skip patterns in test functions
+        // Skip only if it's clearly a pattern definition or documentation
+        if trimmed.contains("example") && trimmed.starts_with("//") {
+            return true;
+        }
+
+        // Skip only obvious test patterns (be more specific)
         if line.contains("#[test]") || line.contains("fn test_") {
             return true;
         }

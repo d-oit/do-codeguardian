@@ -19,14 +19,14 @@
 ### From Crates.io (Recommended)
 
 ```bash
-cargo install codeguardian
+cargo install do-do-codeguardian
 ```
 
 ### From Source
 
 ```bash
-git clone https://github.com/d-oit/do-codeguardian.git
-cd codeguardian
+git clone https://github.com/d-oit/do-do-codeguardian.git
+cd do-codeguardian
 cargo build --release
 cargo install --path .
 ```
@@ -35,18 +35,18 @@ cargo install --path .
 
 ```bash
 # Pull official image
-docker pull codeguardian/codeguardian:latest
+docker pull do-codeguardian/do-codeguardian:latest
 
 # Run analysis
-docker run --rm -v $(pwd):/workspace codeguardian/codeguardian check /workspace
+docker run --rm -v $(pwd):/workspace do-codeguardian/do-codeguardian check /workspace
 
 # With custom configuration
-docker run --rm -v $(pwd):/workspace -v $(pwd)/codeguardian.toml:/etc/codeguardian.toml codeguardian/codeguardian check /workspace
+docker run --rm -v $(pwd):/workspace -v $(pwd)/do-codeguardian.toml:/etc/do-codeguardian.toml do-codeguardian/do-codeguardian check /workspace
 ```
 
 ### Pre-built Binaries
 
-Download from [GitHub Releases](https://github.com/d-oit/do-codeguardian/releases) for:
+Download from [GitHub Releases](https://github.com/d-oit/do-do-codeguardian/releases) for:
 - Linux (x64, ARM64)
 - macOS (x64, ARM64/M1)
 - Windows (x64)
@@ -55,26 +55,26 @@ Download from [GitHub Releases](https://github.com/d-oit/do-codeguardian/release
 
 #### Homebrew (macOS/Linux)
 ```bash
-brew install codeguardian
+brew install do-codeguardian
 ```
 
 #### APT (Ubuntu/Debian)
 ```bash
-curl -fsSL https://apt.codeguardian.dev/gpg.key | sudo gpg --dearmor -o /usr/share/keyrings/codeguardian-archive-keyring.gpg
-echo "deb [signed-by=/usr/share/keyrings/codeguardian-archive-keyring.gpg] https://apt.codeguardian.dev stable main" | sudo tee /etc/apt/sources.list.d/codeguardian.list
-sudo apt update && sudo apt install codeguardian
+curl -fsSL https://apt.do-codeguardian.dev/gpg.key | sudo gpg --dearmor -o /usr/share/keyrings/do-codeguardian-archive-keyring.gpg
+echo "deb [signed-by=/usr/share/keyrings/do-codeguardian-archive-keyring.gpg] https://apt.do-codeguardian.dev stable main" | sudo tee /etc/apt/sources.list.d/do-codeguardian.list
+sudo apt update && sudo apt install do-codeguardian
 ```
 
 #### Chocolatey (Windows)
 ```bash
-choco install codeguardian
+choco install do-codeguardian
 ```
 
 ## CI/CD Integration
 
 CodeGuardian includes several GitHub Actions workflows for automated CI/CD processes:
 
-- **codeguardian-ci.yml**: Main CI pipeline for building, testing, and linting the codebase
+- **do-codeguardian-ci.yml**: Main CI pipeline for building, testing, and linting the codebase
 - **turbo-nightly.yml**: Nightly builds and performance monitoring
 - **turbo-performance-monitor.yml**: Continuous performance benchmarking
 - **turbo-pr-analysis.yml**: Automated analysis of pull requests
@@ -90,29 +90,29 @@ After installation, initialize with a security template:
 
 ```bash
 # Initialize configuration with security template
-codeguardian init --template security
+do-codeguardian init --template security
 
 # Run analysis with ML filtering
-codeguardian check . --format json --out results.json --ml-model enhanced-model.fann
+do-codeguardian check . --format json --out results.json --ml-model enhanced-model.fann
 
 # Generate comprehensive report
-codeguardian report --from results.json --md report.md --html report.html
+do-codeguardian report --from results.json --md report.md --html report.html
 
 # Create GitHub issues with checklist format
-codeguardian gh-issue --from results.json --repo owner/repo --mode checklist
+do-codeguardian gh-issue --from results.json --repo owner/repo --mode checklist
 ```
 
 ## Docker Usage
 
 ```bash
 # Pull and run with default settings
-docker run --rm -v $(pwd):/workspace codeguardian/codeguardian check /workspace
+docker run --rm -v $(pwd):/workspace do-codeguardian/do-codeguardian check /workspace
 
 # Run with custom configuration
-docker run --rm -v $(pwd):/workspace -v $(pwd)/codeguardian.toml:/etc/codeguardian.toml codeguardian/codeguardian check /workspace
+docker run --rm -v $(pwd):/workspace -v $(pwd)/do-codeguardian.toml:/etc/do-codeguardian.toml do-codeguardian/do-codeguardian check /workspace
 
 # Run high-performance analysis
-docker run --rm -v $(pwd):/workspace codeguardian/codeguardian turbo /workspace --max-parallel 8 --memory-limit 2048
+docker run --rm -v $(pwd):/workspace do-codeguardian/do-codeguardian turbo /workspace --max-parallel 8 --memory-limit 2048
 ```
 
 ## Verification
@@ -121,11 +121,11 @@ After installation, verify everything works:
 
 ```bash
 # Check version
-codeguardian --version
+do-codeguardian --version
 
 # Initialize configuration
-codeguardian init --template security
+do-codeguardian init --template security
 
 # Run a quick test
-codeguardian check . --format human
+do-codeguardian check . --format human
 ```

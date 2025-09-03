@@ -3,6 +3,11 @@
 **/*.rs.bk
 Cargo.lock
 
+# CodeGuardian analysis results (prevent root clutter)
+analysis-results/
+reports/
+tmp_rovodev_*
+
 # VS Code
 .vscode/
 .code-workspace

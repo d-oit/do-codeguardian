@@ -12,15 +12,15 @@ jobs:
   dependency-review:
     runs-on: ubuntu-latest
     steps:
-       - name: 'Checkout Repository'
-         uses: actions/checkout@v4
-         with:
-           fetch-depth: 0
-       - name: 'Dependency Review'
-         uses: actions/dependency-review-action@v4
-         with:
-           fail-on-severity: moderate
-           allow-licenses: 'MIT, Apache-2.0, BSD-2-Clause, BSD-3-Clause, ISC'
-           deny-licenses: 'MS-PL, JSON'
-           vulnerability-check: true
-           license-check: true
+      - name: 'Checkout Repository'
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: 'Dependency Review'
+        uses: actions/dependency-review-action@v4
+        with:
+          fail-on-severity: moderate
+          allow-licenses: 'MIT, Apache-2.0, BSD-2-Clause, BSD-3-Clause, ISC'
+          deny-licenses: 'MS-PL, JSON'
+          vulnerability-check: true
+          license-check: true

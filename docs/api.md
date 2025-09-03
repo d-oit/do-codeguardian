@@ -142,7 +142,7 @@ Security-focused SARIF output for integration with security tools:
         "driver": {
           "name": "CodeGuardian",
           "version": "1.2.0",
-          "informationUri": "https://github.com/d-oit/codeguardian",
+          "informationUri": "https://github.com/d-oit/do-codeguardian",
           "rules": [
             {
               "id": "CG001",
@@ -204,16 +204,16 @@ Convert analysis results to various formats:
 
 ```bash
 # Generate Markdown report
-codeguardian report --from results.json --md report.md
+do-codeguardian report --from results.json --md report.md
 
 # Generate HTML report
-codeguardian report --from results.json --html report.html
+do-codeguardian report --from results.json --html report.html
 
 # Generate both formats
-codeguardian report --from results.json --md report.md --html report.html
+do-codeguardian report --from results.json --md report.md --html report.html
 
 # Custom template
-codeguardian report --from results.json --template custom-template.md --out custom-report.md
+do-codeguardian report --from results.json --template custom-template.md --out custom-report.md
 ```
 
 ### Report Options
@@ -240,13 +240,13 @@ Create GitHub issues from analysis results:
 
 ```bash
 # Create issues with checklist format
-codeguardian gh-issue --from results.json --repo owner/repo --mode checklist
+do-codeguardian gh-issue --from results.json --repo owner/repo --mode checklist
 
 # Create simple issues
-codeguardian gh-issue --from results.json --repo owner/repo --mode simple
+do-codeguardian gh-issue --from results.json --repo owner/repo --mode simple
 
 # Create parent-child issue structure
-codeguardian gh-issue --from results.json --repo owner/repo --mode children
+do-codeguardian gh-issue --from results.json --repo owner/repo --mode children
 ```
 
 ### Issue Modes
@@ -340,13 +340,13 @@ View ML model performance metrics:
 
 ```bash
 # Show model metrics
-codeguardian metrics --model enhanced-model.fann
+do-codeguardian metrics --model enhanced-model.fann
 
 # Show training metrics
-codeguardian metrics --model enhanced-model.fann --training
+do-codeguardian metrics --model enhanced-model.fann --training
 
 # Export metrics to JSON
-codeguardian metrics --model enhanced-model.fann --format json --out metrics.json
+do-codeguardian metrics --model enhanced-model.fann --format json --out metrics.json
 ```
 
 ### Metrics Output
@@ -392,29 +392,29 @@ codeguardian metrics --model enhanced-model.fann --format json --out metrics.jso
 
 ```bash
 # Initialize with preset
-codeguardian init --template security
+do-codeguardian init --template security
 
 # List available templates
-codeguardian init --list
+do-codeguardian init --list
 
 # Interactive configuration
-codeguardian init --interactive
+do-codeguardian init --interactive
 
 # Custom configuration file
-codeguardian init --config custom.toml
+do-codeguardian init --config custom.toml
 ```
 
 ### Validate Configuration
 
 ```bash
 # Validate configuration
-codeguardian validate --config codeguardian.toml
+do-codeguardian validate --config do-codeguardian.toml
 
 # Check environment
-codeguardian doctor
+do-codeguardian doctor
 
 # Show current config
-codeguardian config --show
+do-codeguardian config --show
 ```
 
 ## Training API
@@ -423,10 +423,10 @@ Train ML models for better accuracy:
 
 ```bash
 # Train with default settings
-codeguardian train --model-path enhanced-model.fann
+do-codeguardian train --model-path enhanced-model.fann
 
 # Advanced training
-codeguardian train \
+do-codeguardian train \
   --model-path enhanced-model.fann \
   --epochs 2000 \
   --bootstrap \
@@ -435,7 +435,7 @@ codeguardian train \
   --neurons-per-layer 64
 
 # Continue training existing model
-codeguardian train --model-path existing-model.fann --continue
+do-codeguardian train --model-path existing-model.fann --continue
 ```
 
 ### Training Options
@@ -457,19 +457,19 @@ Manage analysis cache and performance data:
 
 ```bash
 # Show cache statistics
-codeguardian cache --stats
+do-codeguardian cache --stats
 
 # Clear cache
-codeguardian cache --clear
+do-codeguardian cache --clear
 
 # Set cache size limit
-codeguardian cache --max-size 1024
+do-codeguardian cache --max-size 1024
 
 # Export cache data
-codeguardian cache --export cache.json
+do-codeguardian cache --export cache.json
 
 # Import cache data
-codeguardian cache --import cache.json
+do-codeguardian cache --import cache.json
 ```
 
 ## Export/Import API
@@ -478,16 +478,16 @@ Export and import analysis data and models:
 
 ```bash
 # Export analysis results
-codeguardian export --from results.json --format json --out export.json
+do-codeguardian export --from results.json --format json --out export.json
 
 # Export ML model
-codeguardian export --model enhanced-model.fann --format fann --out model.fann
+do-codeguardian export --model enhanced-model.fann --format fann --out model.fann
 
 # Import analysis data
-codeguardian import --from export.json --format json
+do-codeguardian import --from export.json --format json
 
 # Import ML model
-codeguardian import --model model.fann --format fann
+do-codeguardian import --model model.fann --format fann
 ```
 
 ## Programmatic Integration
@@ -495,12 +495,12 @@ codeguardian import --model model.fann --format fann
 ### Using CodeGuardian as a Library
 
 ```rust
-use codeguardian::{Config, CodeGuardian, AnalysisResults};
+use do-codeguardian::{Config, CodeGuardian, AnalysisResults};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Load configuration
-    let config = Config::load("codeguardian.toml").await?;
+    let config = Config::load("do-codeguardian.toml").await?;
 
     // Initialize CodeGuardian
     let guardian = CodeGuardian::new(config).await?;
@@ -524,7 +524,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 ### Custom Analyzer Integration
 
 ```rust
-use codeguardian::analyzers::{Analyzer, Finding, Severity};
+use do-codeguardian::analyzers::{Analyzer, Finding, Severity};
 use async_trait::async_trait;
 
 pub struct CustomAnalyzer;
@@ -566,9 +566,9 @@ impl Analyzer for CustomAnalyzer {
 CodeGuardian uses structured error handling with detailed context:
 
 ```rust
-use codeguardian::error::CodeGuardianError;
+use do-codeguardian::error::CodeGuardianError;
 
-match codeguardian.analyze_path(".").await {
+match do-codeguardian.analyze_path(".").await {
     Ok(results) => {
         // Process results
     }
@@ -593,10 +593,10 @@ CodeGuardian can send results to webhooks for integration with external systems:
 
 ```bash
 # Send to webhook
-codeguardian check . --webhook-url https://example.com/webhook --webhook-secret secret
+do-codeguardian check . --webhook-url https://example.com/webhook --webhook-secret secret
 
 # Custom webhook headers
-codeguardian check . --webhook-url https://example.com/webhook --webhook-headers "X-API-Key: key"
+do-codeguardian check . --webhook-url https://example.com/webhook --webhook-headers "X-API-Key: key"
 ```
 
 ### Webhook Payload

@@ -6,25 +6,25 @@ CodeGuardian is designed to work out of the box with sensible defaults, but offe
 
 ### Primary Configuration File
 
-CodeGuardian uses `codeguardian.toml` as its primary configuration file. You can create this file manually or use the `init` command:
+CodeGuardian uses `do-codeguardian.toml` as its primary configuration file. You can create this file manually or use the `init` command:
 
 ```bash
 # Create basic configuration
-codeguardian init
+do-codeguardian init
 
 # Create with specific template
-codeguardian init --template security
-codeguardian init --template performance
-codeguardian init --template ci
+do-codeguardian init --template security
+do-codeguardian init --template performance
+do-codeguardian init --template ci
 ```
 
 ### Configuration File Locations
 
 CodeGuardian looks for configuration files in this order:
 1. Path specified with `--config` flag
-2. `./codeguardian.toml` (current directory)
-3. `~/.config/codeguardian/codeguardian.toml` (user config)
-4. `/etc/codeguardian.toml` (system-wide)
+2. `./do-codeguardian.toml` (current directory)
+3. `~/.config/do-codeguardian/do-codeguardian.toml` (user config)
+4. `/etc/do-codeguardian.toml` (system-wide)
 
 ### Environment Variables
 
@@ -58,10 +58,10 @@ memory_limit_mb = 1024
 streaming_threshold_mb = 5
 
 # Cache directory path
-cache_dir = "~/.cache/codeguardian"
+cache_dir = "~/.cache/do-codeguardian"
 
 # Temporary directory for analysis
-temp_dir = "/tmp/codeguardian"
+temp_dir = "/tmp/do-codeguardian"
 
 # Log level (error, warn, info, debug, trace)
 log_level = "info"
@@ -279,7 +279,7 @@ color_output = true
 pretty_print = true
 
 # File output
-output_dir = "./codeguardian-results"
+output_dir = "./do-codeguardian-results"
 overwrite_existing = false
 compress_output = false
 
@@ -300,7 +300,7 @@ custom_templates = ["security-report.md", "performance-report.html"]
 Optimized for security analysis with maximum vulnerability detection:
 
 ```bash
-codeguardian init --template security
+do-codeguardian init --template security
 ```
 
 This creates a configuration focused on:
@@ -314,7 +314,7 @@ This creates a configuration focused on:
 Optimized for performance analysis and optimization:
 
 ```bash
-codeguardian init --template performance
+do-codeguardian init --template performance
 ```
 
 Features:
@@ -328,7 +328,7 @@ Features:
 Optimized for continuous integration environments:
 
 ```bash
-codeguardian init --template ci
+do-codeguardian init --template ci
 ```
 
 Configuration includes:
@@ -342,7 +342,7 @@ Configuration includes:
 Comprehensive analysis for enterprise environments:
 
 ```bash
-codeguardian init --template enterprise
+do-codeguardian init --template enterprise
 ```
 
 Includes:
@@ -386,13 +386,13 @@ Use environment variables for dynamic configuration:
 
 ```bash
 # Development
-CODEGUARDIAN_LOG_LEVEL=debug codeguardian check .
+CODEGUARDIAN_LOG_LEVEL=debug do-codeguardian check .
 
 # Production
-CODEGUARDIAN_ML_ENABLED=false codeguardian check .
+CODEGUARDIAN_ML_ENABLED=false do-codeguardian check .
 
 # CI Environment
-CODEGUARDIAN_FORMAT=json CODEGUARDIAN_OUTPUT=results.json codeguardian check .
+CODEGUARDIAN_FORMAT=json CODEGUARDIAN_OUTPUT=results.json do-codeguardian check .
 ```
 
 ### Multi-Environment Setup
@@ -401,13 +401,13 @@ Create different configurations for different environments:
 
 ```bash
 # Development
-cp codeguardian.dev.toml codeguardian.toml
+cp do-codeguardian.dev.toml do-codeguardian.toml
 
 # Production
-cp codeguardian.prod.toml codeguardian.toml
+cp do-codeguardian.prod.toml do-codeguardian.toml
 
 # CI
-cp codeguardian.ci.toml codeguardian.toml
+cp do-codeguardian.ci.toml do-codeguardian.toml
 ```
 
 ## Configuration Validation
@@ -417,8 +417,8 @@ cp codeguardian.ci.toml codeguardian.toml
 Check your configuration for errors:
 
 ```bash
-codeguardian config validate
-codeguardian config validate --config custom.toml
+do-codeguardian config validate
+do-codeguardian config validate --config custom.toml
 ```
 
 ### List Available Options
@@ -426,7 +426,7 @@ codeguardian config validate --config custom.toml
 View all configuration options:
 
 ```bash
-codeguardian config list
+do-codeguardian config list
 ```
 
 ### Generate Configuration
@@ -434,7 +434,7 @@ codeguardian config list
 Generate a complete configuration file with all options:
 
 ```bash
-codeguardian config generate > codeguardian.toml
+do-codeguardian config generate > do-codeguardian.toml
 ```
 
 ## Best Practices
@@ -442,19 +442,19 @@ codeguardian config generate > codeguardian.toml
 ### 1. Start with Templates
 Use built-in templates as a starting point:
 ```bash
-codeguardian init --template security
+do-codeguardian init --template security
 ```
 
 ### 2. Environment-Specific Configs
 Create separate configurations for different environments:
 ```toml
-# codeguardian.dev.toml
+# do-codeguardian.dev.toml
 [general]
 log_level = "debug"
 [ml]
 enabled = false
 
-# codeguardian.prod.toml
+# do-codeguardian.prod.toml
 [general]
 log_level = "warn"
 [ml]
@@ -464,7 +464,7 @@ enabled = true
 ### 3. Version Control
 Keep your configuration in version control:
 ```bash
-git add codeguardian.toml
+git add do-codeguardian.toml
 git commit -m "Add CodeGuardian configuration"
 ```
 
@@ -472,17 +472,17 @@ git commit -m "Add CodeGuardian configuration"
 Review and update your configuration regularly:
 ```bash
 # Check for configuration updates
-codeguardian config check-updates
+do-codeguardian config check-updates
 ```
 
 ### 5. Performance Tuning
 Monitor and adjust performance settings:
 ```bash
 # Run with performance metrics
-codeguardian check . --metrics
+do-codeguardian check . --metrics
 
 # Adjust based on results
-codeguardian init --template performance
+do-codeguardian init --template performance
 ```
 
 ## Troubleshooting
@@ -490,13 +490,13 @@ codeguardian init --template performance
 ### Common Configuration Issues
 
 **"Configuration file not found"**
-- Ensure `codeguardian.toml` exists in the current directory
+- Ensure `do-codeguardian.toml` exists in the current directory
 - Check file permissions and path
 
 **"Invalid configuration"**
 ```bash
 # Validate configuration
-codeguardian config validate --verbose
+do-codeguardian config validate --verbose
 ```
 
 **"Settings not applied"**
@@ -512,13 +512,13 @@ codeguardian config validate --verbose
 ### Getting Help
 ```bash
 # View configuration help
-codeguardian config --help
+do-codeguardian config --help
 
 # List all available options
-codeguardian config list --detailed
+do-codeguardian config list --detailed
 
 # Generate example configuration
-codeguardian config generate --template security
+do-codeguardian config generate --template security
 ```
 
 ## Next Steps
