@@ -1,7 +1,6 @@
 use crate::analyzers::AnalyzerRegistry;
 use crate::cache::FileCache;
 use crate::config::Config;
-use crate::core::parallel_file_processor::ParallelFileProcessor;
 use crate::streaming::StreamingAnalyzer;
 use crate::types::{AnalysisResults, Finding};
 use crate::utils::progress::ProgressReporter;

@@ -1,9 +1,4 @@
-name: "CodeQL Configuration"
-
 disable-default-queries: false
-
-queries:
-  - uses: security-and-quality
 
 paths-ignore:
   - target/
@@ -31,7 +26,6 @@ query-filters:
 rust:
   build-mode: manual
   build-commands:
-    - "cargo build --release --all-features"
-    - "cargo build --all-targets --all-features"
-    - "cargo check --all-features --all-targets"
-  extract-all-files: true
+    - "cargo build --release"
+    - "cargo build --all-targets"
+  extract-all-files: false

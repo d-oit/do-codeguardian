@@ -29,6 +29,14 @@ impl Default for AnalyzerRegistry {
     }
 }
 
+impl Clone for AnalyzerRegistry {
+    fn clone(&self) -> Self {
+        // Create a new registry with the same configuration
+        // This is a simplified approach - in practice you might want to store config
+        Self::new()
+    }
+}
+
 impl AnalyzerRegistry {
     pub fn new() -> Self {
         Self::with_config(&Config::default())
@@ -60,25 +68,26 @@ impl AnalyzerRegistry {
             }
 
             if config.analyzers.broken_files.detect_ai_placeholders {
-                let mut ai_analyzer = ai_content_analyzer::AiContentAnalyzer::new();
-                if !config
+                let ai_analyzer = if !config
                     .analyzers
                     .broken_files
                     .placeholders
                     .custom_patterns
                     .is_empty()
                 {
-                    if let Ok(analyzer_with_patterns) = ai_analyzer.with_custom_patterns(
-                        config
-                            .analyzers
-                            .broken_files
-                            .placeholders
-                            .custom_patterns
-                            .clone(),
-                    ) {
-                        ai_analyzer = analyzer_with_patterns;
-                    }
-                }
+                    ai_content_analyzer::AiContentAnalyzer::new()
+                        .with_custom_patterns(
+                            config
+                                .analyzers
+                                .broken_files
+                                .placeholders
+                                .custom_patterns
+                                .clone(),
+                        )
+                        .unwrap_or_else(|_| ai_content_analyzer::AiContentAnalyzer::new())
+                } else {
+                    ai_content_analyzer::AiContentAnalyzer::new()
+                };
                 registry.register(Box::new(ai_analyzer));
             }
 

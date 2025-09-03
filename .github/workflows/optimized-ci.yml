@@ -1,0 +1,158 @@
+name: CodeGuardian CI (Optimized)
+
+on:
+  pull_request:
+    branches: [main, develop]
+  push:
+    branches: [main]
+  schedule:
+    - cron: '0 2 * * 1'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
+
+jobs:
+  # Fast check job for quick feedback
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup Rust
+      uses: actions-rust-lang/setup-rust-toolchain@v1
+      with:
+        toolchain: stable
+        components: clippy, rustfmt
+
+    - name: Rust Cache
+      uses: Swatinem/rust-cache@v2
+      with:
+        workspaces: "./ -> target"
+
+    - name: Check Code
+      run: cargo check --profile dev-fast --features dev
+
+    - name: Clippy
+      run: cargo clippy --profile dev-fast --features dev -- -D warnings
+
+    - name: Format Check
+      run: cargo fmt --check
+
+  # Test job with parallel execution
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: check
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup Rust
+      uses: actions-rust-lang/setup-rust-toolchain@v1
+      with:
+        toolchain: stable
+
+    - name: Rust Cache
+      uses: Swatinem/rust-cache@v2
+      with:
+        workspaces: "./ -> target"
+
+    - name: Run Tests
+      run: cargo test --profile dev-fast --features dev
+
+    - name: Run Benchmarks
+      run: cargo bench --profile bench --features full || true
+
+  # Security audit job
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    needs: check
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup Rust
+      uses: actions-rust-lang/setup-rust-toolchain@v1
+      with:
+        toolchain: stable
+
+    - name: Rust Cache
+      uses: Swatinem/rust-cache@v2
+      with:
+        workspaces: "./ -> target"
+
+    - name: Security Audit
+      run: |
+        cargo install cargo-audit --locked
+        cargo audit --format json || true
+
+  # Build and release job
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: [test, audit]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup Rust
+      uses: actions-rust-lang/setup-rust-toolchain@v1
+      with:
+        toolchain: stable
+
+    - name: Rust Cache
+      uses: Swatinem/rust-cache@v2
+      with:
+        workspaces: "./ -> target"
+
+    - name: Build Release
+      run: cargo build --release --features full
+
+    - name: Run Integration Tests
+      run: cargo test --release --features full --test integration_tests
+
+    - name: Upload Binary
+      uses: actions/upload-artifact@v4
+      with:
+        name: codeguardian-binary
+        path: target/release/codeguardian
+
+  # Performance monitoring job
+  performance:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: build
+    if: github.event_name == 'schedule'
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup Rust
+      uses: actions-rust-lang/setup-rust-toolchain@v1
+      with:
+        toolchain: stable
+
+    - name: Rust Cache
+      uses: Swatinem/rust-cache@v2
+      with:
+        workspaces: "./ -> target"
+
+    - name: Download Binary
+      uses: actions/download-artifact@v4
+      with:
+        name: codeguardian-binary
+        path: ./codeguardian
+
+    - name: Run Performance Benchmarks
+      run: |
+        chmod +x ./codeguardian
+        ./scripts/performance_analysis.sh

@@ -2,7 +2,7 @@ use crate::analyzers::Analyzer;
 use crate::types::{Finding, Severity};
 use anyhow::Result;
 use regex::Regex;
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 use std::path::Path;
 
 /// Duplicate code analyzer finds security-relevant code duplications
@@ -13,6 +13,7 @@ pub struct DuplicateAnalyzer {
     ignore_test_files: bool,
     max_files_to_compare: usize,
     // Cache for file contents to avoid re-reading
+    #[allow(dead_code)]
     file_cache: HashMap<String, Vec<String>>,
 }
 
@@ -252,6 +253,7 @@ impl DuplicateAnalyzer {
             || path_str.ends_with("test.go")
     }
 
+    #[allow(dead_code)]
     /// Get security risk level for duplicate code
     fn get_security_risk_level(&self, block: &CodeBlock) -> Severity {
         let block_text = block.lines.join(" ").to_lowercase();

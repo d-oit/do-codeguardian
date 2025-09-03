@@ -33,7 +33,7 @@ full = ["git", "security", "logging", "hashing", "cargo-audit", "ml", "ast"]
 [dependencies]
 # CLI and async runtime - use minimal features for faster builds
 clap = { version = "4.4", features = ["derive"] }
-tokio = { version = "1.40.0", features = ["rt-multi-thread", "macros", "fs"] }
+tokio = { version = "1.40.0", features = ["rt-multi-thread", "macros"] }
 
 # Serialization and configuration
 serde = { version = "1.0", features = ["derive"] }
@@ -110,7 +110,7 @@ proptest = "1.4"
 divan = "0.1"
 
 # Tokio with test utilities for testing
-tokio = { version = "1.40.0", features = ["test-util", "fs"] }
+tokio = { version = "1.40.0", features = ["test-util"] }
 
 [[bench]]
 name = "hashing_benchmark"

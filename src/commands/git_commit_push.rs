@@ -211,7 +211,7 @@ fn perform_git_commit(
     repo: &Repository,
     message: &str,
     amend: bool,
-    no_verify: bool,
+    _no_verify: bool,
 ) -> Result<()> {
     // Get the current index
     let mut index = repo.index()?;
@@ -224,22 +224,29 @@ fn perform_git_commit(
 
     // Create the commit
     let signature = repo.signature()?;
-    let parents = if amend {
+    if amend {
         // For amend, include all parents of the current HEAD
         let commit = repo.find_commit(head.target().unwrap())?;
-        commit.parents().collect::<Vec<_>>()
+        let parent_commits: Vec<git2::Commit> = commit.parents().collect();
+        let parent_refs: Vec<&git2::Commit> = parent_commits.iter().collect();
+        repo.commit(
+            Some("HEAD"),
+            &signature,
+            &signature,
+            message,
+            &tree,
+            &parent_refs,
+        )?;
     } else {
-        vec![&parent_commit]
+        repo.commit(
+            Some("HEAD"),
+            &signature,
+            &signature,
+            message,
+            &tree,
+            &[&parent_commit],
+        )?;
     };
-
-    repo.commit(
-        Some("HEAD"),
-        &signature,
-        &signature,
-        message,
-        &tree,
-        &parents,
-    )?;
 
     Ok(())
 }

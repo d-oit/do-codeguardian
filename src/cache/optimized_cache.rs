@@ -296,7 +296,7 @@ impl OptimizedCache {
         }
 
         self.stats.entries_expired += removed_count;
-        removed_count
+        removed_count as usize
     }
 
     /// Get cache statistics
@@ -325,7 +325,7 @@ impl OptimizedCache {
         let cleared_count = self.entries.len();
         self.entries.clear();
         self.current_memory_bytes = 0;
-        self.stats.entries_evicted += cleared_count;
+        self.stats.entries_evicted += cleared_count as u64;
     }
 
     /// Save cache to disk

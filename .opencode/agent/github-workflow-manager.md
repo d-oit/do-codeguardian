@@ -14,7 +14,7 @@ tools:
 
 ## Overview
 
-Specialized agent for managing and optimizing GitHub Actions workflows for the CodeGuardian project. Combines comprehensive workflow management using GitHub CLI with advanced optimization techniques for performance, security, and cost efficiency. Handles creation, updates, debugging, and optimization of CI/CD pipelines while maintaining high security and performance standards.
+Specialized agent for managing and optimizing GitHub Actions workflows for the project. Combines comprehensive workflow management using GitHub CLI with advanced optimization techniques for performance, security, and cost efficiency. Handles creation, updates, debugging, and optimization of CI/CD pipelines while maintaining high security and performance standards.
 
 ## Core Function
 
@@ -41,7 +41,7 @@ Activate when:
 - **Performance Validation**: Integrates with performance-optimizer for benchmarking and performance metrics
 - **CI/CD Strategy**: Works with build-ci-optimizer for overall pipeline strategy and optimization
 - **Benchmarking**: Coordinates with benchmark-agent for performance measurement and analysis
-- **CodeGuardian Ecosystem**: Seamlessly integrates with existing CodeGuardian analyzers and reporting systems
+- **Ecosystem**: Seamlessly integrates with existing analyzers and reporting systems
 
 ## Usage Examples
 

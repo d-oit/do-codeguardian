@@ -4,7 +4,7 @@
 
 use crate::performance::PerformanceMetrics;
 use std::sync::Arc;
-use std::time::{Duration, Instant};
+use std::time::Duration;
 
 /// Runtime performance optimizer
 pub struct PerformanceOptimizer {

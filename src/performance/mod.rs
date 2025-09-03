@@ -84,6 +84,7 @@ impl PerformanceMetrics {
 /// Performance profiler for tracking operation timings
 pub struct PerformanceProfiler {
     metrics: Arc<PerformanceMetrics>,
+    #[allow(dead_code)]
     start_time: Instant,
 }
 

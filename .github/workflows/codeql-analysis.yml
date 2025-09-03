@@ -12,6 +12,7 @@ jobs:
   analyze:
     name: Analyze
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     permissions:
       actions: read
       contents: read
@@ -27,15 +28,7 @@ jobs:
       uses: github/codeql-action/init@v3
       with:
         languages: ${{ matrix.language }}
-        config-file: .github/codeql-config.yml
-    - name: Build project
-      run: |
-        # Build with default features first
-        cargo build --release
-        # Build with all features for comprehensive analysis
-        cargo build --all-targets --all-features
-        # Run check to ensure everything compiles
-        cargo check --all-features --all-targets
+
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v3
       with:

@@ -5,6 +5,7 @@ use crate::types::AnalysisResults;
 use crate::utils::progress::ProgressReporter;
 use anyhow::Result;
 use serde_json;
+use std::io::IsTerminal;
 use std::path::PathBuf;
 use std::time::Instant;
 use tokio::fs;
@@ -12,8 +13,9 @@ use tokio::fs;
 pub async fn run(mut args: CheckArgs, mut config: Config) -> Result<()> {
     let start_time = Instant::now();
 
-    // Clone output_dir before moving config
+    // Clone output_dir and fail_on_conflicts before moving config
     let output_dir = config.output.directory.clone();
+    let fail_on_conflicts_config = config.analyzers.broken_files.conflicts.fail_on_conflicts;
 
     // Override config with CLI options
     // TODO: Implement baseline handling in new config structure
@@ -165,7 +167,7 @@ pub async fn run(mut args: CheckArgs, mut config: Config) -> Result<()> {
     }
 
     // Check for conflicts if fail_on_conflicts is enabled
-    if args.fail_on_conflicts || config.analyzers.broken_files.conflicts.fail_on_conflicts {
+    if args.fail_on_conflicts || fail_on_conflicts_config {
         let has_conflicts = results.findings.iter().any(|f| {
             f.analyzer == "git_conflict" && matches!(f.severity, crate::types::Severity::Critical)
         });

@@ -24,7 +24,7 @@ impl StringPool {
     }
 
     /// Get a string buffer from the pool or create a new one
-    pub fn get_buffer(&self) -> PooledString {
+    pub fn get_buffer(&self) -> PooledString<'_> {
         let mut buffer = if let Ok(mut buffers) = self.buffers.lock() {
             buffers
                 .pop_front()
@@ -124,8 +124,8 @@ impl<'a> PooledString<'a> {
     }
 
     /// Convert to owned String (consumes the pooled string)
-    pub fn into_string(self) -> String {
-        self.buffer
+    pub fn into_string(mut self) -> String {
+        std::mem::take(&mut self.buffer)
     }
 }
 
@@ -193,7 +193,7 @@ impl<T> VecPool<T> {
         }
     }
 
-    pub fn get_vec(&self) -> PooledVec<T> {
+    pub fn get_vec(&self) -> PooledVec<'_, T> {
         let mut buffer = if let Ok(mut buffers) = self.buffers.lock() {
             buffers
                 .pop_front()
@@ -208,11 +208,10 @@ impl<T> VecPool<T> {
 
     fn return_vec(&self, mut buffer: Vec<T>) {
         if let Ok(mut buffers) = self.buffers.lock() {
-            if buffers.len() < self.max_pool_size {
-                if buffer.capacity() <= self.default_capacity * 4 {
-                    buffer.clear();
-                    buffers.push_back(buffer);
-                }
+            if buffers.len() < self.max_pool_size && buffer.capacity() <= self.default_capacity * 4
+            {
+                buffer.clear();
+                buffers.push_back(buffer);
             }
         }
     }
@@ -255,8 +254,8 @@ impl<'a, T> PooledVec<'a, T> {
         self.buffer.reserve(additional);
     }
 
-    pub fn into_vec(self) -> Vec<T> {
-        self.buffer
+    pub fn into_vec(mut self) -> Vec<T> {
+        std::mem::take(&mut self.buffer)
     }
 }
 

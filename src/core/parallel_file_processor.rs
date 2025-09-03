@@ -4,7 +4,7 @@
 //! for 2-4x performance improvement over sequential processing.
 
 use crate::analyzers::AnalyzerRegistry;
-use crate::types::{AnalysisResults, Finding};
+use crate::types::Finding;
 use anyhow::Result;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
@@ -59,7 +59,7 @@ impl ParallelFileProcessor {
                 .process_file_chunk(
                     chunk,
                     Arc::clone(&semaphore),
-                    Arc::clone(&analyzer_registry),
+                    analyzer_registry.clone(),
                     config_hash,
                 )
                 .await?;
@@ -201,10 +201,7 @@ impl ParallelFileProcessor {
         let parallel_efficiency = 0.8; // 80% efficiency due to coordination overhead
 
         let sequential_time = base_time_per_file * file_count as u32;
-        let parallel_time =
-            sequential_time.div_f64(self.max_concurrent_files as f64 * parallel_efficiency);
-
-        parallel_time
+        sequential_time.div_f64(self.max_concurrent_files as f64 * parallel_efficiency)
     }
 }
 

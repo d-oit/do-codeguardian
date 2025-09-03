@@ -12,10 +12,10 @@ readme = "README.md"
 keywords = ["security", "analysis", "git", "cli", "code-quality", "ai", "validation", "production"]
 categories = ["command-line-utilities", "development-tools", "security"]
 exclude = ["target/", "benches/", "tests/fixtures/", "examples/ml-training-example.rs"]
-build = "build_fixed.rs"
+build = "build.rs"
 
 [features]
-default = ["git", "security", "logging"]
+default = ["git", "security", "logging", "cargo-audit"]
 git = ["git2"]
 security = ["regex"]
 logging = ["tracing", "tracing-subscriber"]
@@ -25,15 +25,13 @@ ml = ["fann"]
 ast = ["syn", "quote", "proc-macro2"]
 ml-enhanced = ["ml", "ast"]
 
-# Fast development build - minimal features
-dev = ["git", "security", "logging"]
-# Full features for CI/release
+# Enable all features for development
 full = ["git", "security", "logging", "hashing", "cargo-audit", "ml", "ast"]
 
 [dependencies]
-# CLI and async runtime - use minimal features for faster builds
-clap = { version = "4.4", features = ["derive"] }
-tokio = { version = "1.40.0", features = ["rt-multi-thread", "macros", "fs"] }
+# CLI and async runtime
+clap = { version = "4.4", features = ["derive", "color", "suggestions"] }
+tokio = { version = "1.40.0", features = ["full"] }
 
 # Serialization and configuration
 serde = { version = "1.0", features = ["derive"] }
@@ -47,11 +45,11 @@ thiserror = "2.0"
 # Git operations
 git2 = { version = "0.20", optional = true }
 
-# Logging - minimal features
+# Logging
 tracing = { version = "0.1", optional = true }
 tracing-subscriber = { version = "0.3", optional = true, features = ["env-filter"] }
 
-# HTTP client - minimal features for faster builds
+# HTTP client
 reqwest = { version = "0.12", features = ["json", "rustls-tls"] }
 
 # Regular expressions and pattern matching
@@ -80,8 +78,8 @@ is-terminal = "0.4"
 # Machine Learning
 fann = { version = "0.1", optional = true }
 
-# AST Analysis - minimal features for faster builds
-syn = { version = "2.0", features = ["parsing", "printing"], optional = true }
+# AST Analysis for enhanced feature engineering
+syn = { version = "2.0", features = ["full", "extra-traits", "visit"], optional = true }
 quote = { version = "1.0", optional = true }
 proc-macro2 = { version = "1.0", optional = true }
 
@@ -110,7 +108,10 @@ proptest = "1.4"
 divan = "0.1"
 
 # Tokio with test utilities for testing
-tokio = { version = "1.40.0", features = ["test-util", "fs"] }
+tokio = { version = "1.40.0", features = ["test-util"] }
+
+# Code coverage (install separately: cargo install cargo-tarpaulin)
+# tarpaulin = "0.27"
 
 [[bench]]
 name = "hashing_benchmark"
@@ -128,6 +129,9 @@ harness = false
 name = "scanning_benchmark"
 harness = false
 
+
+
+
 [profile.release]
 opt-level = 3
 lto = true
@@ -139,17 +143,6 @@ strip = true
 opt-level = 0
 debug = true
 overflow-checks = true
-# Faster incremental builds
-incremental = true
-
-[profile.dev-fast]
-inherits = "dev"
-opt-level = 1
-debug = false
-overflow-checks = false
-lto = false
-codegen-units = 16
-incremental = true
 
 [profile.bench]
 opt-level = 3
@@ -163,3 +156,6 @@ debug = true
 [package.metadata.docs.rs]
 all-features = true
 rustdoc-args = ["--cfg", "docsrs"]
+
+[badges]
+maintenance = { status = "actively-developed" }

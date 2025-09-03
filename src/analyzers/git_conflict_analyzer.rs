@@ -132,7 +132,7 @@ impl GitConflictAnalyzer {
         if let Some(ext) = file_path.extension().and_then(|e| e.to_str()) {
             match ext {
                 "json" => {
-                    if let Err(_) = serde_json::from_str::<serde_json::Value>(content) {
+                    if serde_json::from_str::<serde_json::Value>(content).is_err() {
                         findings.push(
                             Finding::new(
                                 "git_conflict",
@@ -148,7 +148,7 @@ impl GitConflictAnalyzer {
                     }
                 }
                 "toml" => {
-                    if let Err(_) = toml::from_str::<toml::Value>(content) {
+                    if toml::from_str::<toml::Value>(content).is_err() {
                         findings.push(
                             Finding::new(
                                 "git_conflict",
@@ -188,24 +188,24 @@ impl GitConflictAnalyzer {
             let line_number = (line_num + 1) as u32;
 
             // Look for repeated identical lines (common in conflicts)
-            if line_num > 0 && line_num < lines.len() - 1 {
-                if lines[line_num - 1] == *line
-                    && lines[line_num + 1] == *line
-                    && !line.trim().is_empty()
-                {
-                    findings.push(
-                        Finding::new(
-                            "git_conflict",
-                            "suspicious_duplication",
-                            Severity::Medium,
-                            file_path.to_path_buf(),
-                            line_number,
-                            "Suspicious line duplication detected".to_string(),
-                        )
-                        .with_description("Multiple identical consecutive lines found, which might indicate unresolved merge conflicts.".to_string())
-                        .with_suggestion("Review for potential merge conflict artifacts".to_string()),
-                    );
-                }
+            if line_num > 0
+                && line_num < lines.len() - 1
+                && lines[line_num - 1] == *line
+                && lines[line_num + 1] == *line
+                && !line.trim().is_empty()
+            {
+                findings.push(
+                    Finding::new(
+                        "git_conflict",
+                        "suspicious_duplication",
+                        Severity::Medium,
+                        file_path.to_path_buf(),
+                        line_number,
+                        "Suspicious line duplication detected".to_string(),
+                    )
+                    .with_description("Multiple identical consecutive lines found, which might indicate unresolved merge conflicts.".to_string())
+                    .with_suggestion("Review for potential merge conflict artifacts".to_string()),
+                );
             }
         }
     }

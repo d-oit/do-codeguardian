@@ -17,6 +17,7 @@ jobs:
   codeguardian-pr:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     permissions:
       contents: read
       issues: write
@@ -37,11 +38,11 @@ jobs:
       run: |
         rm -f target/debug/.cargo-lock target/release/.cargo-lock
 
-    - name: Build CodeGuardian
-      run: |
-        cargo build --release
+  - name: Build CodeGuardian
+       run: |
+         cargo build --release --quiet
 
-    - name: Run CodeGuardian (PR diff-only)
+  - name: Run CodeGuardian (PR diff-only)
       run: |
         # Diff-only mode for PRs - fast and focused feedback
         ./target/release/codeguardian check . \
@@ -69,6 +70,7 @@ jobs:
   codeguardian-full:
     if: github.event_name == 'push' || github.event_name == 'schedule'
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     permissions:
       contents: read
       issues: write
@@ -86,11 +88,11 @@ jobs:
       run: |
         rm -f target/debug/.cargo-lock target/release/.cargo-lock
 
-    - name: Build CodeGuardian
-      run: |
-        cargo build --release
+  - name: Build CodeGuardian
+       run: |
+         cargo build --release --quiet
 
-    - name: Run CodeGuardian (Full scan)
+  - name: Run CodeGuardian (Full scan)
       run: |
         # Full repository scan for scheduled jobs and main branch pushes
         ./target/release/codeguardian check . \
@@ -118,6 +120,7 @@ jobs:
   codeguardian-baseline:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     permissions:
       contents: write
 
@@ -134,11 +137,11 @@ jobs:
       run: |
         rm -f target/debug/.cargo-lock target/release/.cargo-lock
 
-    - name: Build CodeGuardian
-      run: |
-        cargo build --release
+  - name: Build CodeGuardian
+       run: |
+         cargo build --release --quiet
 
-    - name: Update baseline
+  - name: Update baseline
       run: |
         ./target/release/codeguardian check . \
           --format json \
