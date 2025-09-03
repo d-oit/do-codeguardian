@@ -46,22 +46,32 @@ pub struct Config {
 
 impl Config {
     /// Load configuration from a TOML file
-    ///
-    /// # Arguments
-    ///
-    /// * `path` - Path to the configuration file
-    ///
-    /// # Returns
-    ///
-    /// Returns a `Result` containing the loaded configuration or an error
-    ///
-    /// # Errors
-    ///
-    /// This function will return an error if:
-    /// - The file cannot be read
-    /// - The TOML content is invalid
     pub fn from_file(path: &Path) -> anyhow::Result<Self> {
         let content = std::fs::read_to_string(path)
+            .with_context(|| format!("Failed to read config file: {}", path.display()))?;
+        let config: Config = toml::from_str(&content).with_context(|| {
+            // Try to get more specific error info
+            match toml::from_str::<toml::Value>(&content) {
+                Ok(_) => format!(
+                    "Failed to parse config file: {} - structure mismatch",
+                    path.display()
+                ),
+                Err(e) => format!(
+                    "Failed to parse config file: {} - TOML syntax error: {}",
+                    path.display(),
+                    e
+                ),
+            }
+        })?;
+        Ok(config)
+    }
+
+    /// Load configuration from a TOML file
+    ///
+    /// Async version of from_file for use in async contexts
+    pub async fn from_file_async(path: &Path) -> anyhow::Result<Self> {
+        let content = tokio::fs::read_to_string(path)
+            .await
             .with_context(|| format!("Failed to read config file: {}", path.display()))?;
         let config: Config = toml::from_str(&content)
             .with_context(|| format!("Failed to parse config file: {}", path.display()))?;

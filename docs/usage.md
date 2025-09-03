@@ -681,6 +681,7 @@ Automatic issue creation with:
 ## See Also
 
 ### Related Commands
+- **[Check Command](docs/user-guide/check.md)**: Comprehensive guide to the primary analysis command
 - **[Turbo Command](docs/user-guide/turbo.md)**: High-performance analysis for large codebases
 - **[Configuration Guide](docs/user-guide/configuration.md)**: Advanced configuration options and customization
 - **[CI/CD Setup Guide](docs/user-guide/ci-cd-setup.md)**: Integration examples for various CI/CD platforms

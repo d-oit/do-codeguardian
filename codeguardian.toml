@@ -52,6 +52,15 @@ max_reports_kept = 10
 # Enable comprehensive security analysis
 enabled = true
 
+# Fail the analysis if security issues are found
+fail_on_issues = false
+
+# Minimum severity level to report (low, medium, high, critical)
+min_severity = "low"
+
+# Maximum file size to analyze (in bytes, 10MB default)
+max_file_size = 10485760
+
 # Minimum entropy threshold for detecting potential secrets (higher = more sensitive)
 entropy_threshold = 4.5
 
@@ -117,6 +126,19 @@ max_memory_usage_mb = 512
 max_cpu_usage_percent = 80
 
 # =============================================================================
+# GIT CONFIGURATION
+# =============================================================================
+[git]
+# Whether to generate conventional commit messages
+conventional_commits = true
+
+# Default commit message template
+commit_template = "{type}({scope}): {description}"
+
+# Whether to check for signed commits
+require_signed_commits = false
+
+# =============================================================================
 # ANALYZER-SPECIFIC CONFIGURATIONS
 # =============================================================================
 [analyzers]
@@ -147,12 +169,12 @@ exclude_test_files = true
 exclude_example_files = true
 
 [[analyzers.non_production.patterns]]
-pattern = '(?i)\b(todo|fixme|hack|xxx)\b'
+pattern = "(?i)\\b(todo|fixme|hack|xxx)\\b"
 description = "Non-production code markers"
 severity = "medium"
 
 [[analyzers.non_production.patterns]]
-pattern = '(?i)\bconsole\.log\b'
+pattern = "(?i)\\bconsole\\.log\\b"
 description = "Debug logging statements"
 severity = "low"
 
@@ -207,6 +229,47 @@ max_nesting_depth = 6
 max_file_size = 500
 max_line_length = 120
 
+[analyzers.broken_files]
+# Enable broken files detection
+enabled = true
+
+# Detect git merge conflicts
+detect_merge_conflicts = true
+
+# Detect AI-generated placeholders
+detect_ai_placeholders = true
+
+# Detect duplicate code (performance intensive)
+detect_duplicates = false
+
+# Git conflict detection settings
+[analyzers.broken_files.conflicts]
+fail_on_conflicts = true
+validate_syntax = true
+check_git_status = true
+
+# AI placeholder detection settings
+[analyzers.broken_files.placeholders]
+severity = "medium"
+patterns = [
+    "add content here",
+    "implement this",
+    "your code here",
+    "placeholder",
+    "todo: implement",
+    "fill in the details",
+    "complete this",
+    "add your logic"
+]
+custom_patterns = []
+
+# Duplicate detection settings
+[analyzers.broken_files.duplicates]
+min_lines = 10
+focus_security = true
+ignore_test_files = true
+max_files_to_compare = 1000
+
 # =============================================================================
 # FILE INCLUSION/EXCLUSION PATTERNS
 # =============================================================================
@@ -227,6 +290,21 @@ exclude_patterns = [
     "*.min.css",
     "vendor/",
     "third_party/",
+    "**/*test*.rs",
+    "**/*_test.rs",
+    "**/tests/",
+    "**/test/",
+    "**/spec/",
+    "**/specs/",
+    "**/*.test.*",
+    "**/*.spec.*",
+    "**/benches/",
+    "**/benchmarks/",
+    "**/examples/",
+    "**/example/",
+    "**/docs/",
+    "**/*.md",
+    "**/codeguardian.toml",
 ]
 
 # File extensions to analyze
@@ -250,27 +328,6 @@ skip_large_files = true
 # SEVERITY LEVEL CUSTOMIZATIONS
 # =============================================================================
 [severity]
-# Custom severity mappings for specific finding types
-# Format: "analyzer.finding_type" = "severity_level"
-
-# Security findings
-"security_analyzer.hardcoded_secret" = "high"
-"security_analyzer.sql_injection" = "critical"
-"security_analyzer.xss" = "high"
-"security_analyzer.command_injection" = "critical"
-
-# Performance findings
-"performance_analyzer.nested_loops" = "medium"
-"performance_analyzer.blocking_io" = "medium"
-
-# Code quality findings
-"code_quality.complexity" = "medium"
-"code_quality.duplication" = "low"
-
-# Dependency findings
-"dependency.vulnerability" = "high"
-"dependency.outdated" = "low"
-
 # Custom severity levels (can be used in patterns)
 custom_levels = ["info", "low", "medium", "high", "critical"]
 
@@ -279,6 +336,34 @@ enable_escalation = true
 
 # Number of occurrences before escalating severity
 escalation_threshold = 5
+
+# =============================================================================
+# ANALYSIS SETTINGS
+# =============================================================================
+[analysis]
+# Enable analysis
+enabled = true
+
+# Analyze binary files
+analyze_binaries = false
+
+# Analysis timeout in seconds
+timeout_seconds = 300
+
+# Enable parallel processing
+parallel_processing = true
+
+# Number of parallel workers
+max_workers = 4
+
+# Enable caching
+enable_caching = true
+
+# Cache directory
+cache_dir = ".codeguardian/cache"
+
+# Cache expiration in days
+cache_expiration_days = 7
 
 # =============================================================================
 # INTEGRATION SETTINGS
@@ -293,7 +378,7 @@ enabled = false
 repository = ""
 
 # GitHub token for API access (use environment variable: CODEGUARDIAN_GITHUB_TOKEN)
-token = "${CODEGUARDIAN_GITHUB_TOKEN}"
+token = ""
 
 # Create GitHub issues for findings
 create_issues = false
@@ -315,7 +400,7 @@ enabled = false
 project = ""
 
 # GitLab token for API access (use environment variable: CODEGUARDIAN_GITLAB_TOKEN)
-token = "${CODEGUARDIAN_GITLAB_TOKEN}"
+token = ""
 
 # Create GitLab issues for findings
 create_issues = false
@@ -329,33 +414,7 @@ comment_mrs = false
 # Minimum severity to create issues/MR comments
 min_severity = "high"
 
-# =============================================================================
-# GENERAL ANALYSIS SETTINGS
-# =============================================================================
-[analysis]
-# Enable analysis
-enabled = true
-
-# Analyze binary files (not recommended for security)
-analyze_binaries = false
-
-# Analysis timeout in seconds
-timeout_seconds = 300
-
-# Enable parallel processing
-parallel_processing = true
-
-# Number of parallel workers
-max_workers = 4
-
-# Enable caching of analysis results
-enable_caching = true
-
-# Cache directory
-cache_dir = ".codeguardian/cache"
-
-# Cache expiration in days
-cache_expiration_days = 7
+# Note: Analysis settings moved to earlier section to avoid duplication
 
 # =============================================================================
 # OPTIMIZATION SETTINGS

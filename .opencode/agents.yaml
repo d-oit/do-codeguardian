@@ -1,0 +1,351 @@
+agents:
+  - name: ai-persona-creation-specialist
+    description: Creates specialized AI personas for CodeGuardian and development workflows with manual activation
+    key_capabilities:
+      - Domain Expertise Analysis
+      - Persona Specification
+      - Integration Planning
+      - Quality Assurance
+      - Documentation Generation
+  - name: analyzer-orchestrator
+    description: Coordinates and orchestrates multiple CodeGuardian analyzers for comprehensive code analysis, managing execution order, result integration, and performance optimization
+    key_capabilities:
+      - Analyzer Coordination Guidance
+      - Result Integration Planning
+      - Priority Management Strategy
+      - Performance Optimization Guidance
+      - Configuration Management Analysis
+      - Cross-Analyzer Correlation Design
+  - name: benchmark-agent
+    description: Manages performance benchmarks in the CodeGuardian project, including creating, running, analyzing, and optimizing performance tests
+    key_capabilities:
+      - Benchmark creation and design
+      - Benchmark execution and data collection
+      - Performance analysis and insights
+      - Optimization recommendations
+      - Benchmark maintenance and updates
+      - CI/CD integration for performance monitoring
+  - name: build-ci-optimizer
+    description: Optimizes build processes and CI/CD pipelines for CodeGuardian, focusing on performance, reliability, and efficiency
+    key_capabilities:
+      - Build process optimization
+      - CI/CD pipeline enhancement
+      - Performance monitoring and improvement
+      - Resource utilization analysis
+      - Automated testing integration
+      - Deployment strategy optimization
+  - name: cache-intelligence-agent
+    description: Manages src/cache.rs for intelligent caching, optimizing performance and memory usage
+    key_capabilities:
+      - Cache Optimization
+      - Invalidation Management
+      - Memory Management
+      - Data Persistence
+      - Performance Monitoring
+      - Cache Warming
+  - name: clean-code-developer
+    description: Ensures code quality and maintainability through clean code practices and refactoring
+    key_capabilities:
+      - Code quality assessment
+      - Refactoring recommendations
+      - Best practices implementation
+      - Code readability improvement
+      - Technical debt reduction
+      - Clean architecture guidance
+  - name: code-analysis-agent
+    description: Performs comprehensive code analysis for quality, security, and performance issues
+    key_capabilities:
+      - Static code analysis
+      - Security vulnerability detection
+      - Performance bottleneck identification
+      - Code quality metrics
+      - Automated code review
+      - Issue prioritization
+  - name: code-consolidator
+    description: Consolidates and organizes code files, modules, and components for better structure and maintainability
+    key_capabilities:
+      - Code organization and restructuring
+      - Module consolidation
+      - Dependency management
+      - Code duplication elimination
+      - Architecture improvement
+      - Documentation updates
+  - name: code-quality-reviewer
+    description: Reviews code for quality standards, best practices, and maintainability
+    key_capabilities:
+      - Code quality assessment
+      - Best practices validation
+      - Maintainability analysis
+      - Code review automation
+      - Quality metrics generation
+      - Improvement recommendations
+  - name: code-research
+    description: Conducts research on code patterns, technologies, and best practices for CodeGuardian development
+    key_capabilities:
+      - Technology research and evaluation
+      - Code pattern analysis
+      - Best practices identification
+      - Innovation exploration
+      - Knowledge base development
+      - Research documentation
+  - name: codebase-doc-updater
+    description: Updates and maintains codebase documentation, ensuring accuracy and completeness
+    key_capabilities:
+      - Documentation generation
+      - API documentation updates
+      - Code comment maintenance
+      - README and guide updates
+      - Documentation quality assurance
+      - Knowledge sharing
+  - name: codeguardian-main
+    description: Main orchestrator for CodeGuardian operations, managing overall system coordination and workflow
+    key_capabilities:
+      - System orchestration
+      - Workflow management
+      - Resource allocation
+      - Process coordination
+      - System monitoring
+      - Error handling
+  - name: configuration-agent
+    description: Manages and optimizes CodeGuardian configuration settings for optimal performance and functionality
+    key_capabilities:
+      - Configuration management
+      - Settings optimization
+      - Configuration validation
+      - Performance tuning
+      - Environment setup
+      - Configuration documentation
+  - name: configuration-validator
+    description: Validates CodeGuardian configuration files and settings for correctness and compatibility
+    key_capabilities:
+      - Configuration validation
+      - Syntax checking
+      - Compatibility verification
+      - Error detection
+      - Configuration testing
+      - Validation reporting
+  - name: debug-findings-analyst
+    description: Analyzes debug findings and error reports to identify root causes and provide solutions
+    key_capabilities:
+      - Error analysis
+      - Root cause identification
+      - Debug report generation
+      - Solution recommendations
+      - Issue tracking
+      - Debugging guidance
+  - name: dependency-agent
+    description: Manages project dependencies, ensuring security, compatibility, and optimal versions
+    key_capabilities:
+      - Dependency analysis
+      - Security vulnerability scanning
+      - Version management
+      - Compatibility checking
+      - Update recommendations
+      - Dependency optimization
+  - name: documentation-specialist
+    description: Specializes in creating and maintaining comprehensive documentation for CodeGuardian
+    key_capabilities:
+      - Technical writing
+      - Documentation architecture
+      - User guide creation
+      - API documentation
+      - Knowledge base management
+      - Documentation standards
+  - name: false-positive-validator
+    description: Validates and filters false positive findings from security and code analysis tools
+    key_capabilities:
+      - False positive identification
+      - Finding validation
+      - Risk assessment
+      - Alert filtering
+      - Accuracy improvement
+      - Validation reporting
+  - name: general
+    description: General-purpose agent for CodeGuardian operations and user assistance
+    key_capabilities:
+      - General assistance
+      - Task coordination
+      - Information retrieval
+      - User support
+      - Basic operations
+      - Workflow guidance
+  - name: git
+    description: Manages Git operations and version control for CodeGuardian development
+    key_capabilities:
+      - Git repository management
+      - Version control operations
+      - Branch management
+      - Commit handling
+      - Merge conflict resolution
+      - Git workflow optimization
+  - name: github-discussions-manager
+    description: Manages GitHub discussions, facilitating community engagement and knowledge sharing
+    key_capabilities:
+      - Discussion moderation
+      - Community engagement
+      - Knowledge sharing
+      - Discussion organization
+      - Response management
+      - Engagement analytics
+  - name: github-docs-specialist
+    description: Specializes in GitHub documentation, including READMEs, wikis, and project documentation
+    key_capabilities:
+      - GitHub documentation management
+      - README optimization
+      - Wiki maintenance
+      - Project documentation
+      - Contribution guidelines
+      - Documentation best practices
+  - name: github-issue-manager
+    description: Manages GitHub issues, including creation, tracking, and resolution
+    key_capabilities:
+      - Issue tracking
+      - Bug report management
+      - Feature request handling
+      - Issue prioritization
+      - Resolution tracking
+      - Issue analytics
+  - name: github-label-manager
+    description: Manages GitHub labels for issues and pull requests, ensuring consistent categorization
+    key_capabilities:
+      - Label creation and management
+      - Categorization standards
+      - Label consistency
+      - Issue organization
+      - Workflow optimization
+      - Label analytics
+  - name: github-pr-manager
+    description: Manages GitHub pull requests, including review, approval, and merging processes
+    key_capabilities:
+      - Pull request management
+      - Code review coordination
+      - Merge conflict resolution
+      - Approval workflows
+      - Branch management
+      - PR analytics
+  - name: github-projects-manager
+    description: Manages GitHub Projects for task tracking and project management
+    key_capabilities:
+      - Project board management
+      - Task tracking
+      - Workflow automation
+      - Progress monitoring
+      - Team coordination
+      - Project analytics
+  - name: github-workflow-manager
+    description: Manages GitHub Actions workflows and CI/CD processes
+    key_capabilities:
+      - Workflow creation and management
+      - CI/CD pipeline setup
+      - Automation implementation
+      - Workflow optimization
+      - Performance monitoring
+      - Error handling
+  - name: github-workflow-optimizer
+    description: Optimizes GitHub Actions workflows for performance, reliability, and efficiency
+    key_capabilities:
+      - Workflow performance optimization
+      - Resource utilization improvement
+      - Reliability enhancement
+      - Cost optimization
+      - Monitoring and alerting
+      - Best practices implementation
+  - name: ml-pipeline-manager
+    description: Manages machine learning pipelines for CodeGuardian's ML components
+    key_capabilities:
+      - ML pipeline design
+      - Data processing management
+      - Model training coordination
+      - Pipeline optimization
+      - Performance monitoring
+      - Error handling
+  - name: ml-training-specialist
+    description: Specializes in machine learning model training and optimization for CodeGuardian
+    key_capabilities:
+      - Model training management
+      - Training data preparation
+      - Hyperparameter optimization
+      - Model evaluation
+      - Performance improvement
+      - Training pipeline automation
+  - name: opencode-command-documenter
+    description: Documents OpenCode commands and provides usage guidance
+    key_capabilities:
+      - Command documentation
+      - Usage examples
+      - Help system management
+      - Documentation updates
+      - User guidance
+      - Command reference
+  - name: orchestrator
+    description: Main orchestrator agent for coordinating multiple agents and workflows
+    key_capabilities:
+      - Agent coordination
+      - Workflow orchestration
+      - Task delegation
+      - Resource management
+      - Process monitoring
+      - Error handling
+  - name: performance-optimizer
+    description: Optimizes CodeGuardian performance across all components and operations
+    key_capabilities:
+      - Performance analysis
+      - Bottleneck identification
+      - Optimization implementation
+      - Resource management
+      - Monitoring setup
+      - Performance reporting
+  - name: release-agent
+    description: Manages CodeGuardian release processes, including versioning and deployment
+    key_capabilities:
+      - Release planning
+      - Version management
+      - Deployment coordination
+      - Release automation
+      - Quality assurance
+      - Release documentation
+  - name: security-auditor
+    description: Conducts security audits and vulnerability assessments for CodeGuardian
+    key_capabilities:
+      - Security analysis
+      - Vulnerability scanning
+      - Risk assessment
+      - Security recommendations
+      - Compliance checking
+      - Security monitoring
+  - name: streaming-processor
+    description: Manages streaming data processing for real-time analysis and monitoring
+    key_capabilities:
+      - Streaming data processing
+      - Real-time analysis
+      - Data pipeline management
+      - Performance monitoring
+      - Error handling
+      - Scalability optimization
+  - name: swarm-orchestrator
+    description: Orchestrates swarm operations and coordinates multiple agents in parallel
+    key_capabilities:
+      - Swarm coordination
+      - Parallel processing
+      - Agent management
+      - Load balancing
+      - Result aggregation
+      - Performance optimization
+  - name: task-coordinator
+    description: Coordinates tasks and workflows across the CodeGuardian ecosystem
+    key_capabilities:
+      - Task management
+      - Workflow coordination
+      - Priority handling
+      - Deadline management
+      - Progress tracking
+      - Resource allocation
+  - name: testing-engineer
+    description: Manages testing processes, including unit tests, integration tests, and quality assurance
+    key_capabilities:
+      - Test planning and execution
+      - Test automation
+      - Quality assurance
+      - Bug tracking
+      - Test coverage analysis
+      - Testing best practices

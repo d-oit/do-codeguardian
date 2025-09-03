@@ -11,6 +11,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::time::{SystemTime, UNIX_EPOCH};
+use tokio::fs;
 
 /// Enhanced cache entry with metadata
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -105,6 +106,22 @@ impl FileMetadata {
 
         // Compute content hash for integrity
         let content = std::fs::read(file_path)?;
+        let content_hash = Self::compute_hash(&content);
+
+        Ok(Self {
+            modified_time,
+            size,
+            content_hash,
+        })
+    }
+
+    pub async fn from_file_async(file_path: &Path) -> Result<Self> {
+        let metadata = fs::metadata(file_path).await?;
+        let modified_time = metadata.modified()?.duration_since(UNIX_EPOCH)?.as_secs();
+        let size = metadata.len();
+
+        // Compute content hash for integrity
+        let content = fs::read(file_path).await?;
         let content_hash = Self::compute_hash(&content);
 
         Ok(Self {
@@ -337,7 +354,7 @@ impl OptimizedCache {
 
     /// Load cache from disk
     pub async fn load_from_disk(&mut self, cache_file: &Path) -> Result<()> {
-        if !cache_file.exists() {
+        if !tokio::fs::try_exists(cache_file).await.unwrap_or(false) {
             return Ok(());
         }
 
@@ -347,7 +364,8 @@ impl OptimizedCache {
         // Validate and load entries
         for (path, entry) in entries {
             // Quick validation - check if file still exists and config is reasonable
-            if path.exists() && !entry.config_hash.is_empty() {
+            if tokio::fs::try_exists(&path).await.unwrap_or(false) && !entry.config_hash.is_empty()
+            {
                 let entry_size = self.estimate_entry_size(&entry);
                 self.current_memory_bytes += entry_size;
                 self.entries.insert(path, entry);

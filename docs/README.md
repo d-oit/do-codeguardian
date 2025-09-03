@@ -14,6 +14,7 @@ Welcome to the CodeGuardian documentation! This directory contains comprehensive
 - **[Advanced Features](user-guide/advanced-features.md)** - Explore ML integration, turbo mode, and more
 - **[CI/CD Integration](user-guide/ci-cd-integration.md)** - Integrate with your development pipeline
 - **[GitHub Integration](user-guide/github-integration.md)** - Set up automated issue creation and management
+- **[Check Command Guide](user-guide/check.md)** - Comprehensive guide to the primary analysis command
 
 ### 🏗️ Technical Documentation
 - **[Architecture Overview](architecture/overview.md)** - Understand CodeGuardian's design and components

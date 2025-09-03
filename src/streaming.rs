@@ -1,6 +1,6 @@
 use crate::types::Finding;
 use anyhow::Result;
-use std::io::{BufRead, BufReader};
+
 use std::path::Path;
 use tokio::fs::File;
 use tokio::io::{AsyncBufReadExt, BufReader as AsyncBufReader};
@@ -104,7 +104,7 @@ impl StreamingAnalyzer {
     }
 
     /// Memory-efficient line-by-line analysis for text files
-    pub fn analyze_text_streaming<F>(
+    pub async fn analyze_text_streaming_async<F>(
         &self,
         file_path: &Path,
         mut analyzer_fn: F,
@@ -112,14 +112,16 @@ impl StreamingAnalyzer {
     where
         F: FnMut(&str, usize) -> Result<Vec<Finding>>,
     {
-        let file = std::fs::File::open(file_path)?;
-        let reader = BufReader::new(file);
+        let file = File::open(file_path).await?;
+        let reader = AsyncBufReader::new(file);
         let mut all_findings = Vec::new();
+        let mut lines = reader.lines();
 
-        for (line_number, line_result) in reader.lines().enumerate() {
-            let line = line_result?;
-            let mut line_findings = analyzer_fn(&line, line_number + 1)?;
+        let mut line_number = 1;
+        while let Some(line_result) = lines.next_line().await? {
+            let mut line_findings = analyzer_fn(&line_result, line_number)?;
             all_findings.append(&mut line_findings);
+            line_number += 1;
         }
 
         Ok(all_findings)
@@ -165,6 +167,28 @@ impl AdaptiveChunking {
         #[cfg(target_os = "linux")]
         {
             if let Ok(meminfo) = std::fs::read_to_string("/proc/meminfo") {
+                for line in meminfo.lines() {
+                    if line.starts_with("MemAvailable:") {
+                        if let Some(kb_str) = line.split_whitespace().nth(1) {
+                            if let Ok(kb) = kb_str.parse::<usize>() {
+                                return kb * 1024; // Convert to bytes
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // Fallback: assume 1GB available
+        1024 * 1024 * 1024
+    }
+
+    #[allow(dead_code)]
+    async fn estimate_available_memory_async() -> usize {
+        // Simple heuristic - in production, use proper memory detection
+        #[cfg(target_os = "linux")]
+        {
+            if let Ok(meminfo) = tokio::fs::read_to_string("/proc/meminfo").await {
                 for line in meminfo.lines() {
                     if line.starts_with("MemAvailable:") {
                         if let Some(kb_str) = line.split_whitespace().nth(1) {

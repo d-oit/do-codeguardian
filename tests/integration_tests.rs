@@ -27,7 +27,30 @@ mod integration_tests {
         println!("✅ Basic security analysis test passed");
     }
 
-    // TODO: Fix configuration loading test - requires all fields to be present    // #[tokio::test]    // async fn test_configuration_loading() {    //     let config = Config::default();    //     assert!(config.security.max_file_size > 0);    //     assert_eq!(config.security.enabled, true);    //     //     // Test that we can create a simple config file with minimal overrides    //     let temp_dir = tempfile::tempdir().unwrap();    //     let config_path = temp_dir.path().join("test_config.toml");    //         //     let config_content = r#"[security]    // enabled = true    // fail_on_issues = true    // "#;    //     std::fs::write(&config_path, config_content).unwrap();    //         //     let loaded_config = Config::from_file(&config_path).unwrap();    //     assert_eq!(loaded_config.security.fail_on_issues, true);    //     // Other fields should have default values    //     assert_eq!(loaded_config.security.enabled, true);    //     println!("✅ Configuration loading test passed");    // }
+    #[tokio::test]
+    async fn test_configuration_loading() {
+        let config = Config::default();
+        assert!(config.security.max_file_size > 0);
+        assert_eq!(config.security.enabled, true);
+
+        // Test that we can create a simple config file with minimal overrides
+        let temp_dir = tempfile::tempdir().unwrap();
+        let config_path = temp_dir.path().join("test_config.toml");
+
+        let config_content = r#"[security]
+enabled = true
+fail_on_issues = true
+"#;
+        tokio::fs::write(&config_path, config_content)
+            .await
+            .unwrap();
+
+        let loaded_config = Config::from_file(&config_path).unwrap();
+        assert_eq!(loaded_config.security.fail_on_issues, true);
+        // Other fields should have default values
+        assert_eq!(loaded_config.security.enabled, true);
+        println!("✅ Configuration loading test passed");
+    }
 
     #[tokio::test]
     async fn test_multiple_file_types() {

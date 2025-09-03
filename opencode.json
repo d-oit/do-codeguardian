@@ -7,7 +7,7 @@
     "ml-pipeline-manager": {
       "model": "nvidia/deepseek-ai/deepseek-v3.1"
     },
-     "github-pr-manager": {
+    "github-pr-manager": {
       "model": "nvidia/deepseek-ai/deepseek-v3.1"
     },
     "ml-training-specialist": {
@@ -16,12 +16,8 @@
   },
   "mcp": {
     "context7": {
-      "command": [
-        "bunx",
-        "-y",
-        "@upstash/context7-mcp@latest"
-      ],
-      "type": "local",
+      "type": "remote",
+      "url": "https://mcp.context7.com/mcp",
       "enabled": true
     },
     "gh_grep": {

@@ -65,6 +65,7 @@ The Swarm Orchestrator integrates seamlessly with the CodeGuardian ecosystem by:
 - **ML Tasks**: ml-training-specialist + performance-optimizer + benchmark-agent
 - **Release Management**: release-agent + testing-engineer + documentation-specialist
 - **CI/CD Optimization**: build-ci-optimizer + github-workflow-optimizer + performance-optimizer
+- For all available agents read @.opencode/agents
 
 ## Usage Examples
 

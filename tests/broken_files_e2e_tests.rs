@@ -1,8 +1,8 @@
 use clap::Parser;
-use codeguardian::cli::{CheckArgs, Cli, Commands};
-use codeguardian::config::Config;
-use codeguardian::core::GuardianEngine;
-use codeguardian::utils::progress::ProgressReporter;
+use do_codeguardian::cli::{CheckArgs, Cli, Commands};
+use do_codeguardian::config::Config;
+use do_codeguardian::core::GuardianEngine;
+use do_codeguardian::utils::progress::ProgressReporter;
 use std::fs;
 use std::io::Write;
 use std::path::PathBuf;

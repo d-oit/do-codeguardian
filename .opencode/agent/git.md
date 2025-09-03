@@ -5,18 +5,18 @@ description: >-
   <example>
     Context: The user wants to commit changes following project standards.
     user: "Help me commit these security analyzer changes with proper practices."
-    assistant: "I should use the Task tool to launch the git-best-practices agent to ensure the commit follows security standards and project conventions."
+    assistant: "I should use the Task tool to launch the git agent to ensure the commit follows security standards and project conventions."
     <commentary>
-    Since the task involves git operations with security considerations, delegate to the git-best-practices agent to ensure proper commit hygiene and security compliance.
+    Since the task involves git operations with security considerations, delegate to the git agent to ensure proper commit hygiene and security compliance.
     </commentary>
   </example>
 
   <example>
     Context: The user needs to create a feature branch with proper naming.
     user: "Create a branch for the new ML performance optimization."
-    assistant: "Use the Task tool to launch the git-best-practices agent to create a properly named branch following project conventions."
+    assistant: "Use the Task tool to launch the git agent to create a properly named branch following project conventions."
     <commentary>
-    This requires understanding project branch naming conventions and git workflow best practices, making the git-best-practices agent appropriate.
+    This requires understanding project branch naming conventions and git workflow best practices, making the git agent appropriate.
     </commentary>
   </example>
 mode: subagent

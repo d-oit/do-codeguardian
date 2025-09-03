@@ -54,13 +54,13 @@ impl EnhancedFeatureExtractor {
 
     /// Get AST features for a file, using cache when possible
     #[cfg(feature = "ast")]
-    fn get_ast_features(&mut self, file_path: &Path) -> Result<Vec<f32>> {
+    async fn get_ast_features_async(&mut self, file_path: &Path) -> Result<Vec<f32>> {
         let file_path_str = file_path.to_string_lossy().to_string();
 
         // Check if we have cached analysis
         if let Some(cached) = self.file_cache.get(&file_path_str) {
             // Check if cache is still valid (file hasn't changed)
-            if let Ok(metadata) = std::fs::metadata(file_path) {
+            if let Ok(metadata) = tokio::fs::metadata(file_path).await {
                 if let Ok(modified) = metadata.modified() {
                     if modified <= cached.timestamp {
                         return Ok(cached.ast_features.to_feature_vector());
@@ -70,7 +70,9 @@ impl EnhancedFeatureExtractor {
         }
 
         // Read and analyze file
-        let content = std::fs::read_to_string(file_path).unwrap_or_else(|_| String::new());
+        let content = tokio::fs::read_to_string(file_path)
+            .await
+            .unwrap_or_else(|_| String::new());
 
         let ast_features = self
             .ast_analyzer

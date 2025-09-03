@@ -201,5 +201,5 @@ The command provides detailed output including:
 - [`opencode git-commit`](git-commit.md) - Commit changes without pushing
 - [`opencode check`](check.md) - Run security and quality analysis
 - [`opencode report`](report.md) - Generate detailed analysis reports
-- [Git Best Practices](../agent/git-best-practices.md) - Git workflow recommendations
+- [Git Best Practices](../agent/git.md) - Git workflow recommendations
 - [Configuration Guide](../user-guide/configuration.md) - Configure analysis settings

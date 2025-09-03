@@ -1,4 +1,5 @@
-use codeguardian::{
+use criterion::{black_box, criterion_group, criterion_main, Criterion};
+use do_codeguardian::{
     analyzers::AnalyzerRegistry,
     cache::FileCache,
     config::{Config, PerformanceConfig},
@@ -10,7 +11,6 @@ use codeguardian::{
         memory_pool::{thread_local_pools, GlobalMemoryPools},
     },
 };
-use criterion::{black_box, criterion_group, criterion_main, Criterion};
 use std::io::Write;
 use std::path::PathBuf;
 use std::sync::Arc;

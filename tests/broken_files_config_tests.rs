@@ -1,5 +1,5 @@
-use codeguardian::analyzers::AnalyzerRegistry;
-use codeguardian::config::{
+use do_codeguardian::analyzers::AnalyzerRegistry;
+use do_codeguardian::config::{
     BrokenFilesConfig, Config, ConflictDetectionConfig, DuplicateDetectionConfig,
     PlaceholderDetectionConfig,
 };

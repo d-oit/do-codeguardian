@@ -1,4 +1,4 @@
-use codeguardian::analyzers::{
+use do_codeguardian::analyzers::{
     ai_content_analyzer::AiContentAnalyzer, duplicate_analyzer::DuplicateAnalyzer,
     git_conflict_analyzer::GitConflictAnalyzer, Analyzer,
 };
@@ -9,7 +9,7 @@ use std::time::{Duration, Instant};
 mod performance_tests {
     use super::*;
 
-    const PERFORMANCE_THRESHOLD_MS: u128 = 1000; // 1 second max for large files
+    pub const PERFORMANCE_THRESHOLD_MS: u128 = 1000; // 1 second max for large files
     const SMALL_FILE_THRESHOLD_MS: u128 = 100; // 100ms for small files
 
     #[test]
@@ -305,7 +305,7 @@ mod performance_tests {
             let modified_content = format!("{}\n// Iteration {}\n", base_content, i);
 
             let start = Instant::now();
-            let _findings = analyzer
+            let findings = analyzer
                 .analyze(Path::new("test.rs"), modified_content.as_bytes())
                 .unwrap();
             total_duration += start.elapsed();
@@ -340,7 +340,7 @@ mod performance_tests {
 
     // Helper functions for generating test content
 
-    fn generate_file_with_conflicts(lines: usize) -> String {
+    pub fn generate_file_with_conflicts(lines: usize) -> String {
         let mut content = String::new();
         content.push_str("fn main() {\n");
 
@@ -480,6 +480,7 @@ mod benchmark_tests {
 
     #[test]
     fn benchmark_analyzer_comparison() {
+        use crate::performance_tests::PERFORMANCE_THRESHOLD_MS;
         // Compare performance of different analyzers on the same content
         let test_content = generate_mixed_content(1000);
 
@@ -521,6 +522,7 @@ mod benchmark_tests {
 
     #[test]
     fn benchmark_scaling_behavior() {
+        use crate::performance_tests::generate_file_with_conflicts;
         // Test how analyzers scale with file size
         let analyzer = GitConflictAnalyzer::new();
         let sizes = vec![100, 500, 1000, 2000, 5000];
@@ -531,7 +533,7 @@ mod benchmark_tests {
             let content = generate_file_with_conflicts(size);
 
             let start = Instant::now();
-            let _findings = analyzer
+            let findings = analyzer
                 .analyze(Path::new("test.rs"), content.as_bytes())
                 .unwrap();
             let duration = start.elapsed();

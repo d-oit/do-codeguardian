@@ -10,6 +10,7 @@ use serde_json;
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
 use std::time::Instant;
+use tokio::fs;
 use walkdir::WalkDir;
 
 pub mod parallel_file_processor;
@@ -147,7 +148,7 @@ impl GuardianEngine {
         Ok(results)
     }
 
-    fn analyze_single_file_optimized(
+    async fn analyze_single_file_optimized(
         &self,
         file_path: &Path,
         analyzer_registry: &AnalyzerRegistry,
@@ -161,15 +162,20 @@ impl GuardianEngine {
         // Check if we should use streaming analysis
         if StreamingAnalyzer::should_use_streaming(file_path) {
             // Use streaming analysis for large files
-            self.analyze_large_file_streaming(file_path, analyzer_registry, streaming_analyzer)
+            self.analyze_large_file_streaming_async(
+                file_path,
+                analyzer_registry,
+                streaming_analyzer,
+            )
+            .await
         } else {
             // Standard in-memory analysis for smaller files
-            let content = std::fs::read(file_path)?;
+            let content = fs::read(file_path).await?;
             analyzer_registry.analyze_file(file_path, &content)
         }
     }
 
-    fn analyze_large_file_streaming(
+    async fn analyze_large_file_streaming_async(
         &self,
         file_path: &Path,
         analyzer_registry: &AnalyzerRegistry,
@@ -179,19 +185,19 @@ impl GuardianEngine {
         // In a full implementation, this would use the streaming analyzer
         // with line-by-line or chunk-by-chunk processing
 
-        use std::io::{BufRead, BufReader};
-        let file = std::fs::File::open(file_path)?;
+        use tokio::io::{AsyncBufReadExt, BufReader};
+        let file = fs::File::open(file_path).await?;
         let reader = BufReader::new(file);
         let mut all_findings = Vec::new();
 
         // Process file line by line to save memory
         let mut line_buffer = String::new();
         let mut line_number = 1u32;
+        let mut lines = reader.lines();
 
-        for line_result in reader.lines() {
-            let line = line_result?;
+        while let Some(line_result) = lines.next_line().await? {
             line_buffer.clear();
-            line_buffer.push_str(&line);
+            line_buffer.push_str(&line_result);
             line_buffer.push('\n');
 
             // Analyze this line
@@ -203,7 +209,7 @@ impl GuardianEngine {
 
             // Yield occasionally for very large files
             if line_number % PROGRESS_UPDATE_INTERVAL == 0 {
-                std::thread::yield_now();
+                tokio::task::yield_now().await;
             }
         }
 
@@ -282,12 +288,15 @@ impl GuardianEngine {
         let mut findings = Vec::new();
 
         for file_path in &uncached_files {
-            match self.analyze_single_file_optimized(
-                file_path,
-                &self.analyzer_registry,
-                &self.streaming_analyzer,
-                config_hash,
-            ) {
+            match self
+                .analyze_single_file_optimized(
+                    file_path,
+                    &self.analyzer_registry,
+                    &self.streaming_analyzer,
+                    config_hash,
+                )
+                .await
+            {
                 Ok(file_findings) => {
                     self.cache_file_findings(file_path, &file_findings, config_hash)
                         .await?;

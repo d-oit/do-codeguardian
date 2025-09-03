@@ -1,8 +1,8 @@
-use codeguardian::analyzers::{
+use do_codeguardian::analyzers::{
     ai_content_analyzer::AiContentAnalyzer, duplicate_analyzer::DuplicateAnalyzer,
     git_conflict_analyzer::GitConflictAnalyzer, Analyzer,
 };
-use codeguardian::types::Severity;
+use do_codeguardian::types::Severity;
 use std::io::Write;
 use std::path::Path;
 use tempfile::NamedTempFile;

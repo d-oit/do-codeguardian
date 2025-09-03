@@ -1,6 +1,4 @@
----
-description: Run comprehensive code analysis with security, performance, and quality checks
----
+# check
 
 ## Synopsis
 CodeGuardian's primary code analysis command that performs comprehensive security, performance, code quality, dependency, integrity, and naming analysis with advanced ML-powered false positive reduction and seamless GitHub integration.
