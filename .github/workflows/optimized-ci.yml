@@ -31,20 +31,21 @@ jobs:
         toolchain: stable
         components: clippy, rustfmt
 
-    - name: Rust Cache
-      uses: Swatinem/rust-cache@v2
-      with:
-        workspaces: "./ -> target"
-
-    - name: Check Code
+    - name: Generate cache keys
+      id: cache-keys
       run: |
-        echo "🔍 Running cargo check..."
-        if cargo check --profile dev-fast --features dev; then
-          echo "✅ Code check passed"
-        else
-          echo "❌ Code check failed"
-          exit 1
-        fi
+        echo "cargo-lock-hash=$(sha256sum Cargo.lock | cut -d' ' -f1)" >> $GITHUB_OUTPUT
+        echo "rust-toolchain=stable" >> $GITHUB_OUTPUT
+        echo "os=ubuntu-latest" >> $GITHUB_OUTPUT
+
+    - name: Rust Cache
+      uses: Swatinem/rust-cache@v2.8.0
+      with:
+        key: ${{ runner.os }}-cargo-${{ steps.cache-keys.outputs.cargo-lock-hash }}-${{ steps.cache-keys.outputs.rust-toolchain }}-check
+        workspaces: "./ -> target"
+        cache-all-crates: true
+        cache-workspace-crates: true
+        save-if: ${{ github.ref == 'refs/heads/main' }}
 
     - name: Clippy
       run: |
@@ -80,10 +81,21 @@ jobs:
       with:
         toolchain: stable
 
+    - name: Generate cache keys
+      id: cache-keys
+      run: |
+        echo "cargo-lock-hash=$(sha256sum Cargo.lock | cut -d' ' -f1)" >> $GITHUB_OUTPUT
+        echo "rust-toolchain=stable" >> $GITHUB_OUTPUT
+        echo "os=ubuntu-latest" >> $GITHUB_OUTPUT
+
     - name: Rust Cache
-      uses: Swatinem/rust-cache@v2
+      uses: Swatinem/rust-cache@v2.8.0
       with:
+        key: ${{ runner.os }}-cargo-${{ steps.cache-keys.outputs.cargo-lock-hash }}-${{ steps.cache-keys.outputs.rust-toolchain }}-test
         workspaces: "./ -> target"
+        cache-all-crates: true
+        cache-workspace-crates: true
+        save-if: ${{ github.ref == 'refs/heads/main' }}
 
     - name: Run Tests
       id: run_tests
@@ -150,10 +162,21 @@ jobs:
       with:
         toolchain: stable
 
+    - name: Generate cache keys
+      id: cache-keys
+      run: |
+        echo "cargo-lock-hash=$(sha256sum Cargo.lock | cut -d' ' -f1)" >> $GITHUB_OUTPUT
+        echo "rust-toolchain=stable" >> $GITHUB_OUTPUT
+        echo "os=ubuntu-latest" >> $GITHUB_OUTPUT
+
     - name: Rust Cache
-      uses: Swatinem/rust-cache@v2
+      uses: Swatinem/rust-cache@v2.8.0
       with:
+        key: ${{ runner.os }}-cargo-${{ steps.cache-keys.outputs.cargo-lock-hash }}-${{ steps.cache-keys.outputs.rust-toolchain }}-audit
         workspaces: "./ -> target"
+        cache-all-crates: true
+        cache-workspace-crates: true
+        save-if: ${{ github.ref == 'refs/heads/main' }}
 
     - name: Security Audit
       id: security_audit
@@ -205,10 +228,21 @@ jobs:
       with:
         toolchain: stable
 
+    - name: Generate cache keys
+      id: cache-keys
+      run: |
+        echo "cargo-lock-hash=$(sha256sum Cargo.lock | cut -d' ' -f1)" >> $GITHUB_OUTPUT
+        echo "rust-toolchain=stable" >> $GITHUB_OUTPUT
+        echo "os=ubuntu-latest" >> $GITHUB_OUTPUT
+
     - name: Rust Cache
-      uses: Swatinem/rust-cache@v2
+      uses: Swatinem/rust-cache@v2.8.0
       with:
+        key: ${{ runner.os }}-cargo-${{ steps.cache-keys.outputs.cargo-lock-hash }}-${{ steps.cache-keys.outputs.rust-toolchain }}-build
         workspaces: "./ -> target"
+        cache-all-crates: true
+        cache-workspace-crates: true
+        save-if: ${{ github.ref == 'refs/heads/main' }}
 
     - name: Build Release
       run: |
@@ -262,10 +296,21 @@ jobs:
       with:
         toolchain: stable
 
+    - name: Generate cache keys
+      id: cache-keys
+      run: |
+        echo "cargo-lock-hash=$(sha256sum Cargo.lock | cut -d' ' -f1)" >> $GITHUB_OUTPUT
+        echo "rust-toolchain=stable" >> $GITHUB_OUTPUT
+        echo "os=ubuntu-latest" >> $GITHUB_OUTPUT
+
     - name: Rust Cache
-      uses: Swatinem/rust-cache@v2
+      uses: Swatinem/rust-cache@v2.8.0
       with:
+        key: ${{ runner.os }}-cargo-${{ steps.cache-keys.outputs.cargo-lock-hash }}-${{ steps.cache-keys.outputs.rust-toolchain }}-performance
         workspaces: "./ -> target"
+        cache-all-crates: true
+        cache-workspace-crates: true
+        save-if: ${{ github.ref == 'refs/heads/main' }}
 
     - name: Run Performance Benchmarks
       id: performance_benchmarks

@@ -152,6 +152,38 @@ impl GitHubApiClient {
         }
     }
 
+    pub async fn find_issue_by_commit_hash(
+        &mut self,
+        commit_hash: &str,
+        repo: &str,
+    ) -> Result<Option<u64>> {
+        // Search for issues that contain the commit hash in title or body
+        let search_query = format!("{} in:title,body", commit_hash);
+        let args = [
+            "issue",
+            "list",
+            "--repo",
+            repo,
+            "--state",
+            "open",
+            "--search",
+            &search_query,
+            "--json",
+            "number,title,body",
+            "-q",
+            ".[0].number",
+        ];
+
+        let output = self.execute_gh_command(&args).await?;
+        let trimmed = output.trim();
+
+        if trimmed.is_empty() || trimmed == "null" {
+            Ok(None)
+        } else {
+            Ok(trimmed.parse().ok())
+        }
+    }
+
     pub async fn create_issue(
         &mut self,
         title: &str,

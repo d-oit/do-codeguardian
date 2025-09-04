@@ -23,6 +23,12 @@ pub async fn run(mut args: GhIssueArgs, config: &Config) -> Result<()> {
 }
 
 pub async fn create_or_update_issue(results: &AnalysisResults, args: &GhIssueArgs) -> Result<()> {
+    // Skip creating issues if there are no findings (only create valid issues)
+    if results.findings.is_empty() {
+        tracing::info!("ℹ️ No findings detected - skipping issue creation to prevent empty issues");
+        return Ok(());
+    }
+
     // Generate issue title
     let title = generate_issue_title(&args.title, &args.repo)?;
 
@@ -41,17 +47,40 @@ pub async fn create_or_update_issue(results: &AnalysisResults, args: &GhIssueArg
     // Initialize GitHub API client with rate limiting
     let mut github_client = GitHubApiClient::new();
 
-    // Check for existing issue (idempotency)
+    // Enhanced duplicate check: look for existing issues with same title OR same commit hash
     let existing_issue = github_client
         .find_existing_issue(&title, &args.repo)
         .await?;
+
+    // Additional check: search for issues containing the commit hash in title or body
+    let commit_hash = get_current_commit_hash()?;
+    let existing_by_commit = if let Some(hash) = &commit_hash {
+        github_client
+            .find_issue_by_commit_hash(hash, &args.repo)
+            .await?
+    } else {
+        None
+    };
+
+    // If we found an existing issue by commit hash that's different from the title match, use that
+    let target_issue = existing_issue.or(existing_by_commit);
+
+    // Log duplicate prevention
+    if let Some(issue_num) = target_issue {
+        tracing::info!(
+            "🔍 Found existing issue #{} - will update instead of creating duplicate",
+            issue_num
+        );
+    } else {
+        tracing::info!("✅ No existing issues found - proceeding with new issue creation");
+    }
 
     // Write body to temporary file
     let temp_file = "tmp_rovodev_issue_body.md";
     fs::write(temp_file, &body).await?;
 
     // Create or update issue with rate limiting
-    if let Some(issue_number) = existing_issue {
+    if let Some(issue_number) = target_issue {
         github_client
             .update_issue(issue_number, temp_file, &args.labels, &args.repo)
             .await?;
@@ -70,7 +99,7 @@ pub async fn create_or_update_issue(results: &AnalysisResults, args: &GhIssueArg
 }
 
 fn generate_issue_title(prefix: &str, _repo: &str) -> Result<String> {
-    // Try to get current commit hash for PR context
+    // Try to get current commit hash for unique identification
     let output = Command::new("git")
         .args(["rev-parse", "--short", "HEAD"])
         .output();
@@ -78,18 +107,45 @@ fn generate_issue_title(prefix: &str, _repo: &str) -> Result<String> {
     if let Ok(output) = output {
         if output.status.success() {
             let commit = String::from_utf8_lossy(&output.stdout).trim().to_string();
-            return Ok(format!("{}{}", prefix, commit));
+            // Include commit hash for uniqueness and traceability
+            return Ok(format!(
+                "{} - Commit {}",
+                prefix.trim_end_matches(':'),
+                commit
+            ));
         }
     }
 
-    // Try to get PR number from environment
+    // Try to get PR number from environment for PR-specific issues
     if let Ok(pr_number) = std::env::var("GITHUB_PR_NUMBER") {
-        return Ok(format!("{}PR #{}", prefix, pr_number));
+        return Ok(format!(
+            "{} - PR #{}",
+            prefix.trim_end_matches(':'),
+            pr_number
+        ));
     }
 
-    // Fallback to timestamp
+    // For scheduled runs, include timestamp for uniqueness
     let timestamp = chrono::Utc::now().format("%Y%m%d-%H%M%S");
-    Ok(format!("{}{}", prefix, timestamp))
+    Ok(format!(
+        "{} - Scheduled {}",
+        prefix.trim_end_matches(':'),
+        timestamp
+    ))
+}
+
+fn get_current_commit_hash() -> Result<Option<String>> {
+    let output = Command::new("git")
+        .args(["rev-parse", "--short", "HEAD"])
+        .output();
+
+    if let Ok(output) = output {
+        if output.status.success() {
+            let commit = String::from_utf8_lossy(&output.stdout).trim().to_string();
+            return Ok(Some(commit));
+        }
+    }
+    Ok(None)
 }
 
 async fn generate_issue_body(
