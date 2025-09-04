@@ -37,13 +37,34 @@ jobs:
         workspaces: "./ -> target"
 
     - name: Check Code
-      run: cargo check --profile dev-fast --features dev
+      run: |
+        echo "🔍 Running cargo check..."
+        if cargo check --profile dev-fast --features dev; then
+          echo "✅ Code check passed"
+        else
+          echo "❌ Code check failed"
+          exit 1
+        fi
 
     - name: Clippy
-      run: cargo clippy --profile dev-fast --features dev -- -D warnings
+      run: |
+        echo "🔍 Running clippy..."
+        if cargo clippy --profile dev-fast --features dev -- -D warnings; then
+          echo "✅ Clippy check passed"
+        else
+          echo "❌ Clippy check failed"
+          exit 1
+        fi
 
     - name: Format Check
-      run: cargo fmt --check
+      run: |
+        echo "🔍 Running format check..."
+        if cargo fmt --check; then
+          echo "✅ Format check passed"
+        else
+          echo "❌ Format check failed - run 'cargo fmt' to fix"
+          exit 1
+        fi
 
   # Test job with parallel execution
   test:
@@ -65,10 +86,55 @@ jobs:
         workspaces: "./ -> target"
 
     - name: Run Tests
-      run: cargo test --profile dev-fast --features dev
+      id: run_tests
+      run: |
+        echo "🧪 Running test suite..."
+        if cargo test --profile dev-fast --features dev -- --format=json | tee test-results.json; then
+          echo "✅ All tests passed"
+          echo "test_status=passed" >> $GITHUB_OUTPUT
+        else
+          echo "❌ Some tests failed"
+          echo "test_status=failed" >> $GITHUB_OUTPUT
+          exit 1
+        fi
 
     - name: Run Benchmarks
-      run: cargo bench --profile bench --features full || true
+      id: run_benchmarks
+      run: |
+        echo "⚡ Running benchmarks (non-critical)..."
+        if cargo bench --profile bench --features full; then
+          echo "✅ Benchmarks completed successfully"
+          echo "benchmark_status=passed" >> $GITHUB_OUTPUT
+        else
+          echo "⚠️  Benchmarks failed, but continuing (non-critical)"
+          echo "benchmark_status=failed" >> $GITHUB_OUTPUT
+        fi
+      continue-on-error: true
+
+    - name: Generate Test Summary
+      if: always()
+      run: |
+        echo "## Test Results Summary" >> $GITHUB_STEP_SUMMARY
+        if [ "${{ steps.run_tests.outcome }}" == "success" ]; then
+          echo "✅ **Tests**: Passed" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "❌ **Tests**: Failed" >> $GITHUB_STEP_SUMMARY
+        fi
+
+        if [ "${{ steps.run_benchmarks.outcome }}" == "success" ]; then
+          echo "✅ **Benchmarks**: Passed" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "⚠️  **Benchmarks**: Failed (non-critical)" >> $GITHUB_STEP_SUMMARY
+        fi
+
+    - name: Upload Test Results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: test-results-${{ github.run_id }}
+        path: |
+          test-results.json
+        retention-days: 30
 
   # Security audit job
   audit:
@@ -90,9 +156,39 @@ jobs:
         workspaces: "./ -> target"
 
     - name: Security Audit
+      id: security_audit
       run: |
+        echo "🔒 Running security audit..."
         cargo install cargo-audit --locked
-        cargo audit --format json || true
+
+        if cargo audit --format json > audit-results.json; then
+          echo "✅ Security audit passed - no vulnerabilities found"
+          echo "audit_status=passed" >> $GITHUB_OUTPUT
+        else
+          echo "⚠️  Security audit found issues (review audit-results.json)"
+          echo "audit_status=issues_found" >> $GITHUB_OUTPUT
+          # Don't fail the job for security audit issues - log them instead
+        fi
+      continue-on-error: true
+
+    - name: Audit Summary
+      if: always()
+      run: |
+        echo "## Security Audit Summary" >> $GITHUB_STEP_SUMMARY
+        if [ "${{ steps.security_audit.outcome }}" == "success" ]; then
+          echo "✅ **Security Audit**: No issues found" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "⚠️  **Security Audit**: Issues detected (check artifacts)" >> $GITHUB_STEP_SUMMARY
+        fi
+
+    - name: Upload Audit Results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: audit-results-${{ github.run_id }}
+        path: |
+          audit-results.json
+        retention-days: 30
 
   # Build and release job
   build:
@@ -115,10 +211,27 @@ jobs:
         workspaces: "./ -> target"
 
     - name: Build Release
-      run: cargo build --release --features full
+      run: |
+        echo "🔨 Building release binary..."
+        if cargo build --release --features full; then
+          echo "✅ Release build successful"
+        else
+          echo "❌ Release build failed"
+          exit 1
+        fi
 
     - name: Run Integration Tests
-      run: cargo test --release --features full --test integration_tests
+      id: integration_tests
+      run: |
+        echo "🧪 Running integration tests..."
+        if cargo test --release --features full --test integration_tests -- --format=json | tee integration-test-results.json; then
+          echo "✅ Integration tests passed"
+          echo "integration_status=passed" >> $GITHUB_OUTPUT
+        else
+          echo "❌ Integration tests failed"
+          echo "integration_status=failed" >> $GITHUB_OUTPUT
+          exit 1
+        fi
 
     - name: Upload Binary
       uses: actions/upload-artifact@v4
@@ -126,11 +239,19 @@ jobs:
         name: codeguardian-binary
         path: target/release/do-codeguardian
 
+    - name: Upload Integration Test Results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: integration-test-results-${{ github.run_id }}
+        path: |
+          integration-test-results.json
+        retention-days: 30
+
   # Performance monitoring job
   performance:
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    needs: build
     if: github.event_name == 'schedule'
 
     steps:
@@ -146,13 +267,35 @@ jobs:
       with:
         workspaces: "./ -> target"
 
-    - name: Download Binary
-      uses: actions/download-artifact@v4
-      with:
-        name: codeguardian-binary
-        path: ./codeguardian
-
     - name: Run Performance Benchmarks
+      id: performance_benchmarks
       run: |
-        chmod +x ./codeguardian
-        ./scripts/performance_analysis.sh
+        echo "📊 Running performance analysis..."
+        if ./scripts/performance_analysis.sh; then
+          echo "✅ Performance analysis completed successfully"
+          echo "performance_status=passed" >> $GITHUB_OUTPUT
+        else
+          echo "⚠️  Performance analysis failed, but continuing (non-critical)"
+          echo "performance_status=failed" >> $GITHUB_OUTPUT
+        fi
+      continue-on-error: true
+
+    - name: Performance Summary
+      if: always()
+      run: |
+        echo "## Performance Analysis Summary" >> $GITHUB_STEP_SUMMARY
+        if [ "${{ steps.performance_benchmarks.outcome }}" == "success" ]; then
+          echo "✅ **Performance Analysis**: Completed successfully" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "⚠️  **Performance Analysis**: Failed (non-critical)" >> $GITHUB_STEP_SUMMARY
+        fi
+
+    - name: Upload Performance Results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: performance-results-${{ github.run_id }}
+        path: |
+          target/criterion/**/*
+          *.log
+        retention-days: 7
