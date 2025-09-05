@@ -20,6 +20,14 @@ description: >-
       </commentary>
   </example>
 mode: all
+tools:
+  write: true
+  edit: true
+  bash: true
+  read: true
+  grep: true
+  glob: true
+  task: true
 permission:
   edit: allow
   bash: allow

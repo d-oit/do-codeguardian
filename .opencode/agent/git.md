@@ -20,8 +20,16 @@ description: >-
     </commentary>
   </example>
 mode: subagent
+tools:
+  write: true
+  edit: true
+  bash: true
+  read: true
+  grep: true
+  glob: true
+  task: true
 permission:
-  edit: deny
+  edit: allow
   bash: allow
   webfetch: allow
 ---

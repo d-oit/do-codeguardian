@@ -8,6 +8,7 @@ tools:
   read: true
   grep: true
   glob: true
+  task: true
 ---
 
 # Swarm Orchestrator Agent

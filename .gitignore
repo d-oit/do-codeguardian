@@ -54,3 +54,7 @@ examples/codeguardian.toml
 cobertura.xml
 tarpaulin-report.html
 tarpaulin-report.json
+
+# Test result files
+final-test.json
+*-test.json
