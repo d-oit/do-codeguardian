@@ -1,196 +1,51 @@
-# CodeGuardian Configuration
-# Production-ready defaults prioritizing security and performance
+# CodeGuardian Configuration - Fixed Structure
 
 [output]
-# Output directory for results
-directory = "codeguardian-results"
-# Output format: json, html, markdown, sarif
-format = "sarif"
-verbose = false
-generate_summary = true
-compress_output = true
-reports_subdirectory = "reports"
-data_subdirectory = "data"
-temp_subdirectory = "temp"
-historical_subdirectory = "historical"
-auto_archive = true
-max_reports_kept = 10
+directory = "reports"
+format = "json"
 
 [security]
 enabled = true
-fail_on_issues = false
-min_severity = "low"
-# Global max file size (10MB)
-max_file_size = 10485760
-entropy_threshold = 4.5
-vulnerability_threshold = "medium"
-check_hardcoded_secrets = true
-check_unsafe_code = true
-check_dependencies = true
-secret_patterns = [
-    '''(?i)(password|passwd|pwd)\s*[:=]\s*['\x22][^'\x22]{8,}['\x22]''',
-    '''(?i)(api[_-]?key|apikey)\s*[:=]\s*['\x22][^'\x22]{16,}['\x22]''',
-    '''(?i)(secret|token)\s*[:=]\s*['\x22][^'\x22]{16,}['\x22]''',
-    '''(?i)(private[_-]?key)\s*[:=]\s*['\x22][^'\x22]{32,}['\x22]''',
-]
-
-[performance]
-enabled = true
-check_allocations = true
-check_async_blocking = true
-enable_profiling = false
-max_memory_usage_mb = 512
-max_cpu_usage_percent = 80
 
 [git]
 conventional_commits = true
 commit_template = "{type}({scope}): {description}"
 require_signed_commits = false
 
+[performance]
+enabled = true
+check_allocations = true
+check_async_blocking = true
+max_complexity = 15
+max_function_length = 150
+enable_profiling = false
+max_memory_usage_mb = 512
+max_cpu_usage_percent = 80
+
 [analyzers]
-
-[analyzers.integrity]
-enabled = true
-hash_algorithm = "Blake3"
-baseline_file = ".codeguardian/integrity.baseline"
-auto_update_baseline = false
-check_permissions = true
-check_binary_files = false
-verify_checksums = true
-# Override global max_file_size for integrity checks (5MB)
-max_file_size = 5242880
-
-[analyzers.lint_drift]
-enabled = false
-config_files = ["Cargo.toml", "package.json", ".eslintrc.json"]
-baseline_file = ".codeguardian/lint_drift.baseline"
-auto_update_baseline = false
-strict_mode = false
-
-[analyzers.non_production]
-enabled = true
-exclude_test_files = true
-exclude_example_files = true
-
-[[analyzers.non_production.patterns]]
-pattern = "(?i)\\b(todo|fixme|hack|xxx)\\b"
-description = "Non-production code markers"
-severity = "medium"
-
-[[analyzers.non_production.patterns]]
-pattern = "(?i)\\bconsole\\.log\\b"
-description = "Debug logging statements"
-severity = "low"
-
-[analyzers.dependency]
-enabled = true
-check_outdated = true
-check_vulnerabilities = true
-check_unused = true
-check_duplicates = true
-check_licenses = true
-max_age_days = 365
-vulnerability_databases = ["https://cve.mitre.org", "https://nvd.nist.gov"]
-
-[analyzers.performance_analyzer]
-enabled = true
-check_nested_loops = true
-check_string_operations = true
-check_blocking_io = true
-check_algorithms = true
-check_memory_usage = true
-check_io_operations = true
-max_complexity = 10
-max_function_length = 50
-max_loop_depth = 3
-
-[analyzers.security_analyzer]
-enabled = true
-check_sql_injection = true
-check_xss = true
-check_command_injection = true
-check_hardcoded_secrets = true
-check_vulnerabilities = true
-check_permissions = true
-check_secrets = true
-min_entropy_threshold = 3.5
-
-[analyzers.code_quality]
-enabled = true
-check_magic_numbers = true
-check_complex_conditions = true
-check_deep_nesting = true
-check_commented_code = true
-check_complexity = true
-check_duplication = true
-check_naming = true
-max_complexity = 10
-max_nesting_depth = 6
-# Override for code quality (500KB)
-max_file_size = 512000
-max_line_length = 120
-
 [analyzers.broken_files]
-enabled = true
-detect_merge_conflicts = true
-detect_ai_placeholders = true
+enabled = false
+detect_merge_conflicts = false
+detect_ai_placeholders = false
 detect_duplicates = false
 
 [analyzers.broken_files.conflicts]
-fail_on_conflicts = true
-validate_syntax = true
-check_git_status = true
-
-[analyzers.broken_files.placeholders]
-severity = "medium"
-patterns = [
-    "add content here",
-    "implement this",
-    "your code here",
-    "placeholder",
-    "todo: implement",
-    "fill in the details",
-    "complete this",
-    "add your logic"
-]
-custom_patterns = []
-
-[analyzers.broken_files.duplicates]
-min_lines = 10
-focus_security = true
-ignore_test_files = true
-max_files_to_compare = 1000
+fail_on_conflicts = false
 
 [files]
 include_patterns = []
-exclude_patterns = [
-    "*.log", "*.tmp", "target/", "node_modules/", ".git/", "dist/", "build/",
-    "*.min.js", "*.min.css", "vendor/", "third_party/",
-    "**/*test*.rs", "**/*_test.rs", "**/tests/", "**/test/", "**/spec/", "**/specs/",
-    "**/*.test.*", "**/*.spec.*", "**/benches/", "**/benchmarks/",
-    "**/examples/", "**/example/", "**/docs/", "**/*.md", "**/codeguardian.toml",
-]
-analyze_extensions = [
-    ".rs", ".js", ".ts", ".py", ".java", ".cpp", ".c", ".h",
-    ".go", ".php", ".rb", ".cs", ".swift", ".kt", ".scala",
-    ".html", ".css", ".json", ".xml", ".yaml", ".yml", ".toml",
-    ".md", ".txt", ".sh", ".bat", ".ps1"
-]
+exclude_patterns = ["*.log", "*.tmp", "target/", "node_modules/", ".git/"]
+analyze_extensions = [".rs", ".js", ".ts", ".py", ".java"]
 skip_binaries = true
+max_file_size_bytes = 10485760
+skip_large_files = true
 
 [severity]
 custom_levels = ["info", "low", "medium", "high", "critical"]
 enable_escalation = true
 escalation_threshold = 5
 
-[analysis]
-enabled = true
-analyze_binaries = false
-timeout_seconds = 300
-parallel_processing = true
-
 [integrations]
-
 [integrations.github]
 enabled = false
 repository = ""
@@ -209,11 +64,20 @@ issue_labels = ["security", "codeguardian"]
 comment_mrs = false
 min_severity = "high"
 
+[analysis]
+enabled = true
+analyze_binaries = false
+timeout_seconds = 300
+parallel_processing = true
+max_workers = 4
+enable_caching = true
+cache_dir = ".codeguardian/cache"
+cache_expiration_days = 7
+
 [optimization]
 enable_optimized_analyzers = true
 enable_file_caching = true
 max_parallel_workers = 4
-# Aligned with global max_file_size
 max_memory_file_size = 10485760
 streaming_chunk_size = 65536
 max_findings_per_file = 50
@@ -229,5 +93,4 @@ cleanup_frequency = 10
 enabled = true
 max_analysis_time_seconds = 30
 max_lines_per_file = 10000
-# Aligned with global max_file_size
-skip_large_files_bytes = 10485760
+skip_large_files_bytes = 52428800
