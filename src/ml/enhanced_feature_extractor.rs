@@ -35,13 +35,13 @@ impl EnhancedFeatureExtractor {
     }
 
     /// Extract enhanced feature vector combining traditional and AST features
-    pub fn extract_enhanced_features(&mut self, finding: &Finding) -> Result<Vec<f32>> {
+    pub async fn extract_enhanced_features(&mut self, finding: &Finding) -> Result<Vec<f32>> {
         // Get base features (8 dimensions)
         let mut base_features = self.base_extractor.extract_features(finding)?;
 
         // Get AST features if available
         #[cfg(feature = "ast")]
-        let ast_features = self.get_ast_features(&finding.file)?;
+        let ast_features = self.get_ast_features_async(&finding.file).await?;
 
         #[cfg(not(feature = "ast"))]
         let ast_features = vec![0.0; 16]; // Placeholder when AST is disabled
@@ -140,11 +140,11 @@ impl EnhancedFeatureExtractor {
     }
 
     /// Analyze feature importance for a given finding
-    pub fn analyze_feature_importance(
+    pub async fn analyze_feature_importance(
         &mut self,
         finding: &Finding,
     ) -> Result<FeatureImportanceAnalysis> {
-        let features = self.extract_enhanced_features(finding)?;
+        let features = self.extract_enhanced_features(finding).await?;
         let feature_names = Self::get_feature_names();
 
         let mut analysis = FeatureImportanceAnalysis {
@@ -271,7 +271,9 @@ mod tests {
             "Test finding".to_string(),
         );
 
-        let features = extractor.extract_enhanced_features(&finding).unwrap();
+        let features = tokio::runtime::Runtime::new()
+            .unwrap()
+            .block_on(async { extractor.extract_enhanced_features(&finding).await.unwrap() });
         assert_eq!(features.len(), 24); // 8 base + 16 AST features
     }
 
@@ -288,7 +290,12 @@ mod tests {
             "Critical test finding".to_string(),
         );
 
-        let analysis = extractor.analyze_feature_importance(&finding).unwrap();
+        let analysis = tokio::runtime::Runtime::new().unwrap().block_on(async {
+            extractor
+                .analyze_feature_importance(&finding)
+                .await
+                .unwrap()
+        });
         assert_eq!(analysis.total_features, 24);
         assert!(analysis.base_feature_contribution >= 0.0);
         assert!(analysis.ast_feature_contribution >= 0.0);

@@ -4,6 +4,43 @@ This guide provides comprehensive documentation for the CodeGuardian CI/CD setup
 
 ## Overview
 
+## License Compliance
+
+CodeGuardian implements comprehensive license compliance checking as part of its CI/CD pipeline to ensure all dependencies comply with organizational license policies and legal requirements.
+
+### License Compliance Features
+
+- **Automated License Scanning**: Uses `cargo-deny` to scan all Rust dependencies for license compliance
+- **Policy-Based Configuration**: Configurable license allow/deny lists in `deny.toml`
+- **Comprehensive Reporting**: Detailed reports showing license types, counts, and compliance status
+- **CI/CD Integration**: License checks run on all PRs, pushes, and releases
+- **Artifact Storage**: License reports stored as workflow artifacts for 30 days
+
+### Supported License Policies
+
+- **Allowed Licenses**: MIT, Apache-2.0, BSD-2-Clause, BSD-3-Clause, ISC, Unicode-DFS-2016, CC0-1.0, 0BSD, Zlib, BSL-1.0, MPL-2.0
+- **Copyleft Licenses**: GPL-2.0-only, GPL-2.0-or-later, LGPL-2.1-only, LGPL-2.1-or-later (allowed with warnings)
+- **Denied Licenses**: GPL-3.0, LGPL-3.0, AGPL-3.0, MS-PL, JSON, CDDL, EPL
+- **Unlicensed Dependencies**: Strictly denied
+
+### License Check Integration
+
+License compliance checks are integrated into multiple workflows:
+
+- **Optimized CI**: Full license scanning with detailed reporting
+- **CodeGuardian CI**: Basic license checks on PRs and pushes
+- **Dependency Review**: GitHub-native license checking for additional coverage
+
+### License Report Generation
+
+The CI/CD pipeline generates comprehensive license reports including:
+- Dependency license distribution
+- Compliance status summary
+- Violation details (if any)
+- Recommendations for resolution
+
+Reports are available as workflow artifacts and can be downloaded for compliance auditing.
+
 CodeGuardian uses a sophisticated CI/CD pipeline with multiple specialized workflows that work together to ensure code quality, security, and performance. The system is designed for both speed and thoroughness, with different workflows handling different aspects of the development lifecycle.
 
 ## Workflow Architecture

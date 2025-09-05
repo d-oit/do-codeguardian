@@ -66,12 +66,12 @@ impl MLClassifier {
     }
 
     /// Predict relevance score for a finding (0.0 = likely false positive, 1.0 = likely true positive)
-    pub fn predict_relevance(&mut self, finding: &Finding) -> Result<f32> {
+    pub async fn predict_relevance(&mut self, finding: &Finding) -> Result<f32> {
         if !self.enabled {
             return Ok(0.5); // Neutral score if ML disabled
         }
 
-        let features = self.extract_features(finding)?;
+        let features = self.extract_features(finding).await?;
 
         #[cfg(feature = "ml")]
         {
@@ -87,12 +87,16 @@ impl MLClassifier {
     }
 
     /// Update model with user feedback (online learning)
-    pub fn record_feedback(&mut self, finding: &Finding, is_true_positive: bool) -> Result<()> {
+    pub async fn record_feedback(
+        &mut self,
+        finding: &Finding,
+        is_true_positive: bool,
+    ) -> Result<()> {
         if !self.enabled {
             return Ok(());
         }
 
-        let features = self.extract_features(finding)?;
+        let features = self.extract_features(finding).await?;
         let target = if is_true_positive { 1.0 } else { 0.0 };
 
         #[cfg(feature = "ml")]
@@ -111,7 +115,7 @@ impl MLClassifier {
     }
 
     /// Filter findings based on confidence threshold
-    pub fn filter_findings(
+    pub async fn filter_findings(
         &mut self,
         findings: Vec<Finding>,
         threshold: f32,
@@ -123,7 +127,7 @@ impl MLClassifier {
         let mut filtered = Vec::new();
 
         for finding in findings {
-            let relevance = self.predict_relevance(&finding)?;
+            let relevance = self.predict_relevance(&finding).await?;
             if relevance >= threshold {
                 filtered.push(finding);
             }
@@ -133,10 +137,12 @@ impl MLClassifier {
     }
 
     /// Extract features using the appropriate extractor
-    fn extract_features(&mut self, finding: &Finding) -> Result<Vec<f32>> {
+    async fn extract_features(&mut self, finding: &Finding) -> Result<Vec<f32>> {
         #[cfg(all(feature = "ml", feature = "ast"))]
         {
-            self.enhanced_extractor.extract_enhanced_features(finding)
+            self.enhanced_extractor
+                .extract_enhanced_features(finding)
+                .await
         }
 
         #[cfg(all(feature = "ml", not(feature = "ast")))]
@@ -153,11 +159,13 @@ impl MLClassifier {
 
     /// Get feature importance analysis for a finding (AST-enhanced only)
     #[cfg(all(feature = "ml", feature = "ast"))]
-    pub fn analyze_feature_importance(
+    pub async fn analyze_feature_importance(
         &mut self,
         finding: &Finding,
     ) -> Result<enhanced_feature_extractor::FeatureImportanceAnalysis> {
-        self.enhanced_extractor.analyze_feature_importance(finding)
+        self.enhanced_extractor
+            .analyze_feature_importance(finding)
+            .await
     }
 
     /// Get information about the ML classifier configuration

@@ -536,3 +536,74 @@ After configuring CodeGuardian:
 **[⬅️ Back to User Guide](../README.md)** | **[📦 Installation Guide](installation.md)** | **[🔧 Basic Usage Guide](basic-usage.md)**
 
 </div>
+
+### License Compliance Configuration
+
+CodeGuardian supports comprehensive license compliance checking through `cargo-deny` integration. Configure license policies in `deny.toml`:
+
+```toml
+[licenses]
+# The lint level for crates which do not have a detectable license
+unlicensed = "deny"
+# List of explicitly allowed licenses
+allow = [
+    "MIT",
+    "Apache-2.0",
+    "BSD-2-Clause",
+    "BSD-3-Clause",
+    "ISC",
+    "Unicode-DFS-2016",
+    "CC0-1.0",
+    "0BSD",
+    "Zlib",
+    "BSL-1.0",
+    "MPL-2.0",
+    "GPL-2.0-only",
+    "GPL-2.0-or-later",
+    "LGPL-2.1-only",
+    "LGPL-2.1-or-later",
+]
+# List of explicitly disallowed licenses
+deny = [
+    "GPL-3.0-only",
+    "GPL-3.0-or-later",
+    "LGPL-3.0-only",
+    "LGPL-3.0-or-later",
+    "AGPL-3.0-only",
+    "AGPL-3.0-or-later",
+    "MS-PL",
+    "JSON",
+    "CDDL-1.0",
+    "CDDL-1.1",
+    "EPL-1.0",
+    "EPL-2.0",
+]
+# Lint level for when no license is detected
+no-license = "deny"
+# Lint level for when a copyleft license is detected
+copyleft = "warn"
+# Confidence threshold for license detection
+confidence-threshold = 0.8
+```
+
+### CI/CD License Integration
+
+Configure license compliance in CI/CD workflows:
+
+```yaml
+- name: License Compliance Check
+  run: |
+    cargo install cargo-deny --locked
+    cargo deny check licenses
+
+- name: Generate License Report
+  run: |
+    ./scripts/generate-license-report.sh
+
+- name: Upload License Results
+  uses: actions/upload-artifact@v4
+  with:
+    name: license-results-${{ github.run_id }}
+    path: license-results.json
+    retention-days: 30
+```

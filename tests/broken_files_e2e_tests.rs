@@ -11,6 +11,7 @@ use tempfile::{NamedTempFile, TempDir};
 #[cfg(test)]
 mod e2e_tests {
     use super::*;
+    use do_codeguardian::types::Severity;
 
     #[test]
     fn test_cli_detect_conflicts_flag() {
@@ -184,7 +185,7 @@ fn main() {
 
         // Verify all conflict findings are critical
         for finding in conflict_findings {
-            assert_eq!(finding.severity, codeguardian::types::Severity::Critical);
+            assert_eq!(finding.severity, Severity::Critical);
         }
 
         Ok(())
@@ -242,7 +243,7 @@ fn handle_this(data: &str) {
         assert!(!ai_findings.is_empty(), "Should detect AI content");
 
         // Should detect various types of AI content
-        let rule_ids: Vec<_> = ai_findings.iter().map(|f| f.rule_id.as_str()).collect();
+        let rule_ids: Vec<_> = ai_findings.iter().map(|f| f.rule.as_str()).collect();
         assert!(rule_ids.contains(&"ai_generated_marker"));
         assert!(rule_ids.contains(&"placeholder_content"));
         assert!(rule_ids.contains(&"incomplete_implementation"));
@@ -312,15 +313,13 @@ fn log_authentication_attempt(username: &str, success: bool) {
         if !duplicate_findings.is_empty() {
             assert!(duplicate_findings
                 .iter()
-                .any(|f| f.rule_id == "internal_duplication"));
+                .any(|f| f.rule == "internal_duplication"));
 
             // Security-relevant duplicates should have appropriate severity
             for finding in duplicate_findings {
                 assert!(matches!(
                     finding.severity,
-                    codeguardian::types::Severity::High
-                        | codeguardian::types::Severity::Medium
-                        | codeguardian::types::Severity::Low
+                    Severity::High | Severity::Medium | Severity::Low
                 ));
             }
         }
@@ -442,10 +441,10 @@ fn main() {
         let results = engine.analyze_files(&files, 1).await?;
 
         // Check that conflicts are detected
-        let has_conflicts = results.findings.iter().any(|f| {
-            f.analyzer == "git_conflict"
-                && matches!(f.severity, codeguardian::types::Severity::Critical)
-        });
+        let has_conflicts = results
+            .findings
+            .iter()
+            .any(|f| f.analyzer == "git_conflict" && matches!(f.severity, Severity::Critical));
 
         assert!(
             has_conflicts,
@@ -500,7 +499,7 @@ fn main() {
         let placeholder_findings: Vec<_> = results
             .findings
             .iter()
-            .filter(|f| f.analyzer == "ai_content" && f.rule_id == "placeholder_content")
+            .filter(|f| f.analyzer == "ai_content" && f.rule == "placeholder_content")
             .collect();
 
         assert!(
@@ -606,11 +605,11 @@ fn do_something() {
         // Test files should have fewer or no generic function name findings
         let main_generic_findings = main_findings
             .iter()
-            .filter(|f| f.rule_id == "generic_function_name")
+            .filter(|f| f.rule == "generic_function_name")
             .count();
         let test_generic_findings = test_findings
             .iter()
-            .filter(|f| f.rule_id == "generic_function_name")
+            .filter(|f| f.rule == "generic_function_name")
             .count();
 
         // Test files should be treated differently (fewer generic function warnings)

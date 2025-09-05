@@ -1,0 +1,18 @@
+# Production Environment Overrides
+# This file contains production-specific security hardening
+# Use with: codeguardian --config codeguardian.prod.toml
+
+[security]
+fail_on_issues = true
+min_severity = "medium"
+
+[analyzers.integrity]
+auto_update_baseline = false
+
+[optimization]
+max_parallel_workers = 8
+enable_file_caching = true
+
+[integrations.github]
+enabled = true
+create_issues = true

@@ -10,6 +10,9 @@
     "github-pr-manager": {
       "model": "nvidia/deepseek-ai/deepseek-v3.1"
     },
+    "github-workflow-manager": {
+      "model": "nvidia/deepseek-ai/deepseek-v3.1"
+    },
     "ml-training-specialist": {
       "model": "nvidia/deepseek-ai/deepseek-v3.1"
     }

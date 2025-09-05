@@ -1,7 +1,6 @@
 use crate::cli::TrainArgs;
 use crate::ml::fann_classifier::{FannClassifier, NetworkConfig};
-use crate::ml::feature_extractor::FeatureExtractor;
-use crate::ml::training_data::{FeedbackSource, TrainingDataCollector, TrainingDataset};
+use crate::ml::training_data::TrainingDataset;
 use crate::Config;
 use anyhow::Result;
 use std::path::PathBuf;
@@ -17,7 +16,7 @@ pub async fn run(args: TrainArgs, _config: &Config) -> Result<()> {
     // Load or create training dataset
     let mut dataset = if let Some(data_path) = &args.training_data {
         info!("Loading training data from: {}", data_path.display());
-        TrainingDataset::load_from_file(&data_path.to_string_lossy())?
+        TrainingDataset::load_from_file_async(&data_path.to_string_lossy()).await?
     } else {
         info!("Creating new training dataset");
         TrainingDataset::new()

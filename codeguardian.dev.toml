@@ -1,0 +1,17 @@
+# Development Environment Overrides
+# This file contains development-specific configuration overrides
+# Use with: codeguardian --config codeguardian.dev.toml
+
+[output]
+verbose = true
+generate_summary = false
+
+[performance]
+enable_profiling = true
+
+[analyzers.broken_files]
+detect_duplicates = true
+
+[optimization]
+max_parallel_workers = 2
+max_findings_per_file = 100

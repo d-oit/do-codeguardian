@@ -36,11 +36,11 @@ fn main() {
 
         // Should detect start, separator, and end markers
         assert_eq!(findings.len(), 3);
-        assert!(findings.iter().any(|f| f.rule_id == "merge_conflict_start"));
+        assert!(findings.iter().any(|f| f.rule == "merge_conflict_start"));
         assert!(findings
             .iter()
-            .any(|f| f.rule_id == "merge_conflict_separator"));
-        assert!(findings.iter().any(|f| f.rule_id == "merge_conflict_end"));
+            .any(|f| f.rule == "merge_conflict_separator"));
+        assert!(findings.iter().any(|f| f.rule == "merge_conflict_end"));
 
         // All conflict findings should be critical severity
         for finding in &findings {
@@ -67,7 +67,7 @@ fn main() {
             .unwrap();
 
         // Should detect malformed conflict
-        assert!(findings.iter().any(|f| f.rule_id == "malformed_conflict"));
+        assert!(findings.iter().any(|f| f.rule == "malformed_conflict"));
         assert!(findings.iter().any(|f| f.severity == Severity::Critical));
     }
 
@@ -80,7 +80,7 @@ fn main() {
             .analyze(Path::new("test.json"), invalid_json.as_bytes())
             .unwrap();
 
-        assert!(findings.iter().any(|f| f.rule_id == "syntax_error"));
+        assert!(findings.iter().any(|f| f.rule == "syntax_error"));
         assert!(findings.iter().any(|f| f.severity == Severity::High));
     }
 
@@ -145,10 +145,10 @@ fn placeholder_function() {
 
         // Should detect multiple placeholder patterns
         assert!(!findings.is_empty());
-        assert!(findings.iter().any(|f| f.rule_id == "placeholder_content"));
+        assert!(findings.iter().any(|f| f.rule == "placeholder_content"));
         assert!(findings
             .iter()
-            .any(|f| f.rule_id == "incomplete_implementation"));
+            .any(|f| f.rule == "incomplete_implementation"));
     }
 
     #[test]
@@ -170,7 +170,7 @@ fn another_function() {
             .analyze(Path::new("test.rs"), content.as_bytes())
             .unwrap();
 
-        assert!(findings.iter().any(|f| f.rule_id == "ai_generated_marker"));
+        assert!(findings.iter().any(|f| f.rule == "ai_generated_marker"));
         assert!(findings.iter().any(|f| f.severity == Severity::Info));
     }
 
@@ -196,9 +196,7 @@ fn process_data(input: &str) {
             .unwrap();
 
         // Should detect generic function names (but not in test files)
-        assert!(findings
-            .iter()
-            .any(|f| f.rule_id == "generic_function_name"));
+        assert!(findings.iter().any(|f| f.rule == "generic_function_name"));
         assert!(findings.iter().any(|f| f.severity == Severity::Low));
     }
 
@@ -216,9 +214,7 @@ fn do_something() {
             .unwrap();
 
         // Generic function names should be ignored in test files
-        assert!(!findings
-            .iter()
-            .any(|f| f.rule_id == "generic_function_name"));
+        assert!(!findings.iter().any(|f| f.rule == "generic_function_name"));
     }
 
     #[test]
@@ -252,7 +248,7 @@ fn main() {
             .analyze(Path::new("test.rs"), content.as_bytes())
             .unwrap();
 
-        assert!(findings.iter().any(|f| f.rule_id == "placeholder_content"));
+        assert!(findings.iter().any(|f| f.rule == "placeholder_content"));
     }
 
     #[test]
@@ -275,12 +271,12 @@ fn todo_implementation() {
         // unimplemented! should be high severity
         let unimpl_finding = findings
             .iter()
-            .find(|f| f.rule_id == "incomplete_implementation" && f.line == 3)
+            .find(|f| f.rule == "incomplete_implementation" && f.line == 3)
             .unwrap();
         assert_eq!(unimpl_finding.severity, Severity::High);
 
         // TODO should be medium severity
-        let todo_finding = findings.iter().find(|f| f.rule_id == "placeholder_content");
+        let todo_finding = findings.iter().find(|f| f.rule == "placeholder_content");
         if let Some(finding) = todo_finding {
             assert_eq!(finding.severity, Severity::Medium);
         }
@@ -329,12 +325,12 @@ fn log_authentication_attempt(username: &str, success: bool) {
             .unwrap();
 
         // Should detect duplicate authentication functions
-        assert!(findings.iter().any(|f| f.rule_id == "internal_duplication"));
+        assert!(findings.iter().any(|f| f.rule == "internal_duplication"));
 
         // Should be high severity due to security relevance
         let duplicate_finding = findings
             .iter()
-            .find(|f| f.rule_id == "internal_duplication")
+            .find(|f| f.rule == "internal_duplication")
             .unwrap();
         assert!(matches!(
             duplicate_finding.severity,
@@ -347,18 +343,18 @@ fn log_authentication_attempt(username: &str, success: bool) {
         let analyzer = DuplicateAnalyzer::new();
 
         // Security-relevant code block
-        let security_block = codeguardian::analyzers::duplicate_analyzer::CodeBlock {
-            lines: vec!["authenticate_user".to_string(), "hash_password".to_string()],
-            start_line: 1,
-            end_line: 2,
-        };
-
-        // Non-security code block
-        let normal_block = codeguardian::analyzers::duplicate_analyzer::CodeBlock {
-            lines: vec!["println!".to_string(), "format!".to_string()],
-            start_line: 1,
-            end_line: 2,
-        };
+        //        let security_block = do_codeguardian::analyzers::duplicate_analyzer::CodeBlock {
+        //            lines: vec!["authenticate_user".to_string(), "hash_password".to_string()],
+        //            start_line: 1,
+        //            end_line: 2,
+        //        };
+        //
+        //        // Non-security code block
+        //        let normal_block = do_codeguardian::analyzers::duplicate_analyzer::CodeBlock {
+        //            lines: vec!["println!".to_string(), "format!".to_string()],
+        //            start_line: 1,
+        //            end_line: 2,
+        //        };
 
         // Note: This test would require exposing the is_security_relevant method
         // For now, we'll test through the full analysis

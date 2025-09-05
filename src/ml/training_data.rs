@@ -1,7 +1,6 @@
 use crate::types::{Finding, Severity};
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
-use std::path::PathBuf;
 
 /// Training data management for the ML classifier
 #[derive(Debug, Serialize, Deserialize)]
@@ -40,18 +39,6 @@ impl TrainingDataset {
         let content = tokio::fs::read_to_string(path).await?;
         let dataset: Self = serde_json::from_str(&content)?;
         Ok(dataset)
-    }
-
-    pub async fn load_from_file_async(path: &str) -> Result<Self> {
-        let content = tokio::fs::read_to_string(path).await?;
-        let dataset: Self = serde_json::from_str(&content)?;
-        Ok(dataset)
-    }
-
-    pub async fn save_to_file_async(&self, path: &str) -> Result<()> {
-        let content = serde_json::to_string_pretty(self)?;
-        tokio::fs::write(path, content).await?;
-        Ok(())
     }
 
     pub async fn save_to_file_async(&self, path: &str) -> Result<()> {

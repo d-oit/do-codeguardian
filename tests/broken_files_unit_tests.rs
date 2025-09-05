@@ -138,13 +138,13 @@ fn main() {
 
         for ext in binary_extensions {
             let file_name = format!("test.{}", ext);
-            let path = Path::new(&format!("test.{}", ext));
+            let path = Path::new(&file_name);
             assert!(!analyzer.supports_file(path), "Should not support .{}", ext);
         }
 
         for ext in text_extensions {
             let file_name = format!("test.{}", ext);
-            let path = Path::new(&format!("test.{}", ext));
+            let path = Path::new(&file_name);
             assert!(analyzer.supports_file(path), "Should support .{}", ext);
         }
     }
@@ -882,13 +882,13 @@ fn test_b() {
 
         for ext in supported_extensions {
             let file_name = format!("test.{}", ext);
-            let path = Path::new(&format!("test.{}", ext));
+            let path = Path::new(&file_name);
             assert!(analyzer.supports_file(path), "Should support .{}", ext);
         }
 
         for ext in unsupported_extensions {
             let file_name = format!("test.{}", ext);
-            let path = Path::new(&format!("test.{}", ext));
+            let path = Path::new(&file_name);
             assert!(!analyzer.supports_file(path), "Should not support .{}", ext);
         }
     }

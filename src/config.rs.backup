@@ -17,7 +17,7 @@
 
 use anyhow::Context;
 use serde::{Deserialize, Serialize};
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 /// Default configuration for CodeGuardian
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -733,6 +733,10 @@ pub struct AnalysisConfig {
     pub cache_dir: String,
     /// Cache expiration in days
     pub cache_expiration_days: u32,
+    /// Baseline file path for comparison
+    pub baseline_file: Option<PathBuf>,
+    /// ML threshold for anomaly detection (0.0-1.0)
+    pub ml_threshold: Option<f64>,
 }
 
 impl Default for AnalysisConfig {
@@ -746,6 +750,8 @@ impl Default for AnalysisConfig {
             enable_caching: true,
             cache_dir: ".codeguardian/cache".to_string(),
             cache_expiration_days: 7,
+            baseline_file: None,
+            ml_threshold: None,
         }
     }
 }

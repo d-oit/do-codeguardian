@@ -1,0 +1,953 @@
+build	Build Release	﻿2025-09-04T11:34:54.3108561Z ##[group]Run echo "🔨 Building release binary..."
+build	Build Release	2025-09-04T11:34:54.3108992Z [36;1mecho "🔨 Building release binary..."[0m
+build	Build Release	2025-09-04T11:34:54.3109370Z [36;1mif cargo build --release --features full; then[0m
+build	Build Release	2025-09-04T11:34:54.3109772Z [36;1m  echo "✅ Release build successful"[0m
+build	Build Release	2025-09-04T11:34:54.3110062Z [36;1melse[0m
+build	Build Release	2025-09-04T11:34:54.3110297Z [36;1m  echo "❌ Release build failed"[0m
+build	Build Release	2025-09-04T11:34:54.3110571Z [36;1m  exit 1[0m
+build	Build Release	2025-09-04T11:34:54.3110787Z [36;1mfi[0m
+build	Build Release	2025-09-04T11:34:54.3143137Z shell: /usr/bin/bash -e {0}
+build	Build Release	2025-09-04T11:34:54.3143420Z env:
+build	Build Release	2025-09-04T11:34:54.3143630Z   CARGO_TERM_COLOR: always
+build	Build Release	2025-09-04T11:34:54.3143883Z   RUST_BACKTRACE: 1
+build	Build Release	2025-09-04T11:34:54.3144114Z   CARGO_INCREMENTAL: 0
+build	Build Release	2025-09-04T11:34:54.3144350Z   CARGO_PROFILE_DEV_DEBUG: 0
+build	Build Release	2025-09-04T11:34:54.3144613Z   RUSTFLAGS: -D warnings
+build	Build Release	2025-09-04T11:34:54.3144875Z   CARGO_UNSTABLE_SPARSE_REGISTRY: true
+build	Build Release	2025-09-04T11:34:54.3145194Z   CARGO_REGISTRIES_CRATES_IO_PROTOCOL: sparse
+build	Build Release	2025-09-04T11:34:54.3145530Z   CACHE_ON_FAILURE: false
+build	Build Release	2025-09-04T11:34:54.3145774Z ##[endgroup]
+build	Build Release	2025-09-04T11:34:54.3198752Z 🔨 Building release binary...
+build	Build Release	2025-09-04T11:34:54.4168335Z [1m[32m    Updating[0m crates.io index
+build	Build Release	2025-09-04T11:34:55.5109859Z [1m[32m     Locking[0m 476 packages to latest compatible versions
+build	Build Release	2025-09-04T11:34:55.5927707Z [1m[32m Downloading[0m crates ...
+build	Build Release	2025-09-04T11:34:55.6656179Z [1m[32m  Downloaded[0m autocfg v1.5.0
+build	Build Release	2025-09-04T11:34:55.6692469Z [1m[32m  Downloaded[0m auditable-info v0.9.0
+build	Build Release	2025-09-04T11:34:55.6707977Z [1m[32m  Downloaded[0m abscissa_derive v0.8.2
+build	Build Release	2025-09-04T11:34:55.6724883Z [1m[32m  Downloaded[0m abscissa_core v0.8.2
+build	Build Release	2025-09-04T11:34:55.6776920Z [1m[32m  Downloaded[0m cargo-lock v10.1.0
+build	Build Release	2025-09-04T11:34:55.6814782Z [1m[32m  Downloaded[0m auditable-serde v0.8.0
+build	Build Release	2025-09-04T11:34:55.6830768Z [1m[32m  Downloaded[0m async-compression v0.4.30
+build	Build Release	2025-09-04T11:34:55.6906858Z [1m[32m  Downloaded[0m num-conv v0.1.0
+build	Build Release	2025-09-04T11:34:55.6920568Z [1m[32m  Downloaded[0m arrayref v0.3.9
+build	Build Release	2025-09-04T11:34:55.6939154Z [1m[32m  Downloaded[0m arc-swap v1.7.1
+build	Build Release	2025-09-04T11:34:55.6991195Z [1m[32m  Downloaded[0m jobserver v0.1.34
+build	Build Release	2025-09-04T11:34:55.7023629Z [1m[32m  Downloaded[0m displaydoc v0.2.5
+build	Build Release	2025-09-04T11:34:55.7071419Z [1m[32m  Downloaded[0m num_cpus v1.17.0
+build	Build Release	2025-09-04T11:34:55.7126974Z [1m[32m  Downloaded[0m tracing-attributes v0.1.30
+build	Build Release	2025-09-04T11:34:55.7184679Z [1m[32m  Downloaded[0m strsim v0.11.1
+build	Build Release	2025-09-04T11:34:55.7237720Z [1m[32m  Downloaded[0m tinyvec v1.10.0
+build	Build Release	2025-09-04T11:34:55.7332461Z [1m[32m  Downloaded[0m rustc-demangle v0.1.26
+build	Build Release	2025-09-04T11:34:55.7418389Z [1m[32m  Downloaded[0m ident_case v1.0.1
+build	Build Release	2025-09-04T11:34:55.7485962Z [1m[32m  Downloaded[0m yoke-derive v0.8.0
+build	Build Release	2025-09-04T11:34:55.7515450Z [1m[32m  Downloaded[0m gix-commitgraph v0.28.0
+build	Build Release	2025-09-04T11:34:55.7555675Z [1m[32m  Downloaded[0m serde_json v1.0.143
+build	Build Release	2025-09-04T11:34:55.7660008Z [1m[32m  Downloaded[0m home v0.5.11
+build	Build Release	2025-09-04T11:34:55.7683544Z [1m[32m  Downloaded[0m winnow v0.7.13
+build	Build Release	2025-09-04T11:34:55.7810988Z [1m[32m  Downloaded[0m indenter v0.3.4
+build	Build Release	2025-09-04T11:34:55.7852484Z [1m[32m  Downloaded[0m tokio-macros v2.5.0
+build	Build Release	2025-09-04T11:34:55.7882485Z [1m[32m  Downloaded[0m gix-ref v0.52.1
+build	Build Release	2025-09-04T11:34:55.7941304Z [1m[32m  Downloaded[0m gix-revwalk v0.20.1
+build	Build Release	2025-09-04T11:34:55.7958367Z [1m[32m  Downloaded[0m gix-shallow v0.4.0
+build	Build Release	2025-09-04T11:34:55.7973089Z [1m[32m  Downloaded[0m gix-hashtable v0.8.1
+build	Build Release	2025-09-04T11:34:55.7986192Z [1m[32m  Downloaded[0m gix-revision v0.34.1
+build	Build Release	2025-09-04T11:34:55.8008906Z [1m[32m  Downloaded[0m webpki-roots v1.0.2
+build	Build Release	2025-09-04T11:34:55.8047280Z [1m[32m  Downloaded[0m gix-odb v0.69.1
+build	Build Release	2025-09-04T11:34:55.8082325Z [1m[32m  Downloaded[0m zerocopy v0.8.26
+build	Build Release	2025-09-04T11:34:55.8341299Z [1m[32m  Downloaded[0m typenum v1.18.0
+build	Build Release	2025-09-04T11:34:55.8375785Z [1m[32m  Downloaded[0m tokio-util v0.7.16
+build	Build Release	2025-09-04T11:34:55.8451087Z [1m[32m  Downloaded[0m tower v0.5.2
+build	Build Release	2025-09-04T11:34:55.8556098Z [1m[32m  Downloaded[0m tower-http v0.6.6
+build	Build Release	2025-09-04T11:34:55.8646377Z [1m[32m  Downloaded[0m gix-negotiate v0.20.1
+build	Build Release	2025-09-04T11:34:55.8663447Z [1m[32m  Downloaded[0m url v2.5.7
+build	Build Release	2025-09-04T11:34:55.8692929Z [1m[32m  Downloaded[0m jiff v0.2.15
+build	Build Release	2025-09-04T11:34:55.8851875Z [1m[32m  Downloaded[0m indicatif v0.18.0
+build	Build Release	2025-09-04T11:34:55.8891446Z [1m[32m  Downloaded[0m gix-transport v0.47.0
+build	Build Release	2025-09-04T11:34:55.8931503Z [1m[32m  Downloaded[0m indexmap v2.11.0
+build	Build Release	2025-09-04T11:34:55.8979983Z [1m[32m  Downloaded[0m libssh2-sys v0.3.1
+build	Build Release	2025-09-04T11:34:55.9318296Z [1m[32m  Downloaded[0m gix-features v0.42.1
+build	Build Release	2025-09-04T11:34:55.9344753Z [1m[32m  Downloaded[0m iri-string v0.7.8
+build	Build Release	2025-09-04T11:34:55.9416398Z [1m[32m  Downloaded[0m jiff-static v0.2.15
+build	Build Release	2025-09-04T11:34:55.9440748Z [1m[32m  Downloaded[0m wasmparser v0.207.0
+build	Build Release	2025-09-04T11:34:55.9504658Z [1m[32m  Downloaded[0m gix-sec v0.11.0
+build	Build Release	2025-09-04T11:34:55.9517168Z [1m[32m  Downloaded[0m gix-config-value v0.15.1
+build	Build Release	2025-09-04T11:34:55.9530897Z [1m[32m  Downloaded[0m topological-sort v0.2.2
+build	Build Release	2025-09-04T11:34:55.9542452Z [1m[32m  Downloaded[0m toml_writer v1.0.2
+build	Build Release	2025-09-04T11:34:55.9557074Z [1m[32m  Downloaded[0m libc v0.2.175
+build	Build Release	2025-09-04T11:34:55.9829675Z [1m[32m  Downloaded[0m miniz_oxide v0.8.9
+build	Build Release	2025-09-04T11:34:55.9855453Z [1m[32m  Downloaded[0m gix-refspec v0.30.1
+build	Build Release	2025-09-04T11:34:55.9872500Z [1m[32m  Downloaded[0m gix-packetline v0.19.1
+build	Build Release	2025-09-04T11:34:55.9895722Z [1m[32m  Downloaded[0m libz-sys v1.1.22
+build	Build Release	2025-09-04T11:34:56.0117467Z [1m[32m  Downloaded[0m gix-index v0.40.1
+build	Build Release	2025-09-04T11:34:56.0154247Z [1m[32m  Downloaded[0m gix-discover v0.40.1
+build	Build Release	2025-09-04T11:34:56.0169769Z [1m[32m  Downloaded[0m gix-date v0.10.5
+build	Build Release	2025-09-04T11:34:56.0185961Z [1m[32m  Downloaded[0m gix-credentials v0.29.0
+build	Build Release	2025-09-04T11:34:56.0203359Z [1m[32m  Downloaded[0m zerofrom v0.1.6
+build	Build Release	2025-09-04T11:34:56.0212382Z [1m[32m  Downloaded[0m unicode-bom v2.0.3
+build	Build Release	2025-09-04T11:34:56.0225655Z [1m[32m  Downloaded[0m uluru v3.1.0
+build	Build Release	2025-09-04T11:34:56.0234330Z [1m[32m  Downloaded[0m typeid v1.0.3
+build	Build Release	2025-09-04T11:34:56.0246730Z [1m[32m  Downloaded[0m tower-service v0.3.3
+build	Build Release	2025-09-04T11:34:56.0255100Z [1m[32m  Downloaded[0m tower-layer v0.3.3
+build	Build Release	2025-09-04T11:34:56.0265219Z [1m[32m  Downloaded[0m toml_write v0.1.2
+build	Build Release	2025-09-04T11:34:56.0278279Z [1m[32m  Downloaded[0m toml_datetime v0.7.0
+build	Build Release	2025-09-04T11:34:56.0291369Z [1m[32m  Downloaded[0m toml v0.8.23
+build	Build Release	2025-09-04T11:34:56.0315904Z [1m[32m  Downloaded[0m tokio-rustls v0.26.2
+build	Build Release	2025-09-04T11:34:56.0336303Z [1m[32m  Downloaded[0m tokio-native-tls v0.3.1
+build	Build Release	2025-09-04T11:34:56.0354555Z [1m[32m  Downloaded[0m mio v1.0.4
+build	Build Release	2025-09-04T11:34:56.0413038Z [1m[32m  Downloaded[0m utf8parse v0.2.2
+build	Build Release	2025-09-04T11:34:56.0422927Z [1m[32m  Downloaded[0m icu_normalizer_data v2.0.0
+build	Build Release	2025-09-04T11:34:56.0444568Z [1m[32m  Downloaded[0m gix-config v0.45.1
+build	Build Release	2025-09-04T11:34:56.0489583Z [1m[32m  Downloaded[0m gix-object v0.49.1
+build	Build Release	2025-09-04T11:34:56.0522048Z [1m[32m  Downloaded[0m gix-lock v17.1.0
+build	Build Release	2025-09-04T11:34:56.0534099Z [1m[32m  Downloaded[0m gix-ignore v0.15.0
+build	Build Release	2025-09-04T11:34:56.0545001Z [1m[32m  Downloaded[0m gix-hash v0.18.0
+build	Build Release	2025-09-04T11:34:56.0559190Z [1m[32m  Downloaded[0m gix-glob v0.20.1
+build	Build Release	2025-09-04T11:34:56.0572887Z [1m[32m  Downloaded[0m gix-fs v0.15.0
+build	Build Release	2025-09-04T11:34:56.0588273Z [1m[32m  Downloaded[0m gix-filter v0.19.2
+build	Build Release	2025-09-04T11:34:56.0613609Z [1m[32m  Downloaded[0m gix-diff v0.52.1
+build	Build Release	2025-09-04T11:34:56.0640764Z [1m[32m  Downloaded[0m toml_datetime v0.6.11
+build	Build Release	2025-09-04T11:34:56.0652283Z [1m[32m  Downloaded[0m toml-span v0.5.2
+build	Build Release	2025-09-04T11:34:56.0669087Z [1m[32m  Downloaded[0m toml v0.9.5
+build	Build Release	2025-09-04T11:34:56.0709992Z [1m[32m  Downloaded[0m is-terminal v0.4.16
+build	Build Release	2025-09-04T11:34:56.0719551Z [1m[32m  Downloaded[0m ipnet v2.11.0
+build	Build Release	2025-09-04T11:34:56.0736661Z [1m[32m  Downloaded[0m io-close v0.3.7
+build	Build Release	2025-09-04T11:34:56.0747233Z [1m[32m  Downloaded[0m gix-utils v0.3.0
+build	Build Release	2025-09-04T11:34:56.0758944Z [1m[32m  Downloaded[0m gix-url v0.31.0
+build	Build Release	2025-09-04T11:34:56.0771948Z [1m[32m  Downloaded[0m libgit2-sys v0.18.2+1.9.1
+build	Build Release	2025-09-04T11:34:56.1405995Z [1m[32m  Downloaded[0m gix-traverse v0.46.2
+build	Build Release	2025-09-04T11:34:56.1440802Z [1m[32m  Downloaded[0m gix-trace v0.1.13
+build	Build Release	2025-09-04T11:34:56.1452857Z [1m[32m  Downloaded[0m gix-tempfile v17.1.0
+build	Build Release	2025-09-04T11:34:56.1471323Z [1m[32m  Downloaded[0m gix-submodule v0.19.1
+build	Build Release	2025-09-04T11:34:56.1488505Z [1m[32m  Downloaded[0m memmap2 v0.9.8
+build	Build Release	2025-09-04T11:34:56.1514262Z [1m[32m  Downloaded[0m yoke v0.8.0
+build	Build Release	2025-09-04T11:34:56.1543360Z [1m[32m  Downloaded[0m writeable v0.6.1
+build	Build Release	2025-09-04T11:34:56.1563120Z [1m[32m  Downloaded[0m uuid v1.18.1
+build	Build Release	2025-09-04T11:34:56.1605013Z [1m[32m  Downloaded[0m linux-raw-sys v0.9.4
+build	Build Release	2025-09-04T11:34:56.2166612Z [1m[32m  Downloaded[0m gix-pack v0.59.1
+build	Build Release	2025-09-04T11:34:56.2233348Z [1m[32m  Downloaded[0m utf8_iter v1.0.4
+build	Build Release	2025-09-04T11:34:56.2243292Z [1m[32m  Downloaded[0m tokio v1.47.1
+build	Build Release	2025-09-04T11:34:56.2663567Z [1m[32m  Downloaded[0m sha1-checked v0.10.0
+build	Build Release	2025-09-04T11:34:56.2723369Z [1m[32m  Downloaded[0m ring v0.17.14
+build	Build Release	2025-09-04T11:34:56.3149242Z [1m[32m  Downloaded[0m mime v0.3.17
+build	Build Release	2025-09-04T11:34:56.3161492Z [1m[32m  Downloaded[0m litemap v0.8.0
+build	Build Release	2025-09-04T11:34:56.3184034Z [1m[32m  Downloaded[0m libz-rs-sys v0.5.2
+build	Build Release	2025-09-04T11:34:56.3197881Z [1m[32m  Downloaded[0m itoa v1.0.15
+build	Build Release	2025-09-04T11:34:56.3211598Z [1m[32m  Downloaded[0m is_terminal_polyfill v1.70.1
+build	Build Release	2025-09-04T11:34:56.3221309Z [1m[32m  Downloaded[0m want v0.3.1
+build	Build Release	2025-09-04T11:34:56.3230815Z [1m[32m  Downloaded[0m unicode-width v0.2.1
+build	Build Release	2025-09-04T11:34:56.3285903Z [1m[32m  Downloaded[0m unicode-normalization v0.1.24
+build	Build Release	2025-09-04T11:34:56.3319254Z [1m[32m  Downloaded[0m iana-time-zone v0.1.63
+build	Build Release	2025-09-04T11:34:56.3345705Z [1m[32m  Downloaded[0m hyper-util v0.1.16
+build	Build Release	2025-09-04T11:34:56.3413517Z [1m[32m  Downloaded[0m hyper v1.7.0
+build	Build Release	2025-09-04T11:34:56.3485432Z [1m[32m  Downloaded[0m http v1.3.1
+build	Build Release	2025-09-04T11:34:56.3520673Z [1m[32m  Downloaded[0m h2 v0.4.12
+build	Build Release	2025-09-04T11:34:56.3584726Z [1m[32m  Downloaded[0m icu_properties v2.0.1
+build	Build Release	2025-09-04T11:34:56.3606645Z [1m[32m  Downloaded[0m gix-protocol v0.50.1
+build	Build Release	2025-09-04T11:34:56.3637756Z [1m[32m  Downloaded[0m regex-automata v0.4.10
+build	Build Release	2025-09-04T11:34:56.3791676Z [1m[32m  Downloaded[0m untrusted v0.9.0
+build	Build Release	2025-09-04T11:34:56.3807664Z [1m[32m  Downloaded[0m unsafe-libyaml v0.2.11
+build	Build Release	2025-09-04T11:34:56.3839495Z [1m[32m  Downloaded[0m unit-prefix v0.5.1
+build	Build Release	2025-09-04T11:34:56.3848973Z [1m[32m  Downloaded[0m unicode-xid v0.2.6
+build	Build Release	2025-09-04T11:34:56.3862146Z [1m[32m  Downloaded[0m unicode-ident v1.0.18
+build	Build Release	2025-09-04T11:34:56.3889393Z [1m[32m  Downloaded[0m icu_normalizer v2.0.0
+build	Build Release	2025-09-04T11:34:56.3922923Z [1m[32m  Downloaded[0m hyper-rustls v0.27.7
+build	Build Release	2025-09-04T11:34:56.3947097Z [1m[32m  Downloaded[0m httpdate v1.0.3
+build	Build Release	2025-09-04T11:34:56.3959045Z [1m[32m  Downloaded[0m httparse v1.10.1
+build	Build Release	2025-09-04T11:34:56.3983412Z [1m[32m  Downloaded[0m http-body-util v0.1.3
+build	Build Release	2025-09-04T11:34:56.4002193Z [1m[32m  Downloaded[0m http-body v1.0.1
+build	Build Release	2025-09-04T11:34:56.4011314Z [1m[32m  Downloaded[0m heck v0.5.0
+build	Build Release	2025-09-04T11:34:56.4023640Z [1m[32m  Downloaded[0m gix-worktree-state v0.19.0
+build	Build Release	2025-09-04T11:34:56.4036320Z [1m[32m  Downloaded[0m gix-worktree v0.41.0
+build	Build Release	2025-09-04T11:34:56.4051191Z [1m[32m  Downloaded[0m gix-quote v0.6.0
+build	Build Release	2025-09-04T11:34:56.4060687Z [1m[32m  Downloaded[0m quinn-proto v0.11.13
+build	Build Release	2025-09-04T11:34:56.4128992Z [1m[32m  Downloaded[0m portable-atomic v1.11.1
+build	Build Release	2025-09-04T11:34:56.4198070Z [1m[32m  Downloaded[0m gix-validate v0.10.0
+build	Build Release	2025-09-04T11:34:56.4208924Z [1m[32m  Downloaded[0m gix-prompt v0.11.1
+build	Build Release	2025-09-04T11:34:56.4219849Z [1m[32m  Downloaded[0m gix-pathspec v0.11.0
+build	Build Release	2025-09-04T11:34:56.4234202Z [1m[32m  Downloaded[0m gix-path v0.10.20
+build	Build Release	2025-09-04T11:34:56.4250553Z [1m[32m  Downloaded[0m gix-packetline-blocking v0.19.1
+build	Build Release	2025-09-04T11:34:56.4271511Z [1m[32m  Downloaded[0m zlib-rs v0.5.2
+build	Build Release	2025-09-04T11:34:56.4320308Z [1m[32m  Downloaded[0m zerovec v0.11.4
+build	Build Release	2025-09-04T11:34:56.4374792Z [1m[32m  Downloaded[0m zerotrie v0.2.2
+build	Build Release	2025-09-04T11:34:56.4409997Z [1m[32m  Downloaded[0m vcpkg v0.2.15
+build	Build Release	2025-09-04T11:34:56.4970985Z [1m[32m  Downloaded[0m tracing-subscriber v0.3.20
+build	Build Release	2025-09-04T11:34:56.5052221Z [1m[32m  Downloaded[0m tracing v0.1.41
+build	Build Release	2025-09-04T11:34:56.5091122Z [1m[32m  Downloaded[0m tame-index v0.22.0
+build	Build Release	2025-09-04T11:34:56.5137915Z [1m[32m  Downloaded[0m syn v2.0.106
+build	Build Release	2025-09-04T11:34:56.5245093Z [1m[32m  Downloaded[0m syn v1.0.109
+build	Build Release	2025-09-04T11:34:56.5338896Z [1m[32m  Downloaded[0m rustix v1.0.8
+build	Build Release	2025-09-04T11:34:56.5607515Z [1m[32m  Downloaded[0m regex-syntax v0.8.6
+build	Build Release	2025-09-04T11:34:56.5676814Z [1m[32m  Downloaded[0m quinn v0.11.9
+build	Build Release	2025-09-04T11:34:56.5708488Z [1m[32m  Downloaded[0m regex v1.11.2
+build	Build Release	2025-09-04T11:34:56.5777596Z [1m[32m  Downloaded[0m rayon v1.11.0
+build	Build Release	2025-09-04T11:34:56.5870820Z [1m[32m  Downloaded[0m proc-macro2 v1.0.101
+build	Build Release	2025-09-04T11:34:56.5898099Z [1m[32m  Downloaded[0m gix-command v0.6.2
+build	Build Release	2025-09-04T11:34:56.5910109Z [1m[32m  Downloaded[0m zerovec-derive v0.11.1
+build	Build Release	2025-09-04T11:34:56.5924064Z [1m[32m  Downloaded[0m zeroize v1.8.1
+build	Build Release	2025-09-04T11:34:56.5936815Z [1m[32m  Downloaded[0m zerofrom-derive v0.1.6
+build	Build Release	2025-09-04T11:34:56.5945520Z [1m[32m  Downloaded[0m walkdir v2.5.0
+build	Build Release	2025-09-04T11:34:56.5963237Z [1m[32m  Downloaded[0m wait-timeout v0.2.1
+build	Build Release	2025-09-04T11:34:56.5977686Z [1m[32m  Downloaded[0m version_check v0.9.5
+build	Build Release	2025-09-04T11:34:56.5989695Z [1m[32m  Downloaded[0m twox-hash v2.1.2
+build	Build Release	2025-09-04T11:34:56.6011779Z [1m[32m  Downloaded[0m try-lock v0.2.5
+build	Build Release	2025-09-04T11:34:56.6020495Z [1m[32m  Downloaded[0m tracing-log v0.2.0
+build	Build Release	2025-09-04T11:34:56.6033510Z [1m[32m  Downloaded[0m tracing-core v0.1.34
+build	Build Release	2025-09-04T11:34:56.6060099Z [1m[32m  Downloaded[0m toml_parser v1.0.2
+build	Build Release	2025-09-04T11:34:56.6082077Z [1m[32m  Downloaded[0m toml_edit v0.22.27
+build	Build Release	2025-09-04T11:34:56.6125735Z [1m[32m  Downloaded[0m memchr v2.7.5
+build	Build Release	2025-09-04T11:34:56.6178995Z [1m[32m  Downloaded[0m idna v1.1.0
+build	Build Release	2025-09-04T11:34:56.6214517Z [1m[32m  Downloaded[0m icu_properties_data v2.0.1
+build	Build Release	2025-09-04T11:34:56.6312945Z [1m[32m  Downloaded[0m icu_locale_core v2.0.0
+build	Build Release	2025-09-04T11:34:56.6382945Z [1m[32m  Downloaded[0m heapless v0.8.0
+build	Build Release	2025-09-04T11:34:56.6420826Z [1m[32m  Downloaded[0m hashbrown v0.15.5
+build	Build Release	2025-09-04T11:34:56.6471450Z [1m[32m  Downloaded[0m time-macros v0.2.24
+build	Build Release	2025-09-04T11:34:56.6493785Z [1m[32m  Downloaded[0m time-core v0.1.6
+build	Build Release	2025-09-04T11:34:56.6503855Z [1m[32m  Downloaded[0m time v0.3.43
+build	Build Release	2025-09-04T11:34:56.6587632Z [1m[32m  Downloaded[0m thread_local v1.1.9
+build	Build Release	2025-09-04T11:34:56.6602242Z [1m[32m  Downloaded[0m thiserror-impl v1.0.69
+build	Build Release	2025-09-04T11:34:56.6615078Z [1m[32m  Downloaded[0m thiserror v2.0.16
+build	Build Release	2025-09-04T11:34:56.6679056Z [1m[32m  Downloaded[0m tempfile v3.21.0
+build	Build Release	2025-09-04T11:34:56.6706642Z [1m[32m  Downloaded[0m smallvec v1.15.1
+build	Build Release	2025-09-04T11:34:56.6728106Z [1m[32m  Downloaded[0m shlex v1.3.0
+build	Build Release	2025-09-04T11:34:56.6740103Z [1m[32m  Downloaded[0m sharded-slab v0.1.7
+build	Build Release	2025-09-04T11:34:56.6773286Z [1m[32m  Downloaded[0m sha2 v0.10.9
+build	Build Release	2025-09-04T11:34:56.6798283Z [1m[32m  Downloaded[0m serde_yaml v0.9.34+deprecated
+build	Build Release	2025-09-04T11:34:56.6832129Z [1m[32m  Downloaded[0m rustls-webpki v0.103.4
+build	Build Release	2025-09-04T11:34:56.6862287Z [1m[32m  Downloaded[0m rand v0.9.2
+build	Build Release	2025-09-04T11:34:56.6900900Z [1m[32m  Downloaded[0m quote v1.0.40
+build	Build Release	2025-09-04T11:34:56.6927063Z [1m[32m  Downloaded[0m quinn-udp v0.5.14
+build	Build Release	2025-09-04T11:34:56.6944524Z [1m[32m  Downloaded[0m ppv-lite86 v0.2.21
+build	Build Release	2025-09-04T11:34:56.6957090Z [1m[32m  Downloaded[0m powerfmt v0.2.0
+build	Build Release	2025-09-04T11:34:56.6967869Z [1m[32m  Downloaded[0m potential_utf v0.1.3
+build	Build Release	2025-09-04T11:34:56.6977698Z [1m[32m  Downloaded[0m platforms v3.6.0
+build	Build Release	2025-09-04T11:34:56.6996887Z [1m[32m  Downloaded[0m pkg-config v0.3.32
+build	Build Release	2025-09-04T11:34:56.7011957Z [1m[32m  Downloaded[0m pin-utils v0.1.0
+build	Build Release	2025-09-04T11:34:56.7023670Z [1m[32m  Downloaded[0m encoding_rs v0.8.35
+build	Build Release	2025-09-04T11:34:56.7238143Z [1m[32m  Downloaded[0m icu_collections v2.0.0
+build	Build Release	2025-09-04T11:34:56.7300302Z [1m[32m  Downloaded[0m maybe-async v0.2.10
+build	Build Release	2025-09-04T11:34:56.7327639Z [1m[32m  Downloaded[0m matchers v0.2.0
+build	Build Release	2025-09-04T11:34:56.7338339Z [1m[32m  Downloaded[0m lru-slab v0.1.2
+build	Build Release	2025-09-04T11:34:56.7349406Z [1m[32m  Downloaded[0m log v0.4.28
+build	Build Release	2025-09-04T11:34:56.7378285Z [1m[32m  Downloaded[0m lock_api v0.4.13
+build	Build Release	2025-09-04T11:34:56.7391331Z [1m[32m  Downloaded[0m lazy_static v1.5.0
+build	Build Release	2025-09-04T11:34:56.7408770Z [1m[32m  Downloaded[0m kstring v2.0.2
+build	Build Release	2025-09-04T11:34:56.7425019Z [1m[32m  Downloaded[0m idna_adapter v1.2.1
+build	Build Release	2025-09-04T11:34:56.7433933Z [1m[32m  Downloaded[0m icu_provider v2.0.0
+build	Build Release	2025-09-04T11:34:56.7458824Z [1m[32m  Downloaded[0m hashbrown v0.14.5
+build	Build Release	2025-09-04T11:34:56.7506006Z [1m[32m  Downloaded[0m tinystr v0.8.1
+build	Build Release	2025-09-04T11:34:56.7525236Z [1m[32m  Downloaded[0m thiserror-impl v2.0.16
+build	Build Release	2025-09-04T11:34:56.7539145Z [1m[32m  Downloaded[0m thiserror v1.0.69
+build	Build Release	2025-09-04T11:34:56.7593902Z [1m[32m  Downloaded[0m terminal_size v0.4.3
+build	Build Release	2025-09-04T11:34:56.7606923Z [1m[32m  Downloaded[0m termcolor v1.4.1
+build	Build Release	2025-09-04T11:34:56.7619342Z [1m[32m  Downloaded[0m synstructure v0.13.2
+build	Build Release	2025-09-04T11:34:56.7629080Z [1m[32m  Downloaded[0m synstructure v0.12.6
+build	Build Release	2025-09-04T11:34:56.7638642Z [1m[32m  Downloaded[0m sync_wrapper v1.0.2
+build	Build Release	2025-09-04T11:34:56.7646397Z [1m[32m  Downloaded[0m subtle v2.6.1
+build	Build Release	2025-09-04T11:34:56.7658128Z [1m[32m  Downloaded[0m static_assertions v1.1.0
+build	Build Release	2025-09-04T11:34:56.7671600Z [1m[32m  Downloaded[0m stable_deref_trait v1.2.0
+build	Build Release	2025-09-04T11:34:56.7679429Z [1m[32m  Downloaded[0m smol_str v0.3.2
+build	Build Release	2025-09-04T11:34:56.7695316Z [1m[32m  Downloaded[0m slab v0.4.11
+build	Build Release	2025-09-04T11:34:56.7707150Z [1m[32m  Downloaded[0m serde_urlencoded v0.7.1
+build	Build Release	2025-09-04T11:34:56.7723286Z [1m[32m  Downloaded[0m reqwest v0.12.23
+build	Build Release	2025-09-04T11:34:56.7778688Z [1m[32m  Downloaded[0m rayon-core v1.13.0
+build	Build Release	2025-09-04T11:34:56.7815886Z [1m[32m  Downloaded[0m quitters v0.1.0
+build	Build Release	2025-09-04T11:34:56.7823797Z [1m[32m  Downloaded[0m petgraph v0.6.5
+build	Build Release	2025-09-04T11:34:56.7996053Z [1m[32m  Downloaded[0m gix v0.72.1
+build	Build Release	2025-09-04T11:34:56.8156714Z [1m[32m  Downloaded[0m git2 v0.20.2
+build	Build Release	2025-09-04T11:34:56.8238755Z [1m[32m  Downloaded[0m gimli v0.31.1
+build	Build Release	2025-09-04T11:34:56.8306206Z [1m[32m  Downloaded[0m color-eyre v0.6.5
+build	Build Release	2025-09-04T11:34:56.8380015Z [1m[32m  Downloaded[0m chrono v0.4.41
+build	Build Release	2025-09-04T11:34:56.8446503Z [1m[32m  Downloaded[0m bstr v1.12.0
+build	Build Release	2025-09-04T11:34:56.8523760Z [1m[32m  Downloaded[0m blake3 v1.8.2
+build	Build Release	2025-09-04T11:34:56.8603202Z [1m[32m  Downloaded[0m base64 v0.22.1
+build	Build Release	2025-09-04T11:34:56.8640330Z [1m[32m  Downloaded[0m hyper-tls v0.6.0
+build	Build Release	2025-09-04T11:34:56.8653674Z [1m[32m  Downloaded[0m hash32 v0.3.1
+build	Build Release	2025-09-04T11:34:56.8667255Z [1m[32m  Downloaded[0m tinyvec_macros v0.1.1
+build	Build Release	2025-09-04T11:34:56.8675251Z [1m[32m  Downloaded[0m sha1 v0.10.6
+build	Build Release	2025-09-04T11:34:56.8690334Z [1m[32m  Downloaded[0m serde_spanned v1.0.0
+build	Build Release	2025-09-04T11:34:56.8701321Z [1m[32m  Downloaded[0m serde_spanned v0.6.9
+build	Build Release	2025-09-04T11:34:56.8711518Z [1m[32m  Downloaded[0m serde_derive v1.0.219
+build	Build Release	2025-09-04T11:34:56.8735759Z [1m[32m  Downloaded[0m serde-value v0.7.0
+build	Build Release	2025-09-04T11:34:56.8745943Z [1m[32m  Downloaded[0m serde v1.0.219
+build	Build Release	2025-09-04T11:34:56.8775563Z [1m[32m  Downloaded[0m semver v1.0.26
+build	Build Release	2025-09-04T11:34:56.8799086Z [1m[32m  Downloaded[0m scopeguard v1.2.0
+build	Build Release	2025-09-04T11:34:56.8810797Z [1m[32m  Downloaded[0m ryu v1.0.20
+build	Build Release	2025-09-04T11:34:56.8841463Z [1m[32m  Downloaded[0m rustsec v0.30.4
+build	Build Release	2025-09-04T11:34:56.8889783Z [1m[32m  Downloaded[0m rustls-pki-types v1.12.0
+build	Build Release	2025-09-04T11:34:56.8935099Z [1m[32m  Downloaded[0m rustls v0.23.31
+build	Build Release	2025-09-04T11:34:56.9054559Z [1m[32m  Downloaded[0m rustc-stable-hash v0.1.2
+build	Build Release	2025-09-04T11:34:56.9069932Z [1m[32m  Downloaded[0m pin-project-lite v0.2.16
+build	Build Release	2025-09-04T11:34:56.9126571Z [1m[32m  Downloaded[0m openssl v0.10.73
+build	Build Release	2025-09-04T11:34:56.9217756Z [1m[32m  Downloaded[0m object v0.36.7
+build	Build Release	2025-09-04T11:34:56.9325232Z [1m[32m  Downloaded[0m getrandom v0.3.3
+build	Build Release	2025-09-04T11:34:56.9357324Z [1m[32m  Downloaded[0m futures-util v0.3.31
+build	Build Release	2025-09-04T11:34:56.9484924Z [1m[32m  Downloaded[0m futures-channel v0.3.31
+build	Build Release	2025-09-04T11:34:56.9502830Z [1m[32m  Downloaded[0m flate2 v1.1.2
+build	Build Release	2025-09-04T11:34:56.9549173Z [1m[32m  Downloaded[0m fann-sys v0.1.8
+build	Build Release	2025-09-04T11:34:56.9563347Z [1m[32m  Downloaded[0m fann v0.1.8
+build	Build Release	2025-09-04T11:34:56.9581063Z [1m[32m  Downloaded[0m eyre v0.6.12
+build	Build Release	2025-09-04T11:34:56.9614180Z [1m[32m  Downloaded[0m erased-serde v0.4.6
+build	Build Release	2025-09-04T11:34:56.9637024Z [1m[32m  Downloaded[0m crossbeam-channel v0.5.15
+build	Build Release	2025-09-04T11:34:56.9677292Z [1m[32m  Downloaded[0m cc v1.2.35
+build	Build Release	2025-09-04T11:34:56.9705284Z [1m[32m  Downloaded[0m borsh v1.5.7
+build	Build Release	2025-09-04T11:34:56.9775053Z [1m[32m  Downloaded[0m bitflags v2.9.4
+build	Build Release	2025-09-04T11:34:56.9816762Z [1m[32m  Downloaded[0m backtrace v0.3.75
+build	Build Release	2025-09-04T11:34:56.9869640Z [1m[32m  Downloaded[0m rand_chacha v0.9.0
+build	Build Release	2025-09-04T11:34:56.9881373Z [1m[32m  Downloaded[0m openssl-sys v0.9.109
+build	Build Release	2025-09-04T11:34:56.9934483Z [1m[32m  Downloaded[0m num-traits v0.2.19
+build	Build Release	2025-09-04T11:34:56.9960004Z [1m[32m  Downloaded[0m native-tls v0.2.14
+build	Build Release	2025-09-04T11:34:56.9979451Z [1m[32m  Downloaded[0m gix-bitmap v0.2.14
+build	Build Release	2025-09-04T11:34:56.9988402Z [1m[32m  Downloaded[0m gix-attributes v0.26.1
+build	Build Release	2025-09-04T11:34:57.0004236Z [1m[32m  Downloaded[0m gix-actor v0.35.4
+build	Build Release	2025-09-04T11:34:57.0016059Z [1m[32m  Downloaded[0m getrandom v0.2.16
+build	Build Release	2025-09-04T11:34:57.0045009Z [1m[32m  Downloaded[0m futures-sink v0.3.31
+build	Build Release	2025-09-04T11:34:57.0122714Z [1m[32m  Downloaded[0m futures-core v0.3.31
+build	Build Release	2025-09-04T11:34:57.0123493Z [1m[32m  Downloaded[0m fs-err v2.11.0
+build	Build Release	2025-09-04T11:34:57.0127001Z [1m[32m  Downloaded[0m find-msvc-tools v0.1.0
+build	Build Release	2025-09-04T11:34:57.0127613Z [1m[32m  Downloaded[0m filetime v0.2.26
+build	Build Release	2025-09-04T11:34:57.0132927Z [1m[32m  Downloaded[0m fastrand v2.3.0
+build	Build Release	2025-09-04T11:34:57.0146300Z [1m[32m  Downloaded[0m faster-hex v0.10.0
+build	Build Release	2025-09-04T11:34:57.0160872Z [1m[32m  Downloaded[0m errno v0.3.13
+build	Build Release	2025-09-04T11:34:57.0175999Z [1m[32m  Downloaded[0m equivalent v1.0.2
+build	Build Release	2025-09-04T11:34:57.0185878Z [1m[32m  Downloaded[0m block-buffer v0.10.4
+build	Build Release	2025-09-04T11:34:57.0196095Z [1m[32m  Downloaded[0m binfarce v0.2.1
+build	Build Release	2025-09-04T11:34:57.0212434Z [1m[32m  Downloaded[0m socket2 v0.6.0
+build	Build Release	2025-09-04T11:34:57.0230374Z [1m[32m  Downloaded[0m serde-untagged v0.1.8
+build	Build Release	2025-09-04T11:34:57.0246712Z [1m[32m  Downloaded[0m same-file v1.0.6
+build	Build Release	2025-09-04T11:34:57.0259899Z [1m[32m  Downloaded[0m rustls-native-certs v0.8.1
+build	Build Release	2025-09-04T11:34:57.0283867Z [1m[32m  Downloaded[0m rustc-hash v2.1.1
+build	Build Release	2025-09-04T11:34:57.0296467Z [1m[32m  Downloaded[0m rand_core v0.9.3
+build	Build Release	2025-09-04T11:34:57.0309684Z [1m[32m  Downloaded[0m prodash v29.0.2
+build	Build Release	2025-09-04T11:34:57.0348420Z [1m[32m  Downloaded[0m parking_lot_core v0.9.11
+build	Build Release	2025-09-04T11:34:57.0369012Z [1m[32m  Downloaded[0m parking_lot v0.12.4
+build	Build Release	2025-09-04T11:34:57.0393632Z [1m[32m  Downloaded[0m owo-colors v4.2.2
+build	Build Release	2025-09-04T11:34:57.0422463Z [1m[32m  Downloaded[0m once_cell v1.21.3
+build	Build Release	2025-09-04T11:34:57.0447150Z [1m[32m  Downloaded[0m generic-array v0.14.7
+build	Build Release	2025-09-04T11:34:57.0461080Z [1m[32m  Downloaded[0m fs-err v3.1.1
+build	Build Release	2025-09-04T11:34:57.0480129Z [1m[32m  Downloaded[0m foreign-types-shared v0.1.1
+build	Build Release	2025-09-04T11:34:57.0486736Z [1m[32m  Downloaded[0m fnv v1.0.7
+build	Build Release	2025-09-04T11:34:57.0495157Z [1m[32m  Downloaded[0m digest v0.10.7
+build	Build Release	2025-09-04T11:34:57.0513250Z [1m[32m  Downloaded[0m colorchoice v1.0.4
+build	Build Release	2025-09-04T11:34:57.0522869Z [1m[32m  Downloaded[0m canonical-path v2.0.2
+build	Build Release	2025-09-04T11:34:57.0529977Z [1m[32m  Downloaded[0m shell-words v1.1.0
+build	Build Release	2025-09-04T11:34:57.0538902Z [1m[32m  Downloaded[0m secrecy v0.10.3
+build	Build Release	2025-09-04T11:34:57.0547771Z [1m[32m  Downloaded[0m percent-encoding v2.3.2
+build	Build Release	2025-09-04T11:34:57.0556305Z [1m[32m  Downloaded[0m openssl-probe v0.1.6
+build	Build Release	2025-09-04T11:34:57.0567050Z [1m[32m  Downloaded[0m gix-chunk v0.4.11
+build	Build Release	2025-09-04T11:34:57.0577751Z [1m[32m  Downloaded[0m futures-task v0.3.31
+build	Build Release	2025-09-04T11:34:57.0588848Z [1m[32m  Downloaded[0m futures-io v0.3.31
+build	Build Release	2025-09-04T11:34:57.0597104Z [1m[32m  Downloaded[0m form_urlencoded v1.2.2
+build	Build Release	2025-09-04T11:34:57.0605103Z [1m[32m  Downloaded[0m foreign-types v0.3.2
+build	Build Release	2025-09-04T11:34:57.0612218Z [1m[32m  Downloaded[0m display-error-chain v0.2.2
+build	Build Release	2025-09-04T11:34:57.0623176Z [1m[32m  Downloaded[0m crypto-common v0.1.6
+build	Build Release	2025-09-04T11:34:57.0631563Z [1m[32m  Downloaded[0m crossbeam-epoch v0.9.18
+build	Build Release	2025-09-04T11:34:57.0655359Z [1m[32m  Downloaded[0m console v0.16.0
+build	Build Release	2025-09-04T11:34:57.0684685Z [1m[32m  Downloaded[0m compression-core v0.4.29
+build	Build Release	2025-09-04T11:34:57.0693313Z [1m[32m  Downloaded[0m clap_lex v0.7.5
+build	Build Release	2025-09-04T11:34:57.0703999Z [1m[32m  Downloaded[0m clap_derive v4.5.47
+build	Build Release	2025-09-04T11:34:57.0725562Z [1m[32m  Downloaded[0m cargo_metadata v0.22.0
+build	Build Release	2025-09-04T11:34:57.0744002Z [1m[32m  Downloaded[0m cargo-util-schemas v0.8.2
+build	Build Release	2025-09-04T11:34:57.0761756Z [1m[32m  Downloaded[0m bytes v1.10.1
+build	Build Release	2025-09-04T11:34:57.0802366Z [1m[32m  Downloaded[0m ordered-float v2.10.1
+build	Build Release	2025-09-04T11:34:57.0815071Z [1m[32m  Downloaded[0m nu-ansi-term v0.50.1
+build	Build Release	2025-09-04T11:34:57.0838198Z [1m[32m  Downloaded[0m clap_builder v4.5.47
+build	Build Release	2025-09-04T11:34:57.0900685Z [1m[32m  Downloaded[0m clap v4.5.47
+build	Build Release	2025-09-04T11:34:57.0988722Z [1m[32m  Downloaded[0m cfg_aliases v0.2.1
+build	Build Release	2025-09-04T11:34:57.0997866Z [1m[32m  Downloaded[0m fixedbitset v0.4.2
+build	Build Release	2025-09-04T11:34:57.1009863Z [1m[32m  Downloaded[0m either v1.15.0
+build	Build Release	2025-09-04T11:34:57.1024607Z [1m[32m  Downloaded[0m deranged v0.5.3
+build	Build Release	2025-09-04T11:34:57.1037408Z [1m[32m  Downloaded[0m crossbeam-utils v0.8.21
+build	Build Release	2025-09-04T11:34:57.1063271Z [1m[32m  Downloaded[0m crc32fast v1.5.0
+build	Build Release	2025-09-04T11:34:57.1081024Z [1m[32m  Downloaded[0m clru v0.6.2
+build	Build Release	2025-09-04T11:34:57.1092497Z [1m[32m  Downloaded[0m cargo-platform v0.3.0
+build	Build Release	2025-09-04T11:34:57.1104192Z [1m[32m  Downloaded[0m byteorder v1.5.0
+build	Build Release	2025-09-04T11:34:57.1119280Z [1m[32m  Downloaded[0m cvss v2.1.1
+build	Build Release	2025-09-04T11:34:57.1171410Z [1m[32m  Downloaded[0m compression-codecs v0.4.30
+build	Build Release	2025-09-04T11:34:57.1207831Z [1m[32m  Downloaded[0m camino v1.1.12
+build	Build Release	2025-09-04T11:34:57.1226905Z [1m[32m  Downloaded[0m openssl-macros v0.1.1
+build	Build Release	2025-09-04T11:34:57.1233860Z [1m[32m  Downloaded[0m crossbeam-deque v0.8.6
+build	Build Release	2025-09-04T11:34:57.1246933Z [1m[32m  Downloaded[0m cpufeatures v0.2.17
+build	Build Release	2025-09-04T11:34:57.1259954Z [1m[32m  Downloaded[0m constant_time_eq v0.3.1
+build	Build Release	2025-09-04T11:34:57.1272463Z [1m[32m  Downloaded[0m cfg-if v1.0.3
+build	Build Release	2025-09-04T11:34:57.1284828Z [1m[32m  Downloaded[0m cargo-audit v0.21.2
+build	Build Release	2025-09-04T11:34:57.1307852Z [1m[32m  Downloaded[0m anstyle-parse v0.2.7
+build	Build Release	2025-09-04T11:34:57.1323235Z [1m[32m  Downloaded[0m anstyle v1.0.11
+build	Build Release	2025-09-04T11:34:57.1337288Z [1m[32m  Downloaded[0m allocator-api2 v0.2.21
+build	Build Release	2025-09-04T11:34:57.1362356Z [1m[32m  Downloaded[0m aho-corasick v1.1.3
+build	Build Release	2025-09-04T11:34:57.1413661Z [1m[32m  Downloaded[0m ahash v0.8.12
+build	Build Release	2025-09-04T11:34:57.1436634Z [1m[32m  Downloaded[0m addr2line v0.24.2
+build	Build Release	2025-09-04T11:34:57.1457000Z [1m[32m  Downloaded[0m atomic-waker v1.1.2
+build	Build Release	2025-09-04T11:34:57.1468675Z [1m[32m  Downloaded[0m arrayvec v0.7.6
+build	Build Release	2025-09-04T11:34:57.1488818Z [1m[32m  Downloaded[0m anstyle-query v1.1.4
+build	Build Release	2025-09-04T11:34:57.1500668Z [1m[32m  Downloaded[0m anstream v0.6.20
+build	Build Release	2025-09-04T11:34:57.1520684Z [1m[32m  Downloaded[0m auditable-extract v0.3.5
+build	Build Release	2025-09-04T11:34:57.1528710Z [1m[32m  Downloaded[0m anyhow v1.0.99
+build	Build Release	2025-09-04T11:34:57.1568904Z [1m[32m  Downloaded[0m adler2 v2.0.1
+build	Build Release	2025-09-04T11:34:57.2853721Z [1m[32m   Compiling[0m proc-macro2 v1.0.101
+build	Build Release	2025-09-04T11:34:57.2854625Z [1m[32m   Compiling[0m unicode-ident v1.0.18
+build	Build Release	2025-09-04T11:34:57.2855452Z [1m[32m   Compiling[0m libc v0.2.175
+build	Build Release	2025-09-04T11:34:57.2856858Z [1m[32m   Compiling[0m memchr v2.7.5
+build	Build Release	2025-09-04T11:34:57.4564826Z [1m[32m   Compiling[0m cfg-if v1.0.3
+build	Build Release	2025-09-04T11:34:57.4961909Z [1m[32m   Compiling[0m serde v1.0.219
+build	Build Release	2025-09-04T11:34:57.6943086Z [1m[32m   Compiling[0m once_cell v1.21.3
+build	Build Release	2025-09-04T11:34:57.8643000Z [1m[32m   Compiling[0m smallvec v1.15.1
+build	Build Release	2025-09-04T11:34:58.0767119Z [1m[32m   Compiling[0m autocfg v1.5.0
+build	Build Release	2025-09-04T11:34:58.1804009Z [1m[32m   Compiling[0m quote v1.0.40
+build	Build Release	2025-09-04T11:34:58.3651421Z [1m[32m   Compiling[0m syn v2.0.106
+build	Build Release	2025-09-04T11:34:58.3994481Z [1m[32m   Compiling[0m aho-corasick v1.1.3
+build	Build Release	2025-09-04T11:34:58.4020713Z [1m[32m   Compiling[0m regex-syntax v0.8.6
+build	Build Release	2025-09-04T11:34:58.5250217Z [1m[32m   Compiling[0m bytes v1.10.1
+build	Build Release	2025-09-04T11:34:59.2234400Z [1m[32m   Compiling[0m thiserror v2.0.16
+build	Build Release	2025-09-04T11:34:59.4991555Z [1m[32m   Compiling[0m stable_deref_trait v1.2.0
+build	Build Release	2025-09-04T11:34:59.5359533Z [1m[32m   Compiling[0m log v0.4.28
+build	Build Release	2025-09-04T11:34:59.7059394Z [1m[32m   Compiling[0m adler2 v2.0.1
+build	Build Release	2025-09-04T11:34:59.7821417Z [1m[32m   Compiling[0m miniz_oxide v0.8.9
+build	Build Release	2025-09-04T11:35:00.7714074Z [1m[32m   Compiling[0m regex-automata v0.4.10
+build	Build Release	2025-09-04T11:35:01.7445631Z [1m[32m   Compiling[0m crossbeam-utils v0.8.21
+build	Build Release	2025-09-04T11:35:01.9514574Z [1m[32m   Compiling[0m tinyvec_macros v0.1.1
+build	Build Release	2025-09-04T11:35:01.9858808Z [1m[32m   Compiling[0m tinyvec v1.10.0
+build	Build Release	2025-09-04T11:35:02.4388259Z [1m[32m   Compiling[0m fastrand v2.3.0
+build	Build Release	2025-09-04T11:35:02.6365345Z [1m[32m   Compiling[0m bitflags v2.9.4
+build	Build Release	2025-09-04T11:35:02.8777677Z [1m[32m   Compiling[0m crc32fast v1.5.0
+build	Build Release	2025-09-04T11:35:03.0314278Z [1m[32m   Compiling[0m gix-trace v0.1.13
+build	Build Release	2025-09-04T11:35:03.0919339Z [1m[32m   Compiling[0m unicode-normalization v0.1.24
+build	Build Release	2025-09-04T11:35:03.5946624Z [1m[32m   Compiling[0m lock_api v0.4.13
+build	Build Release	2025-09-04T11:35:03.6536164Z [1m[32m   Compiling[0m parking_lot_core v0.9.11
+build	Build Release	2025-09-04T11:35:03.6665963Z [1m[32m   Compiling[0m serde_derive v1.0.219
+build	Build Release	2025-09-04T11:35:03.7341661Z [1m[32m   Compiling[0m thiserror-impl v2.0.16
+build	Build Release	2025-09-04T11:35:03.8019209Z [1m[32m   Compiling[0m zlib-rs v0.5.2
+build	Build Release	2025-09-04T11:35:05.1105209Z [1m[32m   Compiling[0m bstr v1.12.0
+build	Build Release	2025-09-04T11:35:06.0756638Z [1m[32m   Compiling[0m gix-validate v0.10.0
+build	Build Release	2025-09-04T11:35:06.4737333Z [1m[32m   Compiling[0m gix-utils v0.3.0
+build	Build Release	2025-09-04T11:35:06.8569701Z [1m[32m   Compiling[0m libz-rs-sys v0.5.2
+build	Build Release	2025-09-04T11:35:07.1180340Z [1m[32m   Compiling[0m home v0.5.11
+build	Build Release	2025-09-04T11:35:07.2021443Z [1m[32m   Compiling[0m itoa v1.0.15
+build	Build Release	2025-09-04T11:35:07.2891601Z [1m[32m   Compiling[0m scopeguard v1.2.0
+build	Build Release	2025-09-04T11:35:07.5218652Z [1m[32m   Compiling[0m gix-path v0.10.20
+build	Build Release	2025-09-04T11:35:07.6364605Z [1m[32m   Compiling[0m flate2 v1.1.2
+build	Build Release	2025-09-04T11:35:08.2657780Z [1m[32m   Compiling[0m parking_lot v0.12.4
+build	Build Release	2025-09-04T11:35:08.8219697Z [1m[32m   Compiling[0m version_check v0.9.5
+build	Build Release	2025-09-04T11:35:08.8660693Z [1m[32m   Compiling[0m jobserver v0.1.34
+build	Build Release	2025-09-04T11:35:09.0530211Z [1m[32m   Compiling[0m shlex v1.3.0
+build	Build Release	2025-09-04T11:35:09.1499130Z [1m[32m   Compiling[0m find-msvc-tools v0.1.0
+build	Build Release	2025-09-04T11:35:09.1767550Z [1m[32m   Compiling[0m same-file v1.0.6
+build	Build Release	2025-09-04T11:35:09.2588332Z [1m[32m   Compiling[0m cc v1.2.35
+build	Build Release	2025-09-04T11:35:09.3073918Z [1m[32m   Compiling[0m walkdir v2.5.0
+build	Build Release	2025-09-04T11:35:09.7025140Z [1m[32m   Compiling[0m prodash v29.0.2
+build	Build Release	2025-09-04T11:35:09.7395018Z [1m[32m   Compiling[0m crossbeam-channel v0.5.15
+build	Build Release	2025-09-04T11:35:10.3156322Z [1m[32m   Compiling[0m gix-features v0.42.1
+build	Build Release	2025-09-04T11:35:10.7804352Z [1m[32m   Compiling[0m typenum v1.18.0
+build	Build Release	2025-09-04T11:35:10.7907312Z [1m[32m   Compiling[0m generic-array v0.14.7
+build	Build Release	2025-09-04T11:35:10.9316038Z [1m[32m   Compiling[0m heapless v0.8.0
+build	Build Release	2025-09-04T11:35:10.9440460Z [1m[32m   Compiling[0m byteorder v1.5.0
+build	Build Release	2025-09-04T11:35:11.0813259Z [1m[32m   Compiling[0m hash32 v0.3.1
+build	Build Release	2025-09-04T11:35:11.1502409Z [1m[32m   Compiling[0m winnow v0.7.13
+build	Build Release	2025-09-04T11:35:11.3241545Z [1m[32m   Compiling[0m synstructure v0.13.2
+build	Build Release	2025-09-04T11:35:11.7050617Z [1m[32m   Compiling[0m faster-hex v0.10.0
+build	Build Release	2025-09-04T11:35:11.8299583Z [1m[32m   Compiling[0m cpufeatures v0.2.17
+build	Build Release	2025-09-04T11:35:11.8666395Z [1m[32m   Compiling[0m zerofrom-derive v0.1.6
+build	Build Release	2025-09-04T11:35:11.9503756Z [1m[32m   Compiling[0m yoke-derive v0.8.0
+build	Build Release	2025-09-04T11:35:12.1684006Z [1m[32m   Compiling[0m block-buffer v0.10.4
+build	Build Release	2025-09-04T11:35:12.2576447Z [1m[32m   Compiling[0m crypto-common v0.1.6
+build	Build Release	2025-09-04T11:35:12.3304686Z [1m[32m   Compiling[0m digest v0.10.7
+build	Build Release	2025-09-04T11:35:12.4897902Z [1m[32m   Compiling[0m sha1 v0.10.6
+build	Build Release	2025-09-04T11:35:12.7239677Z [1m[32m   Compiling[0m zerocopy v0.8.26
+build	Build Release	2025-09-04T11:35:13.0158051Z [1m[32m   Compiling[0m sha1-checked v0.10.0
+build	Build Release	2025-09-04T11:35:13.0860642Z [1m[32m   Compiling[0m ahash v0.8.12
+build	Build Release	2025-09-04T11:35:13.1007378Z [1m[32m   Compiling[0m pkg-config v0.3.32
+build	Build Release	2025-09-04T11:35:13.3093917Z [1m[32m   Compiling[0m zerofrom v0.1.6
+build	Build Release	2025-09-04T11:35:13.3943854Z [1m[32m   Compiling[0m yoke v0.8.0
+build	Build Release	2025-09-04T11:35:13.4620103Z [1m[32m   Compiling[0m gix-hash v0.18.0
+build	Build Release	2025-09-04T11:35:13.5501039Z [1m[32m   Compiling[0m zerovec-derive v0.11.1
+build	Build Release	2025-09-04T11:35:13.5538028Z [1m[32m   Compiling[0m displaydoc v0.2.5
+build	Build Release	2025-09-04T11:35:13.8321552Z [1m[32m   Compiling[0m vcpkg v0.2.15
+build	Build Release	2025-09-04T11:35:14.2474386Z [1m[32m   Compiling[0m allocator-api2 v0.2.21
+build	Build Release	2025-09-04T11:35:14.4088385Z [1m[32m   Compiling[0m pin-project-lite v0.2.16
+build	Build Release	2025-09-04T11:35:14.4541687Z [1m[32m   Compiling[0m jiff v0.2.15
+build	Build Release	2025-09-04T11:35:14.6107266Z [1m[32m   Compiling[0m rustix v1.0.8
+build	Build Release	2025-09-04T11:35:14.7957466Z [1m[32m   Compiling[0m zerovec v0.11.4
+build	Build Release	2025-09-04T11:35:14.8933939Z [1m[32m   Compiling[0m linux-raw-sys v0.9.4
+build	Build Release	2025-09-04T11:35:15.2482719Z [1m[32m   Compiling[0m hashbrown v0.14.5
+build	Build Release	2025-09-04T11:35:15.8976826Z [1m[32m   Compiling[0m tinystr v0.8.1
+build	Build Release	2025-09-04T11:35:15.9310905Z [1m[32m   Compiling[0m gix-hashtable v0.8.1
+build	Build Release	2025-09-04T11:35:16.0087578Z [1m[32m   Compiling[0m hashbrown v0.15.5
+build	Build Release	2025-09-04T11:35:16.0469232Z [1m[32m   Compiling[0m litemap v0.8.0
+build	Build Release	2025-09-04T11:35:16.2477283Z [1m[32m   Compiling[0m equivalent v1.0.2
+build	Build Release	2025-09-04T11:35:16.2868498Z [1m[32m   Compiling[0m getrandom v0.3.3
+build	Build Release	2025-09-04T11:35:16.5127801Z [1m[32m   Compiling[0m writeable v0.6.1
+build	Build Release	2025-09-04T11:35:16.6565705Z [1m[32m   Compiling[0m indexmap v2.11.0
+build	Build Release	2025-09-04T11:35:16.7878774Z [1m[32m   Compiling[0m icu_locale_core v2.0.0
+build	Build Release	2025-09-04T11:35:17.5023619Z [1m[32m   Compiling[0m potential_utf v0.1.3
+build	Build Release	2025-09-04T11:35:17.5918974Z [1m[32m   Compiling[0m openssl-sys v0.9.109
+build	Build Release	2025-09-04T11:35:18.0222922Z [1m[32m   Compiling[0m zerotrie v0.2.2
+build	Build Release	2025-09-04T11:35:18.1120703Z [1m[32m   Compiling[0m memmap2 v0.9.8
+build	Build Release	2025-09-04T11:35:18.2938012Z [1m[32m   Compiling[0m percent-encoding v2.3.2
+build	Build Release	2025-09-04T11:35:18.3255395Z [1m[32m   Compiling[0m icu_properties_data v2.0.1
+build	Build Release	2025-09-04T11:35:18.3920309Z [1m[32m   Compiling[0m icu_normalizer_data v2.0.0
+build	Build Release	2025-09-04T11:35:18.4365744Z [1m[32m   Compiling[0m futures-core v0.3.31
+build	Build Release	2025-09-04T11:35:18.4673392Z [1m[32m   Compiling[0m icu_provider v2.0.0
+build	Build Release	2025-09-04T11:35:18.5273085Z [1m[32m   Compiling[0m icu_collections v2.0.0
+build	Build Release	2025-09-04T11:35:18.7356154Z [1m[32m   Compiling[0m tokio-macros v2.5.0
+build	Build Release	2025-09-04T11:35:18.7480365Z [1m[32m   Compiling[0m mio v1.0.4
+build	Build Release	2025-09-04T11:35:19.0051977Z [1m[32m   Compiling[0m gix-date v0.10.5
+build	Build Release	2025-09-04T11:35:19.3573459Z [1m[32m   Compiling[0m gix-actor v0.35.4
+build	Build Release	2025-09-04T11:35:19.4521721Z [1m[32m   Compiling[0m socket2 v0.6.0
+build	Build Release	2025-09-04T11:35:19.5671173Z [1m[32m   Compiling[0m gix-object v0.49.1
+build	Build Release	2025-09-04T11:35:19.9999725Z [1m[32m   Compiling[0m fnv v1.0.7
+build	Build Release	2025-09-04T11:35:20.0457553Z [1m[32m   Compiling[0m tokio v1.47.1
+build	Build Release	2025-09-04T11:35:20.7605786Z [1m[32m   Compiling[0m icu_properties v2.0.1
+build	Build Release	2025-09-04T11:35:22.1014394Z [1m[32m   Compiling[0m icu_normalizer v2.0.0
+build	Build Release	2025-09-04T11:35:22.2316906Z [1m[32m   Compiling[0m tempfile v3.21.0
+build	Build Release	2025-09-04T11:35:22.7204964Z [1m[32m   Compiling[0m gix-fs v0.15.0
+build	Build Release	2025-09-04T11:35:22.9875416Z [1m[32m   Compiling[0m gix-chunk v0.4.11
+build	Build Release	2025-09-04T11:35:23.0881768Z [1m[32m   Compiling[0m futures-sink v0.3.31
+build	Build Release	2025-09-04T11:35:23.1425389Z [1m[32m   Compiling[0m gix-tempfile v17.1.0
+build	Build Release	2025-09-04T11:35:23.1465527Z [1m[32m   Compiling[0m idna_adapter v1.2.1
+build	Build Release	2025-09-04T11:35:23.2128905Z [1m[32m   Compiling[0m form_urlencoded v1.2.2
+build	Build Release	2025-09-04T11:35:23.3462195Z [1m[32m   Compiling[0m gix-quote v0.6.0
+build	Build Release	2025-09-04T11:35:23.3559109Z [1m[32m   Compiling[0m tracing-core v0.1.34
+build	Build Release	2025-09-04T11:35:23.5479454Z [1m[32m   Compiling[0m utf8_iter v1.0.4
+build	Build Release	2025-09-04T11:35:23.5786676Z [1m[32m   Compiling[0m zeroize v1.8.1
+build	Build Release	2025-09-04T11:35:23.6421995Z [1m[32m   Compiling[0m idna v1.1.0
+build	Build Release	2025-09-04T11:35:23.6960498Z [1m[32m   Compiling[0m http v1.3.1
+build	Build Release	2025-09-04T11:35:24.0000888Z [1m[32m   Compiling[0m tracing-attributes v0.1.30
+build	Build Release	2025-09-04T11:35:25.0015820Z [1m[32m   Compiling[0m slab v0.4.11
+build	Build Release	2025-09-04T11:35:25.0613607Z [1m[32m   Compiling[0m url v2.5.7
+build	Build Release	2025-09-04T11:35:25.1402912Z [1m[32m   Compiling[0m gix-commitgraph v0.28.0
+build	Build Release	2025-09-04T11:35:25.3865832Z [1m[32m   Compiling[0m tracing v0.1.41
+build	Build Release	2025-09-04T11:35:25.7383347Z [1m[32m   Compiling[0m ring v0.17.14
+build	Build Release	2025-09-04T11:35:26.2231245Z [1m[32m   Compiling[0m pin-utils v0.1.0
+build	Build Release	2025-09-04T11:35:26.4484383Z [1m[32m   Compiling[0m gix-revwalk v0.20.1
+build	Build Release	2025-09-04T11:35:26.6043695Z [1m[32m   Compiling[0m http-body v1.0.1
+build	Build Release	2025-09-04T11:35:26.6651650Z [1m[32m   Compiling[0m rustls-pki-types v1.12.0
+build	Build Release	2025-09-04T11:35:26.6898041Z [1m[32m   Compiling[0m gix-lock v17.1.0
+build	Build Release	2025-09-04T11:35:27.0635988Z [1m[32m   Compiling[0m futures-task v0.3.31
+build	Build Release	2025-09-04T11:35:27.1625579Z [1m[32m   Compiling[0m ryu v1.0.20
+build	Build Release	2025-09-04T11:35:27.1980789Z [1m[32m   Compiling[0m openssl-probe v0.1.6
+build	Build Release	2025-09-04T11:35:27.3236639Z [1m[32m   Compiling[0m httparse v1.10.1
+build	Build Release	2025-09-04T11:35:27.3302098Z [1m[32m   Compiling[0m futures-io v0.3.31
+build	Build Release	2025-09-04T11:35:27.3475943Z [1m[32m   Compiling[0m tokio-util v0.7.16
+build	Build Release	2025-09-04T11:35:27.4329328Z [1m[32m   Compiling[0m futures-util v0.3.31
+build	Build Release	2025-09-04T11:35:27.5766023Z [1m[32m   Compiling[0m gix-glob v0.20.1
+build	Build Release	2025-09-04T11:35:28.0124323Z [1m[32m   Compiling[0m getrandom v0.2.16
+build	Build Release	2025-09-04T11:35:28.0847666Z [1m[32m   Compiling[0m untrusted v0.9.0
+build	Build Release	2025-09-04T11:35:28.1483789Z [1m[32m   Compiling[0m serde_json v1.0.143
+build	Build Release	2025-09-04T11:35:28.1488734Z [1m[32m   Compiling[0m foreign-types-shared v0.1.1
+build	Build Release	2025-09-04T11:35:28.1888527Z [1m[32m   Compiling[0m tower-service v0.3.3
+build	Build Release	2025-09-04T11:35:28.2366319Z [1m[32m   Compiling[0m atomic-waker v1.1.2
+build	Build Release	2025-09-04T11:35:28.2785853Z [1m[32m   Compiling[0m unicode-bom v2.0.3
+build	Build Release	2025-09-04T11:35:28.2968313Z [1m[32m   Compiling[0m try-lock v0.2.5
+build	Build Release	2025-09-04T11:35:28.3485483Z [1m[32m   Compiling[0m openssl v0.10.73
+build	Build Release	2025-09-04T11:35:28.3828287Z [1m[32m   Compiling[0m semver v1.0.26
+build	Build Release	2025-09-04T11:35:28.5203965Z [1m[32m   Compiling[0m want v0.3.1
+build	Build Release	2025-09-04T11:35:28.5950432Z [1m[32m   Compiling[0m h2 v0.4.12
+build	Build Release	2025-09-04T11:35:28.6151566Z [1m[32m   Compiling[0m foreign-types v0.3.2
+build	Build Release	2025-09-04T11:35:28.9601062Z [1m[32m   Compiling[0m futures-channel v0.3.31
+build	Build Release	2025-09-04T11:35:29.1488032Z [1m[32m   Compiling[0m gix-config-value v0.15.1
+build	Build Release	2025-09-04T11:35:29.6713065Z [1m[32m   Compiling[0m openssl-macros v0.1.1
+build	Build Release	2025-09-04T11:35:30.0389847Z [1m[32m   Compiling[0m static_assertions v1.1.0
+build	Build Release	2025-09-04T11:35:30.0755756Z [1m[32m   Compiling[0m rustls v0.23.31
+build	Build Release	2025-09-04T11:35:30.1916554Z [1m[32m   Compiling[0m shell-words v1.1.0
+build	Build Release	2025-09-04T11:35:30.2229471Z [1m[32m   Compiling[0m native-tls v0.2.14
+build	Build Release	2025-09-04T11:35:30.3155939Z [1m[32m   Compiling[0m gix-command v0.6.2
+build	Build Release	2025-09-04T11:35:30.3681340Z [1m[32m   Compiling[0m kstring v2.0.2
+build	Build Release	2025-09-04T11:35:32.4597777Z [1m[32m   Compiling[0m hyper v1.7.0
+build	Build Release	2025-09-04T11:35:33.7426460Z [1m[32m   Compiling[0m gix-sec v0.11.0
+build	Build Release	2025-09-04T11:35:33.9786764Z [1m[32m   Compiling[0m base64 v0.22.1
+build	Build Release	2025-09-04T11:35:34.3414740Z [1m[32m   Compiling[0m ipnet v2.11.0
+build	Build Release	2025-09-04T11:35:34.4309850Z [1m[32m   Compiling[0m subtle v2.6.1
+build	Build Release	2025-09-04T11:35:34.5786524Z [1m[32m   Compiling[0m gix-attributes v0.26.1
+build	Build Release	2025-09-04T11:35:34.8581296Z [1m[32m   Compiling[0m hyper-util v0.1.16
+build	Build Release	2025-09-04T11:35:35.0292338Z [1m[32m   Compiling[0m sync_wrapper v1.0.2
+build	Build Release	2025-09-04T11:35:35.0811856Z [1m[32m   Compiling[0m encoding_rs v0.8.35
+build	Build Release	2025-09-04T11:35:36.3328307Z [1m[32m   Compiling[0m compression-core v0.4.29
+build	Build Release	2025-09-04T11:35:36.3790635Z [1m[32m   Compiling[0m tower-layer v0.3.3
+build	Build Release	2025-09-04T11:35:36.5084738Z [1m[32m   Compiling[0m tower v0.5.2
+build	Build Release	2025-09-04T11:35:36.6214291Z [1m[32m   Compiling[0m compression-codecs v0.4.30
+build	Build Release	2025-09-04T11:35:36.7826059Z [1m[32m   Compiling[0m tokio-native-tls v0.3.1
+build	Build Release	2025-09-04T11:35:36.8809816Z [1m[32m   Compiling[0m rustls-native-certs v0.8.1
+build	Build Release	2025-09-04T11:35:36.9977420Z [1m[32m   Compiling[0m webpki-roots v1.0.2
+build	Build Release	2025-09-04T11:35:37.0497867Z [1m[32m   Compiling[0m gix-ref v0.52.1
+build	Build Release	2025-09-04T11:35:37.2169263Z [1m[32m   Compiling[0m http-body-util v0.1.3
+build	Build Release	2025-09-04T11:35:37.4285703Z [1m[32m   Compiling[0m gix-url v0.31.0
+build	Build Release	2025-09-04T11:35:38.0342055Z [1m[32m   Compiling[0m toml_datetime v0.6.11
+build	Build Release	2025-09-04T11:35:38.1930580Z [1m[32m   Compiling[0m serde_spanned v0.6.9
+build	Build Release	2025-09-04T11:35:38.2471128Z [1m[32m   Compiling[0m iri-string v0.7.8
+build	Build Release	2025-09-04T11:35:38.2833416Z [1m[32m   Compiling[0m arrayvec v0.7.6
+build	Build Release	2025-09-04T11:35:38.4695468Z [1m[32m   Compiling[0m toml_write v0.1.2
+build	Build Release	2025-09-04T11:35:38.6412067Z [1m[32m   Compiling[0m toml_edit v0.22.27
+build	Build Release	2025-09-04T11:35:39.9760467Z [1m[32m   Compiling[0m tower-http v0.6.6
+build	Build Release	2025-09-04T11:35:40.2776256Z [1m[32m   Compiling[0m hyper-tls v0.6.0
+build	Build Release	2025-09-04T11:35:40.4194072Z [1m[32m   Compiling[0m async-compression v0.4.30
+build	Build Release	2025-09-04T11:35:40.6373464Z [1m[32m   Compiling[0m gix-prompt v0.11.1
+build	Build Release	2025-09-04T11:35:40.6522104Z [1m[32m   Compiling[0m serde_urlencoded v0.7.1
+build	Build Release	2025-09-04T11:35:40.8760583Z [1m[32m   Compiling[0m rustls-webpki v0.103.4
+build	Build Release	2025-09-04T11:35:40.9082831Z [1m[32m   Compiling[0m gix-traverse v0.46.2
+build	Build Release	2025-09-04T11:35:42.2484459Z [1m[32m   Compiling[0m gix-revision v0.34.1
+build	Build Release	2025-09-04T11:35:43.2484542Z [1m[32m   Compiling[0m libz-sys v1.1.22
+build	Build Release	2025-09-04T11:35:43.6013529Z [1m[32m   Compiling[0m gix-bitmap v0.2.14
+build	Build Release	2025-09-04T11:35:43.7091759Z [1m[32m   Compiling[0m filetime v0.2.26
+build	Build Release	2025-09-04T11:35:43.8441413Z [1m[32m   Compiling[0m num-traits v0.2.19
+build	Build Release	2025-09-04T11:35:43.8719501Z [1m[32m   Compiling[0m mime v0.3.17
+build	Build Release	2025-09-04T11:35:44.0682414Z [1m[32m   Compiling[0m gix-index v0.40.1
+build	Build Release	2025-09-04T11:35:44.2334834Z [1m[32m   Compiling[0m gix-refspec v0.30.1
+build	Build Release	2025-09-04T11:35:45.2251699Z [1m[32m   Compiling[0m gix-credentials v0.29.0
+build	Build Release	2025-09-04T11:35:45.9045260Z [1m[32m   Compiling[0m tokio-rustls v0.26.2
+build	Build Release	2025-09-04T11:35:45.9513683Z [1m[32m   Compiling[0m toml v0.8.23
+build	Build Release	2025-09-04T11:35:46.1345949Z [1m[32m   Compiling[0m hyper-rustls v0.27.7
+build	Build Release	2025-09-04T11:35:46.5603761Z [1m[32m   Compiling[0m reqwest v0.12.23
+build	Build Release	2025-09-04T11:35:46.9454578Z [1m[32m   Compiling[0m uluru v3.1.0
+build	Build Release	2025-09-04T11:35:47.0138310Z [1m[32m   Compiling[0m gix-ignore v0.15.0
+build	Build Release	2025-09-04T11:35:47.3007092Z [1m[32m   Compiling[0m gix-packetline-blocking v0.19.1
+build	Build Release	2025-09-04T11:35:47.4671397Z [1m[32m   Compiling[0m gix-packetline v0.19.1
+build	Build Release	2025-09-04T11:35:47.5881004Z [1m[32m   Compiling[0m crossbeam-epoch v0.9.18
+build	Build Release	2025-09-04T11:35:47.7547222Z [1m[32m   Compiling[0m arc-swap v1.7.1
+build	Build Release	2025-09-04T11:35:47.9196007Z [1m[32m   Compiling[0m utf8parse v0.2.2
+build	Build Release	2025-09-04T11:35:47.9757755Z [1m[32m   Compiling[0m camino v1.1.12
+build	Build Release	2025-09-04T11:35:48.0026315Z [1m[32m   Compiling[0m typeid v1.0.3
+build	Build Release	2025-09-04T11:35:48.1742354Z [1m[32m   Compiling[0m clru v0.6.2
+build	Build Release	2025-09-04T11:35:48.1866942Z [1m[32m   Compiling[0m syn v1.0.109
+build	Build Release	2025-09-04T11:35:48.3625618Z [1m[32m   Compiling[0m rayon-core v1.13.0
+build	Build Release	2025-09-04T11:35:48.3910045Z [1m[32m   Compiling[0m object v0.36.7
+build	Build Release	2025-09-04T11:35:48.5118021Z [1m[32m   Compiling[0m gix-pack v0.59.1
+build	Build Release	2025-09-04T11:35:48.5853469Z [1m[32m   Compiling[0m gix-transport v0.47.0
+build	Build Release	2025-09-04T11:35:51.5335001Z [1m[32m   Compiling[0m anstyle-parse v0.2.7
+build	Build Release	2025-09-04T11:35:51.6700569Z [1m[32m   Compiling[0m crossbeam-deque v0.8.6
+build	Build Release	2025-09-04T11:35:51.8346043Z [1m[32m   Compiling[0m gix-filter v0.19.2
+build	Build Release	2025-09-04T11:35:52.0054706Z [1m[32m   Compiling[0m gix-worktree v0.41.0
+build	Build Release	2025-09-04T11:35:53.3637014Z [1m[32m   Compiling[0m gix-config v0.45.1
+build	Build Release	2025-09-04T11:35:53.6569262Z [1m[32m   Compiling[0m gix-pathspec v0.11.0
+build	Build Release	2025-09-04T11:35:54.2773417Z [1m[32m   Compiling[0m gix-shallow v0.4.0
+build	Build Release	2025-09-04T11:35:54.6701743Z [1m[32m   Compiling[0m gix-negotiate v0.20.1
+build	Build Release	2025-09-04T11:35:54.9077275Z [1m[32m   Compiling[0m libssh2-sys v0.3.1
+build	Build Release	2025-09-04T11:35:55.2315533Z [1m[32m   Compiling[0m maybe-async v0.2.10
+build	Build Release	2025-09-04T11:35:55.3167697Z [1m[32m   Compiling[0m io-close v0.3.7
+build	Build Release	2025-09-04T11:35:55.4093733Z [1m[32m   Compiling[0m is_terminal_polyfill v1.70.1
+build	Build Release	2025-09-04T11:35:55.4541915Z [1m[32m   Compiling[0m anstyle-query v1.1.4
+build	Build Release	2025-09-04T11:35:55.5070679Z [1m[32m   Compiling[0m anstyle v1.0.11
+build	Build Release	2025-09-04T11:35:55.6971415Z [1m[32m   Compiling[0m eyre v0.6.12
+build	Build Release	2025-09-04T11:35:55.9069122Z [1m[32m   Compiling[0m owo-colors v4.2.2
+build	Build Release	2025-09-04T11:35:56.1113929Z [1m[32m   Compiling[0m colorchoice v1.0.4
+build	Build Release	2025-09-04T11:35:56.1637035Z [1m[32m   Compiling[0m gimli v0.31.1
+build	Build Release	2025-09-04T11:35:56.2070615Z [1m[32m   Compiling[0m anstream v0.6.20
+build	Build Release	2025-09-04T11:35:56.5110864Z [1m[32m   Compiling[0m gix-protocol v0.50.1
+build	Build Release	2025-09-04T11:35:57.3334059Z [1m[32m   Compiling[0m gix-worktree-state v0.19.0
+build	Build Release	2025-09-04T11:35:58.4446085Z [1m[32m   Compiling[0m addr2line v0.24.2
+build	Build Release	2025-09-04T11:35:58.4502354Z [1m[32m   Compiling[0m gix-submodule v0.19.1
+build	Build Release	2025-09-04T11:35:59.3160962Z [1m[32m   Compiling[0m gix-odb v0.69.1
+build	Build Release	2025-09-04T11:36:02.0692845Z [1m[32m   Compiling[0m gix-discover v0.40.1
+build	Build Release	2025-09-04T11:36:02.4223906Z [1m[32m   Compiling[0m gix-diff v0.52.1
+build	Build Release	2025-09-04T11:36:02.5315204Z [1m[32m   Compiling[0m regex v1.11.2
+build	Build Release	2025-09-04T11:36:02.6432095Z [1m[32m   Compiling[0m wasmparser v0.207.0
+build	Build Release	2025-09-04T11:36:03.1940549Z [1m[32m   Compiling[0m fs-err v2.11.0
+build	Build Release	2025-09-04T11:36:03.2078675Z [1m[32m   Compiling[0m fs-err v3.1.1
+build	Build Release	2025-09-04T11:36:03.3358097Z [1m[32m   Compiling[0m fixedbitset v0.4.2
+build	Build Release	2025-09-04T11:36:03.3462231Z [1m[32m   Compiling[0m clap_lex v0.7.5
+build	Build Release	2025-09-04T11:36:03.5206381Z [1m[32m   Compiling[0m indenter v0.3.4
+build	Build Release	2025-09-04T11:36:03.5632221Z [1m[32m   Compiling[0m heck v0.5.0
+build	Build Release	2025-09-04T11:36:03.5765396Z [1m[32m   Compiling[0m lazy_static v1.5.0
+build	Build Release	2025-09-04T11:36:03.6253205Z [1m[32m   Compiling[0m binfarce v0.2.1
+build	Build Release	2025-09-04T11:36:03.7189733Z [1m[32m   Compiling[0m topological-sort v0.2.2
+build	Build Release	2025-09-04T11:36:03.8206474Z [1m[32m   Compiling[0m unicode-xid v0.2.6
+build	Build Release	2025-09-04T11:36:03.8862423Z [1m[32m   Compiling[0m either v1.15.0
+build	Build Release	2025-09-04T11:36:04.0400016Z [1m[32m   Compiling[0m strsim v0.11.1
+build	Build Release	2025-09-04T11:36:04.5758720Z [1m[32m   Compiling[0m powerfmt v0.2.0
+build	Build Release	2025-09-04T11:36:04.7308985Z [1m[32m   Compiling[0m rustc-demangle v0.1.26
+build	Build Release	2025-09-04T11:36:04.8911003Z [1m[32m   Compiling[0m deranged v0.5.3
+build	Build Release	2025-09-04T11:36:05.2445798Z [1m[32m   Compiling[0m backtrace v0.3.75
+build	Build Release	2025-09-04T11:36:06.3498078Z [1m[32m   Compiling[0m auditable-extract v0.3.5
+build	Build Release	2025-09-04T11:36:06.4386653Z [1m[32m   Compiling[0m clap_builder v4.5.47
+build	Build Release	2025-09-04T11:36:06.5016002Z [1m[32m   Compiling[0m rayon v1.11.0
+build	Build Release	2025-09-04T11:36:08.8937845Z [1m[32m   Compiling[0m synstructure v0.12.6
+build	Build Release	2025-09-04T11:36:08.9504208Z [1m[32m   Compiling[0m auditable-serde v0.8.0
+build	Build Release	2025-09-04T11:36:09.3263528Z [1m[32m   Compiling[0m clap_derive v4.5.47
+build	Build Release	2025-09-04T11:36:09.9286435Z [1m[32m   Compiling[0m sharded-slab v0.1.7
+build	Build Release	2025-09-04T11:36:10.8281442Z [1m[32m   Compiling[0m petgraph v0.6.5
+build	Build Release	2025-09-04T11:36:11.2959486Z [1m[32m   Compiling[0m gix v0.72.1
+build	Build Release	2025-09-04T11:36:12.4225060Z [1m[32m   Compiling[0m erased-serde v0.4.6
+build	Build Release	2025-09-04T11:36:12.9968373Z [1m[32m   Compiling[0m ordered-float v2.10.1
+build	Build Release	2025-09-04T11:36:13.3054414Z [1m[32m   Compiling[0m tracing-log v0.2.0
+build	Build Release	2025-09-04T11:36:13.3106285Z [1m[32m   Compiling[0m libgit2-sys v0.18.2+1.9.1
+build	Build Release	2025-09-04T11:36:13.5176296Z [1m[32m   Compiling[0m smol_str v0.3.2
+build	Build Release	2025-09-04T11:36:13.5467561Z [1m[32m   Compiling[0m matchers v0.2.0
+build	Build Release	2025-09-04T11:36:13.6225691Z [1m[32m   Compiling[0m toml-span v0.5.2
+build	Build Release	2025-09-04T11:36:13.7241237Z [1m[32m   Compiling[0m thread_local v1.1.9
+build	Build Release	2025-09-04T11:36:13.7938753Z [1m[32m   Compiling[0m nu-ansi-term v0.50.1
+build	Build Release	2025-09-04T11:36:13.9114611Z [1m[32m   Compiling[0m portable-atomic v1.11.1
+build	Build Release	2025-09-04T11:36:14.1362464Z [1m[32m   Compiling[0m rustc-stable-hash v0.1.2
+build	Build Release	2025-09-04T11:36:14.2497960Z [1m[32m   Compiling[0m ident_case v1.0.1
+build	Build Release	2025-09-04T11:36:14.2709226Z [1m[32m   Compiling[0m num-conv v0.1.0
+build	Build Release	2025-09-04T11:36:14.3087619Z [1m[32m   Compiling[0m thiserror v1.0.69
+build	Build Release	2025-09-04T11:36:14.4388696Z [1m[32m   Compiling[0m twox-hash v2.1.2
+build	Build Release	2025-09-04T11:36:14.5120374Z [1m[32m   Compiling[0m time-core v0.1.6
+build	Build Release	2025-09-04T11:36:14.6253099Z [1m[32m   Compiling[0m time v0.3.43
+build	Build Release	2025-09-04T11:36:15.5775349Z [1m[32m   Compiling[0m abscissa_derive v0.8.2
+build	Build Release	2025-09-04T11:36:15.8029808Z [1m[32m   Compiling[0m tame-index v0.22.0
+build	Build Release	2025-09-04T11:36:16.0592331Z [1m[32m   Compiling[0m tracing-subscriber v0.3.20
+build	Build Release	2025-09-04T11:36:20.1901627Z [1m[32m   Compiling[0m color-eyre v0.6.5
+build	Build Release	2025-09-04T11:36:21.1273696Z [1m[32m   Compiling[0m serde-value v0.7.0
+build	Build Release	2025-09-04T11:36:21.5524425Z [1m[32m   Compiling[0m serde-untagged v0.1.8
+build	Build Release	2025-09-04T11:36:21.6699183Z [1m[32m   Compiling[0m cargo-lock v10.1.0
+build	Build Release	2025-09-04T11:36:22.2458184Z [1m[32m   Compiling[0m clap v4.5.47
+build	Build Release	2025-09-04T11:36:22.2840650Z [1m[32m   Compiling[0m auditable-info v0.9.0
+build	Build Release	2025-09-04T11:36:23.0456803Z [1m[32m   Compiling[0m quitters v0.1.0
+build	Build Release	2025-09-04T11:36:23.4515699Z [1m[32m   Compiling[0m secrecy v0.10.3
+build	Build Release	2025-09-04T11:36:23.5439841Z [1m[32m   Compiling[0m blake3 v1.8.2
+build	Build Release	2025-09-04T11:36:23.8566007Z [1m[32m   Compiling[0m cvss v2.1.1
+build	Build Release	2025-09-04T11:36:25.0687578Z [1m[32m   Compiling[0m platforms v3.6.0
+build	Build Release	2025-09-04T11:36:25.2308905Z [1m[32m   Compiling[0m thiserror-impl v1.0.69
+build	Build Release	2025-09-04T11:36:25.4173902Z [1m[32m   Compiling[0m wait-timeout v0.2.1
+build	Build Release	2025-09-04T11:36:25.6768443Z [1m[32m   Compiling[0m canonical-path v2.0.2
+build	Build Release	2025-09-04T11:36:25.8309077Z [1m[32m   Compiling[0m anyhow v1.0.99
+build	Build Release	2025-09-04T11:36:26.0410996Z [1m[32m   Compiling[0m unicode-width v0.2.1
+build	Build Release	2025-09-04T11:36:26.2475930Z [1m[32m   Compiling[0m termcolor v1.4.1
+build	Build Release	2025-09-04T11:36:26.4959773Z [1m[32m   Compiling[0m cargo-util-schemas v0.8.2
+build	Build Release	2025-09-04T11:36:26.5869961Z [1m[32m   Compiling[0m abscissa_core v0.8.2
+build	Build Release	2025-09-04T11:36:28.1836856Z [1m[32m   Compiling[0m console v0.16.0
+build	Build Release	2025-09-04T11:36:29.0228609Z [1m[32m   Compiling[0m rustsec v0.30.4
+build	Build Release	2025-09-04T11:36:30.8163928Z [1m[32m   Compiling[0m toml_parser v1.0.2
+build	Build Release	2025-09-04T11:36:30.8910694Z [1m[32m   Compiling[0m cargo-platform v0.3.0
+build	Build Release	2025-09-04T11:36:31.2224086Z [1m[32m   Compiling[0m serde_spanned v1.0.0
+build	Build Release	2025-09-04T11:36:31.3092221Z [1m[32m   Compiling[0m toml_datetime v0.7.0
+build	Build Release	2025-09-04T11:36:31.6102819Z [1m[32m   Compiling[0m fann-sys v0.1.8
+build	Build Release	2025-09-04T11:36:31.6748902Z [1m[32m   Compiling[0m display-error-chain v0.2.2
+build	Build Release	2025-09-04T11:36:31.7205979Z [1m[32m   Compiling[0m unit-prefix v0.5.1
+build	Build Release	2025-09-04T11:36:31.7241434Z [1m[32m   Compiling[0m constant_time_eq v0.3.1
+build	Build Release	2025-09-04T11:36:31.7623410Z [1m[32m   Compiling[0m toml_writer v1.0.2
+build	Build Release	2025-09-04T11:36:31.7930051Z [1m[32m   Compiling[0m iana-time-zone v0.1.63
+build	Build Release	2025-09-04T11:36:31.9383898Z [1m[32m   Compiling[0m unsafe-libyaml v0.2.11
+build	Build Release	2025-09-04T11:36:32.0663604Z [1m[32m   Compiling[0m do-codeguardian v0.1.0 (/home/runner/work/do-codeguardian/do-codeguardian)
+build	Build Release	2025-09-04T11:36:32.2417170Z [1m[32m   Compiling[0m arrayref v0.3.9
+build	Build Release	2025-09-04T11:36:32.7394278Z [1m[32m   Compiling[0m serde_yaml v0.9.34+deprecated
+build	Build Release	2025-09-04T11:36:33.5488345Z [1m[32m   Compiling[0m toml v0.9.5
+build	Build Release	2025-09-04T11:36:35.0764423Z [1m[32m   Compiling[0m chrono v0.4.41
+build	Build Release	2025-09-04T11:36:35.8811551Z [1m[32m   Compiling[0m indicatif v0.18.0
+build	Build Release	2025-09-04T11:36:37.2422825Z [1m[32m   Compiling[0m cargo-audit v0.21.2
+build	Build Release	2025-09-04T11:36:37.7920662Z [1m[32m   Compiling[0m fann v0.1.8
+build	Build Release	2025-09-04T11:36:38.1048519Z [1m[32m   Compiling[0m cargo_metadata v0.22.0
+build	Build Release	2025-09-04T11:36:45.0603267Z [1m[32m   Compiling[0m uuid v1.18.1
+build	Build Release	2025-09-04T11:36:45.4292351Z [1m[32m   Compiling[0m sha2 v0.10.9
+build	Build Release	2025-09-04T11:36:46.3480471Z [1m[32m   Compiling[0m num_cpus v1.17.0
+build	Build Release	2025-09-04T11:36:46.9484254Z [1m[32m   Compiling[0m is-terminal v0.4.16
+build	Build Release	2025-09-04T11:36:59.6533033Z [1m[32m   Compiling[0m git2 v0.20.2
+build	Build Release	2025-09-04T11:37:01.6813444Z [0m[1m[38;5;9merror[E0432][0m[0m[1m: unresolved imports `syn::visit`, `syn::Block`, `syn::File`, `syn::Item`, `syn::ItemEnum`, `syn::ItemFn`, `syn::ItemImpl`, `syn::ItemStruct`, `syn::Stmt`[0m
+build	Build Release	2025-09-04T11:37:01.6837531Z ##[error][0m   [0m[0m[1m[38;5;12m--> [0m[0msrc/ml/ast_analyzer.rs:5:11[0m
+build	Build Release	2025-09-04T11:37:01.6839424Z [0m    [0m[0m[1m[38;5;12m|[0m
+build	Build Release	2025-09-04T11:37:01.6840522Z [0m[1m[38;5;12m5[0m[0m   [0m[0m[1m[38;5;12m|[0m[0m [0m[0muse syn::{visit::Visit, Block, Expr, File, Item, ItemEnum, ItemFn, ItemImpl, ItemStruct, Stmt};[0m
+build	Build Release	2025-09-04T11:37:01.6842250Z [0m    [0m[0m[1m[38;5;12m|[0m[0m           [0m[0m[1m[38;5;9m^^^^^[0m[0m         [0m[0m[1m[38;5;9m^^^^^[0m[0m        [0m[0m[1m[38;5;9m^^^^[0m[0m  [0m[0m[1m[38;5;9m^^^^[0m[0m  [0m[0m[1m[38;5;9m^^^^^^^^[0m[0m  [0m[0m[1m[38;5;9m^^^^^^[0m[0m  [0m[0m[1m[38;5;9m^^^^^^^^[0m[0m  [0m[0m[1m[38;5;9m^^^^^^^^^^[0m[0m  [0m[0m[1m[38;5;9m^^^^[0m[0m [0m[0m[1m[38;5;9mno `Stmt` in the root[0m
+build	Build Release	2025-09-04T11:37:01.6844168Z [0m    [0m[0m[1m[38;5;12m|[0m[0m           [0m[0m[1m[38;5;9m|[0m[0m             [0m[0m[1m[38;5;9m|[0m[0m            [0m[0m[1m[38;5;9m|[0m[0m     [0m[0m[1m[38;5;9m|[0m[0m     [0m[0m[1m[38;5;9m|[0m[0m         [0m[0m[1m[38;5;9m|[0m[0m       [0m[0m[1m[38;5;9m|[0m[0m         [0m[0m[1m[38;5;9m|[0m
+build	Build Release	2025-09-04T11:37:01.6845754Z [0m    [0m[0m[1m[38;5;12m|[0m[0m           [0m[0m[1m[38;5;9m|[0m[0m             [0m[0m[1m[38;5;9m|[0m[0m            [0m[0m[1m[38;5;9m|[0m[0m     [0m[0m[1m[38;5;9m|[0m[0m     [0m[0m[1m[38;5;9m|[0m[0m         [0m[0m[1m[38;5;9m|[0m[0m       [0m[0m[1m[38;5;9m|[0m[0m         [0m[0m[1m[38;5;9mno `ItemStruct` in the root[0m
+build	Build Release	2025-09-04T11:37:01.6847278Z [0m    [0m[0m[1m[38;5;12m|[0m[0m           [0m[0m[1m[38;5;9m|[0m[0m             [0m[0m[1m[38;5;9m|[0m[0m            [0m[0m[1m[38;5;9m|[0m[0m     [0m[0m[1m[38;5;9m|[0m[0m     [0m[0m[1m[38;5;9m|[0m[0m         [0m[0m[1m[38;5;9m|[0m[0m       [0m[0m[1m[38;5;9mno `ItemImpl` in the root[0m
+build	Build Release	2025-09-04T11:37:01.6848655Z [0m    [0m[0m[1m[38;5;12m|[0m[0m           [0m[0m[1m[38;5;9m|[0m[0m             [0m[0m[1m[38;5;9m|[0m[0m            [0m[0m[1m[38;5;9m|[0m[0m     [0m[0m[1m[38;5;9m|[0m[0m     [0m[0m[1m[38;5;9m|[0m[0m         [0m[0m[1m[38;5;9mno `ItemFn` in the root[0m
+build	Build Release	2025-09-04T11:37:01.6849876Z [0m    [0m[0m[1m[38;5;12m|[0m[0m           [0m[0m[1m[38;5;9m|[0m[0m             [0m[0m[1m[38;5;9m|[0m[0m            [0m[0m[1m[38;5;9m|[0m[0m     [0m[0m[1m[38;5;9m|[0m[0m     [0m[0m[1m[38;5;9mno `ItemEnum` in the root[0m
+build	Build Release	2025-09-04T11:37:01.6851397Z [0m    [0m[0m[1m[38;5;12m|[0m[0m           [0m[0m[1m[38;5;9m|[0m[0m             [0m[0m[1m[38;5;9m|[0m[0m            [0m[0m[1m[38;5;9m|[0m[0m     [0m[0m[1m[38;5;9mno `Item` in the root[0m
+build	Build Release	2025-09-04T11:37:01.6852435Z [0m    [0m[0m[1m[38;5;12m|[0m[0m           [0m[0m[1m[38;5;9m|[0m[0m             [0m[0m[1m[38;5;9m|[0m[0m            [0m[0m[1m[38;5;9mno `File` in the root[0m
+build	Build Release	2025-09-04T11:37:01.6853497Z [0m    [0m[0m[1m[38;5;12m|[0m[0m           [0m[0m[1m[38;5;9m|[0m[0m             [0m[0m[1m[38;5;9mno `Block` in the root[0m
+build	Build Release	2025-09-04T11:37:01.6854243Z [0m    [0m[0m[1m[38;5;12m|[0m[0m           [0m[0m[1m[38;5;9mcould not find `visit` in `syn`[0m
+build	Build Release	2025-09-04T11:37:01.6854835Z [0m    [0m[0m[1m[38;5;12m|[0m
+build	Build Release	2025-09-04T11:37:01.6855457Z [0m[1m[38;5;10mnote[0m[0m: found an item that was configured out[0m
+build	Build Release	2025-09-04T11:37:01.6856754Z [0m   [0m[0m[1m[38;5;12m--> [0m[0m/home/runner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/syn-2.0.106/src/lib.rs:876:21[0m
+build	Build Release	2025-09-04T11:37:01.6857573Z [0m    [0m[0m[1m[38;5;12m|[0m
+build	Build Release	2025-09-04T11:37:01.6858272Z [0m[1m[38;5;12m876[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0mpub use crate::gen::visit;[0m
+build	Build Release	2025-09-04T11:37:01.6858960Z [0m    [0m[0m[1m[38;5;12m|[0m[0m                     [0m[0m[1m[38;5;10m^^^^^[0m
+build	Build Release	2025-09-04T11:37:01.6859664Z [0m[1m[38;5;10mnote[0m[0m: the item is gated behind the `visit` feature[0m
+build	Build Release	2025-09-04T11:37:01.6860754Z [0m   [0m[0m[1m[38;5;12m--> [0m[0m/home/runner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/syn-2.0.106/src/lib.rs:874:7[0m
+build	Build Release	2025-09-04T11:37:01.6861620Z [0m    [0m[0m[1m[38;5;12m|[0m
+build	Build Release	2025-09-04T11:37:01.6862327Z [0m[1m[38;5;12m874[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m#[cfg(feature = "visit")][0m
+build	Build Release	2025-09-04T11:37:01.6863341Z [0m    [0m[0m[1m[38;5;12m|[0m[0m       [0m[0m[1m[38;5;10m^^^^^^^^^^^^^^^^^[0m
+build	Build Release	2025-09-04T11:37:01.6864261Z [0m    [0m[0m[1m[38;5;12m= [0m[0m[1mhelp[0m[0m: consider importing one of these variants instead:[0m
+build	Build Release	2025-09-04T11:37:01.6865162Z [0m            crate::ml::ast_analyzer::Expr::Block[0m
+build	Build Release	2025-09-04T11:37:01.6865792Z [0m            syn::Expr::Block[0m
+build	Build Release	2025-09-04T11:37:01.6866377Z [0m[1m[38;5;10mnote[0m[0m: found an item that was configured out[0m
+build	Build Release	2025-09-04T11:37:01.6867499Z [0m   [0m[0m[1m[38;5;12m--> [0m[0m/home/runner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/syn-2.0.106/src/lib.rs:530:23[0m
+build	Build Release	2025-09-04T11:37:01.6868407Z [0m    [0m[0m[1m[38;5;12m|[0m
+build	Build Release	2025-09-04T11:37:01.6869491Z [0m[1m[38;5;12m530[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0mpub use crate::stmt::{Block, Local, LocalInit, Stmt, StmtMacro};[0m
+build	Build Release	2025-09-04T11:37:01.6870492Z [0m    [0m[0m[1m[38;5;12m|[0m[0m                       [0m[0m[1m[38;5;10m^^^^^[0m
+build	Build Release	2025-09-04T11:37:01.6871285Z [0m[1m[38;5;10mnote[0m[0m: the item is gated behind the `full` feature[0m
+build	Build Release	2025-09-04T11:37:01.6872500Z [0m   [0m[0m[1m[38;5;12m--> [0m[0m/home/runner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/syn-2.0.106/src/lib.rs:528:7[0m
+build	Build Release	2025-09-04T11:37:01.6873706Z [0m    [0m[0m[1m[38;5;12m|[0m
+build	Build Release	2025-09-04T11:37:01.6874366Z [0m[1m[38;5;12m528[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m#[cfg(feature = "full")][0m
+build	Build Release	2025-09-04T11:37:01.6875132Z [0m    [0m[0m[1m[38;5;12m|[0m[0m       [0m[0m[1m[38;5;10m^^^^^^^^^^^^^^^^[0m
+build	Build Release	2025-09-04T11:37:01.6875980Z [0m    [0m[0m[1m[38;5;12m= [0m[0m[1mhelp[0m[0m: consider importing one of these structs instead:[0m
+build	Build Release	2025-09-04T11:37:01.6876743Z [0m            std::fs::File[0m
+build	Build Release	2025-09-04T11:37:01.6877239Z [0m            tokio::fs::File[0m
+build	Build Release	2025-09-04T11:37:01.6877863Z [0m[1m[38;5;10mnote[0m[0m: found an item that was configured out[0m
+build	Build Release	2025-09-04T11:37:01.6878985Z [0m   [0m[0m[1m[38;5;12m--> [0m[0m/home/runner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/syn-2.0.106/src/lib.rs:395:22[0m
+build	Build Release	2025-09-04T11:37:01.6880167Z [0m    [0m[0m[1m[38;5;12m|[0m
+build	Build Release	2025-09-04T11:37:01.6880953Z [0m[1m[38;5;12m395[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0mpub use crate::file::File;[0m
+build	Build Release	2025-09-04T11:37:01.6881748Z [0m    [0m[0m[1m[38;5;12m|[0m[0m                      [0m[0m[1m[38;5;10m^^^^[0m
+build	Build Release	2025-09-04T11:37:01.6882750Z [0m[1m[38;5;10mnote[0m[0m: the item is gated behind the `full` feature[0m
+build	Build Release	2025-09-04T11:37:01.6883936Z [0m   [0m[0m[1m[38;5;12m--> [0m[0m/home/runner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/syn-2.0.106/src/lib.rs:393:7[0m
+build	Build Release	2025-09-04T11:37:01.6884849Z [0m    [0m[0m[1m[38;5;12m|[0m
+build	Build Release	2025-09-04T11:37:01.6885521Z [0m[1m[38;5;12m393[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m#[cfg(feature = "full")][0m
+build	Build Release	2025-09-04T11:37:01.6886281Z [0m    [0m[0m[1m[38;5;12m|[0m[0m       [0m[0m[1m[38;5;10m^^^^^^^^^^^^^^^^[0m
+build	Build Release	2025-09-04T11:37:01.6887071Z [0m    [0m[0m[1m[38;5;12m= [0m[0m[1mhelp[0m[0m: consider importing this enum instead:[0m
+build	Build Release	2025-09-04T11:37:01.6888122Z [0m            chrono::format::Item[0m
+build	Build Release	2025-09-04T11:37:01.6888764Z [0m[1m[38;5;10mnote[0m[0m: found an item that was configured out[0m
+build	Build Release	2025-09-04T11:37:01.6889933Z [0m   [0m[0m[1m[38;5;12m--> [0m[0m/home/runner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/syn-2.0.106/src/lib.rs:429:88[0m
+build	Build Release	2025-09-04T11:37:01.6890852Z [0m    [0m[0m[1m[38;5;12m|[0m
+build	Build Release	2025-09-04T11:37:01.6891906Z [0m[1m[38;5;12m429[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m    ImplItem, ImplItemConst, ImplItemFn, ImplItemMacro, ImplItemType, ImplRestriction, Item,[0m
+build	Build Release	2025-09-04T11:37:01.6893354Z [0m    [0m[0m[1m[38;5;12m|[0m[0m                                                                                        [0m[0m[1m[38;5;10m^^^^[0m
+build	Build Release	2025-09-04T11:37:01.6894151Z [0m[1m[38;5;10mnote[0m[0m: the item is gated behind the `full` feature[0m
+build	Build Release	2025-09-04T11:37:01.6895325Z [0m   [0m[0m[1m[38;5;12m--> [0m[0m/home/runner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/syn-2.0.106/src/lib.rs:425:7[0m
+build	Build Release	2025-09-04T11:37:01.6896266Z [0m    [0m[0m[1m[38;5;12m|[0m
+build	Build Release	2025-09-04T11:37:01.6896928Z [0m[1m[38;5;12m425[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m#[cfg(feature = "full")][0m
+build	Build Release	2025-09-04T11:37:01.6897703Z [0m    [0m[0m[1m[38;5;12m|[0m[0m       [0m[0m[1m[38;5;10m^^^^^^^^^^^^^^^^[0m
+build	Build Release	2025-09-04T11:37:01.6898447Z [0m[1m[38;5;10mnote[0m[0m: found an item that was configured out[0m
+build	Build Release	2025-09-04T11:37:01.6899592Z [0m   [0m[0m[1m[38;5;12m--> [0m[0m/home/runner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/syn-2.0.106/src/lib.rs:430:16[0m
+build	Build Release	2025-09-04T11:37:01.6900488Z [0m    [0m[0m[1m[38;5;12m|[0m
+build	Build Release	2025-09-04T11:37:01.6901563Z [0m[1m[38;5;12m430[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m    ItemConst, ItemEnum, ItemExternCrate, ItemFn, ItemForeignMod, ItemImpl, ItemMacro, ItemMod,[0m
+build	Build Release	2025-09-04T11:37:01.6902938Z [0m    [0m[0m[1m[38;5;12m|[0m[0m                [0m[0m[1m[38;5;10m^^^^^^^^[0m
+build	Build Release	2025-09-04T11:37:01.6903749Z [0m[1m[38;5;10mnote[0m[0m: the item is gated behind the `full` feature[0m
+build	Build Release	2025-09-04T11:37:01.6904912Z [0m   [0m[0m[1m[38;5;12m--> [0m[0m/home/runner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/syn-2.0.106/src/lib.rs:425:7[0m
+build	Build Release	2025-09-04T11:37:01.6905837Z [0m    [0m[0m[1m[38;5;12m|[0m
+build	Build Release	2025-09-04T11:37:01.6906517Z [0m[1m[38;5;12m425[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m#[cfg(feature = "full")][0m
+build	Build Release	2025-09-04T11:37:01.6907290Z [0m    [0m[0m[1m[38;5;12m|[0m[0m       [0m[0m[1m[38;5;10m^^^^^^^^^^^^^^^^[0m
+build	Build Release	2025-09-04T11:37:01.6908013Z [0m[1m[38;5;10mnote[0m[0m: found an item that was configured out[0m
+build	Build Release	2025-09-04T11:37:01.6909174Z [0m   [0m[0m[1m[38;5;12m--> [0m[0m/home/runner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/syn-2.0.106/src/lib.rs:430:43[0m
+build	Build Release	2025-09-04T11:37:01.6910107Z [0m    [0m[0m[1m[38;5;12m|[0m
+build	Build Release	2025-09-04T11:37:01.6911166Z [0m[1m[38;5;12m430[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m    ItemConst, ItemEnum, ItemExternCrate, ItemFn, ItemForeignMod, ItemImpl, ItemMacro, ItemMod,[0m
+build	Build Release	2025-09-04T11:37:01.6912802Z [0m    [0m[0m[1m[38;5;12m|[0m[0m                                           [0m[0m[1m[38;5;10m^^^^^^[0m
+build	Build Release	2025-09-04T11:37:01.6913600Z [0m[1m[38;5;10mnote[0m[0m: the item is gated behind the `full` feature[0m
+build	Build Release	2025-09-04T11:37:01.6914754Z [0m   [0m[0m[1m[38;5;12m--> [0m[0m/home/runner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/syn-2.0.106/src/lib.rs:425:7[0m
+build	Build Release	2025-09-04T11:37:01.6915663Z [0m    [0m[0m[1m[38;5;12m|[0m
+build	Build Release	2025-09-04T11:37:01.6916354Z [0m[1m[38;5;12m425[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m#[cfg(feature = "full")][0m
+build	Build Release	2025-09-04T11:37:01.6917130Z [0m    [0m[0m[1m[38;5;12m|[0m[0m       [0m[0m[1m[38;5;10m^^^^^^^^^^^^^^^^[0m
+build	Build Release	2025-09-04T11:37:01.6917856Z [0m[1m[38;5;10mnote[0m[0m: found an item that was configured out[0m
+build	Build Release	2025-09-04T11:37:01.6919017Z [0m   [0m[0m[1m[38;5;12m--> [0m[0m/home/runner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/syn-2.0.106/src/lib.rs:430:67[0m
+build	Build Release	2025-09-04T11:37:01.6920200Z [0m    [0m[0m[1m[38;5;12m|[0m
+build	Build Release	2025-09-04T11:37:01.6921288Z [0m[1m[38;5;12m430[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m    ItemConst, ItemEnum, ItemExternCrate, ItemFn, ItemForeignMod, ItemImpl, ItemMacro, ItemMod,[0m
+build	Build Release	2025-09-04T11:37:01.6922481Z [0m    [0m[0m[1m[38;5;12m|[0m[0m                                                                   [0m[0m[1m[38;5;10m^^^^^^^^[0m
+build	Build Release	2025-09-04T11:37:01.6923475Z [0m[1m[38;5;10mnote[0m[0m: the item is gated behind the `full` feature[0m
+build	Build Release	2025-09-04T11:37:01.6924700Z [0m   [0m[0m[1m[38;5;12m--> [0m[0m/home/runner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/syn-2.0.106/src/lib.rs:425:7[0m
+build	Build Release	2025-09-04T11:37:01.6925687Z [0m    [0m[0m[1m[38;5;12m|[0m
+build	Build Release	2025-09-04T11:37:01.6926390Z [0m[1m[38;5;12m425[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m#[cfg(feature = "full")][0m
+build	Build Release	2025-09-04T11:37:01.6927225Z [0m    [0m[0m[1m[38;5;12m|[0m[0m       [0m[0m[1m[38;5;10m^^^^^^^^^^^^^^^^[0m
+build	Build Release	2025-09-04T11:37:01.6928000Z [0m[1m[38;5;10mnote[0m[0m: found an item that was configured out[0m
+build	Build Release	2025-09-04T11:37:01.6929100Z [0m   [0m[0m[1m[38;5;12m--> [0m[0m/home/runner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/syn-2.0.106/src/lib.rs:431:17[0m
+build	Build Release	2025-09-04T11:37:01.6930096Z [0m    [0m[0m[1m[38;5;12m|[0m
+build	Build Release	2025-09-04T11:37:01.6931222Z [0m[1m[38;5;12m431[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m    ItemStatic, ItemStruct, ItemTrait, ItemTraitAlias, ItemType, ItemUnion, ItemUse, Receiver,[0m
+build	Build Release	2025-09-04T11:37:01.6932396Z [0m    [0m[0m[1m[38;5;12m|[0m[0m                 [0m[0m[1m[38;5;10m^^^^^^^^^^[0m
+build	Build Release	2025-09-04T11:37:01.6933461Z [0m[1m[38;5;10mnote[0m[0m: the item is gated behind the `full` feature[0m
+build	Build Release	2025-09-04T11:37:01.6934664Z [0m   [0m[0m[1m[38;5;12m--> [0m[0m/home/runner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/syn-2.0.106/src/lib.rs:425:7[0m
+build	Build Release	2025-09-04T11:37:01.6935643Z [0m    [0m[0m[1m[38;5;12m|[0m
+build	Build Release	2025-09-04T11:37:01.6936363Z [0m[1m[38;5;12m425[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m#[cfg(feature = "full")][0m
+build	Build Release	2025-09-04T11:37:01.6937189Z [0m    [0m[0m[1m[38;5;12m|[0m[0m       [0m[0m[1m[38;5;10m^^^^^^^^^^^^^^^^[0m
+build	Build Release	2025-09-04T11:37:01.6937961Z [0m[1m[38;5;10mnote[0m[0m: found an item that was configured out[0m
+build	Build Release	2025-09-04T11:37:01.6939189Z [0m   [0m[0m[1m[38;5;12m--> [0m[0m/home/runner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/syn-2.0.106/src/lib.rs:530:48[0m
+build	Build Release	2025-09-04T11:37:01.6940192Z [0m    [0m[0m[1m[38;5;12m|[0m
+build	Build Release	2025-09-04T11:37:01.6941214Z [0m[1m[38;5;12m530[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0mpub use crate::stmt::{Block, Local, LocalInit, Stmt, StmtMacro};[0m
+build	Build Release	2025-09-04T11:37:01.6942304Z [0m    [0m[0m[1m[38;5;12m|[0m[0m                                                [0m[0m[1m[38;5;10m^^^^[0m
+build	Build Release	2025-09-04T11:37:01.6943284Z [0m[1m[38;5;10mnote[0m[0m: the item is gated behind the `full` feature[0m
+build	Build Release	2025-09-04T11:37:01.6944864Z [0m   [0m[0m[1m[38;5;12m--> [0m[0m/home/runner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/syn-2.0.106/src/lib.rs:528:7[0m
+build	Build Release	2025-09-04T11:37:01.6945812Z [0m    [0m[0m[1m[38;5;12m|[0m
+build	Build Release	2025-09-04T11:37:01.6946506Z [0m[1m[38;5;12m528[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m#[cfg(feature = "full")][0m
+build	Build Release	2025-09-04T11:37:01.6947392Z [0m    [0m[0m[1m[38;5;12m|[0m[0m       [0m[0m[1m[38;5;10m^^^^^^^^^^^^^^^^[0m
+build	Build Release	2025-09-04T11:37:01.6947783Z
+build	Build Release	2025-09-04T11:37:01.7843171Z [0m[1m[38;5;9merror[E0433][0m[0m[1m: failed to resolve: could not find `visit` in `syn`[0m
+build	Build Release	2025-09-04T11:37:01.7845068Z ##[error][0m   [0m[0m[1m[38;5;12m--> [0m[0msrc/ml/ast_analyzer.rs:292:14[0m
+build	Build Release	2025-09-04T11:37:01.7846690Z [0m    [0m[0m[1m[38;5;12m|[0m
+build	Build Release	2025-09-04T11:37:01.7847742Z [0m[1m[38;5;12m292[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m        syn::visit::visit_item(self, item);[0m
+build	Build Release	2025-09-04T11:37:01.7849154Z [0m    [0m[0m[1m[38;5;12m|[0m[0m              [0m[0m[1m[38;5;9m^^^^^[0m[0m [0m[0m[1m[38;5;9mcould not find `visit` in `syn`[0m
+build	Build Release	2025-09-04T11:37:01.7849916Z [0m    [0m[0m[1m[38;5;12m|[0m
+build	Build Release	2025-09-04T11:37:01.7850593Z [0m[1m[38;5;10mnote[0m[0m: found an item that was configured out[0m
+build	Build Release	2025-09-04T11:37:01.7851801Z [0m   [0m[0m[1m[38;5;12m--> [0m[0m/home/runner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/syn-2.0.106/src/lib.rs:876:21[0m
+build	Build Release	2025-09-04T11:37:01.7853030Z [0m    [0m[0m[1m[38;5;12m|[0m
+build	Build Release	2025-09-04T11:37:01.7853934Z [0m[1m[38;5;12m876[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0mpub use crate::gen::visit;[0m
+build	Build Release	2025-09-04T11:37:01.7854768Z [0m    [0m[0m[1m[38;5;12m|[0m[0m                     [0m[0m[1m[38;5;10m^^^^^[0m
+build	Build Release	2025-09-04T11:37:01.7855588Z [0m[1m[38;5;10mnote[0m[0m: the item is gated behind the `visit` feature[0m
+build	Build Release	2025-09-04T11:37:01.7856800Z [0m   [0m[0m[1m[38;5;12m--> [0m[0m/home/runner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/syn-2.0.106/src/lib.rs:874:7[0m
+build	Build Release	2025-09-04T11:37:01.7857801Z [0m    [0m[0m[1m[38;5;12m|[0m
+build	Build Release	2025-09-04T11:37:01.7858506Z [0m[1m[38;5;12m874[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m#[cfg(feature = "visit")][0m
+build	Build Release	2025-09-04T11:37:01.7859316Z [0m    [0m[0m[1m[38;5;12m|[0m[0m       [0m[0m[1m[38;5;10m^^^^^^^^^^^^^^^^^[0m
+build	Build Release	2025-09-04T11:37:01.7859843Z
+build	Build Release	2025-09-04T11:37:01.7875442Z [0m[1m[38;5;9merror[E0433][0m[0m[1m: failed to resolve: could not find `visit` in `syn`[0m
+build	Build Release	2025-09-04T11:37:01.7877069Z ##[error][0m   [0m[0m[1m[38;5;12m--> [0m[0msrc/ml/ast_analyzer.rs:297:14[0m
+build	Build Release	2025-09-04T11:37:01.7878577Z [0m    [0m[0m[1m[38;5;12m|[0m
+build	Build Release	2025-09-04T11:37:01.7879575Z [0m[1m[38;5;12m297[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m        syn::visit::visit_block(self, block);[0m
+build	Build Release	2025-09-04T11:37:01.7880623Z [0m    [0m[0m[1m[38;5;12m|[0m[0m              [0m[0m[1m[38;5;9m^^^^^[0m[0m [0m[0m[1m[38;5;9mcould not find `visit` in `syn`[0m
+build	Build Release	2025-09-04T11:37:01.7881365Z [0m    [0m[0m[1m[38;5;12m|[0m
+build	Build Release	2025-09-04T11:37:01.7882001Z [0m[1m[38;5;10mnote[0m[0m: found an item that was configured out[0m
+build	Build Release	2025-09-04T11:37:01.7883454Z [0m   [0m[0m[1m[38;5;12m--> [0m[0m/home/runner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/syn-2.0.106/src/lib.rs:876:21[0m
+build	Build Release	2025-09-04T11:37:01.7884435Z [0m    [0m[0m[1m[38;5;12m|[0m
+build	Build Release	2025-09-04T11:37:01.7885295Z [0m[1m[38;5;12m876[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0mpub use crate::gen::visit;[0m
+build	Build Release	2025-09-04T11:37:01.7886122Z [0m    [0m[0m[1m[38;5;12m|[0m[0m                     [0m[0m[1m[38;5;10m^^^^^[0m
+build	Build Release	2025-09-04T11:37:01.7886954Z [0m[1m[38;5;10mnote[0m[0m: the item is gated behind the `visit` feature[0m
+build	Build Release	2025-09-04T11:37:01.7888186Z [0m   [0m[0m[1m[38;5;12m--> [0m[0m/home/runner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/syn-2.0.106/src/lib.rs:874:7[0m
+build	Build Release	2025-09-04T11:37:01.7889159Z [0m    [0m[0m[1m[38;5;12m|[0m
+build	Build Release	2025-09-04T11:37:01.7889898Z [0m[1m[38;5;12m874[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m#[cfg(feature = "visit")][0m
+build	Build Release	2025-09-04T11:37:01.7891029Z [0m    [0m[0m[1m[38;5;12m|[0m[0m       [0m[0m[1m[38;5;10m^^^^^^^^^^^^^^^^^[0m
+build	Build Release	2025-09-04T11:37:01.7891436Z
+build	Build Release	2025-09-04T11:37:01.7907556Z [0m[1m[38;5;9merror[E0433][0m[0m[1m: failed to resolve: could not find `visit` in `syn`[0m
+build	Build Release	2025-09-04T11:37:01.7909007Z ##[error][0m   [0m[0m[1m[38;5;12m--> [0m[0msrc/ml/ast_analyzer.rs:312:14[0m
+build	Build Release	2025-09-04T11:37:01.7910413Z [0m    [0m[0m[1m[38;5;12m|[0m
+build	Build Release	2025-09-04T11:37:01.7911335Z [0m[1m[38;5;12m312[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m        syn::visit::visit_expr(self, expr);[0m
+build	Build Release	2025-09-04T11:37:01.7912385Z [0m    [0m[0m[1m[38;5;12m|[0m[0m              [0m[0m[1m[38;5;9m^^^^^[0m[0m [0m[0m[1m[38;5;9mcould not find `visit` in `syn`[0m
+build	Build Release	2025-09-04T11:37:01.7913339Z [0m    [0m[0m[1m[38;5;12m|[0m
+build	Build Release	2025-09-04T11:37:01.7914284Z [0m[1m[38;5;10mnote[0m[0m: found an item that was configured out[0m
+build	Build Release	2025-09-04T11:37:01.7915527Z [0m   [0m[0m[1m[38;5;12m--> [0m[0m/home/runner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/syn-2.0.106/src/lib.rs:876:21[0m
+build	Build Release	2025-09-04T11:37:01.7916519Z [0m    [0m[0m[1m[38;5;12m|[0m
+build	Build Release	2025-09-04T11:37:01.7917388Z [0m[1m[38;5;12m876[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0mpub use crate::gen::visit;[0m
+build	Build Release	2025-09-04T11:37:01.7918222Z [0m    [0m[0m[1m[38;5;12m|[0m[0m                     [0m[0m[1m[38;5;10m^^^^^[0m
+build	Build Release	2025-09-04T11:37:01.7919047Z [0m[1m[38;5;10mnote[0m[0m: the item is gated behind the `visit` feature[0m
+build	Build Release	2025-09-04T11:37:01.7920286Z [0m   [0m[0m[1m[38;5;12m--> [0m[0m/home/runner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/syn-2.0.106/src/lib.rs:874:7[0m
+build	Build Release	2025-09-04T11:37:01.7921260Z [0m    [0m[0m[1m[38;5;12m|[0m
+build	Build Release	2025-09-04T11:37:01.7921980Z [0m[1m[38;5;12m874[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m#[cfg(feature = "visit")][0m
+build	Build Release	2025-09-04T11:37:01.7923012Z [0m    [0m[0m[1m[38;5;12m|[0m[0m       [0m[0m[1m[38;5;10m^^^^^^^^^^^^^^^^^[0m
+build	Build Release	2025-09-04T11:37:01.7923422Z
+build	Build Release	2025-09-04T11:37:01.8024796Z [0m[1m[38;5;9merror[E0425][0m[0m[1m: cannot find function `parse_file` in crate `syn`[0m
+build	Build Release	2025-09-04T11:37:01.8026642Z ##[error][0m   [0m[0m[1m[38;5;12m--> [0m[0msrc/ml/ast_analyzer.rs:42:32[0m
+build	Build Release	2025-09-04T11:37:01.8028321Z [0m    [0m[0m[1m[38;5;12m|[0m
+build	Build Release	2025-09-04T11:37:01.8029422Z [0m[1m[38;5;12m42[0m[0m  [0m[0m[1m[38;5;12m|[0m[0m [0m[0m        let syntax_tree = syn::parse_file(content)[0m
+build	Build Release	2025-09-04T11:37:01.8047540Z [0m    [0m[0m[1m[38;5;12m|[0m[0m                                [0m[0m[1m[38;5;9m^^^^^^^^^^[0m[0m [0m[0m[1m[38;5;9mnot found in `syn`[0m
+build	Build Release	2025-09-04T11:37:01.8048426Z [0m    [0m[0m[1m[38;5;12m|[0m
+build	Build Release	2025-09-04T11:37:01.8049105Z [0m[1m[38;5;10mnote[0m[0m: found an item that was configured out[0m
+build	Build Release	2025-09-04T11:37:01.8050312Z [0m   [0m[0m[1m[38;5;12m--> [0m[0m/home/runner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/syn-2.0.106/src/lib.rs:987:8[0m
+build	Build Release	2025-09-04T11:37:01.8051368Z [0m    [0m[0m[1m[38;5;12m|[0m
+build	Build Release	2025-09-04T11:37:01.8052279Z [0m[1m[38;5;12m987[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0mpub fn parse_file(mut content: &str) -> Result<File> {[0m
+build	Build Release	2025-09-04T11:37:01.8053413Z [0m    [0m[0m[1m[38;5;12m|[0m[0m        [0m[0m[1m[38;5;10m^^^^^^^^^^[0m
+build	Build Release	2025-09-04T11:37:01.8054136Z [0m[1m[38;5;10mnote[0m[0m: the item is gated here[0m
+build	Build Release	2025-09-04T11:37:01.8055273Z [0m   [0m[0m[1m[38;5;12m--> [0m[0m/home/runner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/syn-2.0.106/src/lib.rs:985:1[0m
+build	Build Release	2025-09-04T11:37:01.8056239Z [0m    [0m[0m[1m[38;5;12m|[0m
+build	Build Release	2025-09-04T11:37:01.8057075Z [0m[1m[38;5;12m985[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0m#[cfg(all(feature = "parsing", feature = "full"))][0m
+build	Build Release	2025-09-04T11:37:01.8058068Z [0m    [0m[0m[1m[38;5;12m|[0m[0m [0m[0m[1m[38;5;10m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+build	Build Release	2025-09-04T11:37:01.8058943Z
+build	Build Release	2025-09-04T11:37:01.8141910Z [0m[1m[38;5;9merror[0m[0m[1m: unused import: `crate::ml::feature_extractor::FeatureExtractor`[0m
+build	Build Release	2025-09-04T11:37:01.8145855Z ##[error][0m [0m[0m[1m[38;5;12m--> [0m[0msrc/cli/train.rs:3:5[0m
+build	Build Release	2025-09-04T11:37:01.8147505Z [0m  [0m[0m[1m[38;5;12m|[0m
+build	Build Release	2025-09-04T11:37:01.8148487Z [0m[1m[38;5;12m3[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0muse crate::ml::feature_extractor::FeatureExtractor;[0m
+build	Build Release	2025-09-04T11:37:01.8149490Z [0m  [0m[0m[1m[38;5;12m|[0m[0m     [0m[0m[1m[38;5;9m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+build	Build Release	2025-09-04T11:37:01.8150150Z [0m  [0m[0m[1m[38;5;12m|[0m
+build	Build Release	2025-09-04T11:37:01.8150898Z [0m  [0m[0m[1m[38;5;12m= [0m[0m[1mnote[0m[0m: `-D unused-imports` implied by `-D warnings`[0m
+build	Build Release	2025-09-04T11:37:01.8151937Z [0m  [0m[0m[1m[38;5;12m= [0m[0m[1mhelp[0m[0m: to override `-D warnings` add `#[allow(unused_imports)]`[0m
+build	Build Release	2025-09-04T11:37:01.8153017Z
+build	Build Release	2025-09-04T11:37:01.8153652Z [0m[1m[38;5;9merror[0m[0m[1m: unused imports: `FeedbackSource` and `TrainingDataCollector`[0m
+build	Build Release	2025-09-04T11:37:01.8155122Z ##[error][0m [0m[0m[1m[38;5;12m--> [0m[0msrc/cli/train.rs:4:32[0m
+build	Build Release	2025-09-04T11:37:01.8156889Z [0m  [0m[0m[1m[38;5;12m|[0m
+build	Build Release	2025-09-04T11:37:01.8158128Z [0m[1m[38;5;12m4[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0muse crate::ml::training_data::{FeedbackSource, TrainingDataCollector, TrainingDataset};[0m
+build	Build Release	2025-09-04T11:37:01.8159397Z [0m  [0m[0m[1m[38;5;12m|[0m[0m                                [0m[0m[1m[38;5;9m^^^^^^^^^^^^^^[0m[0m  [0m[0m[1m[38;5;9m^^^^^^^^^^^^^^^^^^^^^[0m
+build	Build Release	2025-09-04T11:37:01.8159888Z
+build	Build Release	2025-09-04T11:37:01.8160485Z [0m[1m[38;5;9merror[0m[0m[1m: unused import: `std::path::PathBuf`[0m
+build	Build Release	2025-09-04T11:37:01.8161747Z ##[error][0m [0m[0m[1m[38;5;12m--> [0m[0msrc/cli/train.rs:7:5[0m
+build	Build Release	2025-09-04T11:37:01.8163456Z [0m  [0m[0m[1m[38;5;12m|[0m
+build	Build Release	2025-09-04T11:37:01.8164439Z [0m[1m[38;5;12m7[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0muse std::path::PathBuf;[0m
+build	Build Release	2025-09-04T11:37:01.8165292Z [0m  [0m[0m[1m[38;5;12m|[0m[0m     [0m[0m[1m[38;5;9m^^^^^^^^^^^^^^^^^^[0m
+build	Build Release	2025-09-04T11:37:01.8165694Z
+build	Build Release	2025-09-04T11:37:01.8187482Z [0m[1m[38;5;9merror[0m[0m[1m: unused import: `Severity`[0m
+build	Build Release	2025-09-04T11:37:01.8188902Z ##[error][0m [0m[0m[1m[38;5;12m--> [0m[0msrc/ml/enhanced_feature_extractor.rs:4:29[0m
+build	Build Release	2025-09-04T11:37:01.8190441Z [0m  [0m[0m[1m[38;5;12m|[0m
+build	Build Release	2025-09-04T11:37:01.8191349Z [0m[1m[38;5;12m4[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0muse crate::types::{Finding, Severity};[0m
+build	Build Release	2025-09-04T11:37:01.8192229Z [0m  [0m[0m[1m[38;5;12m|[0m[0m                             [0m[0m[1m[38;5;9m^^^^^^^^[0m
+build	Build Release	2025-09-04T11:37:01.8192839Z
+build	Build Release	2025-09-04T11:37:01.8193447Z [0m[1m[38;5;9merror[0m[0m[1m: unused import: `std::path::PathBuf`[0m
+build	Build Release	2025-09-04T11:37:01.8194715Z ##[error][0m [0m[0m[1m[38;5;12m--> [0m[0msrc/ml/training_data.rs:4:5[0m
+build	Build Release	2025-09-04T11:37:01.8196323Z [0m  [0m[0m[1m[38;5;12m|[0m
+build	Build Release	2025-09-04T11:37:01.8197180Z [0m[1m[38;5;12m4[0m[0m [0m[0m[1m[38;5;12m|[0m[0m [0m[0muse std::path::PathBuf;[0m
+build	Build Release	2025-09-04T11:37:01.8197984Z [0m  [0m[0m[1m[38;5;12m|[0m[0m     [0m[0m[1m[38;5;9m^^^^^^^^^^^^^^^^^^[0m
+build	Build Release	2025-09-04T11:37:01.8198380Z
+build	Build Release	2025-09-04T11:37:02.0535763Z [0m[1mSome errors have detailed explanations: E0425, E0432, E0433.[0m
+build	Build Release	2025-09-04T11:37:02.0536800Z [0m[1mFor more information about an error, try `rustc --explain E0425`.[0m
+build	Build Release	2025-09-04T11:37:02.0623623Z [1m[31merror[0m[1m:[0m could not compile `do-codeguardian` (lib) due to 10 previous errors
+build	Build Release	2025-09-04T11:37:02.0624773Z [1m[33mwarning[0m[1m:[0m build failed, waiting for other jobs to finish...
+build	Build Release	2025-09-04T11:37:02.9378888Z ❌ Release build failed
+build	Build Release	2025-09-04T11:37:02.9385600Z ##[error]Process completed with exit code 1.

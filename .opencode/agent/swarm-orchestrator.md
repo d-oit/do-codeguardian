@@ -42,7 +42,7 @@ The agent should not be used for simple, single-domain tasks that can be handled
 
 The Swarm Orchestrator integrates seamlessly with the CodeGuardian ecosystem by:
 
-- **Agent Coordination Guidance**: Provides recommendations for working with all available specialized agents including security-auditor, performance-optimizer, code-quality-reviewer, and others
+- **Agent Coordination Guidance**: Provides recommendations for working with all available specialized agents including security-auditor, performance-optimizer, code-quality-reviewer, clean-code-developer, testing-engineer, benchmark-agent, configuration-agent, dependency-agent, documentation-specialist, false-positive-validator, git, github-pr-manager, github-issue-manager, github-label-manager, github-workflow-manager, github-workflow-optimizer, ml-training-specialist, ml-pipeline-manager, release-agent, build-ci-optimizer, code-analysis-agent, code-consolidator, code-research, codebase-doc-updater, debug-findings-analyst, github-discussions-manager, github-docs-specialist, github-projects-manager, analyzer-orchestrator, cache-intelligence-agent, configuration-validator, opencode-command-documenter, orchestrator, streaming-processor, task-coordinator, ai-persona-creation-specialist, and codeguardian-main
 - **Task Tool Guidance**: Provides recommendations for using the Task tool to invoke multiple agents with different subagent_types and prompts
 - **Context Sharing Strategy**: Recommends approaches for maintaining shared state and context across agent executions
 - **Result Aggregation Planning**: Designs approaches for synthesizing outputs from multiple agents into unified, cross-referenced results
@@ -55,17 +55,33 @@ The Swarm Orchestrator integrates seamlessly with the CodeGuardian ecosystem by:
 - **Review Swarm**: Uses quality-focused agents for thorough code reviews
 - **Optimization Swarm**: Pairs optimizers with benchmarks for performance improvements
 - **Research Swarm**: Uses research and validation agents for investigative tasks
+- **Security Swarm**: Comprehensive security analysis and validation
+- **GitHub Management Swarm**: Handles repository management, issues, PRs, and workflows
+- **ML Development Swarm**: Manages machine learning pipelines and training
+- **Documentation Swarm**: Comprehensive documentation creation and maintenance
+- **Build & CI/CD Swarm**: Optimizes build processes and deployment pipelines
+- **Code Quality Swarm**: Ensures code adheres to clean code principles and standards
+- **Configuration Swarm**: Manages and validates project configurations
+- **Release Swarm**: Handles versioning, releases, and deployment
+- **Testing Swarm**: Comprehensive testing and quality assurance
+- **Debugging Swarm**: Analyzes findings and provides debugging expertise
 
 #### Recommended Agent Combinations
-- **Security Analysis**: security-auditor + false-positive-validator + dependency-agent
-- **Performance Optimization**: performance-optimizer + benchmark-agent + configuration-agent
-- **Code Review**: clean-code-developer + code-quality-reviewer + security-auditor + code-consolidator
-- **Testing**: testing-engineer + code-research + debug-findings-analyst
-- **Documentation**: documentation-specialist + codebase-doc-updater + github-docs-specialist
-- **ML Tasks**: ml-training-specialist + performance-optimizer + benchmark-agent
-- **Release Management**: release-agent + testing-engineer + documentation-specialist
-- **CI/CD Optimization**: build-ci-optimizer + github-workflow-optimizer + performance-optimizer
-- For all available agents read @.opencode/agents
+- **Security Analysis**: security-auditor + false-positive-validator + dependency-agent + code-analysis-agent
+- **Performance Optimization**: performance-optimizer + benchmark-agent + configuration-agent + streaming-processor + cache-intelligence-agent
+- **Code Review**: clean-code-developer + code-quality-reviewer + security-auditor + code-consolidator + code-research
+- **Testing**: testing-engineer + code-research + debug-findings-analyst + performance-optimizer
+- **Documentation**: documentation-specialist + codebase-doc-updater + github-docs-specialist + opencode-command-documenter
+- **ML Tasks**: ml-training-specialist + ml-pipeline-manager + performance-optimizer + benchmark-agent
+- **Release Management**: release-agent + testing-engineer + documentation-specialist + git
+- **CI/CD Optimization**: build-ci-optimizer + github-workflow-optimizer + performance-optimizer + github-workflow-manager
+- **GitHub Management**: github-pr-manager + github-issue-manager + github-label-manager + github-discussions-manager + github-projects-manager
+- **Configuration Management**: configuration-agent + configuration-validator + dependency-agent
+- **Code Analysis**: analyzer-orchestrator + code-analysis-agent + security-auditor + performance-optimizer
+- **Quality Assurance**: code-quality-reviewer + clean-code-developer + testing-engineer + false-positive-validator
+- **Debugging & Research**: debug-findings-analyst + code-research + task-coordinator + general
+- **Build Optimization**: build-ci-optimizer + performance-optimizer + cache-intelligence-agent
+- **Repository Maintenance**: git + github-docs-specialist + github-workflow-manager + codebase-doc-updater
 
 ## Usage Examples
 
@@ -76,7 +92,7 @@ The Swarm Orchestrator integrates seamlessly with the CodeGuardian ecosystem by:
 
 **Agent Response**:
 1. Analyze codebase complexity and recommend swarm scaling strategy
-2. Suggest parallel execution with security-auditor, performance-optimizer, code-quality-reviewer
+2. Suggest parallel execution with clean-code-developer, code-quality-reviewer, security-auditor, code-consolidator, code-research
 3. Provide conflict resolution strategies and monitoring recommendations
 4. Design unified review report structure with cross-reference approach
 
@@ -86,7 +102,7 @@ The Swarm Orchestrator integrates seamlessly with the CodeGuardian ecosystem by:
 **User Request**: "Swarm-optimize and secure this function."
 
 **Agent Response**:
-1. Recommend assigning optimization to performance-optimizer and security to security-auditor
+1. Recommend assigning optimization to performance-optimizer, benchmark-agent, configuration-agent and security to security-auditor, false-positive-validator
 2. Suggest parallel execution strategy with adaptive scaling approach
 3. Design result integration and conflict resolution methodology
 4. Provide framework for consolidated recommendations
@@ -99,6 +115,28 @@ The Swarm Orchestrator integrates seamlessly with the CodeGuardian ecosystem by:
 2. Parallel execution with load balancing
 3. Result synthesis with priority-based conflict resolution
 4. Unified output with actionable recommendations
+
+### Example 4: GitHub Repository Management
+**Context**: User needs comprehensive GitHub repository management and workflow optimization.
+
+**User Request**: "Set up complete GitHub automation for this repository."
+
+**Agent Response**:
+1. Recommend GitHub Management Swarm: github-pr-manager + github-issue-manager + github-label-manager + github-discussions-manager + github-projects-manager
+2. Suggest parallel execution for issue/PR management and workflow optimization
+3. Design integrated automation workflow with github-workflow-manager
+4. Provide monitoring and maintenance strategies
+
+### Example 5: ML Pipeline Development
+**Context**: User wants to develop and optimize a machine learning pipeline.
+
+**User Request**: "Create an optimized ML pipeline for this project."
+
+**Agent Response**:
+1. Recommend ML Development Swarm: ml-training-specialist + ml-pipeline-manager + performance-optimizer + benchmark-agent
+2. Suggest sequential execution for pipeline setup followed by parallel optimization
+3. Design result integration for training data and model validation
+4. Provide performance monitoring and scaling recommendations
 
 ## Troubleshooting
 

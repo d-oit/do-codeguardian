@@ -18,6 +18,7 @@ CodeGuardian is a cutting-edge, security-first code analysis tool that combines 
 - 🔗 **GitHub Integration**: Automated issue creation, PR analysis, and workflow optimization
 - 📊 **Comprehensive Reporting**: Detailed analysis reports with actionable recommendations
 - ⚡ **CI/CD Ready**: Seamless integration with popular CI/CD pipelines
+- 📋 **License Compliance**: Automated dependency license checking and reporting
 - 🐳 **Container Support**: Docker and cloud-native deployment options
 - 📈 **Performance Monitoring**: Built-in benchmarking and optimization tools
 
@@ -182,3 +183,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 [⭐ Star us on GitHub](https://github.com/d-oit/do-codeguardian) | [🐛 Report Issues](https://github.com/d-oit/do-codeguardian/issues) | [💬 Join Discussions](https://github.com/d-oit/do-codeguardian/discussions)
 
 </div># Test comment for workflow verification
+# Test change to trigger license workflow

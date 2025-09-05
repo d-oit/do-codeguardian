@@ -3,7 +3,7 @@ use crate::config::Config;
 use crate::core::GuardianEngine;
 use crate::types::AnalysisResults;
 use crate::utils::progress::ProgressReporter;
-use anyhow::Result;
+use anyhow::{Context, Result};
 use serde_json;
 use std::io::IsTerminal;
 use std::path::PathBuf;
@@ -18,15 +18,45 @@ pub async fn run(mut args: CheckArgs, mut config: Config) -> Result<()> {
     let fail_on_conflicts_config = config.analyzers.broken_files.conflicts.fail_on_conflicts;
 
     // Override config with CLI options
-    // TODO: Implement baseline handling in new config structure
-    // if let Some(baseline_path) = &args.baseline {
-    //     // Handle baseline path for comparison functionality
-    // }
+    // Implement baseline handling in new config structure
+    if let Some(baseline_path) = &args.baseline {
+        // Validate baseline file exists and is readable
+        if !baseline_path.exists() {
+            return Err(anyhow::anyhow!(
+                "Baseline file does not exist: {}",
+                baseline_path.display()
+            ));
+        }
 
-    // TODO: Implement ML threshold in new config structure
-    // if let Some(threshold) = args.ml_threshold {
-    //     // Handle ML threshold for anomaly detection
-    // }
+        // Canonicalize path for security
+        let canonical_baseline = baseline_path.canonicalize().with_context(|| {
+            format!(
+                "Failed to canonicalize baseline path: {}",
+                baseline_path.display()
+            )
+        })?;
+
+        // Store baseline path in config for later use
+        config.analysis.baseline_file = Some(canonical_baseline);
+    }
+
+    // Implement ML threshold in new config structure
+    if let Some(threshold) = args.ml_threshold {
+        // Validate threshold is within valid range
+        if !(0.0..=1.0).contains(&threshold) {
+            return Err(anyhow::anyhow!(
+                "ML threshold must be between 0.0 and 1.0, got: {}",
+                threshold
+            ));
+        }
+
+        // Store ML threshold in config
+        config.analysis.ml_threshold = Some(threshold);
+    }
+
+    // Extract ml_threshold and baseline_file after overrides
+    let ml_threshold = config.analysis.ml_threshold;
+    let baseline_file = config.analysis.baseline_file.clone();
 
     // Override parallel processing setting
     if args.parallel > 0 {
@@ -102,6 +132,23 @@ pub async fn run(mut args: CheckArgs, mut config: Config) -> Result<()> {
         }
     }
 
+    // Handle baseline comparison for drift detection
+    let mut _baseline_results = None;
+    if let Some(baseline_path) = &baseline_file {
+        if let Ok(baseline_content) = tokio::fs::read_to_string(baseline_path).await {
+            if let Ok(results) =
+                serde_json::from_str::<crate::types::AnalysisResults>(&baseline_content)
+            {
+                _baseline_results = Some(results);
+                tracing::info!("Loaded baseline from: {}", baseline_path.display());
+            } else {
+                tracing::warn!("Failed to parse baseline file: {}", baseline_path.display());
+            }
+        } else {
+            tracing::warn!("Failed to read baseline file: {}", baseline_path.display());
+        }
+    }
+
     if files_to_scan.is_empty() {
         tracing::info!("No files to analyze");
         return Ok(());
@@ -109,6 +156,24 @@ pub async fn run(mut args: CheckArgs, mut config: Config) -> Result<()> {
 
     // Run analysis
     let mut results = engine.analyze_files(&files_to_scan, args.parallel).await?;
+
+    // Apply ML-based false positive filtering if threshold is configured
+    #[allow(unused_variables)]
+    if let Some(threshold) = ml_threshold {
+        #[cfg(feature = "ml")]
+        {
+            let mut ml_classifier = crate::ml::MLClassifier::new(None);
+            results.findings = ml_classifier
+                .filter_findings(results.findings, threshold as f32)
+                .await?;
+            tracing::info!("Applied ML filtering with threshold: {}", threshold);
+        }
+
+        #[cfg(not(feature = "ml"))]
+        {
+            tracing::warn!("ML threshold configured but ML feature is not enabled. Use --features ml to enable ML-based filtering");
+        }
+    }
 
     // Sort findings deterministically
     results.sort_findings();

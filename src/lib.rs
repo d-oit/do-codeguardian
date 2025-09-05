@@ -71,7 +71,7 @@ pub use error::{CodeGuardianError, Result};
 /// # Example
 ///
 /// ```rust,no_run
-/// use codeguardian::{analyze_files, Config};
+/// use do_codeguardian::{analyze_files, Config};
 ///
 /// #[tokio::main]
 /// async fn main() -> anyhow::Result<()> {
@@ -113,7 +113,7 @@ pub async fn analyze_files(
 /// # Example
 ///
 /// ```rust,no_run
-/// use codeguardian::{git_commit, Config};
+/// use do_codeguardian::{git_commit, Config};
 ///
 /// #[tokio::main]
 /// async fn main() -> anyhow::Result<()> {

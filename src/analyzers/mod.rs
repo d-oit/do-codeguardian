@@ -6,6 +6,7 @@ pub mod integrity;
 pub mod lint_drift;
 pub mod non_production;
 pub mod performance_analyzer;
+pub mod security;
 pub mod security_analyzer;
 
 use crate::config::Config;

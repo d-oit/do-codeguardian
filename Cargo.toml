@@ -80,8 +80,8 @@ is-terminal = "0.4"
 # Machine Learning
 fann = { version = "0.1", optional = true }
 
-# AST Analysis - minimal features for faster builds
-syn = { version = "2.0", features = ["parsing", "printing"], optional = true }
+# AST Analysis - full features for AST parsing and visiting
+syn = { version = "2.0", features = ["parsing", "printing", "full", "visit"], optional = true }
 quote = { version = "1.0", optional = true }
 proc-macro2 = { version = "1.0", optional = true }
 
