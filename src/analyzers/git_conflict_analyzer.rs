@@ -279,7 +279,11 @@ mod tests {
         let analyzer = GitConflictAnalyzer::new();
         let content = r#"
 some code
+<<<<<<< HEAD
 version 1
+=======
+version 2
+>>>>>>> branch
 more code
 "#;
         let findings = analyzer
@@ -298,7 +302,10 @@ more code
         let analyzer = GitConflictAnalyzer::new();
         let content = r#"
 some code
+<<<<<<< HEAD
 version 1
+=======
+version 2
 more code without end marker
 "#;
         let findings = analyzer
