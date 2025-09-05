@@ -19,7 +19,7 @@ jobs:
         pull-requests: write
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
       with:
         fetch-depth: 0  # Need full history for diff
 
@@ -70,7 +70,7 @@ jobs:
         issues: write
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
 
     - name: Setup Rust
       uses: actions-rust-lang/setup-rust-toolchain@v1
@@ -118,7 +118,7 @@ jobs:
         contents: write
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
 
     - name: Setup Rust
       uses: actions-rust-lang/setup-rust-toolchain@v1
