@@ -12,7 +12,7 @@ jobs:
   quick-turbo-scan:
     name: ⚡ Quick Turbo Scan
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 10
 
     steps:
     - name: 📥 Checkout PR
@@ -79,7 +79,7 @@ jobs:
         # Run turbo analysis on changed files only
         START_TIME=$(date +%s.%N)
 
-        ./target/release/do-codeguardian turbo changed_files_analysis \
+        cargo run --release -- turbo changed_files_analysis \
           --max-parallel 4 \
           --memory-limit 256 \
           --format json \
