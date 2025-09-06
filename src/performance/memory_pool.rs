@@ -177,7 +177,7 @@ impl PoolStats {
     }
 }
 
-/// Vector pool for reusing Vec<T> allocations
+/// Vector pool for reusing `Vec<T>` allocations
 pub struct VecPool<T> {
     buffers: Mutex<VecDeque<Vec<T>>>,
     max_pool_size: usize,

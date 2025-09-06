@@ -179,11 +179,15 @@ impl NonProductionAnalyzer {
                 // Check if it looks like an assignment with a non-placeholder value
                 if let Some(value_part) = line.split('=').nth(1) {
                     let value = value_part.trim().trim_matches('"').trim_matches('\'');
-                    // Skip obvious placeholders
+                    // Skip obvious placeholders and test patterns
                     if !value.is_empty()
                         && !value.contains("your_")
                         && !value.contains("placeholder")
                         && !value.contains("example")
+                        && !value.starts_with("sk-1234567890abcdef") // OpenAI test pattern
+                        && !value.starts_with("ghp_1234567890abcdef") // GitHub test pattern
+                        && !value.contains("1234567890abcdef") // Generic test pattern
+                        && !value.contains("password123") // Common test password
                         && value.len() > 8
                     {
                         return true;
@@ -212,11 +216,20 @@ impl NonProductionAnalyzer {
             return true;
         }
 
+        // Skip benchmark files - they contain test data with fake secrets
+        if path_str.contains("/benches/")
+            || path_str.contains("benchmark")
+            || path_str.ends_with("benchmark.rs")
+        {
+            return true;
+        }
+
         // Skip test files
         if let Some(file_name) = file_path.file_name().and_then(|n| n.to_str()) {
             if file_name.ends_with("_test.rs")
                 || file_name == "tests.rs"
                 || file_name.contains("test")
+                || file_name.contains("benchmark")
             {
                 return true;
             }

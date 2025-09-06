@@ -48,7 +48,6 @@ async fn main() -> Result<()> {
     // Load configuration
     let config_path = &cli.config;
     let config = Config::from_file(config_path).unwrap_or_else(|e| {
-        eprintln!("DEBUG: Config loading error: {}", e);
         if !cli.quiet {
             tracing::warn!(
                 "Configuration file error at {}: {}. Using defaults",

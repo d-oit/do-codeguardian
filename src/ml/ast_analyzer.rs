@@ -334,7 +334,6 @@ mod tests {
                 let x = "hello".to_string();
                 let y = x.unwrap();
                 if y.len() > 0 {
-                    println!("Not empty");
                 }
             }
 
