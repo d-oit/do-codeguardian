@@ -18,7 +18,7 @@ jobs:
 
       # 1️⃣ Regex-based labeling
       - name: Apply regex labels
-        uses: actions/labeler@v5
+        uses: actions/labeler@v6
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           configuration-path: .github/labeler.yml
