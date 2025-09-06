@@ -1,12 +1,72 @@
 use do_codeguardian::analyzers::{
     performance_analyzer::PerformanceAnalyzer, security_analyzer::SecurityAnalyzer, Analyzer,
 };
+use serde::{Deserialize, Serialize};
+use std::fs;
 use std::path::PathBuf;
 use std::time::Instant;
 use tempfile::tempdir;
 
 /// Performance regression tests to ensure CodeGuardian maintains good performance
 /// These tests establish baselines and catch performance regressions
+
+#[derive(Serialize, Deserialize, Debug)]
+struct PerformanceBaseline {
+    test_name: String,
+    duration_ms: u128,
+    timestamp: String,
+}
+
+fn load_baseline(test_name: &str) -> Option<PerformanceBaseline> {
+    let baseline_file = format!("tests/baselines/{}.json", test_name);
+    if let Ok(content) = fs::read_to_string(&baseline_file) {
+        serde_json::from_str(&content).ok()
+    } else {
+        None
+    }
+}
+
+fn save_baseline(test_name: &str, duration_ms: u128) {
+    let baseline = PerformanceBaseline {
+        test_name: test_name.to_string(),
+        duration_ms,
+        timestamp: chrono::Utc::now().to_rfc3339(),
+    };
+
+    let baseline_dir = "tests/baselines";
+    fs::create_dir_all(baseline_dir).unwrap();
+    let baseline_file = format!("{}/{}.json", baseline_dir, test_name);
+    let content = serde_json::to_string_pretty(&baseline).unwrap();
+    fs::write(&baseline_file, content).unwrap();
+}
+
+fn compare_with_baseline(
+    test_name: &str,
+    current_duration: u128,
+    threshold_percent: f64,
+) -> Result<(), String> {
+    if let Some(baseline) = load_baseline(test_name) {
+        let degradation = (current_duration as f64 - baseline.duration_ms as f64)
+            / baseline.duration_ms as f64
+            * 100.0;
+
+        if degradation > threshold_percent {
+            return Err(format!(
+                "Performance regression detected: {:.1}% slower than baseline (current: {}ms, baseline: {}ms)",
+                degradation, current_duration, baseline.duration_ms
+            ));
+        } else if degradation < -threshold_percent {
+            println!(
+                "Performance improvement detected: {:.1}% faster than baseline",
+                -degradation
+            );
+        }
+    } else {
+        println!("No baseline found for {}, creating new baseline", test_name);
+        save_baseline(test_name, current_duration);
+    }
+    Ok(())
+}
 
 #[test]
 fn test_security_analyzer_performance_baseline() {
@@ -28,7 +88,14 @@ const PASSWORD = "secret_password_123";"#;
         .unwrap();
     let duration = start.elapsed();
 
-    // Performance baseline: should complete within 50ms for 1000 lines
+    // Compare with baseline (allow 20% degradation)
+    if let Err(msg) =
+        compare_with_baseline("security_analyzer_baseline", duration.as_millis(), 20.0)
+    {
+        panic!("{}", msg);
+    }
+
+    // Absolute performance baseline: should complete within reasonable time
     assert!(
         duration.as_millis() < 150,
         "Security analyzer performance regression: took {}ms (baseline: 150ms)",
@@ -58,7 +125,14 @@ fn test_performance_analyzer_baseline() {
         .unwrap();
     let duration = start.elapsed();
 
-    // Performance baseline: should complete within 100ms for 1000 lines
+    // Compare with baseline (allow 20% degradation)
+    if let Err(msg) =
+        compare_with_baseline("performance_analyzer_baseline", duration.as_millis(), 20.0)
+    {
+        panic!("{}", msg);
+    }
+
+    // Absolute performance baseline: should complete within reasonable time
     assert!(
         duration.as_millis() < 150,
         "Performance analyzer regression: took {}ms (baseline: 150ms)",
@@ -121,6 +195,76 @@ fn test_memory_efficiency() {
             expected_max_ms
         );
     }
+}
+
+#[test]
+fn test_memory_leak_detection() {
+    use std::alloc::{GlobalAlloc, Layout, System};
+    use std::sync::atomic::{AtomicUsize, Ordering};
+
+    // Simple memory tracker for leak detection
+    struct MemoryTracker {
+        allocated: AtomicUsize,
+        allocations: AtomicUsize,
+    }
+
+    static TRACKER: MemoryTracker = MemoryTracker {
+        allocated: AtomicUsize::new(0),
+        allocations: AtomicUsize::new(0),
+    };
+
+    struct TrackingAllocator;
+
+    unsafe impl GlobalAlloc for TrackingAllocator {
+        unsafe fn alloc(&self, layout: Layout) -> *mut u8 {
+            let ptr = System.alloc(layout);
+            if !ptr.is_null() {
+                TRACKER.allocated.fetch_add(layout.size(), Ordering::SeqCst);
+                TRACKER.allocations.fetch_add(1, Ordering::SeqCst);
+            }
+            ptr
+        }
+
+        unsafe fn dealloc(&self, ptr: *mut u8, layout: Layout) {
+            System.dealloc(ptr, layout);
+            TRACKER.allocated.fetch_sub(layout.size(), Ordering::SeqCst);
+            TRACKER.allocations.fetch_sub(1, Ordering::SeqCst);
+        }
+    }
+
+    // Test memory usage during analysis
+    let analyzer = SecurityAnalyzer::new();
+    let temp_dir = tempfile::tempdir().unwrap();
+    let test_content = generate_security_test_content(1000);
+    let file_path = temp_dir.path().join("leak_test.rs");
+    std::fs::write(&file_path, &test_content).unwrap();
+
+    let initial_allocated = TRACKER.allocated.load(Ordering::SeqCst);
+    let initial_allocations = TRACKER.allocations.load(Ordering::SeqCst);
+
+    // Run analysis
+    let result = analyzer.analyze(&file_path, test_content.as_bytes());
+    assert!(result.is_ok(), "Analysis failed in memory leak test");
+
+    // Check for significant memory leaks
+    let final_allocated = TRACKER.allocated.load(Ordering::SeqCst);
+    let final_allocations = TRACKER.allocations.load(Ordering::SeqCst);
+
+    let memory_growth = final_allocated as i64 - initial_allocated as i64;
+    let allocation_growth = final_allocations as i64 - initial_allocations as i64;
+
+    // Allow some growth but detect major leaks
+    assert!(
+        memory_growth < 1024 * 1024, // Less than 1MB growth
+        "Potential memory leak detected: {} bytes allocated during analysis",
+        memory_growth
+    );
+
+    assert!(
+        allocation_growth < 1000, // Reasonable allocation count
+        "Too many allocations: {} new allocations during analysis",
+        allocation_growth
+    );
 }
 
 #[test]

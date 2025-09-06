@@ -134,9 +134,13 @@ focus_security = true
 ignore_test_files = true
 max_files_to_compare = 800
 
+[analyzers.integrity]
+enabled = true
+
 [output]
 directory = "test-results"
 format = "json"
+verbose = false
 
 [security]
 enabled = true
@@ -173,9 +177,14 @@ detect_duplicates = true
 
 [analyzers.broken_files.conflicts]
 fail_on_conflicts = false
+validate_syntax = true
+check_git_status = true
 
 [analyzers.broken_files.duplicates]
 min_lines = 20
+focus_security = true
+ignore_test_files = true
+max_files_to_compare = 1000
 "#;
 
         temp_file.write_all(config_content.as_bytes())?;
@@ -198,6 +207,8 @@ min_lines = 20
         let toml_content = r#"
 [analyzers.broken_files]
 enabled = true
+detect_merge_conflicts = true
+detect_ai_placeholders = true
 detect_duplicates = true
 "#;
 
@@ -435,10 +446,12 @@ detect_duplicates = false
 [analyzers.broken_files.conflicts]
 fail_on_conflicts = true
 validate_syntax = true
+check_git_status = true
 
 [analyzers.broken_files.placeholders]
 severity = "high"
 patterns = ["TODO", "FIXME", "implement this"]
+custom_patterns = []
 "#;
 
         let ci_config_file = temp_dir.path().join("ci_config.toml");
@@ -535,6 +548,7 @@ max_files_to_compare = 2000
 [output]
 directory = "results"
 format = "json"
+verbose = false
 
 [security]
 enabled = true
@@ -568,6 +582,8 @@ detect_duplicates = true
 [analyzers.broken_files.duplicates]
 min_lines = 15
 focus_security = false
+ignore_test_files = true
+max_files_to_compare = 1000
 "#;
 
         let config: Config = toml::from_str(config_with_overrides).unwrap();
