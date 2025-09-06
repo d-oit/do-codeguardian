@@ -40,13 +40,19 @@ run_test() {
     print_status "Running $test_name..."
     start_time=$(date +%s)
 
-    if eval "$test_command"; then
+    # Use separate target directory to avoid build lock contention
+    local target_dir="/tmp/cargo-target-$(date +%s)-$$"
+    mkdir -p "$target_dir"
+
+    if CARGO_TARGET_DIR="$target_dir" eval "$test_command"; then
         end_time=$(date +%s)
         duration=$((end_time - start_time))
         print_success "$test_name completed in ${duration}s"
+        rm -rf "$target_dir"
         return 0
     else
         print_error "$test_name failed"
+        rm -rf "$target_dir"
         return 1
     fi
 }

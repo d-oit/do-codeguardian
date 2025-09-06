@@ -77,6 +77,20 @@ else
     OVERALL_STATUS=1
 fi
 
+# Memory leak detection using valgrind (if available)
+log_info "Checking for memory leaks..."
+if command -v valgrind >/dev/null 2>&1; then
+    log_info "Running valgrind memory leak detection..."
+    if cargo test performance_regression_tests --release --message-format=json | valgrind --leak-check=full --error-exitcode=1 --quiet; then
+        log_success "No memory leaks detected"
+    else
+        log_error "Memory leaks detected by valgrind"
+        OVERALL_STATUS=1
+    fi
+else
+    log_warning "valgrind not available for memory leak detection"
+fi
+
 # Summary
 echo ""
 echo "===================================="
