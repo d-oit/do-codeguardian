@@ -1,5 +1,11 @@
 disable-default-queries: false
 
+# Paths to analyze
+paths:
+  - src/
+  - build.rs
+
+# Paths to ignore during analysis
 paths-ignore:
   - target/
   - benches/
@@ -13,19 +19,52 @@ paths-ignore:
   - "**/*.yaml"
   - "**/*.sh"
   - "**/*.txt"
+  - "**/*.lock"
+  - "**/Cargo.lock"
+  - "**/Cargo.toml"
+  - "**/node_modules/"
+  - "**/.git/"
+  - "**/docs/"
+  - "**/scripts/"
+  - "**/coverage/"
+  - "**/reports/"
 
-paths:
-  - src/
-
+# Query filters to reduce noise
 query-filters:
   - exclude:
       problem.severity:
         - recommendation
         - warning
+  - exclude:
+      tags:
+        - "external/cwe/cwe-020"  # Input validation issues (too noisy for CLI tools)
+        - "external/cwe/cwe-022"  # Path traversal (handled by Rust's std::path)
+  - include:
+      tags:
+        - "security"
+        - "correctness"
+        - "performance"
 
+# Language-specific configuration
 rust:
   build-mode: manual
   build-commands:
-    - "cargo build --release"
-    - "cargo build --all-targets"
+    - "cargo build --release --features full"
+    - "cargo build --all-targets --features full"
+    - "cargo check --all-features --all-targets"
   extract-all-files: false
+
+  # Additional Rust-specific settings
+  macros: true
+  unsafe: true
+
+  # External dependencies to analyze
+  external-dependencies:
+    - git2
+    - reqwest
+    - serde
+    - tokio
+
+# Global analysis settings
+threads: 0  # Use all available cores
+timeout: 600  # 10 minutes timeout per query

@@ -1,5 +1,6 @@
 {
   "$schema": "https://opencode.ai/config.json",
+  "model": "opencode/grok-code",
   "agent": {
     "security-auditor": {
       "model": "chutes/zai-org/GLM-4.5-FP8"
