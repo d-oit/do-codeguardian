@@ -1,16 +1,8 @@
-use std::fs;
-use std::path::Path;
-use std::process::Command;
-use tempfile::TempDir;
-
-use do_codeguardian::cli::gh_issue::create_or_update_issue;
-use do_codeguardian::cli::GhIssueArgs;
-use do_codeguardian::github_api::GitHubApiClient;
-use do_codeguardian::types::AnalysisResults;
+// Removed unused imports - keeping only what's actually used in tests
 
 #[cfg(test)]
 mod github_deduplication_edge_cases {
-    use super::*;
+    // Removed unused super import
 
     /// Test edge cases for commit hash extraction and formatting
     #[test]
@@ -228,7 +220,7 @@ mod github_deduplication_edge_cases {
     fn test_concurrent_issue_scenarios() {
         // Edge case 1: Race condition simulation
         let commit_hash = "abc123d";
-        let repo = "test-owner/test-repo";
+        let _repo = "test-owner/test-repo";
 
         // Simulate scenario where multiple CI runs happen simultaneously
         let concurrent_scenarios = [
@@ -337,7 +329,7 @@ mod github_deduplication_edge_cases {
 
     // Helper functions for edge case testing
 
-    fn generate_issue_title_fallback(prefix: &str, scenario: &str) -> String {
+    fn generate_issue_title_fallback(prefix: &str, _scenario: &str) -> String {
         // Simulate the title generation logic with fallbacks
         if let Ok(pr_number) = std::env::var("GITHUB_PR_NUMBER") {
             format!("{} - PR #{}", prefix.trim_end_matches(':'), pr_number)

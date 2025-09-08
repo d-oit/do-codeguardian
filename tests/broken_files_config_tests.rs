@@ -1,8 +1,5 @@
 use do_codeguardian::analyzers::AnalyzerRegistry;
-use do_codeguardian::config::{
-    BrokenFilesConfig, Config, ConflictDetectionConfig, DuplicateDetectionConfig,
-    PlaceholderDetectionConfig,
-};
+use do_codeguardian::config::{BrokenFilesConfig, Config};
 use std::io::Write;
 use std::path::Path;
 use tempfile::NamedTempFile;
@@ -263,13 +260,13 @@ mod analyzer_registry_config_tests {
         // Test that analyzers are created (we can't easily test internal state)
         // but the registry should be functional
         let test_content = b"fn test() {}";
-        let findings = registry
+        let _findings = registry
             .analyze_file(Path::new("test.rs"), test_content)
             .unwrap();
 
         // Should not crash and should work with other analyzers
         // (findings might be empty or contain results from other analyzers)
-        assert!(findings.len() >= 0);
+        // Test completed successfully - findings length is always >= 0 by definition
     }
 
     #[test]
@@ -294,7 +291,7 @@ fn do_something() {
 }
 "#;
 
-        let findings = registry
+        let _findings = registry
             .analyze_file(Path::new("test.rs"), test_content)
             .unwrap();
 
@@ -346,7 +343,7 @@ fn short_b() {
 }
 "#;
 
-        let dup_findings = registry
+        let _dup_findings = registry
             .analyze_file(Path::new("test.rs"), duplicate_content)
             .unwrap();
 
@@ -385,7 +382,7 @@ fn test_b() {
 
         // Default config has duplicates disabled, custom has them enabled
         let default_has_duplicates = default_findings.iter().any(|f| f.analyzer == "duplicate");
-        let custom_has_duplicates = custom_findings.iter().any(|f| f.analyzer == "duplicate");
+        let _custom_has_duplicates = custom_findings.iter().any(|f| f.analyzer == "duplicate");
 
         assert!(
             !default_has_duplicates,
@@ -400,7 +397,7 @@ fn test_b() {
         let mut config = Config::default();
         config.analyzers.broken_files.duplicates.min_lines = 0;
 
-        let registry = AnalyzerRegistry::with_config(&config);
+        let _registry = AnalyzerRegistry::with_config(&config);
         // Should not crash with zero min_lines
 
         // Test very large max_files
@@ -409,7 +406,7 @@ fn test_b() {
             .broken_files
             .duplicates
             .max_files_to_compare = usize::MAX;
-        let registry = AnalyzerRegistry::with_config(&config);
+        let _registry = AnalyzerRegistry::with_config(&config);
         // Should not crash with large max_files
 
         // Test empty custom patterns

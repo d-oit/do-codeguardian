@@ -213,6 +213,7 @@ fn test_memory_leak_detection() {
         allocations: AtomicUsize::new(0),
     };
 
+    #[allow(dead_code)]
     struct TrackingAllocator;
 
     unsafe impl GlobalAlloc for TrackingAllocator {

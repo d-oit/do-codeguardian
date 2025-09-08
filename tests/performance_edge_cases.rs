@@ -4,9 +4,7 @@ use std::time::{Duration, Instant};
 use tempfile::TempDir;
 
 use do_codeguardian::analyzers::security::SecretAnalyzer;
-use do_codeguardian::analyzers::{
-    non_production::NonProductionAnalyzer, security_analyzer::SecurityAnalyzer, Analyzer,
-};
+use do_codeguardian::analyzers::{security_analyzer::SecurityAnalyzer, Analyzer};
 
 #[cfg(test)]
 mod performance_edge_cases {
@@ -467,7 +465,7 @@ impl Config {
     fn get_memory_usage() -> u64 {
         // This is a simplified memory usage estimation
         // In a real implementation, you might use system-specific APIs
-        use std::alloc::{GlobalAlloc, Layout, System};
+        // Memory usage estimation - imports removed as they're not used in this mock implementation
 
         // For testing purposes, return a mock value
         // In practice, you'd use platform-specific memory APIs

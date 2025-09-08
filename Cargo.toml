@@ -27,6 +27,8 @@ ml-enhanced = ["ml", "ast"]
 
 # Fast development build - minimal features
 dev = ["git", "security", "logging"]
+# Fast test build - minimal features for testing
+test-fast = ["git", "security"]
 # Full features for CI/release
 full = ["git", "security", "logging", "hashing", "cargo-audit", "ml", "ast"]
 
@@ -91,15 +93,15 @@ cargo-audit = { version = "0.21", optional = true }
 cargo-deny = "0.16"
 
 [dev-dependencies]
-# Testing utilities
+# Testing utilities - optimized for speed
 tempfile = "3.10"
-assert_cmd = "2.0"
-predicates = "3.1"
-criterion = "0.7"
+assert_cmd = { version = "2.0", default-features = false }
+predicates = { version = "3.1", default-features = false }
+criterion = { version = "0.7", default-features = false }
 
-# Mocking and fixtures
-mockito = "1.5"
-fake = "4.4"
+# Mocking and fixtures - minimal features
+mockito = { version = "1.5", default-features = false }
+fake = { version = "4.4", default-features = false }
 
 # Development tools
 cargo-husky = { version = "1", default-features = false, features = ["precommit-hook", "run-cargo-clippy", "run-cargo-fmt"] }
@@ -110,8 +112,8 @@ proptest = "1.5"
 # Benchmarking
 divan = "0.1"
 
-# Tokio with test utilities for testing
-tokio = { version = "1.40.0", features = ["test-util", "fs"] }
+# Tokio with test utilities for testing - optimized features
+tokio = { version = "1.40.0", features = ["test-util", "fs", "rt-multi-thread"] }
 
 [[bench]]
 name = "hashing_benchmark"
@@ -158,8 +160,13 @@ debug = false
 lto = true
 
 [profile.test]
-opt-level = 0
-debug = true
+opt-level = 2
+debug = false
+overflow-checks = false
+lto = "thin"
+codegen-units = 1
+incremental = true
+panic = "abort"
 
 [package.metadata.docs.rs]
 all-features = true

@@ -1,6 +1,6 @@
 use std::fs;
 use std::path::Path;
-use std::process::Command;
+// Removed unused import: std::process::Command
 use tempfile::TempDir;
 
 #[cfg(test)]
@@ -186,7 +186,7 @@ mod ci_workflow_edge_cases {
             ("pr-125", "abc123d", "bugfix-validation"),
         ];
 
-        for (pr_id, commit_hash, branch) in &concurrent_scenarios {
+        for (pr_id, commit_hash, _branch) in &concurrent_scenarios {
             let issue_title = format!("CodeGuardian - {} - Commit {}", pr_id, commit_hash);
             let search_query = format!("{} in:title", commit_hash);
 

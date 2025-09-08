@@ -1,12 +1,10 @@
 use clap::Parser;
-use do_codeguardian::cli::{CheckArgs, Cli, Commands};
+use do_codeguardian::cli::{Cli, Commands};
 use do_codeguardian::config::Config;
 use do_codeguardian::core::GuardianEngine;
 use do_codeguardian::utils::progress::ProgressReporter;
 use std::fs;
-use std::io::Write;
-use std::path::PathBuf;
-use tempfile::{NamedTempFile, TempDir};
+use tempfile::TempDir;
 
 #[cfg(test)]
 mod e2e_tests {
@@ -542,7 +540,7 @@ fn main() {
 
         // Should complete without crashing
         // Duplicate detection might not find anything due to high min_lines threshold
-        assert!(results.findings.len() >= 0);
+        // Test completed successfully - findings length is always >= 0 by definition
 
         Ok(())
     }
@@ -583,7 +581,7 @@ fn do_something() {
 
         // Check that test and example files are handled appropriately
         // (AI content analyzer should skip generic function names in test files)
-        let findings_by_file: std::collections::HashMap<_, _> = results
+        let _findings_by_file: std::collections::HashMap<_, _> = results
             .findings
             .iter()
             .map(|f| (f.file.clone(), f))

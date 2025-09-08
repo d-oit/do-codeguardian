@@ -3,9 +3,7 @@ use do_codeguardian::analyzers::{
     git_conflict_analyzer::GitConflictAnalyzer, Analyzer,
 };
 use do_codeguardian::types::Severity;
-use std::io::Write;
 use std::path::Path;
-use tempfile::NamedTempFile;
 
 #[cfg(test)]
 mod git_conflict_tests {
@@ -367,7 +365,7 @@ fn authenticate_user_copy() {
 }
 "#;
 
-        let findings = analyzer
+        let _findings = analyzer
             .analyze(Path::new("security.rs"), security_content.as_bytes())
             .unwrap();
         // The analyzer should focus on security-relevant duplicates

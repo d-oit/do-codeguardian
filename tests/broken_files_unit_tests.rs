@@ -477,11 +477,11 @@ mod duplicate_analyzer_unit_tests {
             ("# only comment", ""),
         ];
 
-        for (input, expected) in test_cases {
+        for (input, _expected) in test_cases {
             // Note: This would require exposing the normalize_line method
             // For now, we test through the full analysis pipeline
             let content = format!("{}\n{}\n", input, input);
-            let findings = analyzer
+            let _findings = analyzer
                 .analyze(Path::new("test.rs"), content.as_bytes())
                 .unwrap();
 
