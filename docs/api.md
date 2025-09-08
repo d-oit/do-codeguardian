@@ -346,7 +346,7 @@ do-codeguardian metrics --model enhanced-model.fann
 do-codeguardian metrics --model enhanced-model.fann --training
 
 # Export metrics to JSON
-do-codeguardian metrics --model enhanced-model.fann --format json --out metrics.json
+do-codeguardian metrics --model enhanced-model.fann --format json --out reports/metrics.json
 ```
 
 ### Metrics Output
@@ -429,10 +429,7 @@ do-codeguardian train --model-path enhanced-model.fann
 do-codeguardian train \
   --model-path enhanced-model.fann \
   --epochs 2000 \
-  --bootstrap \
-  --learning-rate 0.01 \
-  --hidden-layers 2 \
-  --neurons-per-layer 64
+  --bootstrap
 
 # Continue training existing model
 do-codeguardian train --model-path existing-model.fann --continue
@@ -443,9 +440,6 @@ do-codeguardian train --model-path existing-model.fann --continue
 - `--model-path PATH` - Output model file path
 - `--epochs NUM` - Number of training epochs
 - `--bootstrap` - Use bootstrap sampling
-- `--learning-rate FLOAT` - Learning rate
-- `--hidden-layers NUM` - Number of hidden layers
-- `--neurons-per-layer NUM` - Neurons per hidden layer
 - `--continue` - Continue training existing model
 - `--cross-validation` - Enable cross-validation
 - `--early-stopping` - Enable early stopping

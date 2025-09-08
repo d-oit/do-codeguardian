@@ -1,7 +1,7 @@
 # CodeGuardian Configuration - Fixed Structure
 
 [output]
-directory = "reports"
+directory = "analysis-results"
 format = "json"
 
 [security]
@@ -125,9 +125,9 @@ escalation_threshold = 5
 
 [integrations]
 [integrations.github]
-enabled = false
+enabled = true
 repository = ""
-token = ""
+token = "${CODEGUARDIAN_GITHUB_TOKEN}"
 create_issues = false
 issue_labels = ["security", "codeguardian"]
 comment_prs = false
@@ -136,7 +136,7 @@ min_severity = "high"
 [integrations.gitlab]
 enabled = false
 project = ""
-token = ""
+token = "${CODEGUARDIAN_GITLAB_TOKEN}"
 create_issues = false
 issue_labels = ["security", "codeguardian"]
 comment_mrs = false

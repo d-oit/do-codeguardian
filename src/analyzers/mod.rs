@@ -51,7 +51,9 @@ impl AnalyzerRegistry {
         // Register default analyzers
         registry.register(Box::new(integrity::IntegrityAnalyzer::new()));
         registry.register(Box::new(lint_drift::LintDriftAnalyzer::new()));
-        registry.register(Box::new(non_production::NonProductionAnalyzer::new()));
+        registry.register(Box::new(non_production::NonProductionAnalyzer::new(
+            &config.analyzers.non_production,
+        )));
         registry.register(Box::new(performance_analyzer::PerformanceAnalyzer::new()));
         registry.register(Box::new(security_analyzer::SecurityAnalyzer::new()));
         registry.register(Box::new(dependency_analyzer::DependencyAnalyzer::new(

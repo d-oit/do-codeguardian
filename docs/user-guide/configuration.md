@@ -410,6 +410,102 @@ cp do-codeguardian.prod.toml do-codeguardian.toml
 cp do-codeguardian.ci.toml do-codeguardian.toml
 ```
 
+## GitHub Integration
+
+CodeGuardian provides seamless integration with GitHub for automated issue creation, pull request analysis, and workflow optimization.
+
+### Basic Setup
+
+```toml
+[integrations.github]
+enabled = true
+repository = "owner/repo"
+token = "${CODEGUARDIAN_GITHUB_TOKEN}"
+create_issues = true
+issue_labels = ["security", "codeguardian"]
+comment_prs = true
+min_severity = "high"
+```
+
+### Environment Variable Configuration
+
+Set your GitHub token securely:
+
+```bash
+# Linux/macOS
+export CODEGUARDIAN_GITHUB_TOKEN="ghp_your_token_here"
+
+# Windows
+set CODEGUARDIAN_GITHUB_TOKEN=ghp_your_token_here
+
+# CI/CD pipelines
+# Add to your pipeline secrets/variables
+```
+
+### Configuration Options
+
+| Option | Description | Default |
+|--------|-------------|---------|
+| `enabled` | Enable GitHub integration | `true` |
+| `repository` | Repository in "owner/repo" format | `""` |
+| `token` | GitHub token (use env vars) | `"${CODEGUARDIAN_GITHUB_TOKEN}"` |
+| `create_issues` | Create GitHub issues for findings | `false` |
+| `issue_labels` | Labels for created issues | `["security", "codeguardian"]` |
+| `comment_prs` | Comment on pull requests | `false` |
+| `min_severity` | Minimum severity for issues/PRs | `"high"` |
+
+### CI/CD Integration Examples
+
+#### GitHub Actions
+
+```yaml
+name: CodeGuardian Analysis
+on: [push, pull_request]
+
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run CodeGuardian
+        env:
+          CODEGUARDIAN_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          codeguardian check . --format json --out results.json
+```
+
+#### GitLab CI
+
+```yaml
+codeguardian:
+  image: d-oit/codeguardian:latest
+  script:
+    - codeguardian check . --format json --out results.json
+  variables:
+    CODEGUARDIAN_GITHUB_TOKEN: $GITHUB_TOKEN
+```
+
+### Security Best Practices
+
+1. **Never commit tokens** to version control
+2. **Use environment variables** for token configuration
+3. **Limit token permissions** to necessary scopes only
+4. **Rotate tokens regularly** for security
+5. **Use repository-specific tokens** when possible
+
+### Troubleshooting
+
+**Issue: "Repository not configured"**
+- Ensure `repository` is set to "owner/repo" format
+- Verify the repository exists and is accessible
+
+**Issue: "Token not configured"**
+- Set the `CODEGUARDIAN_GITHUB_TOKEN` environment variable
+- Ensure the token has necessary permissions
+
+**Issue: "Invalid repository format"**
+- Repository must be in "owner/repo" format (e.g., "microsoft/vscode")
+
 ## Configuration Validation
 
 ### Validate Configuration

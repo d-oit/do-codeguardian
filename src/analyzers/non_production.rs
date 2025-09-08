@@ -1,28 +1,54 @@
 use crate::analyzers::Analyzer;
+use crate::config::analysis::NonProductionConfig;
 use crate::types::{Finding, Severity};
 use anyhow::Result;
 use regex::Regex;
 use std::path::Path;
 
 pub struct NonProductionAnalyzer {
+    // Configuration
+    config: NonProductionConfig,
     // Patterns for detecting non-production code
     todo_pattern: Regex,
     debug_pattern: Regex,
     console_pattern: Regex,
+    // Test-related patterns
+    test_directory_patterns: Vec<Regex>,
+    test_extension_patterns: Vec<Regex>,
+    fuzzy_test_patterns: Vec<Regex>,
 }
 
 impl Default for NonProductionAnalyzer {
     fn default() -> Self {
-        Self::new()
+        Self::new(&NonProductionConfig::default())
     }
 }
 
 impl NonProductionAnalyzer {
-    pub fn new() -> Self {
+    pub fn new(config: &NonProductionConfig) -> Self {
+        let test_directory_patterns = config
+            .custom_test_directories
+            .iter()
+            .filter_map(|pattern| Regex::new(&format!(r"(?i)/{}/", regex::escape(pattern))).ok())
+            .collect();
+
+        let test_extension_patterns = config
+            .custom_test_extensions
+            .iter()
+            .filter_map(|ext| Regex::new(&format!(r"(?i){}$", regex::escape(ext))).ok())
+            .collect();
+
+        let fuzzy_test_patterns = config
+            .fuzzy_test_patterns
+            .iter()
+            .filter_map(|pattern| Regex::new(pattern).ok())
+            .collect();
+
         Self {
+            config: config.clone(),
             // Enhanced pattern to catch TODO/FIXME in comments with proper delimiters
             todo_pattern: Regex::new(
-                r"(?i)(?://|#|/\*)\s*(TODO|FIXME|HACK|XXX|BUG|NOTE|REVIEW)(?:\s*:|\s+)",
+                r"(?://|#|/\*)\s*(TODO|FIXME|HACK|XXX|BUG|NOTE|REVIEW)(?:\s*:|\s+)",
             )
             .unwrap(),
             // Enhanced debug pattern for multiple languages and contexts
@@ -31,6 +57,9 @@ impl NonProductionAnalyzer {
             )
             .unwrap(),
             console_pattern: Regex::new(r"console\.(log|debug|info|warn|error)").unwrap(),
+            test_directory_patterns,
+            test_extension_patterns,
+            fuzzy_test_patterns,
         }
     }
 
@@ -197,7 +226,12 @@ impl NonProductionAnalyzer {
 
     /// Check if a file should be skipped from non-production analysis
     fn should_skip_file(&self, file_path: &Path) -> bool {
-        let path_str = file_path.to_string_lossy();
+        // Canonicalize path for security
+        let canonical_path = match file_path.canonicalize() {
+            Ok(path) => path,
+            Err(_) => return false, // If we can't canonicalize, don't skip
+        };
+        let path_str = canonical_path.to_string_lossy();
 
         // Skip analyzer files as they contain legitimate patterns by design
         if path_str.contains("/analyzers/")
@@ -212,18 +246,61 @@ impl NonProductionAnalyzer {
             return true;
         }
 
-        // Skip test files
-        if let Some(file_name) = file_path.file_name().and_then(|n| n.to_str()) {
-            if file_name.ends_with("_test.rs")
-                || file_name == "tests.rs"
-                || file_name.contains("test")
+        // Skip test files based on configuration
+        if self.config.exclude_test_files {
+            // Check file name patterns
+            if let Some(file_name) = file_path.file_name().and_then(|n| n.to_str()) {
+                // Standard Rust test patterns
+                if file_name.ends_with("_test.rs")
+                    || file_name == "tests.rs"
+                    || file_name.contains("test")
+                {
+                    return true;
+                }
+
+                // Custom test extensions
+                for pattern in &self.test_extension_patterns {
+                    if pattern.is_match(file_name) {
+                        return true;
+                    }
+                }
+
+                // Fuzzy test patterns
+                for pattern in &self.fuzzy_test_patterns {
+                    if pattern.is_match(file_name) {
+                        return true;
+                    }
+                }
+            }
+
+            // Check directory patterns
+            for pattern in &self.test_directory_patterns {
+                if pattern.is_match(&path_str) {
+                    return true;
+                }
+            }
+
+            // Standard test directories
+            if path_str.contains("/tests/")
+                || path_str.contains("/test/")
+                || path_str.contains("/spec/")
+                || path_str.contains("/specs/")
+                || path_str.contains("/__tests__/")
+                || path_str.contains("/testdata/")
+                || path_str.contains("/fixtures/")
+                || path_str.contains("/mocks/")
             {
                 return true;
             }
         }
 
-        // Skip files in tests directory
-        if path_str.contains("/tests/") {
+        // Skip example files if configured
+        if self.config.exclude_example_files
+            && (path_str.contains("/examples/")
+                || path_str.contains("/example/")
+                || path_str.contains("example")
+                || path_str.contains("demo"))
+        {
             return true;
         }
 

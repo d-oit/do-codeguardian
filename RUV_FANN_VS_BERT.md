@@ -123,9 +123,9 @@ NetworkConfig {
     input_size: 8,           // Feature vector size
     hidden_layers: [12, 8],  // Two hidden layers
     output_size: 1,          // Binary classification score
-    learning_rate: 0.1,      // Fast convergence
     activation: Sigmoid,     // Smooth gradients
 }
+// Note: Learning rate is fixed by FANN library
 
 // Total parameters: 8*12 + 12*8 + 8*1 = 200 parameters
 // Model size: ~800 bytes (vs 500MB for BERT!)

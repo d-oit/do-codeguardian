@@ -2,6 +2,8 @@ use crate::cli::{GhIssueArgs, GhMode};
 use crate::config::Config;
 use crate::github_api::GitHubApiClient;
 use crate::types::AnalysisResults;
+use crate::utils::path_utils::resolve_input_path;
+use crate::utils::report_utils::{generate_checklist_item, truncate_findings};
 use anyhow::Result;
 use std::process::Command;
 use tokio::fs;
@@ -10,10 +12,8 @@ use tokio::fs;
 const GITHUB_ISSUE_MAX_BODY_SIZE: usize = 60000; // GitHub's approximate limit
 
 pub async fn run(mut args: GhIssueArgs, config: &Config) -> Result<()> {
-    // Use configured output directory for default paths
-    if args.from == std::path::PathBuf::from("results.json") {
-        args.from = std::path::PathBuf::from(&config.output.directory).join("results.json");
-    }
+    // Resolve input path using consolidated utility
+    args.from = resolve_input_path(&args.from, "results.json", config);
 
     // Load results from JSON file
     let json_content = fs::read_to_string(&args.from).await?;
@@ -231,23 +231,11 @@ fn generate_checklist_body(results: &AnalysisResults, args: &GhIssueArgs) -> Res
     // Limit findings for readability
     let max_findings = args.summary_max_issues.min(results.findings.len());
 
-    for finding in results.findings.iter().take(max_findings) {
-        let emoji = match finding.severity {
-            crate::types::Severity::Critical => "🔴",
-            crate::types::Severity::High => "🟠",
-            crate::types::Severity::Medium => "🟡",
-            crate::types::Severity::Low => "🔵",
-            crate::types::Severity::Info => "ℹ️",
-        };
+    let truncated_findings =
+        truncate_findings(&results.findings.iter().collect::<Vec<_>>(), max_findings);
 
-        body.push_str(&format!(
-            "- [ ] {} **{}** - `{}:{}` ({})\n",
-            emoji,
-            finding.message,
-            finding.file.display(),
-            finding.line,
-            finding.id
-        ));
+    for finding in truncated_findings {
+        body.push_str(&generate_checklist_item(finding));
 
         if let Some(description) = &finding.description {
             body.push_str(&format!("  > {}\n", description));

@@ -3,7 +3,6 @@ use crate::ml::fann_classifier::{FannClassifier, NetworkConfig};
 use crate::ml::training_data::TrainingDataset;
 use crate::Config;
 use anyhow::Result;
-use std::path::PathBuf;
 
 // TrainArgs is defined in cli.rs
 

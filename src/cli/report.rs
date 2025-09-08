@@ -1,17 +1,18 @@
 use crate::cli::ReportArgs;
 use crate::config::Config;
 use crate::types::AnalysisResults;
+use crate::utils::formatting::{format_finding_id, severity_emoji};
+use crate::utils::path_utils::{ensure_output_directory, resolve_input_path, resolve_output_path};
+use crate::utils::report_utils::{
+    generate_severity_table_row, get_severity_order, group_findings_by_severity,
+};
 use anyhow::Result;
 use regex::Regex;
-use std::collections::HashMap;
-use std::path::PathBuf;
 use tokio::fs;
 
 pub async fn run(mut args: ReportArgs, config: &Config) -> Result<()> {
-    // Use configured output directory for default paths
-    if args.from == PathBuf::from("results.json") {
-        args.from = PathBuf::from(&config.output.directory).join("results.json");
-    }
+    // Resolve input path using consolidated utility
+    args.from = resolve_input_path(&args.from, "results.json", config);
 
     // Load results from JSON file
     let json_content = fs::read_to_string(&args.from).await?;
@@ -26,18 +27,8 @@ pub async fn run(mut args: ReportArgs, config: &Config) -> Result<()> {
 
     // Output to file or stdout
     if let Some(output_path) = &args.md {
-        let mut final_output_path = output_path.clone();
-        // Use configured output directory if relative path is used
-        if !output_path.is_absolute()
-            && !output_path.starts_with("./")
-            && !output_path.starts_with("../")
-        {
-            final_output_path = PathBuf::from(&config.output.directory).join(output_path);
-            // Ensure output directory exists
-            if let Some(parent) = final_output_path.parent() {
-                tokio::fs::create_dir_all(parent).await?;
-            }
-        }
+        let final_output_path = resolve_output_path(output_path, "report.md", config);
+        ensure_output_directory(&final_output_path).await?;
         fs::write(&final_output_path, report_content).await?;
         tracing::info!("Report saved to: {}", final_output_path.display());
     } else {
@@ -87,24 +78,10 @@ pub fn generate_markdown(results: &AnalysisResults) -> Result<String> {
         md.push_str("| Severity | Count | Emoji |\n");
         md.push_str("|----------|-------|-------|\n");
 
-        let severity_order = [
-            crate::types::Severity::Critical,
-            crate::types::Severity::High,
-            crate::types::Severity::Medium,
-            crate::types::Severity::Low,
-            crate::types::Severity::Info,
-        ];
-
+        let severity_order = get_severity_order();
         for severity in &severity_order {
             if let Some(count) = results.summary.findings_by_severity.get(severity) {
-                let emoji = match severity {
-                    crate::types::Severity::Critical => "🔴",
-                    crate::types::Severity::High => "🟠",
-                    crate::types::Severity::Medium => "🟡",
-                    crate::types::Severity::Low => "🔵",
-                    crate::types::Severity::Info => "ℹ️",
-                };
-                md.push_str(&format!("| {} | {} | {} |\n", severity, count, emoji));
+                md.push_str(&generate_severity_table_row(severity, *count));
             }
         }
         md.push('\n');
@@ -129,38 +106,17 @@ pub fn generate_markdown(results: &AnalysisResults) -> Result<String> {
     if !results.findings.is_empty() {
         md.push_str("## 🔍 Detailed Findings\n\n");
 
-        // Group findings by severity
-        let mut findings_by_severity: HashMap<_, Vec<_>> = HashMap::new();
-        for finding in &results.findings {
-            findings_by_severity
-                .entry(&finding.severity)
-                .or_default()
-                .push(finding);
-        }
-
-        let severity_order = [
-            crate::types::Severity::Critical,
-            crate::types::Severity::High,
-            crate::types::Severity::Medium,
-            crate::types::Severity::Low,
-            crate::types::Severity::Info,
-        ];
+        let findings_by_severity = group_findings_by_severity(&results.findings);
+        let severity_order = get_severity_order();
 
         for severity in &severity_order {
             if let Some(findings) = findings_by_severity.get(severity) {
-                let emoji = match severity {
-                    crate::types::Severity::Critical => "🔴",
-                    crate::types::Severity::High => "🟠",
-                    crate::types::Severity::Medium => "🟡",
-                    crate::types::Severity::Low => "🔵",
-                    crate::types::Severity::Info => "ℹ️",
-                };
-
+                let emoji = severity_emoji(severity);
                 md.push_str(&format!("### {} {} Issues\n\n", emoji, severity));
 
                 for finding in findings {
                     md.push_str(&format!("#### {}\n\n", finding.message));
-                    md.push_str(&format!("- **ID:** `{}`\n", finding.id));
+                    md.push_str(&format!("- **ID:** {}\n", format_finding_id(&finding.id)));
                     md.push_str(&format!("- **File:** `{}`\n", finding.file.display()));
                     md.push_str(&format!("- **Line:** {}\n", finding.line));
                     if let Some(column) = finding.column {
@@ -182,9 +138,7 @@ pub fn generate_markdown(results: &AnalysisResults) -> Result<String> {
             }
         }
     } else {
-        md.push_str(
-            "## ✅ No Issues Found\n\nGreat job! No issues were detected in the analyzed code.\n\n",
-        );
+        md.push_str(&crate::utils::formatting::no_issues_message());
     }
 
     // Footer

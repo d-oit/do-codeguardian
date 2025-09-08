@@ -1,5 +1,6 @@
 agents:
-  - name: ai-persona-creation-specialist
+agents:
+   - name: ai-persona-creation-specialist
     description: Creates specialized AI personas for CodeGuardian and development workflows with manual activation
     key_capabilities:
       - Domain Expertise Analysis
@@ -148,18 +149,27 @@ agents:
       - Technical writing
       - Documentation architecture
       - User guide creation
-      - API documentation
-      - Knowledge base management
-      - Documentation standards
-  - name: false-positive-validator
-    description: Validates and filters false positive findings from security and code analysis tools
-    key_capabilities:
-      - False positive identification
-      - Finding validation
-      - Risk assessment
-      - Alert filtering
-      - Accuracy improvement
-      - Validation reporting
+       - API documentation
+       - Knowledge base management
+       - Documentation standards
+   - name: false-positive-validator
+     description: Validates and filters false positive findings from security and code analysis tools
+     key_capabilities:
+       - False positive identification
+       - Finding validation
+       - Risk assessment
+       - Alert filtering
+       - Accuracy improvement
+       - Validation reporting
+   - name: gh_grep_search_specialist
+     description: Specialized subagent for GitHub code search using the gh_grep MCP tool, providing expert assistance in finding real-world code examples from public repositories
+     key_capabilities:
+       - Code Pattern Discovery
+       - Language-Specific Searches
+       - Repository and Path Filtering
+       - Regex vs Literal Guidance
+       - Multi-Criteria Queries
+       - Best Practices Education
   - name: general
     description: General-purpose agent for CodeGuardian operations and user assistance
     key_capabilities:

@@ -180,8 +180,7 @@ fn should_analyze_file(path: &std::path::Path, config: &Config) -> bool {
 
     // Check exclude patterns
     for pattern in &config.files.exclude_patterns {
-        // Simple substring match for now; could be improved with glob matching
-        if path_str.contains(pattern) {
+        if matches_exclude_pattern(&path_str, pattern) {
             return false;
         }
     }
@@ -242,6 +241,21 @@ fn should_analyze_file(path: &std::path::Path, config: &Config) -> bool {
     true
 }
 
+fn matches_exclude_pattern(path_str: &str, pattern: &str) -> bool {
+    if let Some(suffix) = pattern.strip_prefix('*') {
+        // Handle glob patterns like *.log, *.tmp
+        // Remove the leading *
+        path_str.ends_with(suffix)
+    } else if let Some(prefix) = pattern.strip_suffix('*') {
+        // Handle patterns like prefix*
+        // Remove the trailing *
+        path_str.starts_with(prefix)
+    } else {
+        // Exact match or substring match for simple patterns
+        path_str.contains(pattern)
+    }
+}
+
 /// Analyze the content of a single file for security issues
 ///
 /// # Arguments
@@ -260,7 +274,7 @@ async fn analyze_file_content(
     let lines: Vec<&str> = content.lines().collect();
 
     // Common security patterns to check
-    let patterns = vec![
+    let pattern_definitions = vec![
         // Hardcoded secrets
         (
             r#"(?i)(api[_-]?key|secret|password|token|apikey)\s*[=:]\s*['"]([^'"]{10,})['"]"#,
@@ -305,19 +319,25 @@ async fn analyze_file_content(
         ),
     ];
 
+    // Compile regexes once for better performance
+    let mut compiled_patterns = Vec::new();
+    for (pattern, severity, category, message) in &pattern_definitions {
+        if let Ok(regex) = Regex::new(pattern) {
+            compiled_patterns.push((regex, *severity, *category, *message));
+        }
+    }
+
     for (line_num, line) in lines.iter().enumerate() {
-        for (pattern, severity, category, message) in &patterns {
-            if let Ok(regex) = Regex::new(pattern) {
-                if regex.is_match(line) {
-                    issues.push(SecurityIssue {
-                        file: file_path.to_path_buf(),
-                        line: line_num + 1,
-                        severity: severity.to_string(),
-                        category: category.to_string(),
-                        message: message.to_string(),
-                        suggestion: get_suggestion_for_category(category),
-                    });
-                }
+        for (regex, severity, category, message) in &compiled_patterns {
+            if regex.is_match(line) {
+                issues.push(SecurityIssue {
+                    file: file_path.to_path_buf(),
+                    line: line_num + 1,
+                    severity: severity.to_string(),
+                    category: category.to_string(),
+                    message: message.to_string(),
+                    suggestion: get_suggestion_for_category(category),
+                });
             }
         }
     }

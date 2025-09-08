@@ -1,51 +1,36 @@
-# CodeGuardian Configuration Guide
+# Configuration
 
-## Configuration Files
+CodeGuardian uses TOML configuration files for customization.
 
-- `codeguardian.toml` - Main configuration file with production defaults
-- `codeguardian.dev.toml` - Development environment overrides
-- `codeguardian.prod.toml` - Production environment overrides
+## Default Configuration
 
-## Usage
+```toml
+[security]
+fail_on_issues = true
+max_file_size = "10MB"
 
-```bash
-# Default configuration
-codeguardian analyze
+[analysis]
+parallel_workers = 0
+streaming = false
 
-# Development mode
-codeguardian analyze --config codeguardian.dev.toml
-
-# Production mode
-codeguardian analyze --config codeguardian.prod.toml
+[output]
+format = "json"
+verbose = false
 ```
 
-## Key Settings
+## Configuration Options
 
-### Security
-- `max_file_size`: 10MB limit prevents resource exhaustion
-- `entropy_threshold`: 4.5 for secret detection sensitivity
-- `min_severity`: "low" for comprehensive reporting
+### Security Settings
 
-### Performance
-- `max_parallel_workers`: 4 concurrent workers (adjust based on system)
-- `enable_file_caching`: true for faster repeated analyses
-- `max_findings_per_file`: 50 to prevent overwhelming output
+- `fail_on_issues`: Exit with error if security issues are found
+- `max_file_size`: Maximum file size to analyze
 
-### Analyzers
-All analyzers are enabled by default for comprehensive analysis:
-- Security analysis with vulnerability detection
-- Performance analysis with complexity checks
-- Code quality analysis with duplication detection
-- Integrity checking with Blake3 hashing
+### Analysis Settings
 
-## Environment Variables
+- `parallel_workers`: Number of parallel analysis workers (0 = auto)
+- `streaming`: Enable streaming analysis for large files
 
-- `CODEGUARDIAN_GITHUB_TOKEN`: For GitHub integration
-- `CODEGUARDIAN_GITLAB_TOKEN`: For GitLab integration
+### Output Settings
 
-## Optimization Recommendations
-
-1. **For CI/CD**: Use production config with `fail_on_issues = true`
-2. **For Development**: Use dev config with verbose output
-3. **For Large Codebases**: Increase `max_parallel_workers` and `max_memory_file_size`
-4. **For Security-Focused**: Enable all analyzers and set low severity thresholds
+- `format`: Output format (json, human, sarif)
+- `verbose`: Enable verbose output

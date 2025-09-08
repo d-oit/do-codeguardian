@@ -14,5 +14,8 @@ max_parallel_workers = 8
 enable_file_caching = true
 
 [integrations.github]
-enabled = true
+# GitHub integration is enabled by default in main config
+# Production overrides for enhanced security and automation
 create_issues = true
+comment_prs = true
+min_severity = "medium"

@@ -4,6 +4,8 @@ use std::path::PathBuf;
 pub mod check;
 pub mod gh_issue;
 pub mod init;
+#[cfg(feature = "ml")]
+pub mod metrics;
 pub mod report;
 #[cfg(feature = "ml")]
 pub mod train;
@@ -62,6 +64,10 @@ pub enum Commands {
     /// Train machine learning model for false positive reduction
     #[cfg(feature = "ml")]
     Train(TrainArgs),
+
+    /// Analyze ML model performance metrics
+    #[cfg(feature = "ml")]
+    Metrics(MetricsArgs),
 
     /// Update and maintain documentation
     UpdateDocs(UpdateDocsArgs),
@@ -136,6 +142,10 @@ pub struct CheckArgs {
     /// ML threshold for anomaly detection (0.0-1.0)
     #[arg(long, value_name = "THRESHOLD")]
     pub ml_threshold: Option<f64>,
+
+    /// Path to trained ML model file (.fann format)
+    #[arg(long, value_name = "PATH")]
+    pub ml_model: Option<PathBuf>,
 
     /// Enable all broken file detection
     #[arg(long)]
@@ -311,10 +321,6 @@ pub struct TrainArgs {
     #[arg(long, default_value = "1000")]
     pub epochs: u32,
 
-    /// Learning rate for training
-    #[arg(long, default_value = "0.1")]
-    pub learning_rate: f32,
-
     /// Generate synthetic training data for cold start
     #[arg(long)]
     pub bootstrap: bool,
@@ -334,6 +340,42 @@ pub struct TrainArgs {
     /// Use AST-enhanced features (requires ast feature)
     #[arg(long)]
     pub enhanced: bool,
+}
+
+#[cfg(feature = "ml")]
+#[derive(Parser)]
+pub struct MetricsArgs {
+    /// Path to the ML model file
+    #[arg(long, default_value = "codeguardian-model.fann")]
+    pub model_path: PathBuf,
+
+    /// Suppress all output except errors
+    #[arg(long)]
+    pub quiet: bool,
+
+    #[command(subcommand)]
+    pub subcommand: MetricsSubcommands,
+}
+
+#[cfg(feature = "ml")]
+#[derive(Subcommand)]
+pub enum MetricsSubcommands {
+    /// Show detailed metrics
+    Show,
+
+    /// Export metrics to JSON
+    Export(MetricsExportArgs),
+
+    /// Show summary metrics
+    Summary,
+}
+
+#[cfg(feature = "ml")]
+#[derive(Parser)]
+pub struct MetricsExportArgs {
+    /// Output file for JSON export
+    #[arg(long, default_value = "reports/metrics.json")]
+    pub output: PathBuf,
 }
 
 #[derive(Parser)]

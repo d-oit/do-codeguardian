@@ -10,14 +10,12 @@ use fann::{ActivationFunc, Fann};
 pub struct FannClassifier {
     network: Fann,
     input_size: usize,
-    learning_rate: f32,
 }
 
 /// Stub implementation when ML feature is disabled
 #[cfg(not(feature = "ml"))]
 pub struct FannClassifier {
     input_size: usize,
-    learning_rate: f32,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -25,7 +23,6 @@ pub struct NetworkConfig {
     pub input_size: usize,
     pub hidden_layers: Vec<usize>,
     pub output_size: usize,
-    pub learning_rate: f32,
     pub activation_function: String,
 }
 
@@ -49,7 +46,6 @@ impl FannClassifier {
         Ok(Self {
             network,
             input_size: config.input_size,
-            learning_rate: config.learning_rate,
         })
     }
 
@@ -60,12 +56,10 @@ impl FannClassifier {
 
         // Extract configuration from loaded network
         let input_size = network.get_num_input() as usize;
-        let learning_rate = 0.1; // Default learning rate since get_learning_rate may not be available
 
         Ok(Self {
             network,
             input_size,
-            learning_rate,
         })
     }
 
@@ -88,7 +82,7 @@ impl FannClassifier {
 
         let output = self
             .network
-            .run(&features)
+            .run(features)
             .map_err(|e| anyhow!("FANN prediction failed: {:?}", e))?;
 
         Ok(output[0]) // Single output for binary classification
@@ -107,7 +101,7 @@ impl FannClassifier {
         let target_output = vec![target];
 
         self.network
-            .train(&features, &target_output)
+            .train(features, &target_output)
             .map_err(|e| anyhow!("FANN training failed: {:?}", e))?;
 
         Ok(())
@@ -141,7 +135,6 @@ impl FannClassifier {
             hidden_layers: self.network.get_num_layers() as usize - 2, // Exclude input/output
             total_neurons: self.network.get_total_neurons() as usize,
             total_connections: self.network.get_total_connections() as usize,
-            learning_rate: self.learning_rate,
         }
     }
 }
@@ -153,7 +146,6 @@ impl FannClassifier {
     pub fn new(config: NetworkConfig) -> Result<Self> {
         Ok(Self {
             input_size: config.input_size,
-            learning_rate: config.learning_rate,
         })
     }
 
@@ -189,30 +181,24 @@ impl FannClassifier {
             hidden_layers: 0,
             total_neurons: 0,
             total_connections: 0,
-            learning_rate: self.learning_rate,
         }
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct NetworkStats {
     pub input_size: usize,
     pub hidden_layers: usize,
     pub total_neurons: usize,
     pub total_connections: usize,
-    pub learning_rate: f32,
 }
 
 impl std::fmt::Display for NetworkStats {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
-            "FANN Network: {} inputs, {} hidden layers, {} neurons, {} connections, LR: {:.4}",
-            self.input_size,
-            self.hidden_layers,
-            self.total_neurons,
-            self.total_connections,
-            self.learning_rate
+            "FANN Network: {} inputs, {} hidden layers, {} neurons, {} connections",
+            self.input_size, self.hidden_layers, self.total_neurons, self.total_connections
         )
     }
 }
@@ -228,7 +214,6 @@ impl Default for NetworkConfig {
                 vec![12, 8] // Original network for base features
             },
             output_size: 1, // Single relevance score
-            learning_rate: 0.1,
             activation_function: "sigmoid".to_string(),
         }
     }
@@ -236,13 +221,11 @@ impl Default for NetworkConfig {
 
 impl NetworkConfig {
     /// Create configuration optimized for AST-enhanced features
-    #[cfg(feature = "ast")]
     pub fn enhanced() -> Self {
         Self {
             input_size: 24,                  // 8 base + 16 AST features
             hidden_layers: vec![48, 24, 12], // Larger network for complex patterns
             output_size: 1,
-            learning_rate: 0.05, // Lower learning rate for stability
             activation_function: "sigmoid".to_string(),
         }
     }
@@ -253,7 +236,6 @@ impl NetworkConfig {
             input_size: 8,
             hidden_layers: vec![12, 8],
             output_size: 1,
-            learning_rate: 0.1,
             activation_function: "sigmoid".to_string(),
         }
     }

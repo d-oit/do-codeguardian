@@ -35,7 +35,7 @@ pub struct OutputConfig {
 impl Default for OutputConfig {
     fn default() -> Self {
         Self {
-            directory: "codeguardian-results".to_string(),
+            directory: "analysis-results".to_string(),
             format: "sarif".to_string(),
             verbose: false,
             generate_summary: true,

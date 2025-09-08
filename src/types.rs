@@ -17,7 +17,7 @@ pub fn generate_finding_id(analyzer: &str, rule: &str, file: &str, line: u32, ke
     hasher.update(file.as_bytes());
     hasher.update(line.to_le_bytes());
     hasher.update(key.as_bytes());
-    format!("{:x}", hasher.finalize())[..16].to_string()
+    format!("{:x}", hasher.finalize())[..32].to_string()
 }
 
 /// Fallback ID generation without hashing
@@ -29,13 +29,23 @@ pub fn generate_finding_id(analyzer: &str, rule: &str, file: &str, line: u32, ke
         .collect()
 }
 
+/// Represents the complete results of a code analysis scan.
+/// This struct encapsulates all findings, metadata, and summary information
+/// from a CodeGuardian analysis run, providing a comprehensive view of
+/// security, performance, and code quality issues detected.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AnalysisResults {
+    /// The schema version of the results format for compatibility checking
     pub schema_version: String,
+    /// Metadata about the tool that performed the analysis
     pub tool_metadata: ToolMetadata,
+    /// Collection of all security and code quality findings discovered
     pub findings: Vec<Finding>,
+    /// Statistical summary of the analysis results
     pub summary: ResultsSummary,
+    /// Hash of the configuration used for this analysis (for caching)
     pub config_hash: String,
+    /// Timestamp when the analysis was completed
     pub timestamp: DateTime<Utc>,
 }
 

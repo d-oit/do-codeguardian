@@ -15,9 +15,6 @@ use walkdir::WalkDir;
 
 pub mod parallel_file_processor;
 
-// Constants for file processing
-const PROGRESS_UPDATE_INTERVAL: u32 = 10000; // Update progress every 10k lines
-
 pub struct GuardianEngine {
     config: Config,
     analyzer_registry: AnalyzerRegistry,
@@ -94,7 +91,7 @@ impl GuardianEngine {
 
             // Check exclude patterns from config
             for pattern in &self.config.files.exclude_patterns {
-                if name.contains(pattern.trim_start_matches('*')) {
+                if self.matches_exclude_pattern(name, pattern) {
                     return false;
                 }
             }
@@ -120,6 +117,21 @@ impl GuardianEngine {
         }
 
         true
+    }
+
+    fn matches_exclude_pattern(&self, filename: &str, pattern: &str) -> bool {
+        if let Some(suffix) = pattern.strip_prefix('*') {
+            // Handle glob patterns like *.log, *.tmp
+            // Remove the leading *
+            filename.ends_with(suffix)
+        } else if let Some(prefix) = pattern.strip_suffix('*') {
+            // Handle patterns like prefix*
+            // Remove the trailing *
+            filename.starts_with(prefix)
+        } else {
+            // Exact match or substring match for simple patterns
+            filename.contains(pattern)
+        }
     }
 
     pub async fn analyze_files(
@@ -181,34 +193,36 @@ impl GuardianEngine {
         analyzer_registry: &AnalyzerRegistry,
         _streaming_analyzer: &StreamingAnalyzer,
     ) -> Result<Vec<Finding>> {
-        // For now, fall back to chunked reading for large files
-        // In a full implementation, this would use the streaming analyzer
-        // with line-by-line or chunk-by-chunk processing
+        // For large files, read in chunks to avoid memory issues
+        // This is a compromise between memory usage and analysis completeness
 
-        use tokio::io::{AsyncBufReadExt, BufReader};
-        let file = fs::File::open(file_path).await?;
-        let reader = BufReader::new(file);
+        use tokio::io::{AsyncReadExt, AsyncSeekExt};
+        let mut file = fs::File::open(file_path).await?;
+        let file_size = file.metadata().await?.len();
+
+        const CHUNK_SIZE: u64 = 1024 * 1024; // 1MB chunks
         let mut all_findings = Vec::new();
+        let mut offset = 0u64;
 
-        // Process file line by line to save memory
-        let mut line_buffer = String::new();
-        let mut line_number = 1u32;
-        let mut lines = reader.lines();
+        while offset < file_size {
+            let chunk_size = std::cmp::min(CHUNK_SIZE, file_size - offset);
+            let mut buffer = vec![0u8; chunk_size as usize];
 
-        while let Some(line_result) = lines.next_line().await? {
-            line_buffer.clear();
-            line_buffer.push_str(&line_result);
-            line_buffer.push('\n');
+            file.seek(std::io::SeekFrom::Start(offset)).await?;
+            file.read_exact(&mut buffer).await?;
 
-            // Analyze this line
-            let line_findings =
-                analyzer_registry.analyze_file(file_path, line_buffer.as_bytes())?;
-            all_findings.extend(line_findings);
+            // Try to convert to string for analysis
+            if let Ok(chunk_content) = String::from_utf8(buffer) {
+                // Analyze this chunk with context about its position
+                let chunk_findings =
+                    analyzer_registry.analyze_file(file_path, chunk_content.as_bytes())?;
+                all_findings.extend(chunk_findings);
+            }
 
-            line_number += 1;
+            offset += chunk_size;
 
             // Yield occasionally for very large files
-            if line_number % PROGRESS_UPDATE_INTERVAL == 0 {
+            if offset % (CHUNK_SIZE * 10) == 0 {
                 tokio::task::yield_now().await;
             }
         }
@@ -328,13 +342,9 @@ impl GuardianEngine {
         config_hash: &str,
     ) -> Result<()> {
         if let Ok(mut cache_guard) = self.cache.lock() {
-            tokio::task::block_in_place(|| {
-                tokio::runtime::Handle::current().block_on(cache_guard.cache_findings(
-                    file_path,
-                    findings.to_vec(),
-                    config_hash,
-                ))
-            })?;
+            cache_guard
+                .cache_findings(file_path, findings.to_vec(), config_hash)
+                .await?;
         }
         Ok(())
     }

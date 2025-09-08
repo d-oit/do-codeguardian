@@ -1,9 +1,16 @@
 use crate::cli::CheckArgs;
 use crate::config::Config;
 use crate::core::GuardianEngine;
-use crate::types::AnalysisResults;
+use crate::utils::config_utils::{
+    enable_broken_files_feature, set_baseline_file, set_fail_on_conflicts, set_ml_threshold,
+    set_parallel_workers, BrokenFilesFeature,
+};
+use crate::utils::path_utils::{
+    ensure_output_directory, resolve_output_path, validate_file_extension, validate_file_path,
+};
 use crate::utils::progress::ProgressReporter;
-use anyhow::{Context, Result};
+use crate::utils::summary_utils::{generate_cli_summary, has_issues};
+use anyhow::Result;
 use serde_json;
 use std::io::IsTerminal;
 use std::path::PathBuf;
@@ -17,77 +24,51 @@ pub async fn run(mut args: CheckArgs, mut config: Config) -> Result<()> {
     let output_dir = config.output.directory.clone();
     let fail_on_conflicts_config = config.analyzers.broken_files.conflicts.fail_on_conflicts;
 
-    // Override config with CLI options
-    // Implement baseline handling in new config structure
+    // Override config with CLI options using consolidated utilities
     if let Some(baseline_path) = &args.baseline {
-        // Validate baseline file exists and is readable
-        if !baseline_path.exists() {
-            return Err(anyhow::anyhow!(
-                "Baseline file does not exist: {}",
-                baseline_path.display()
-            ));
-        }
-
-        // Canonicalize path for security
-        let canonical_baseline = baseline_path.canonicalize().with_context(|| {
-            format!(
-                "Failed to canonicalize baseline path: {}",
-                baseline_path.display()
-            )
-        })?;
-
-        // Store baseline path in config for later use
-        config.analysis.baseline_file = Some(canonical_baseline);
+        let canonical_baseline = validate_file_path(baseline_path, "Baseline")?;
+        set_baseline_file(&mut config, &canonical_baseline);
     }
 
-    // Implement ML threshold in new config structure
     if let Some(threshold) = args.ml_threshold {
-        // Validate threshold is within valid range
-        if !(0.0..=1.0).contains(&threshold) {
-            return Err(anyhow::anyhow!(
-                "ML threshold must be between 0.0 and 1.0, got: {}",
-                threshold
-            ));
-        }
+        set_ml_threshold(&mut config, threshold)?;
+    }
 
-        // Store ML threshold in config
-        config.analysis.ml_threshold = Some(threshold);
+    if let Some(model_path) = &args.ml_model {
+        let _canonical_model = validate_file_path(model_path, "ML model")?;
+        validate_file_extension(&_canonical_model, "fann", "ML model")?;
     }
 
     // Extract ml_threshold and baseline_file after overrides
     let ml_threshold = config.analysis.ml_threshold;
     let baseline_file = config.analysis.baseline_file.clone();
 
-    // Override parallel processing setting
-    if args.parallel > 0 {
-        config.analysis.max_workers = args.parallel as u32;
-    }
+    // Override parallel processing setting using consolidated utility
+    set_parallel_workers(&mut config, args.parallel);
 
-    // Override broken files detection settings
+    // Resolve output path using consolidated utility
+    args.out = resolve_output_path(&args.out, "results.json", &config);
+    ensure_output_directory(&args.out).await?;
+
+    // Override broken files detection settings using consolidated utilities
     if args.detect_broken_files {
-        config.analyzers.broken_files.enabled = true;
-        config.analyzers.broken_files.detect_merge_conflicts = true;
-        config.analyzers.broken_files.detect_ai_placeholders = true;
-        config.analyzers.broken_files.detect_duplicates = true;
+        enable_broken_files_feature(&mut config, BrokenFilesFeature::All);
     }
 
     if args.detect_conflicts {
-        config.analyzers.broken_files.enabled = true;
-        config.analyzers.broken_files.detect_merge_conflicts = true;
+        enable_broken_files_feature(&mut config, BrokenFilesFeature::MergeConflicts);
     }
 
     if args.detect_placeholders {
-        config.analyzers.broken_files.enabled = true;
-        config.analyzers.broken_files.detect_ai_placeholders = true;
+        enable_broken_files_feature(&mut config, BrokenFilesFeature::Placeholders);
     }
 
     if args.detect_duplicates {
-        config.analyzers.broken_files.enabled = true;
-        config.analyzers.broken_files.detect_duplicates = true;
+        enable_broken_files_feature(&mut config, BrokenFilesFeature::Duplicates);
     }
 
     if args.fail_on_conflicts {
-        config.analyzers.broken_files.conflicts.fail_on_conflicts = true;
+        set_fail_on_conflicts(&mut config, true);
     }
 
     // Use configured output directory if default output path is used
@@ -103,7 +84,7 @@ pub async fn run(mut args: CheckArgs, mut config: Config) -> Result<()> {
     let progress = ProgressReporter::new(!args.quiet && std::io::stdout().is_terminal());
 
     // Initialize the Guardian engine
-    let mut engine = GuardianEngine::new(config, progress).await?;
+    let mut engine = GuardianEngine::new(config.clone(), progress).await?;
 
     // Determine files to scan
     let mut files_to_scan = if let Some(diff_spec) = &args.diff {
@@ -121,12 +102,19 @@ pub async fn run(mut args: CheckArgs, mut config: Config) -> Result<()> {
                 if let Ok(baseline_results) =
                     serde_json::from_str::<crate::types::AnalysisResults>(&baseline_content)
                 {
-                    let baseline_files: std::collections::HashSet<_> = baseline_results
-                        .findings
-                        .iter()
-                        .map(|f| f.file.canonicalize().ok())
-                        .collect();
-                    files_to_scan.retain(|f| !baseline_files.contains(&f.canonicalize().ok()));
+                    let mut baseline_files = std::collections::HashSet::new();
+                    for finding in &baseline_results.findings {
+                        if let Ok(canonical) = finding.file.canonicalize() {
+                            baseline_files.insert(canonical);
+                        }
+                    }
+                    files_to_scan.retain(|f| {
+                        if let Ok(canonical) = f.canonicalize() {
+                            !baseline_files.contains(&canonical)
+                        } else {
+                            true // Keep files that can't be canonicalized
+                        }
+                    });
                 }
             }
         }
@@ -162,11 +150,25 @@ pub async fn run(mut args: CheckArgs, mut config: Config) -> Result<()> {
     if let Some(threshold) = ml_threshold {
         #[cfg(feature = "ml")]
         {
-            let mut ml_classifier = crate::ml::MLClassifier::new(None);
+            let model_path_str = args
+                .ml_model
+                .as_ref()
+                .map(|p| p.to_string_lossy().to_string());
+            let mut ml_classifier = crate::ml::MLClassifier::new(model_path_str.as_deref());
             results.findings = ml_classifier
                 .filter_findings(results.findings, threshold as f32)
                 .await?;
-            tracing::info!("Applied ML filtering with threshold: {}", threshold);
+            if args.ml_model.is_some() {
+                tracing::info!(
+                    "Applied ML filtering with custom model and threshold: {}",
+                    threshold
+                );
+            } else {
+                tracing::info!(
+                    "Applied ML filtering with default model and threshold: {}",
+                    threshold
+                );
+            }
         }
 
         #[cfg(not(feature = "ml"))]
@@ -191,17 +193,9 @@ pub async fn run(mut args: CheckArgs, mut config: Config) -> Result<()> {
 
     // Emit markdown report if requested
     if let Some(md_path) = &args.emit_md {
-        let mut final_md_path = md_path.clone();
-        // Use configured output directory if relative path is used
-        if md_path == &PathBuf::from("report.md")
-            || !md_path.is_absolute() && !md_path.starts_with("./") && !md_path.starts_with("../")
-        {
-            final_md_path = PathBuf::from(&output_dir).join(md_path);
-            // Ensure output directory exists
-            if let Some(parent) = final_md_path.parent() {
-                tokio::fs::create_dir_all(parent).await?;
-            }
-        }
+        let final_md_path = resolve_output_path(md_path, "report.md", &config);
+        ensure_output_directory(&final_md_path).await?;
+
         let markdown = crate::report::generate_markdown(&results)?;
         fs::write(&final_md_path, markdown).await?;
 
@@ -228,7 +222,7 @@ pub async fn run(mut args: CheckArgs, mut config: Config) -> Result<()> {
 
     // Print summary to stdout if not quiet
     if !args.quiet {
-        print_summary(&results);
+        println!("{}", generate_cli_summary(&results));
     }
 
     // Check for conflicts if fail_on_conflicts is enabled
@@ -244,38 +238,9 @@ pub async fn run(mut args: CheckArgs, mut config: Config) -> Result<()> {
     }
 
     // Determine exit code
-    if args.fail_on_issues && results.has_issues() {
+    if args.fail_on_issues && has_issues(&results) {
         std::process::exit(2);
     }
 
     Ok(())
-}
-
-fn print_summary(results: &AnalysisResults) {
-    tracing::info!("📊 Analysis Summary");
-    tracing::info!("==================");
-    tracing::info!("Files scanned: {}", results.summary.total_files_scanned);
-    tracing::info!("Total findings: {}", results.summary.total_findings);
-    tracing::info!("Duration: {}ms", results.summary.scan_duration_ms);
-
-    if !results.summary.findings_by_severity.is_empty() {
-        tracing::info!("Findings by severity:");
-        for (severity, count) in &results.summary.findings_by_severity {
-            let emoji = match severity {
-                crate::types::Severity::Critical => "🔴",
-                crate::types::Severity::High => "🟠",
-                crate::types::Severity::Medium => "🟡",
-                crate::types::Severity::Low => "🔵",
-                crate::types::Severity::Info => "ℹ️",
-            };
-            tracing::info!("  {} {}: {}", emoji, severity, count);
-        }
-    }
-
-    if !results.summary.findings_by_analyzer.is_empty() {
-        tracing::info!("Findings by analyzer:");
-        for (analyzer, count) in &results.summary.findings_by_analyzer {
-            tracing::info!("  {}: {}", analyzer, count);
-        }
-    }
 }

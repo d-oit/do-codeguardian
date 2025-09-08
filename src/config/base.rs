@@ -37,9 +37,10 @@ impl Config {
     pub fn from_file(path: &Path) -> anyhow::Result<Self> {
         let content = std::fs::read_to_string(path)
             .with_context(|| format!("Failed to read config file: {}", path.display()))?;
-        let config: Config = toml::from_str(&content).with_context(|| {
+        let processed_content = Self::process_env_vars(&content)?;
+        let config: Config = toml::from_str(&processed_content).with_context(|| {
             // Try to get more specific error info
-            match toml::from_str::<toml::Value>(&content) {
+            match toml::from_str::<toml::Value>(&processed_content) {
                 Ok(_) => format!(
                     "Failed to parse config file: {} - structure mismatch",
                     path.display()
@@ -51,7 +52,82 @@ impl Config {
                 ),
             }
         })?;
+        config.validate()?;
         Ok(config)
+    }
+
+    /// Process environment variable substitution in configuration content
+    pub fn process_env_vars(content: &str) -> anyhow::Result<String> {
+        let mut result = content.to_string();
+        let env_var_pattern = regex::Regex::new(r"\$\{([^}]+)\}").unwrap();
+
+        for capture in env_var_pattern.captures_iter(content) {
+            let placeholder = &capture[0];
+            let var_name = &capture[1];
+
+            match std::env::var(var_name) {
+                Ok(value) => {
+                    result = result.replace(placeholder, &value);
+                }
+                Err(_) => {
+                    // Keep the placeholder if environment variable is not set
+                    // This maintains backward compatibility
+                }
+            }
+        }
+
+        Ok(result)
+    }
+
+    /// Validate configuration settings
+    pub fn validate(&self) -> anyhow::Result<()> {
+        // Validate GitHub configuration
+        if self.integrations.github.enabled {
+            if self.integrations.github.repository.is_empty() {
+                return Err(anyhow::anyhow!(
+                    "GitHub integration is enabled but repository is not configured. \
+                     Please set 'integrations.github.repository' in your configuration file."
+                ));
+            }
+
+            if self.integrations.github.token.is_empty()
+                || self.integrations.github.token.starts_with("${")
+            {
+                return Err(anyhow::anyhow!(
+                    "GitHub integration is enabled but token is not configured. \
+                     Please set the CODEGUARDIAN_GITHUB_TOKEN environment variable or configure 'integrations.github.token'."
+                ));
+            }
+
+            // Validate repository format (owner/repo)
+            if !self.integrations.github.repository.contains('/') {
+                return Err(anyhow::anyhow!(
+                    "GitHub repository must be in 'owner/repo' format, got: {}",
+                    self.integrations.github.repository
+                ));
+            }
+        }
+
+        // Validate GitLab configuration
+        if self.integrations.gitlab.enabled {
+            if self.integrations.gitlab.project.is_empty() {
+                return Err(anyhow::anyhow!(
+                    "GitLab integration is enabled but project is not configured. \
+                     Please set 'integrations.gitlab.project' in your configuration file."
+                ));
+            }
+
+            if self.integrations.gitlab.token.is_empty()
+                || self.integrations.gitlab.token.starts_with("${")
+            {
+                return Err(anyhow::anyhow!(
+                    "GitLab integration is enabled but token is not configured. \
+                     Please set the CODEGUARDIAN_GITLAB_TOKEN environment variable or configure 'integrations.gitlab.token'."
+                ));
+            }
+        }
+
+        Ok(())
     }
 
     /// Load configuration from a TOML file
@@ -61,8 +137,10 @@ impl Config {
         let content = tokio::fs::read_to_string(path)
             .await
             .with_context(|| format!("Failed to read config file: {}", path.display()))?;
-        let config: Config = toml::from_str(&content)
+        let processed_content = Self::process_env_vars(&content)?;
+        let config: Config = toml::from_str(&processed_content)
             .with_context(|| format!("Failed to parse config file: {}", path.display()))?;
+        config.validate()?;
         Ok(config)
     }
 }

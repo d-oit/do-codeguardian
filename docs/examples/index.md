@@ -495,9 +495,7 @@ impl Analyzer for CustomSecurityAnalyzer {
 do-codeguardian train \
   --model-path custom-model.fann \
   --epochs 5000 \
-  --learning-rate 0.001 \
-  --bootstrap \
-  --validation-split 0.2
+  --bootstrap
 
 # Use trained model
 do-codeguardian check . \

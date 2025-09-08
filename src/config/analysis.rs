@@ -105,6 +105,12 @@ pub struct NonProductionConfig {
     pub exclude_example_files: bool,
     /// Detection patterns
     pub patterns: Vec<NonProductionPattern>,
+    /// Custom test directory patterns
+    pub custom_test_directories: Vec<String>,
+    /// Custom test file extensions
+    pub custom_test_extensions: Vec<String>,
+    /// Fuzzy test patterns (regex)
+    pub fuzzy_test_patterns: Vec<String>,
 }
 
 impl Default for NonProductionConfig {
@@ -124,6 +130,28 @@ impl Default for NonProductionConfig {
                     description: "Debug logging statements".to_string(),
                     severity: "low".to_string(),
                 },
+            ],
+            custom_test_directories: vec![
+                "tests".to_string(),
+                "test".to_string(),
+                "spec".to_string(),
+                "specs".to_string(),
+                "__tests__".to_string(),
+                "testdata".to_string(),
+                "fixtures".to_string(),
+                "mocks".to_string(),
+            ],
+            custom_test_extensions: vec![
+                ".test.rs".to_string(),
+                ".spec.rs".to_string(),
+                ".integration.rs".to_string(),
+                ".e2e.rs".to_string(),
+            ],
+            fuzzy_test_patterns: vec![
+                r"(?i)test.*\.rs$".to_string(),
+                r"(?i)spec.*\.rs$".to_string(),
+                r"(?i).*test.*".to_string(),
+                r"(?i).*spec.*".to_string(),
             ],
         }
     }

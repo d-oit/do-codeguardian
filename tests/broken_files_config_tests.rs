@@ -600,4 +600,127 @@ max_files_to_compare = 1000
             1000
         );
     }
+
+    #[test]
+    fn test_environment_variable_substitution() {
+        // Test environment variable processing
+        let config_content = r#"
+            [integrations.github]
+            enabled = true
+            repository = "test/repo"
+            token = "${CODEGUARDIAN_GITHUB_TOKEN}"
+            create_issues = false
+        "#;
+
+        // Set environment variable
+        std::env::set_var("CODEGUARDIAN_GITHUB_TOKEN", "test-token-123");
+
+        let processed = Config::process_env_vars(config_content).unwrap();
+        assert!(processed.contains("token = \"test-token-123\""));
+        assert!(!processed.contains("${CODEGUARDIAN_GITHUB_TOKEN}"));
+
+        // Clean up
+        std::env::remove_var("CODEGUARDIAN_GITHUB_TOKEN");
+    }
+
+    #[test]
+    fn test_environment_variable_not_set() {
+        // Test when environment variable is not set
+        let config_content = r#"
+            [integrations.github]
+            token = "${UNSET_VAR}"
+        "#;
+
+        let processed = Config::process_env_vars(config_content).unwrap();
+        // Should keep the placeholder when env var is not set
+        assert!(processed.contains("${UNSET_VAR}"));
+    }
+
+    #[test]
+    fn test_github_config_validation_success() {
+        let mut config = Config::default();
+        config.integrations.github.enabled = true;
+        config.integrations.github.repository = "owner/repo".to_string();
+        config.integrations.github.token = "valid-token".to_string();
+
+        assert!(config.validate().is_ok());
+    }
+
+    #[test]
+    fn test_github_config_validation_missing_repository() {
+        let mut config = Config::default();
+        config.integrations.github.enabled = true;
+        config.integrations.github.repository = "".to_string();
+        config.integrations.github.token = "valid-token".to_string();
+
+        let result = config.validate();
+        assert!(result.is_err());
+        assert!(result
+            .unwrap_err()
+            .to_string()
+            .contains("repository is not configured"));
+    }
+
+    #[test]
+    fn test_github_config_validation_missing_token() {
+        let mut config = Config::default();
+        config.integrations.github.enabled = true;
+        config.integrations.github.repository = "owner/repo".to_string();
+        config.integrations.github.token = "".to_string();
+
+        let result = config.validate();
+        assert!(result.is_err());
+        assert!(result
+            .unwrap_err()
+            .to_string()
+            .contains("token is not configured"));
+    }
+
+    #[test]
+    fn test_github_config_validation_invalid_repository_format() {
+        let mut config = Config::default();
+        config.integrations.github.enabled = true;
+        config.integrations.github.repository = "invalid-repo-format".to_string();
+        config.integrations.github.token = "valid-token".to_string();
+
+        let result = config.validate();
+        assert!(result.is_err());
+        assert!(result.unwrap_err().to_string().contains("owner/repo"));
+    }
+
+    #[test]
+    fn test_github_config_validation_unset_env_var() {
+        let mut config = Config::default();
+        config.integrations.github.enabled = true;
+        config.integrations.github.repository = "owner/repo".to_string();
+        config.integrations.github.token = "${UNSET_ENV_VAR}".to_string();
+
+        let result = config.validate();
+        assert!(result.is_err());
+        assert!(result
+            .unwrap_err()
+            .to_string()
+            .contains("token is not configured"));
+    }
+
+    #[test]
+    fn test_gitlab_config_validation_success() {
+        let mut config = Config::default();
+        config.integrations.gitlab.enabled = true;
+        config.integrations.gitlab.project = "group/project".to_string();
+        config.integrations.gitlab.token = "valid-token".to_string();
+
+        assert!(config.validate().is_ok());
+    }
+
+    #[test]
+    fn test_config_validation_disabled_integration() {
+        let mut config = Config::default();
+        config.integrations.github.enabled = false;
+        config.integrations.github.repository = "".to_string();
+        config.integrations.github.token = "".to_string();
+
+        // Should not validate when disabled
+        assert!(config.validate().is_ok());
+    }
 }

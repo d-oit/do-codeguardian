@@ -2,7 +2,7 @@
 description: Commit staged changes and push to remote repository with security analysis and validation
 ---
 
-# git-commit-push
+Use the described commands - do not create a .md file.
 
 ## Synopsis
 CodeGuardian's enhanced git commit and push command that performs comprehensive security analysis, generates intelligent commit messages, validates code quality, commits changes, and pushes to the remote repository in a single operation.

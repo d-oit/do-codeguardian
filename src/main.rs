@@ -18,6 +18,8 @@ use anyhow::Result;
 use do_codeguardian::cli::check;
 use do_codeguardian::cli::gh_issue;
 use do_codeguardian::cli::init;
+#[cfg(feature = "ml")]
+use do_codeguardian::cli::metrics;
 use do_codeguardian::cli::report;
 use do_codeguardian::cli::{Cli, Commands};
 use do_codeguardian::commands::git_commit;
@@ -89,8 +91,8 @@ async fn main() -> Result<()> {
         Commands::Turbo(args) => {
             turbo::execute_turbo(args, config).await?;
         }
-        Commands::UpdateDocs(_args) => {
-            update_docs::execute_update_docs(&config).await?;
+        Commands::UpdateDocs(args) => {
+            update_docs::execute_update_docs(&config, &args).await?;
             if !cli.quiet {
                 tracing::info!("Documentation update successful");
             }
@@ -98,6 +100,10 @@ async fn main() -> Result<()> {
         #[cfg(feature = "ml")]
         Commands::Train(args) => {
             do_codeguardian::cli::train::run(args, &config).await?;
+        }
+        #[cfg(feature = "ml")]
+        Commands::Metrics(args) => {
+            metrics::run(args)?;
         }
     }
 

@@ -248,16 +248,58 @@ resource_monitoring = true
 
 ## GitHub Integration
 
+CodeGuardian supports seamless integration with GitHub for automated issue creation and pull request comments.
+
+### Basic Configuration
+
 ```toml
-[github]
+[integrations.github]
 enabled = true
-default_labels = ["security", "automated"]
-title_prefix = "Security Alert: "
-max_body_size = 60000
-rate_limit_buffer = 100
-issue_template = "checklist"
-dry_run = false
-auto_close_resolved = true
+repository = "owner/repo"
+token = "${CODEGUARDIAN_GITHUB_TOKEN}"
+create_issues = true
+issue_labels = ["security", "codeguardian"]
+comment_prs = true
+min_severity = "high"
+```
+
+### Environment Variables
+
+Set the GitHub token securely using environment variables:
+
+```bash
+export CODEGUARDIAN_GITHUB_TOKEN="your_github_token_here"
+```
+
+### Configuration Options
+
+- `enabled`: Enable/disable GitHub integration (default: true)
+- `repository`: GitHub repository in "owner/repo" format
+- `token`: GitHub personal access token (supports environment variables)
+- `create_issues`: Automatically create GitHub issues for findings
+- `issue_labels`: Labels to apply to created issues
+- `comment_prs`: Comment on pull requests with findings
+- `min_severity`: Minimum severity level to create issues/PR comments
+
+### Security Best Practices
+
+1. **Use Environment Variables**: Never hardcode tokens in configuration files
+2. **Token Permissions**: Use tokens with minimal required permissions
+3. **Repository Access**: Limit token access to specific repositories
+4. **Token Rotation**: Regularly rotate GitHub tokens
+
+### CI/CD Integration
+
+For CI/CD pipelines, set the environment variable in your pipeline configuration:
+
+```yaml
+# GitHub Actions
+env:
+  CODEGUARDIAN_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+# GitLab CI
+variables:
+  CODEGUARDIAN_GITHUB_TOKEN: $GITHUB_TOKEN
 ```
 
 ## Output Configuration
@@ -299,15 +341,34 @@ override_defaults = false
 
 ### Environment Variables
 
-CodeGuardian respects these environment variables:
+CodeGuardian supports environment variable substitution in configuration files using the `${VARIABLE_NAME}` syntax.
+
+#### Supported Environment Variables
 
 - `CODEGUARDIAN_CONFIG` - Path to configuration file
 - `CODEGUARDIAN_CACHE_DIR` - Cache directory path
 - `CODEGUARDIAN_LOG_LEVEL` - Logging level
-- `CODEGUARDIAN_GITHUB_TOKEN` - GitHub API token
+- `CODEGUARDIAN_GITHUB_TOKEN` - GitHub API token for integration
+- `CODEGUARDIAN_GITLAB_TOKEN` - GitLab API token for integration
 - `CODEGUARDIAN_ML_MODEL` - ML model path
 - `CODEGUARDIAN_MEMORY_LIMIT` - Memory limit in MB
 - `CODEGUARDIAN_TIMEOUT` - Analysis timeout in seconds
+
+#### Usage Examples
+
+```toml
+[integrations.github]
+enabled = true
+repository = "myorg/myrepo"
+token = "${CODEGUARDIAN_GITHUB_TOKEN}"
+
+[integrations.gitlab]
+enabled = true
+project = "mygroup/myproject"
+token = "${CODEGUARDIAN_GITLAB_TOKEN}"
+```
+
+If an environment variable is not set, the placeholder remains unchanged, maintaining backward compatibility.
 
 ### Configuration Validation
 
