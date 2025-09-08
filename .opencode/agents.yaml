@@ -278,14 +278,14 @@ agents:
       - User guidance
       - Command reference
   - name: orchestrator
-    description: Main orchestrator agent for coordinating multiple agents and workflows
+    description: Enhanced Orchestrator that provides guidance for workflow orchestration and task coordination in CodeGuardian. Analyzes complex multi-step tasks and provides recommendations for agent coordination. For parallel execution, recommends using the swarm-orchestrator agent for actual parallel processing, load balancing, and result aggregation.
     key_capabilities:
-      - Agent coordination
-      - Workflow orchestration
-      - Task delegation
-      - Resource management
-      - Process monitoring
-      - Error handling
+      - Task Complexity Assessment
+      - Agent Selection Guidance
+      - Workflow Design
+      - Dependency Mapping
+      - Resource Planning
+      - Parallel Processing Strategy
   - name: performance-optimizer
     description: Optimizes CodeGuardian performance across all components and operations
     key_capabilities:
@@ -323,14 +323,14 @@ agents:
       - Error handling
       - Scalability optimization
   - name: swarm-orchestrator
-    description: Orchestrates swarm operations and coordinates multiple agents in parallel
+    description: Dynamic coordinator that provides strategic analysis and recommendations for managing agent swarms and parallel processing in the CodeGuardian ecosystem
     key_capabilities:
-      - Swarm coordination
-      - Parallel processing
-      - Agent management
-      - Load balancing
-      - Result aggregation
-      - Performance optimization
+      - Dynamic Swarm Analysis
+      - Intelligent Agent Recommendations
+      - Parallel Execution Strategy
+      - Result Synthesis Planning
+      - Performance Optimization Guidance
+      - Conflict Resolution Strategies
   - name: task-coordinator
     description: Coordinates tasks and workflows across the CodeGuardian ecosystem
     key_capabilities:
@@ -349,3 +349,12 @@ agents:
       - Bug tracking
       - Test coverage analysis
       - Testing best practices
+  - name: ai-code-analysis-swarm
+    description: "Use this agent when you need to perform comprehensive, multi-faceted analysis of code segments, such as reviewing for bugs, performance issues, security vulnerabilities, and best practices in a collaborative swarm-like manner, typically after a logical chunk of code has been written or modified. This agent is ideal for orchestrating analysis across multiple domains simultaneously. Examples include: <example> Context: The user has just written a new function and wants it analyzed for multiple aspects. user: \"I've written this function to calculate Fibonacci numbers, can you analyze it?\" assistant: \"Let me use the Task tool to launch the ai-code-analysis-swarm agent to perform a comprehensive analysis of the code.\" <commentary> Since the user is requesting code analysis, use the ai-code-analysis-swarm agent to review the code for bugs, performance, security, and best practices. </commentary> </example> <example> Context: User is working on a project and proactively wants ongoing code analysis as they develop. user: \"As I write code, I'd like continuous analysis.\" assistant: \"I'll use the Task tool to launch the ai-code-analysis-swarm agent to monitor and analyze code in real-time.\" <commentary> Since the user implies proactive use, deploy the ai-code-analysis-swarm agent to handle ongoing analysis tasks. </commentary> </example>"
+    key_capabilities:
+      - Static code analysis and error detection
+      - Logic and bug identification
+      - Security vulnerability scanning
+      - Performance optimization analysis
+      - Code maintainability assessment
+      - Compliance and best practices validation
