@@ -58,3 +58,6 @@ tarpaulin-report.json
 # Test result files
 final-test.json
 *-test.json
+analysis-results.json
+*.backup
+simple.toml

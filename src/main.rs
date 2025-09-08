@@ -23,6 +23,7 @@ use do_codeguardian::cli::{Cli, Commands};
 use do_codeguardian::commands::git_commit;
 use do_codeguardian::commands::git_commit_push;
 use do_codeguardian::commands::turbo;
+use do_codeguardian::commands::update_docs;
 use do_codeguardian::{CodeGuardianError, Config};
 
 // CLI structure is now imported from cli.rs
@@ -87,6 +88,12 @@ async fn main() -> Result<()> {
         }
         Commands::Turbo(args) => {
             turbo::execute_turbo(args, config).await?;
+        }
+        Commands::UpdateDocs(_args) => {
+            update_docs::execute_update_docs(&config).await?;
+            if !cli.quiet {
+                tracing::info!("Documentation update successful");
+            }
         }
         #[cfg(feature = "ml")]
         Commands::Train(args) => {

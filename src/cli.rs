@@ -62,6 +62,9 @@ pub enum Commands {
     /// Train machine learning model for false positive reduction
     #[cfg(feature = "ml")]
     Train(TrainArgs),
+
+    /// Update and maintain documentation
+    UpdateDocs(UpdateDocsArgs),
 }
 
 #[derive(Parser)]
@@ -331,6 +334,29 @@ pub struct TrainArgs {
     /// Use AST-enhanced features (requires ast feature)
     #[arg(long)]
     pub enhanced: bool,
+}
+
+#[derive(Parser)]
+pub struct UpdateDocsArgs {
+    /// Force update all documentation files
+    #[arg(long)]
+    pub force: bool,
+
+    /// Only validate documentation without updating
+    #[arg(long)]
+    pub validate_only: bool,
+
+    /// Generate API documentation
+    #[arg(long)]
+    pub api: bool,
+
+    /// Generate user guide documentation
+    #[arg(long)]
+    pub user_guide: bool,
+
+    /// Generate configuration documentation
+    #[arg(long)]
+    pub config: bool,
 }
 
 #[derive(ValueEnum, Clone, Debug)]

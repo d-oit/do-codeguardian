@@ -23,6 +23,73 @@ max_memory_usage_mb = 512
 max_cpu_usage_percent = 80
 
 [analyzers]
+[analyzers.integrity]
+enabled = true
+hash_algorithm = "Blake3"
+baseline_file = ".codeguardian/integrity.baseline"
+auto_update_baseline = false
+check_permissions = true
+check_binary_files = false
+verify_checksums = true
+max_file_size = 5242880
+
+[analyzers.lint_drift]
+enabled = false
+config_files = ["Cargo.toml", "package.json", ".eslintrc.json"]
+baseline_file = ".codeguardian/lint_drift.baseline"
+auto_update_baseline = false
+strict_mode = false
+
+[analyzers.non_production]
+enabled = true
+patterns = ["debug", "test", "staging", "dev"]
+severity = "low"
+
+[analyzers.dependency]
+enabled = true
+check_outdated = true
+check_vulnerabilities = true
+check_licenses = true
+check_sizes = true
+max_dependency_size_mb = 50
+
+[analyzers.performance_analyzer]
+enabled = true
+check_nested_loops = true
+check_string_operations = true
+check_blocking_io = true
+check_algorithms = true
+check_memory_usage = true
+check_io_operations = true
+max_complexity = 10
+max_function_length = 50
+max_loop_depth = 3
+
+[analyzers.security_analyzer]
+enabled = true
+check_sql_injection = true
+check_xss = true
+check_command_injection = true
+check_hardcoded_secrets = true
+check_vulnerabilities = true
+check_permissions = true
+check_secrets = true
+min_entropy_threshold = 3.5
+
+[analyzers.code_quality]
+enabled = true
+check_magic_numbers = true
+check_complex_conditions = true
+check_deep_nesting = true
+check_commented_code = true
+check_complexity = true
+check_duplication = true
+check_naming = true
+max_complexity = 10
+max_nesting_depth = 6
+max_file_size = 500
+max_line_length = 120
+
 [analyzers.broken_files]
 enabled = false
 detect_merge_conflicts = false
@@ -31,6 +98,17 @@ detect_duplicates = false
 
 [analyzers.broken_files.conflicts]
 fail_on_conflicts = false
+
+[analyzers.broken_files.placeholders]
+severity = "medium"
+patterns = ["add content here", "implement this", "your code here", "placeholder", "todo: implement", "fill in the details", "complete this", "add your logic"]
+custom_patterns = []
+
+[analyzers.broken_files.duplicates]
+min_lines = 6
+focus_security = true
+ignore_comments = true
+ignore_imports = true
 
 [files]
 include_patterns = []
