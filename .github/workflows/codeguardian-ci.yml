@@ -85,7 +85,7 @@ jobs:
     - name: Run CodeGuardian (Full scan)
       run: |
         # Full repository scan for scheduled jobs and main branch pushes
-        # Exclude test files to avoid false positives from test data
+        # Enable all detection modes for comprehensive analysis
         ./target/release/do-codeguardian check . \
           --format json \
           --out results.json \
@@ -94,9 +94,10 @@ jobs:
           --repo ${{ github.repository }} \
           --gh-mode checklist \
           --labels "codeguardian,automated,full-scan" \
-          --fail-on-issues \
-          --exclude "tests/" \
-          --exclude "src/analyzers/git_conflict_analyzer.rs"
+          --detect-broken-files \
+          --detect-conflicts \
+          --detect-placeholders \
+          --detect-duplicates
 
         # Log whether issues were created or skipped
         echo "CodeGuardian analysis completed. Check logs above for issue creation status."
