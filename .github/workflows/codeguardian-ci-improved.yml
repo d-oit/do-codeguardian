@@ -49,8 +49,7 @@ jobs:
           --diff origin/main..HEAD \
           --format json \
           --out results.json \
-          --emit-md report.md \
-          --no-emit-gh  # Disable auto GH issue creation, we'll handle it with duplicate prevention
+          --emit-md report.md
 
         echo "CodeGuardian analysis completed. Results saved to results.json"
 
@@ -140,8 +139,7 @@ jobs:
         ./target/release/do-codeguardian check . \
           --format json \
           --out results.json \
-          --emit-md report.md \
-          --no-emit-gh  # Disable auto GH issue creation, we'll handle it with duplicate prevention
+          --emit-md report.md
 
         echo "CodeGuardian analysis completed. Results saved to results.json"
 
