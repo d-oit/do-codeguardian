@@ -1,0 +1,171 @@
+# GitHub Actions Step Template for Duplicate Issue Prevention
+# This template provides reusable steps for preventing duplicate GitHub issues
+
+# Usage in workflow:
+# - name: Check for duplicate issues
+#   uses: ./.github/workflows-templates/duplicate-prevention-step.yml
+#   with:
+#     results-json: results.json
+#     issue-title-prefix: "CodeGuardian Analysis"
+#     labels: "codeguardian,security,automated"
+#     mode: "checklist"
+
+name: "Duplicate Issue Prevention"
+description: "Prevent duplicate GitHub issues with enhanced detection"
+
+inputs:
+  results-json:
+    description: "Path to analysis results JSON file"
+    required: true
+    default: "results.json"
+  issue-title-prefix:
+    description: "Prefix for issue titles"
+    required: true
+    default: "CodeGuardian Analysis"
+  labels:
+    description: "Comma-separated labels for issues"
+    required: true
+    default: "codeguardian,security,automated"
+  mode:
+    description: "Issue generation mode (checklist|simple|children)"
+    required: false
+    default: "checklist"
+  dry-run:
+    description: "Dry run mode (true/false)"
+    required: false
+    default: "false"
+
+runs:
+  using: "composite"
+  steps:
+    - name: Setup GitHub CLI
+      shell: bash
+      run: |
+        # Install GitHub CLI if not present
+        if ! command -v gh &> /dev/null; then
+          echo "Installing GitHub CLI..."
+          sudo apt-get update && sudo apt-get install -y gh
+        fi
+        
+        # Authenticate with GitHub token
+        echo "${{ secrets.GITHUB_TOKEN }}" | gh auth login --with-token
+        
+        # Verify authentication
+        gh auth status
+
+    - name: Check for duplicate issues
+      shell: bash
+      run: |
+        # Load the duplicate prevention utilities
+        source ./scripts/github-issue-utils.sh
+        
+        # Generate unique issue title
+        ISSUE_TITLE=$(generate_issue_title "${{ inputs.issue-title-prefix }}" "${{ github.repository }}")
+        
+        # Generate issue body from results
+        TEMP_BODY_FILE="$(mktemp)"
+        
+        # Use CodeGuardian to generate issue body
+        if command -v do-codeguardian &> /dev/null; then
+          do-codeguardian gh-issue \
+            --from "${{ inputs.results-json }}" \
+            --repo "${{ github.repository }}" \
+            --mode "${{ inputs.mode }}" \
+            --title "${{ inputs.issue-title-prefix }}" \
+            --labels "${{ inputs.labels }}" \
+            --dry-run \
+            --summary-max-issues 20 > "$TEMP_BODY_FILE" 2>/dev/null || \
+          echo "Using fallback body generation" > "$TEMP_BODY_FILE"
+        else
+          # Fallback body generation
+          echo "# CodeGuardian Analysis Results" > "$TEMP_BODY_FILE"
+          echo "Generated: $(date)" >> "$TEMP_BODY_FILE"
+          echo "Repository: ${{ github.repository }}" >> "$TEMP_BODY_FILE"
+          echo "Run ID: ${{ github.run_id }}" >> "$TEMP_BODY_FILE"
+          echo "" >> "$TEMP_BODY_FILE"
+          echo "See artifacts for full results." >> "$TEMP_BODY_FILE"
+        fi
+        
+        # Get current commit hash
+        COMMIT_HASH=$(get_commit_hash)
+        
+        # Check for duplicates
+        if [ "${{ inputs.dry-run }}" = "true" ]; then
+          echo "DRY RUN: Would check for duplicates with title: $ISSUE_TITLE"
+          echo "DRY RUN: Commit hash: $COMMIT_HASH"
+          echo "DRY RUN: Body preview:"
+          head -5 "$TEMP_BODY_FILE"
+        else
+          # Detect duplicates and create/update issue
+          ISSUE_NUMBER=$(detect_duplicate_issue \
+            "${{ github.repository }}" \
+            "$ISSUE_TITLE" \
+            "$(cat "$TEMP_BODY_FILE")" \
+            "$COMMIT_HASH")
+          
+          if [ -n "$ISSUE_NUMBER" ]; then
+            echo "DUPLICATE_PREVENTED=true" >> $GITHUB_ENV
+            echo "EXISTING_ISSUE=$ISSUE_NUMBER" >> $GITHUB_ENV
+            echo "::notice::Duplicate prevented - updated existing issue #$ISSUE_NUMBER"
+          else
+            echo "DUPLICATE_PREVENTED=false" >> $GITHUB_ENV
+            echo "::notice::No duplicates found - proceeding with new issue"
+          fi
+        fi
+        
+        # Clean up
+        rm -f "$TEMP_BODY_FILE"
+
+    - name: Create or update issue (if not dry run)
+      shell: bash
+      if: inputs.dry-run == 'false' && env.DUPLICATE_PREVENTED == 'false'
+      run: |
+        source ./scripts/github-issue-utils.sh
+        
+        # Generate issue title and body
+        ISSUE_TITLE=$(generate_issue_title "${{ inputs.issue-title-prefix }}" "${{ github.repository }}")
+        TEMP_BODY_FILE="$(mktemp)"
+        
+        # Generate proper issue body using CodeGuardian
+        if command -v do-codeguardian &> /dev/null; then
+          do-codeguardian gh-issue \
+            --from "${{ inputs.results-json }}" \
+            --repo "${{ github.repository }}" \
+            --mode "${{ inputs.mode }}" \
+            --title "${{ inputs.issue-title-prefix }}" \
+            --labels "${{ inputs.labels }}" \
+            --summary-max-issues 20 > "$TEMP_BODY_FILE"
+        else
+          # Fallback body
+          echo "# Analysis Results" > "$TEMP_BODY_FILE"
+          echo "- Run ID: ${{ github.run_id }}" >> "$TEMP_BODY_FILE"
+          echo "- Workflow: ${{ github.workflow }}" >> "$TEMP_BODY_FILE"
+        fi
+        
+        COMMIT_HASH=$(get_commit_hash)
+        
+        # Create issue
+        ISSUE_NUMBER=$(create_or_update_issue \
+          "${{ github.repository }}" \
+          "$ISSUE_TITLE" \
+          "$TEMP_BODY_FILE" \
+          "${{ inputs.labels }}" \
+          "$COMMIT_HASH")
+        
+        echo "ISSUE_CREATED=$ISSUE_NUMBER" >> $GITHUB_ENV
+        echo "::notice::Created new issue #$ISSUE_NUMBER"
+        
+        rm -f "$TEMP_BODY_FILE"
+
+    - name: Report results
+      shell: bash
+      run: |
+        if [ "${{ inputs.dry-run }}" = "true" ]; then
+          echo "::notice::Dry run completed - no changes made"
+        elif [ "$DUPLICATE_PREVENTED" = "true" ]; then
+          echo "::notice::Duplicate prevention successful - updated issue #$EXISTING_ISSUE"
+        elif [ -n "$ISSUE_CREATED" ]; then
+          echo "::notice::New issue created: #$ISSUE_CREATED"
+        else
+          echo "::warning::No action taken - check logs for details"
+        fi

@@ -50,16 +50,55 @@ jobs:
           --format json \
           --out results.json \
           --emit-md report.md \
-          --emit-gh \
-          --repo ${{ github.repository }} \
-          --gh-mode checklist \
-          --labels "codeguardian,automated,pr-${{ github.event.number }}"
+          --no-emit-gh  # Disable auto GH issue creation, we'll handle it with duplicate prevention
 
-        # Log whether issues were created or skipped
-        echo "CodeGuardian analysis completed. Check logs above for issue creation status."
+        echo "CodeGuardian analysis completed. Results saved to results.json"
+
+    - name: Prevent duplicate GitHub issues
+      if: github.event_name == 'pull_request'
+      run: |
+        # Load enhanced duplicate prevention utilities
+        source ./scripts/github-issue-utils.sh
+
+        # Generate unique issue title with PR context
+        ISSUE_TITLE="CodeGuardian PR Analysis - PR #${{ github.event.number }}"
+
+        # Check for existing issues before creating
+        COMMIT_HASH=$(git rev-parse --short HEAD)
+
+        # Use enhanced duplicate detection with ML and semantic matching
+        EXISTING_ISSUE=$(detect_duplicate_issue \
+          "${{ github.repository }}" \
+          "$ISSUE_TITLE" \
+          "$(cat results.json)" \
+          "$COMMIT_HASH")
+
+        if [ -n "$EXISTING_ISSUE" ]; then
+          echo "::notice::Duplicate prevented - issue already exists: #$EXISTING_ISSUE"
+          echo "DUPLICATE_PREVENTED=true" >> $GITHUB_ENV
+          echo "EXISTING_ISSUE=$EXISTING_ISSUE" >> $GITHUB_ENV
+        else
+          echo "::notice::No duplicates found - safe to create new issue"
+          echo "DUPLICATE_PREVENTED=false" >> $GITHUB_ENV
+        fi
+
+    - name: Create GitHub issue for PR findings
+      if: github.event_name == 'pull_request' && env.DUPLICATE_PREVENTED == 'false'
+      run: |
+        # Use CodeGuardian's enhanced issue creation with duplicate prevention
+        ./target/release/do-codeguardian gh-issue \
+          --from results.json \
+          --repo "${{ github.repository }}" \
+          --title "CodeGuardian PR Analysis - PR #${{ github.event.number }}" \
+          --labels "codeguardian,automated,pr-${{ github.event.number }},duplicate-prevention-enabled" \
+          --mode checklist \
+          --summary-max-issues 15 \
+          --duplicate-check \
+          --ml-enhanced
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         GITHUB_REPOSITORY: ${{ github.repository }}
+        GITHUB_PR_NUMBER: "${{ github.event.number }}"
 
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
@@ -102,14 +141,49 @@ jobs:
           --format json \
           --out results.json \
           --emit-md report.md \
-          --emit-gh \
-          --repo ${{ github.repository }} \
-          --gh-mode checklist \
-          --labels "codeguardian,automated,full-scan" \
-          --fail-on-issues
+          --no-emit-gh  # Disable auto GH issue creation, we'll handle it with duplicate prevention
 
-        # Log whether issues were created or skipped
-        echo "CodeGuardian analysis completed. Check logs above for issue creation status."
+        echo "CodeGuardian analysis completed. Results saved to results.json"
+
+    - name: Prevent duplicate GitHub issues for full scan
+      if: github.event_name == 'push' || github.event_name == 'schedule'
+      run: |
+        # Load enhanced duplicate prevention utilities
+        source ./scripts/github-issue-utils.sh
+
+        # Generate unique issue title with date and commit info
+        ISSUE_TITLE="CodeGuardian Full Analysis - $(date +%Y%m%d)"
+        COMMIT_HASH=$(git rev-parse --short HEAD)
+
+        # Use enhanced duplicate detection
+        EXISTING_ISSUE=$(detect_duplicate_issue \
+          "${{ github.repository }}" \
+          "$ISSUE_TITLE" \
+          "$(cat results.json)" \
+          "$COMMIT_HASH")
+
+        if [ -n "$EXISTING_ISSUE" ]; then
+          echo "::notice::Duplicate prevented - issue already exists: #$EXISTING_ISSUE"
+          echo "DUPLICATE_PREVENTED=true" >> $GITHUB_ENV
+          echo "EXISTING_ISSUE=$EXISTING_ISSUE" >> $GITHUB_ENV
+        else
+          echo "::notice::No duplicates found - safe to create new issue"
+          echo "DUPLICATE_PREVENTED=false" >> $GITHUB_ENV
+        fi
+
+    - name: Create GitHub issue for full scan findings
+      if: (github.event_name == 'push' || github.event_name == 'schedule') && env.DUPLICATE_PREVENTED == 'false'
+      run: |
+        # Use CodeGuardian's enhanced issue creation
+        ./target/release/do-codeguardian gh-issue \
+          --from results.json \
+          --repo "${{ github.repository }}" \
+          --title "CodeGuardian Full Analysis - $(date +%Y%m%d)" \
+          --labels "codeguardian,automated,full-scan,duplicate-prevention-enabled" \
+          --mode checklist \
+          --summary-max-issues 20 \
+          --duplicate-check \
+          --ml-enhanced
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         GITHUB_REPOSITORY: ${{ github.repository }}

@@ -100,6 +100,25 @@ codeguardian pr analyze 123
 codeguardian issue create --auto
 ```
 
+### Duplicate Issue Prevention
+CodeGuardian includes advanced duplicate prevention to avoid creating redundant GitHub issues:
+
+```bash
+# Manual duplicate detection
+codeguardian gh-issue --from results.json --prevent-duplicates
+
+# CI/CD integration with automatic duplicate prevention
+# See: .github/workflows/codeguardian-ci-improved.yml
+```
+
+**Features:**
+- Multi-strategy duplicate detection (title, commit hash, semantic matching)
+- Intelligent issue updates instead of duplicate creation
+- Cross-workflow coordination and state sharing
+- Comprehensive validation and testing suite
+
+For detailed documentation, see [Duplicate Prevention Guide](docs/duplicate-prevention.md)
+
 ### Performance Analysis
 ```bash
 # Run performance benchmarks

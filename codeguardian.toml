@@ -42,16 +42,12 @@ strict_mode = false
 
 [analyzers.non_production]
 enabled = true
-patterns = ["debug", "test", "staging", "dev"]
-severity = "low"
 
 [analyzers.dependency]
 enabled = true
 check_outdated = true
 check_vulnerabilities = true
 check_licenses = true
-check_sizes = true
-max_dependency_size_mb = 50
 
 [analyzers.performance_analyzer]
 enabled = true
@@ -104,11 +100,22 @@ severity = "medium"
 patterns = ["add content here", "implement this", "your code here", "placeholder", "todo: implement", "fill in the details", "complete this", "add your logic"]
 custom_patterns = []
 
-[analyzers.broken_files.duplicates]
-min_lines = 6
+[analyzers.duplicate_analyzer]
+enabled = true
+min_lines = 10
 focus_security = true
-ignore_comments = true
-ignore_imports = true
+ignore_test_files = true
+max_files_to_compare = 1000
+enable_ml_similarity = true
+ml_model_path = "enhanced-model.fann"
+similarity_threshold = 0.85
+enable_github_prevention = true
+
+[analyzers.duplicate_analyzer.cache]
+enabled = true
+max_size_mb = 100
+expiration_hours = 24
+max_entries = 1000
 
 [files]
 include_patterns = []
@@ -126,9 +133,9 @@ escalation_threshold = 5
 [integrations]
 [integrations.github]
 enabled = true
-repository = ""
+repository = "d-oit/do-codeguardian"
 token = "${CODEGUARDIAN_GITHUB_TOKEN}"
-create_issues = false
+create_issues = true
 issue_labels = ["security", "codeguardian"]
 comment_prs = false
 min_severity = "high"

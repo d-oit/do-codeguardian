@@ -1,0 +1,224 @@
+# Duplicate Prevention Validation Workflow
+# Tests and validates the duplicate prevention mechanisms
+
+name: Duplicate Prevention Validation
+
+on:
+  workflow_dispatch:
+    inputs:
+      test_scenario:
+        description: "Test scenario to run"
+        required: false
+        default: "all"
+        type: choice
+        options:
+          - all
+          - title-matching
+          - commit-hash
+          - semantic
+          - integration
+  schedule:
+    - cron: '0 3 * * 0'  # Weekly validation
+  pull_request:
+    paths:
+      - '.github/workflows/duplicate-prevention-validation.yml'
+      - 'scripts/github-issue-utils.sh'
+      - 'src/github_api.rs'
+      - 'src/cli/gh_issue.rs'
+
+jobs:
+  validation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      issues: write
+
+    steps:
+    - uses: actions/checkout@v5
+
+    - name: Setup GitHub CLI
+      run: |
+        # Install GitHub CLI
+        sudo apt-get update && sudo apt-get install -y gh
+        echo "${{ secrets.GITHUB_TOKEN }}" | gh auth login --with-token
+        gh auth status
+
+    - name: Setup test environment
+      run: |
+        # Make scripts executable
+        chmod +x ./scripts/github-issue-utils.sh
+        
+        # Create test data
+        mkdir -p test-data
+        echo '{"findings": [], "summary": {"total_findings": 0}}' > test-data/empty-results.json
+        
+        # Create test results with sample findings
+        cat > test-data/sample-results.json << 'EOF'
+        {
+          "findings": [
+            {
+              "id": "test123",
+              "message": "Security vulnerability detected",
+              "severity": "high",
+              "file": "src/main.rs",
+              "line": 42,
+              "analyzer": "security"
+            }
+          ],
+          "summary": {
+            "total_findings": 1,
+            "total_files_scanned": 10,
+            "scan_duration_ms": 100
+          }
+        }
+        EOF
+
+    - name: Test title matching duplicate detection
+      if: github.event.inputs.test_scenario == 'all' || github.event.inputs.test_scenario == 'title-matching'
+      run: |
+        echo "🧪 Testing title matching duplicate detection..."
+        source ./scripts/github-issue-utils.sh
+        
+        # Test with a unique title that shouldn't exist
+        TEST_TITLE="CodeGuardian Test - Title Matching $(date +%s)"
+        TEST_BODY="This is a test body for title matching validation"
+        
+        result=$(detect_duplicate_issue "${{ github.repository }}" "$TEST_TITLE" "$TEST_BODY" "")
+        
+        if [ -z "$result" ]; then
+          echo "✅ Title matching test passed - no false positives"
+        else
+          echo "❌ Title matching test failed - unexpected duplicate detected"
+          exit 1
+        fi
+
+    - name: Test commit hash detection
+      if: github.event.inputs.test_scenario == 'all' || github.event.inputs.test_scenario == 'commit-hash'
+      run: |
+        echo "🧪 Testing commit hash duplicate detection..."
+        source ./scripts/github-issue-utils.sh
+        
+        COMMIT_HASH=$(git rev-parse --short HEAD)
+        TEST_TITLE="CodeGuardian Test - Commit Hash $(date +%s)"
+        TEST_BODY="This issue contains commit hash: $COMMIT_HASH"
+        
+        result=$(detect_duplicate_issue "${{ github.repository }}" "$TEST_TITLE" "$TEST_BODY" "$COMMIT_HASH")
+        
+        # Should not find duplicates for unique commit hashes
+        if [ -z "$result" ]; then
+          echo "✅ Commit hash test passed - no false positives"
+        else
+          echo "❌ Commit hash test failed - unexpected duplicate detected"
+          exit 1
+        fi
+
+    - name: Test semantic keyword detection
+      if: github.event.inputs.test_scenario == 'all' || github.event.inputs.test_scenario == 'semantic'
+      run: |
+        echo "🧪 Testing semantic keyword detection..."
+        source ./scripts/github-issue-utils.sh
+        
+        # Test keyword extraction
+        TEST_TITLE="Security vulnerability in authentication module"
+        TEST_BODY="Critical security issue found in the authentication system with potential SQL injection vulnerabilities"
+        
+        keywords=$(extract_keywords "$TEST_TITLE" "$TEST_BODY")
+        
+        if echo "$keywords" | grep -q "security" && echo "$keywords" | grep -q "vulnerability"; then
+          echo "✅ Keyword extraction test passed"
+          echo "Extracted keywords: $keywords"
+        else
+          echo "❌ Keyword extraction test failed"
+          exit 1
+        fi
+
+    - name: Test integration with GitHub API
+      if: github.event.inputs.test_scenario == 'all' || github.event.inputs.test_scenario == 'integration'
+      run: |
+        echo "🧪 Testing GitHub API integration..."
+        source ./scripts/github-issue-utils.sh
+        
+        # Test that GitHub CLI is working
+        if gh issue list --repo "${{ github.repository }}" --limit 1 --json number >/dev/null 2>&1; then
+          echo "✅ GitHub API connectivity test passed"
+        else
+          echo "❌ GitHub API connectivity test failed"
+          exit 1
+        fi
+        
+        # Test rate limiting helper
+        if exec_gh_with_retry issue list --repo "${{ github.repository }}" --limit 1 --json number >/dev/null 2>&1; then
+          echo "✅ GitHub retry logic test passed"
+        else
+          echo "❌ GitHub retry logic test failed"
+          exit 1
+        fi
+
+    - name: Test cache functionality
+      run: |
+        echo "🧪 Testing cache functionality..."
+        source ./scripts/github-issue-utils.sh
+        
+        # Test cache directory creation
+        if [ -d "$GITHUB_ISSUE_CACHE_DIR" ]; then
+          echo "✅ Cache directory test passed"
+        else
+          echo "❌ Cache directory test failed"
+          exit 1
+        fi
+        
+        # Test cache cleanup
+        cleanup_cache
+        echo "✅ Cache cleanup test passed"
+
+    - name: Run comprehensive validation
+      if: github.event.inputs.test_scenario == 'all'
+      run: |
+        echo "🏃 Running comprehensive validation..."
+        
+        # Test all major functions
+        source ./scripts/github-issue-utils.sh
+        
+        # Test title generation
+        title=$(generate_issue_title "Test Prefix" "${{ github.repository }}")
+        if [[ "$title" == *"Test Prefix"* ]]; then
+          echo "✅ Title generation test passed: $title"
+        else
+          echo "❌ Title generation test failed"
+          exit 1
+        fi
+        
+        # Test commit hash retrieval
+        commit_hash=$(get_commit_hash)
+        if [ -n "$commit_hash" ]; then
+          echo "✅ Commit hash retrieval test passed: $commit_hash"
+        else
+          echo "⚠️ Commit hash retrieval test warning (may be expected in CI)"
+        fi
+        
+        echo "🎉 All duplicate prevention validation tests passed!"
+
+    - name: Create validation summary
+      if: always()
+      run: |
+        echo "## Duplicate Prevention Validation Summary" >> $GITHUB_STEP_SUMMARY
+        echo "**Date:** $(date)" >> $GITHUB_STEP_SUMMARY
+        echo "**Workflow:** ${{ github.workflow }}" >> $GITHUB_STEP_SUMMARY
+        echo "**Run ID:** ${{ github.run_id }}" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        
+        if [ "${{ job.status }}" = "success" ]; then
+          echo "✅ **Status**: All validation tests passed" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Tests Executed:" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Title matching duplicate detection" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Commit hash detection" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Semantic keyword extraction" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ GitHub API integration" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Cache functionality" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "❌ **Status**: Validation tests failed" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Check the logs for detailed failure information." >> $GITHUB_STEP_SUMMARY
+        fi

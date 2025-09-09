@@ -110,6 +110,42 @@ jobs:
           exit 1
         fi
 
+    - name: Check for test-related duplicate issues
+      if: always() && github.event_name == 'push'
+      run: |
+        # Load duplicate prevention utilities
+        source ./scripts/github-issue-utils.sh
+        
+        # Check if tests failed and we should create an issue
+        if [ "${{ steps.run_tests.outcome }}" != "success" ]; then
+          ISSUE_TITLE="Test Failures - $(date +%Y%m%d-%H%M%S)"
+          
+          # Create simple test failure body
+          TEMP_BODY_FILE="$(mktemp)"
+          echo "# Test Failure Report" > "$TEMP_BODY_FILE"
+          echo "**Workflow:** ${{ github.workflow }}" >> "$TEMP_BODY_FILE"
+          echo "**Run ID:** ${{ github.run_id }}" >> "$TEMP_BODY_FILE"
+          echo "**Branch:** ${{ github.ref }}" >> "$TEMP_BODY_FILE"
+          echo "" >> "$TEMP_BODY_FILE"
+          echo "Tests failed during CI execution. See artifacts for detailed test results." >> "$TEMP_BODY_FILE"
+          
+          # Check for duplicates
+          COMMIT_HASH=$(git rev-parse --short HEAD)
+          EXISTING_ISSUE=$(detect_duplicate_issue \
+            "${{ github.repository }}" \
+            "$ISSUE_TITLE" \
+            "$(cat "$TEMP_BODY_FILE")" \
+            "$COMMIT_HASH")
+          
+          if [ -n "$EXISTING_ISSUE" ]; then
+            echo "::notice::Test failure issue already exists: #$EXISTING_ISSUE"
+          else
+            echo "::warning::Tests failed - consider creating an issue manually"
+          fi
+          
+          rm -f "$TEMP_BODY_FILE"
+        fi
+
     - name: Run Benchmarks
       id: run_benchmarks
       run: |

@@ -25,6 +25,8 @@ pub struct AnalyzerConfigs {
     pub code_quality: CodeQualityConfig,
     /// Broken files detection
     pub broken_files: BrokenFilesConfig,
+    /// Duplicate code detection
+    pub duplicate_analyzer: DuplicateAnalyzerConfig,
 }
 
 /// File integrity configuration
@@ -352,7 +354,7 @@ pub struct BrokenFilesConfig {
     /// AI placeholder detection settings
     pub placeholders: PlaceholderDetectionConfig,
     /// Duplicate detection settings
-    pub duplicates: DuplicateDetectionConfig,
+    pub duplicates: DuplicateAnalyzerConfig,
 }
 
 impl Default for BrokenFilesConfig {
@@ -364,7 +366,7 @@ impl Default for BrokenFilesConfig {
             detect_duplicates: false, // Opt-in for performance
             conflicts: ConflictDetectionConfig::default(),
             placeholders: PlaceholderDetectionConfig::default(),
-            duplicates: DuplicateDetectionConfig::default(),
+            duplicates: DuplicateAnalyzerConfig::default(),
         }
     }
 }
@@ -420,9 +422,11 @@ impl Default for PlaceholderDetectionConfig {
     }
 }
 
-/// Duplicate detection configuration
+/// Duplicate analyzer configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct DuplicateDetectionConfig {
+pub struct DuplicateAnalyzerConfig {
+    /// Enable duplicate analysis
+    pub enabled: bool,
     /// Minimum lines for duplicate detection
     pub min_lines: usize,
     /// Focus on security-relevant code
@@ -431,15 +435,55 @@ pub struct DuplicateDetectionConfig {
     pub ignore_test_files: bool,
     /// Maximum files to compare (performance limit)
     pub max_files_to_compare: usize,
+    /// Enable ML-enhanced similarity detection
+    pub enable_ml_similarity: bool,
+    /// ML model path for similarity detection
+    pub ml_model_path: Option<String>,
+    /// Similarity threshold for duplicate detection (0.0-1.0)
+    pub similarity_threshold: f64,
+    /// Enable GitHub duplicate issue prevention
+    pub enable_github_prevention: bool,
+    /// Cache settings for duplicate analysis
+    pub cache: DuplicateCacheConfig,
 }
 
-impl Default for DuplicateDetectionConfig {
+impl Default for DuplicateAnalyzerConfig {
     fn default() -> Self {
         Self {
+            enabled: true,
             min_lines: 10,
             focus_security: true,
             ignore_test_files: true,
             max_files_to_compare: 1000,
+            enable_ml_similarity: false,
+            ml_model_path: None,
+            similarity_threshold: 0.8,
+            enable_github_prevention: false,
+            cache: DuplicateCacheConfig::default(),
+        }
+    }
+}
+
+/// Cache configuration for duplicate analysis
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct DuplicateCacheConfig {
+    /// Enable caching for duplicate analysis
+    pub enabled: bool,
+    /// Maximum cache size in MB
+    pub max_size_mb: usize,
+    /// Cache expiration time in hours
+    pub expiration_hours: u32,
+    /// Maximum entries in cache
+    pub max_entries: usize,
+}
+
+impl Default for DuplicateCacheConfig {
+    fn default() -> Self {
+        Self {
+            enabled: true,
+            max_size_mb: 100,
+            expiration_hours: 24,
+            max_entries: 1000,
         }
     }
 }
