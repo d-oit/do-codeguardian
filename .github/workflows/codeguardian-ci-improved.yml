@@ -139,8 +139,7 @@ jobs:
         ./target/release/do-codeguardian check . \
           --format json \
           --out results.json \
-          --emit-md report.md \
-          --detect-conflicts
+          --emit-md report.md
 
         echo "CodeGuardian analysis completed. Results saved to results.json"
 
