@@ -97,7 +97,8 @@ jobs:
           --detect-broken-files \
           --detect-conflicts \
           --detect-placeholders \
-          --detect-duplicates
+          --detect-duplicates \
+          --fail-on-conflicts
 
         # Log whether issues were created or skipped
         echo "CodeGuardian analysis completed. Check logs above for issue creation status."
