@@ -48,11 +48,11 @@ jobs:
       run: |
         # Make scripts executable
         chmod +x ./scripts/github-issue-utils.sh
-        
+
         # Create test data
         mkdir -p test-data
         echo '{"findings": [], "summary": {"total_findings": 0}}' > test-data/empty-results.json
-        
+
         # Create test results with sample findings
         cat > test-data/sample-results.json << 'EOF'
         {
@@ -79,13 +79,13 @@ jobs:
       run: |
         echo "🧪 Testing title matching duplicate detection..."
         source ./scripts/github-issue-utils.sh
-        
+
         # Test with a unique title that shouldn't exist
         TEST_TITLE="CodeGuardian Test - Title Matching $(date +%s)"
         TEST_BODY="This is a test body for title matching validation"
-        
+
         result=$(detect_duplicate_issue "${{ github.repository }}" "$TEST_TITLE" "$TEST_BODY" "")
-        
+
         if [ -z "$result" ]; then
           echo "✅ Title matching test passed - no false positives"
         else
@@ -98,13 +98,13 @@ jobs:
       run: |
         echo "🧪 Testing commit hash duplicate detection..."
         source ./scripts/github-issue-utils.sh
-        
+
         COMMIT_HASH=$(git rev-parse --short HEAD)
         TEST_TITLE="CodeGuardian Test - Commit Hash $(date +%s)"
         TEST_BODY="This issue contains commit hash: $COMMIT_HASH"
-        
+
         result=$(detect_duplicate_issue "${{ github.repository }}" "$TEST_TITLE" "$TEST_BODY" "$COMMIT_HASH")
-        
+
         # Should not find duplicates for unique commit hashes
         if [ -z "$result" ]; then
           echo "✅ Commit hash test passed - no false positives"
@@ -118,13 +118,13 @@ jobs:
       run: |
         echo "🧪 Testing semantic keyword detection..."
         source ./scripts/github-issue-utils.sh
-        
+
         # Test keyword extraction
         TEST_TITLE="Security vulnerability in authentication module"
         TEST_BODY="Critical security issue found in the authentication system with potential SQL injection vulnerabilities"
-        
+
         keywords=$(extract_keywords "$TEST_TITLE" "$TEST_BODY")
-        
+
         if echo "$keywords" | grep -q "security" && echo "$keywords" | grep -q "vulnerability"; then
           echo "✅ Keyword extraction test passed"
           echo "Extracted keywords: $keywords"
@@ -138,7 +138,7 @@ jobs:
       run: |
         echo "🧪 Testing GitHub API integration..."
         source ./scripts/github-issue-utils.sh
-        
+
         # Test that GitHub CLI is working
         if gh issue list --repo "${{ github.repository }}" --limit 1 --json number >/dev/null 2>&1; then
           echo "✅ GitHub API connectivity test passed"
@@ -146,7 +146,7 @@ jobs:
           echo "❌ GitHub API connectivity test failed"
           exit 1
         fi
-        
+
         # Test rate limiting helper
         if exec_gh_with_retry issue list --repo "${{ github.repository }}" --limit 1 --json number >/dev/null 2>&1; then
           echo "✅ GitHub retry logic test passed"
@@ -159,7 +159,7 @@ jobs:
       run: |
         echo "🧪 Testing cache functionality..."
         source ./scripts/github-issue-utils.sh
-        
+
         # Test cache directory creation
         if [ -d "$GITHUB_ISSUE_CACHE_DIR" ]; then
           echo "✅ Cache directory test passed"
@@ -167,7 +167,7 @@ jobs:
           echo "❌ Cache directory test failed"
           exit 1
         fi
-        
+
         # Test cache cleanup
         cleanup_cache
         echo "✅ Cache cleanup test passed"
@@ -176,10 +176,10 @@ jobs:
       if: github.event.inputs.test_scenario == 'all'
       run: |
         echo "🏃 Running comprehensive validation..."
-        
+
         # Test all major functions
         source ./scripts/github-issue-utils.sh
-        
+
         # Test title generation
         title=$(generate_issue_title "Test Prefix" "${{ github.repository }}")
         if [[ "$title" == *"Test Prefix"* ]]; then
@@ -188,7 +188,7 @@ jobs:
           echo "❌ Title generation test failed"
           exit 1
         fi
-        
+
         # Test commit hash retrieval
         commit_hash=$(get_commit_hash)
         if [ -n "$commit_hash" ]; then
@@ -196,7 +196,7 @@ jobs:
         else
           echo "⚠️ Commit hash retrieval test warning (may be expected in CI)"
         fi
-        
+
         echo "🎉 All duplicate prevention validation tests passed!"
 
     - name: Create validation summary
@@ -207,7 +207,7 @@ jobs:
         echo "**Workflow:** ${{ github.workflow }}" >> $GITHUB_STEP_SUMMARY
         echo "**Run ID:** ${{ github.run_id }}" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
-        
+
         if [ "${{ job.status }}" = "success" ]; then
           echo "✅ **Status**: All validation tests passed" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY

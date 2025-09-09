@@ -341,9 +341,11 @@ impl GuardianEngine {
         findings: &[Finding],
         config_hash: &str,
     ) -> Result<()> {
+        let findings_vec = findings.to_vec();
         if let Ok(mut cache_guard) = self.cache.lock() {
+            #[allow(clippy::await_holding_lock)]
             cache_guard
-                .cache_findings(file_path, findings.to_vec(), config_hash)
+                .cache_findings(file_path, findings_vec, config_hash)
                 .await?;
         }
         Ok(())

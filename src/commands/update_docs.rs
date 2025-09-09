@@ -203,7 +203,8 @@ async fn generate_command_docs(user_guide_path: &PathBuf) -> Result<()> {
 }
 
 /// Generate documentation for the check command
-async fn generate_check_docs(user_guide_path: &PathBuf) -> Result<()> {
+#[allow(clippy::ptr_arg)]
+async fn generate_check_docs(user_guide_path: &std::path::Path) -> Result<()> {
     let content = r#"# check
 
 ## Synopsis
@@ -344,7 +345,8 @@ codeguardian check . \
 }
 
 /// Generate documentation for the report command
-async fn generate_report_docs(user_guide_path: &PathBuf) -> Result<()> {
+#[allow(clippy::ptr_arg)]
+async fn generate_report_docs(user_guide_path: &std::path::Path) -> Result<()> {
     let content = r#"# report
 
 ## Synopsis
@@ -400,7 +402,8 @@ codeguardian report --from custom-results.json --md custom-report.md
 }
 
 /// Generate documentation for the gh-issue command
-async fn generate_gh_issue_docs(user_guide_path: &PathBuf) -> Result<()> {
+#[allow(clippy::ptr_arg)]
+async fn generate_gh_issue_docs(user_guide_path: &std::path::Path) -> Result<()> {
     let content = r#"# gh-issue
 
 ## Synopsis
@@ -469,7 +472,8 @@ codeguardian gh-issue --repo myorg/myrepo \
 }
 
 /// Generate documentation for the init command
-async fn generate_init_docs(user_guide_path: &PathBuf) -> Result<()> {
+#[allow(clippy::ptr_arg)]
+async fn generate_init_docs(user_guide_path: &std::path::Path) -> Result<()> {
     let content = r#"# init
 
 ## Synopsis
@@ -523,7 +527,8 @@ codeguardian init
 }
 
 /// Generate documentation for the git-commit command
-async fn generate_git_commit_docs(user_guide_path: &PathBuf) -> Result<()> {
+#[allow(clippy::ptr_arg)]
+async fn generate_git_commit_docs(user_guide_path: &std::path::Path) -> Result<()> {
     let content = r#"# git-commit
 
 ## Synopsis
@@ -575,7 +580,8 @@ codeguardian git-commit
 }
 
 /// Generate documentation for the git-commit-push command
-async fn generate_git_commit_push_docs(user_guide_path: &PathBuf) -> Result<()> {
+#[allow(clippy::ptr_arg)]
+async fn generate_git_commit_push_docs(user_guide_path: &std::path::Path) -> Result<()> {
     let content = r#"# git-commit-push
 
 ## Synopsis
@@ -631,7 +637,8 @@ codeguardian git-commit-push --no-verify --message "Hotfix deployment"
 }
 
 /// Generate documentation for the turbo command
-async fn generate_turbo_docs(user_guide_path: &PathBuf) -> Result<()> {
+#[allow(clippy::ptr_arg)]
+async fn generate_turbo_docs(user_guide_path: &std::path::Path) -> Result<()> {
     let content = r#"# turbo
 
 ## Synopsis
@@ -696,7 +703,8 @@ codeguardian turbo . --aggressive --fail-on-issues
 }
 
 /// Generate documentation for the train command
-async fn generate_train_docs(user_guide_path: &PathBuf) -> Result<()> {
+#[allow(clippy::ptr_arg)]
+async fn generate_train_docs(user_guide_path: &std::path::Path) -> Result<()> {
     let content = r#"# train
 
 ## Synopsis
@@ -760,7 +768,8 @@ codeguardian train --enhanced --training-data custom-data.json
 }
 
 /// Generate documentation for the update-docs command
-async fn generate_update_docs_docs(user_guide_path: &PathBuf) -> Result<()> {
+#[allow(clippy::ptr_arg)]
+async fn generate_update_docs_docs(user_guide_path: &std::path::Path) -> Result<()> {
     let content = r#"# update-docs
 
 ## Synopsis

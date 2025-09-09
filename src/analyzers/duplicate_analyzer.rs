@@ -1,8 +1,11 @@
 use crate::analyzers::Analyzer;
 use crate::cache::optimized_cache::OptimizedCache;
 use crate::config::analysis::DuplicateAnalyzerConfig;
+#[cfg(feature = "ml")]
+#[allow(unused_imports)]
 use crate::github_api::GitHubApiClient;
 #[cfg(feature = "ml")]
+#[allow(unused_imports)]
 use crate::ml::fann_classifier::FannClassifier;
 use crate::types::{Finding, Severity};
 use anyhow::Result;
@@ -10,8 +13,11 @@ use regex::Regex;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::Path;
+#[cfg(feature = "ml")]
+#[allow(unused_imports)]
 use std::sync::Arc;
 #[cfg(feature = "ml")]
+#[allow(unused_imports)]
 use tokio::sync::Mutex;
 
 /// Enhanced duplicate code analyzer with ML and GitHub integration
@@ -20,7 +26,9 @@ pub struct DuplicateAnalyzer {
     security_function_patterns: Vec<Regex>,
     #[cfg(feature = "ml")]
     github_client: Option<Arc<Mutex<GitHubApiClient>>>,
+    #[allow(dead_code)]
     cache: OptimizedCache,
+    #[allow(dead_code)]
     file_cache: HashMap<String, Vec<String>>,
 }
 
@@ -132,7 +140,7 @@ impl DuplicateAnalyzer {
     }
 
     /// Use ML classifier to enhance similarity detection
-    fn calculate_ml_similarity(&self, block1: &CodeBlock, block2: &CodeBlock) -> Option<f64> {
+    fn calculate_ml_similarity(&self, _block1: &CodeBlock, _block2: &CodeBlock) -> Option<f64> {
         #[cfg(feature = "ml")]
         {
             if !self.config.enable_ml_similarity {
@@ -160,6 +168,7 @@ impl DuplicateAnalyzer {
     }
 
     /// Extract features for ML-based similarity detection
+    #[allow(dead_code)]
     fn extract_similarity_features(
         &self,
         block1: &CodeBlock,
@@ -201,6 +210,7 @@ impl DuplicateAnalyzer {
     }
 
     /// Calculate function density in a code block
+    #[allow(dead_code)]
     fn calculate_function_density(&self, block: &CodeBlock) -> f64 {
         let total_lines = block.lines.len();
         if total_lines == 0 {

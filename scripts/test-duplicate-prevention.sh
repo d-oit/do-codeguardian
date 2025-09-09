@@ -38,7 +38,7 @@ cleanup() {
     if [ -d "$TEST_DIR" ]; then
         rm -rf "$TEST_DIR"
     fi
-    
+
     # Cleanup cache
     if [ -f "./scripts/github-issue-utils.sh" ]; then
         source ./scripts/github-issue-utils.sh
@@ -49,10 +49,10 @@ cleanup() {
 # Setup test environment
 setup_test() {
     log_info "Setting up test environment..."
-    
+
     # Create test directory
     mkdir -p "$TEST_DIR"
-    
+
     # Create sample test results
     cat > "$TEST_RESULTS_FILE" << 'EOF'
 {
@@ -68,7 +68,7 @@ setup_test() {
       "suggestion": "Fix the test vulnerability"
     },
     {
-      "id": "test-duplicate-2", 
+      "id": "test-duplicate-2",
       "message": "Test code quality issue",
       "severity": "medium",
       "file": "src/main.rs",
@@ -90,39 +90,39 @@ setup_test() {
   }
 }
 EOF
-    
+
     # Make scripts executable
     chmod +x ./scripts/github-issue-utils.sh
-    
+
     log_success "Test environment setup complete"
 }
 
 # Test 1: Utility script loading
 test_script_loading() {
     log_info "Testing script loading..."
-    
+
     if [ ! -f "./scripts/github-issue-utils.sh" ]; then
         log_error "github-issue-utils.sh not found"
         return 1
     fi
-    
+
     # Source the script
     if ! source ./scripts/github-issue-utils.sh; then
         log_error "Failed to source github-issue-utils.sh"
         return 1
     fi
-    
+
     # Test basic functions exist
     if ! type detect_duplicate_issue >/dev/null 2>&1; then
         log_error "detect_duplicate_issue function not found"
         return 1
     fi
-    
+
     if ! type create_or_update_issue >/dev/null 2>&1; then
         log_error "create_or_update_issue function not found"
         return 1
     fi
-    
+
     log_success "Script loading test passed"
     return 0
 }
@@ -130,13 +130,13 @@ test_script_loading() {
 # Test 2: Title generation
 test_title_generation() {
     log_info "Testing title generation..."
-    
+
     source ./scripts/github-issue-utils.sh
-    
+
     # Test with commit hash
     GITHUB_PR_NUMBER=""
     title=$(generate_issue_title "Test Analysis" "$TEST_REPO")
-    
+
     if [[ "$title" == *"Test Analysis"* ]]; then
         log_success "Title generation test passed: $title"
         return 0
@@ -149,14 +149,14 @@ test_title_generation() {
 # Test 3: Keyword extraction
 test_keyword_extraction() {
     log_info "Testing keyword extraction..."
-    
+
     source ./scripts/github-utils.sh
-    
+
     title="Security vulnerability in authentication module"
     body="Critical security issue found with potential SQL injection vulnerabilities and authentication bypass"
-    
+
     keywords=$(extract_keywords "$title" "$body")
-    
+
     # Check that security-related keywords are extracted
     if echo "$keywords" | grep -q "security" && \
        echo "$keywords" | grep -q "vulnerability"; then
@@ -171,15 +171,15 @@ test_keyword_extraction() {
 # Test 4: Duplicate detection (should find no duplicates for unique titles)
 test_duplicate_detection_negative() {
     log_info "Testing duplicate detection (negative case)..."
-    
+
     source ./scripts/github-issue-utils.sh
-    
+
     # Use a unique title that shouldn't match anything
     unique_title="CodeGuardian Test - Unique Title $(date +%s)$RANDOM"
     test_body="This is a unique test body that should not match any existing issues"
-    
+
     result=$(detect_duplicate_issue "$TEST_REPO" "$unique_title" "$test_body" "")
-    
+
     if [ -z "$result" ]; then
         log_success "Negative duplicate detection test passed - no false positives"
         return 0
@@ -192,9 +192,9 @@ test_duplicate_detection_negative() {
 # Test 5: GitHub API connectivity
 test_github_connectivity() {
     log_info "Testing GitHub API connectivity..."
-    
+
     source ./scripts/github-issue-utils.sh
-    
+
     # Test basic GitHub CLI functionality
     if exec_gh_with_retry issue list --repo "$TEST_REPO" --limit 1 --json number >/dev/null 2>&1; then
         log_success "GitHub API connectivity test passed"
@@ -208,9 +208,9 @@ test_github_connectivity() {
 # Test 6: Cache functionality
 test_cache_functionality() {
     log_info "Testing cache functionality..."
-    
+
     source ./scripts/github-issue-utils.sh
-    
+
     # Test cache directory creation
     if [ -d "$GITHUB_ISSUE_CACHE_DIR" ]; then
         log_success "Cache directory test passed"
@@ -218,10 +218,10 @@ test_cache_functionality() {
         log_error "Cache directory test failed"
         return 1
     fi
-    
+
     # Test cache cleanup
     cleanup_cache
-    
+
     if [ $? -eq 0 ]; then
         log_success "Cache cleanup test passed"
         return 0
@@ -234,20 +234,20 @@ test_cache_functionality() {
 # Test 7: Full integration test (dry run)
 test_integration_dry_run() {
     log_info "Testing integration (dry run)..."
-    
+
     source ./scripts/github-issue-utils.sh
-    
+
     # Create temporary body file
     temp_body="$(mktemp)"
     echo "# Test Integration" > "$temp_body"
     echo "This is a test integration body" >> "$temp_body"
-    
+
     # Test dry run
     result=$(create_or_update_issue "$TEST_REPO" "Integration Test Title" "$temp_body" "test,integration" "")
-    
+
     # Cleanup
     rm -f "$temp_body"
-    
+
     # In dry run mode, we just check that the function runs without errors
     if [ $? -eq 0 ]; then
         log_success "Integration dry run test passed"
@@ -263,13 +263,13 @@ run_tests() {
     local tests_passed=0
     local tests_total=0
     local failed_tests=()
-    
+
     log_info "Starting duplicate prevention tests..."
     echo "============================================"
-    
+
     # Setup
     setup_test
-    
+
     # Run all tests
     local test_functions=(
         test_script_loading
@@ -280,11 +280,11 @@ run_tests() {
         test_cache_functionality
         test_integration_dry_run
     )
-    
+
     for test_func in "${test_functions[@]}"; do
         tests_total=$((tests_total + 1))
         log_info "Running $test_func..."
-        
+
         if $test_func; then
             tests_passed=$((tests_passed + 1))
             log_success "$test_func passed"
@@ -292,10 +292,10 @@ run_tests() {
             failed_tests+=("$test_func")
             log_error "$test_func failed"
         fi
-        
+
         echo "--------------------------------------------"
     done
-    
+
     # Print summary
     echo ""
     log_info "TEST SUMMARY"
@@ -303,14 +303,14 @@ run_tests() {
     echo "Total tests: $tests_total"
     echo "Tests passed: $tests_passed"
     echo "Tests failed: $((tests_total - tests_passed))"
-    
+
     if [ ${#failed_tests[@]} -gt 0 ]; then
         log_error "Failed tests:"
         for failed_test in "${failed_tests[@]}"; do
             echo "  - $failed_test"
         done
     fi
-    
+
     if [ $tests_passed -eq $tests_total ]; then
         log_success "🎉 All duplicate prevention tests passed!"
         return 0

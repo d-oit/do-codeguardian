@@ -63,7 +63,7 @@ keywords=$(extract_keywords "$title" "$body")
 - name: Prevent duplicate GitHub issues
   run: |
     source ./scripts/github-issue-utils.sh
-    
+
     # Check for duplicates before creating issues
     EXISTING_ISSUE=$(detect_duplicate_issue \
       "${{ github.repository }}" \
@@ -118,16 +118,16 @@ EXISTING_ISSUE=$(./scripts/github-issue-utils.sh detect-duplicate \
 - name: Prevent duplicate security issues
   run: |
     source ./scripts/github-issue-utils.sh
-    
+
     # Generate unique title
     TITLE="Security Scan $(date +%Y-%m-%d)"
-    
+
     # Check for duplicates
     if [ -n "$(detect_duplicate_issue '${{ github.repository }}' "$TITLE" "$(cat results.json)" "$(git rev-parse --short HEAD)")" ]; then
       echo "Duplicate found - skipping issue creation"
       exit 0
     fi
-    
+
     # Create new issue
     create_or_update_issue "${{ github.repository }}" "$TITLE" "results.json" "security,automated"
 ```
