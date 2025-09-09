@@ -185,6 +185,7 @@ This creates a default `codeguardian.toml` configuration file.
 }
 
 /// Generate documentation for all CodeGuardian commands
+#[allow(clippy::ptr_arg)]
 async fn generate_command_docs(user_guide_path: &PathBuf) -> Result<()> {
     info!("Generating command documentation");
 
