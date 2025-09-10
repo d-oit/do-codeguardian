@@ -281,7 +281,7 @@ mod analyzer_registry_config_tests {
 
         // Test with content that would trigger multiple analyzers
         let test_content = br#"
-// TODO: implement this
+// PLACEHOLDER: implement this function
 fn do_something() {
 <<<<<<< HEAD
     println!("version 1");
@@ -291,7 +291,7 @@ fn do_something() {
 }
 "#;
 
-        let _findings = registry
+        let findings = registry
             .analyze_file(Path::new("test.rs"), test_content)
             .unwrap();
 

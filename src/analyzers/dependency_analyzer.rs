@@ -85,7 +85,7 @@ impl DependencyAnalyzer {
         let config = AuditConfig::default();
 
         // Create auditor instance
-        let auditor = Auditor::new(&config);
+        let _auditor = Auditor::new(&config);
 
         // For now, fall back to subprocess since the audit method is private
         // This is a limitation of the cargo-audit crate API

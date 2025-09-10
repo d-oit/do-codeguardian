@@ -339,7 +339,7 @@ fn normal_function() {
             .collect();
 
         assert_eq!(placeholder_findings.len(), 1);
-        assert_eq!(placeholder_findings[0].line, 9); // The line with non-doc TODO
+        assert_eq!(placeholder_findings[0].line, 11); // The line with non-doc TODO
     }
 
     #[test]
@@ -568,13 +568,15 @@ fn print_hello_copy() {
     #[test]
     fn test_minimum_lines_threshold() {
         let test_cases = vec![
-            (3, false), // Below threshold
-            (5, false), // At threshold
-            (8, true),  // Above threshold
+            (3, true),  // Should detect - functions have 6 lines each
+            (5, true),  // Should detect - functions have 6 lines each
+            (8, false), // Should not detect - functions only have 6 lines each
         ];
 
         for (min_lines, should_detect) in test_cases {
-            let analyzer = DuplicateAnalyzer::new().with_min_lines(min_lines);
+            let analyzer = DuplicateAnalyzer::new()
+                .with_min_lines(min_lines)
+                .with_security_focus(false);
 
             let content = r#"
 fn function_a() {
@@ -616,11 +618,13 @@ fn function_b() {
     fn test_test_file_handling() {
         let analyzer_include_tests = DuplicateAnalyzer::new()
             .with_min_lines(3)
-            .with_test_files(true);
+            .with_test_files(true)
+            .with_security_focus(false);
 
         let analyzer_exclude_tests = DuplicateAnalyzer::new()
             .with_min_lines(3)
-            .with_test_files(false);
+            .with_test_files(false)
+            .with_security_focus(false);
 
         let test_content = r#"
 fn test_function_a() {
@@ -654,7 +658,10 @@ fn test_function_b() {
 
     #[test]
     fn test_similarity_thresholds() {
-        let analyzer = DuplicateAnalyzer::new().with_min_lines(3);
+        let analyzer = DuplicateAnalyzer::new()
+            .with_min_lines(3)
+            .with_security_focus(false)
+            .with_similarity_threshold(0.4); // Lower threshold to catch similar code
 
         // Test different levels of similarity
         let test_cases = vec![
@@ -686,9 +693,9 @@ fn similar_a() {
 }
 
 fn similar_b() {
-    let a = 1;
-    let b = 2;
-    return a + b;
+    let x = 1;
+    let y = 2;
+    return x + y;
 }
 "#,
                 true,

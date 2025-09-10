@@ -12,6 +12,12 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+# Default permissions for all jobs
+permissions:
+  contents: read
+  issues: read
+  pull-requests: read
+
 env:
   CARGO_TERM_COLOR: always
   RUST_BACKTRACE: 1

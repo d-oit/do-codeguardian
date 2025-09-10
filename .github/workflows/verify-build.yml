@@ -10,6 +10,10 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+# Default permissions
+permissions:
+  contents: read
+
 jobs:
   verify-build:
     name: Verify Build
@@ -59,7 +63,7 @@ jobs:
     - name: Setup CI Build Environment
       run: |
         chmod +x scripts/ci-build-optimization.sh
-        ./scripts/ci-build-optimization.sh setup
+        if [ -f "./scripts/ci-build-optimization.sh" ]; then ./scripts/ci-build-optimization.sh setup; else echo "Script not found, skipping setup"; fi
 
     - name: Verify build with ${{ matrix.features }} features
       timeout-minutes: 15

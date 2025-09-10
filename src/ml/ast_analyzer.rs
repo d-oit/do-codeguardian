@@ -2,7 +2,7 @@ use anyhow::Result;
 use std::path::Path;
 
 #[cfg(feature = "ast")]
-use syn::{visit::Visit, Block, Expr, File, Item, ItemEnum, ItemFn, ItemImpl, ItemStruct, Stmt};
+use syn::{visit::Visit, Block, Expr, Item, ItemFn, Stmt};
 
 /// AST-based code analysis for enhanced feature extraction
 pub struct AstAnalyzer {
@@ -23,7 +23,7 @@ impl AstAnalyzer {
         }
 
         // Only analyze Rust files
-        if !file_path.extension().map_or(false, |ext| ext == "rs") {
+        if file_path.extension().is_none_or(|ext| ext != "rs") {
             return Ok(AstFeatures::default());
         }
 
@@ -283,7 +283,7 @@ impl<'ast> Visit<'ast> for AstVisitor {
                     self.documented_items += 1;
                 }
             }
-            Item::Impl(impl_item) => {
+            Item::Impl(_impl_item) => {
                 self.features.impl_block_count += 1.0;
             }
             _ => {}
@@ -310,6 +310,12 @@ impl<'ast> Visit<'ast> for AstVisitor {
         }
 
         syn::visit::visit_expr(self, expr);
+    }
+}
+
+impl Default for AstAnalyzer {
+    fn default() -> Self {
+        Self::new()
     }
 }
 

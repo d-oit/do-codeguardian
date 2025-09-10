@@ -112,7 +112,7 @@ impl FeatureExtractor {
         // Early lines in files are often more important (imports, declarations, etc.)
         // Use inverse relationship: line 1 = 1.0, line 1000+ = 0.1
         let normalized = 1.0 - ((line as f32 - 1.0) / 1000.0);
-        normalized.max(0.1).min(1.0)
+        normalized.clamp(0.1, 1.0)
     }
 
     fn rule_specificity_score(&self, rule: &str) -> f32 {
@@ -131,7 +131,7 @@ impl FeatureExtractor {
     pub fn update_file_type_score(&mut self, extension: &str, is_reliable: bool) {
         let current_score = self.file_type_scores.get(extension).copied().unwrap_or(0.5);
         let adjustment = if is_reliable { 0.05 } else { -0.05 };
-        let new_score = (current_score + adjustment).max(0.1).min(0.9);
+        let new_score = (current_score + adjustment).clamp(0.1, 0.9);
         self.file_type_scores
             .insert(extension.to_string(), new_score);
     }
@@ -144,9 +144,15 @@ impl FeatureExtractor {
             .copied()
             .unwrap_or(0.5);
         let adjustment = if is_reliable { 0.02 } else { -0.02 };
-        let new_score = (current_score + adjustment).max(0.1).min(0.95);
+        let new_score = (current_score + adjustment).clamp(0.1, 0.95);
         self.analyzer_confidence
             .insert(analyzer.to_string(), new_score);
+    }
+}
+
+impl Default for FeatureExtractor {
+    fn default() -> Self {
+        Self::new()
     }
 }
 

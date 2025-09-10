@@ -57,7 +57,7 @@ jobs:
 
             let response;
             try {
-              response = await github.models.run({
+              response = await github.rest.actions.run({
                 model: "github/semantic-classifier",
                 input: prompt
               });

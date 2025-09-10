@@ -78,7 +78,7 @@ mod performance_tests {
         // Large file with AI content
         let large_content = generate_file_with_ai_content(5000);
         let start = Instant::now();
-        let findings = analyzer
+        let _findings = analyzer
             .analyze(Path::new("large.rs"), large_content.as_bytes())
             .unwrap();
         let duration = start.elapsed();
@@ -97,7 +97,7 @@ mod performance_tests {
         // Small file with duplicates
         let small_content = generate_file_with_duplicates(50);
         let start = Instant::now();
-        let findings = analyzer
+        let _findings = analyzer
             .analyze(Path::new("small.rs"), small_content.as_bytes())
             .unwrap();
         let duration = start.elapsed();
@@ -111,7 +111,7 @@ mod performance_tests {
         // Medium file with duplicates (duplicate analysis is more expensive)
         let medium_content = generate_file_with_duplicates(500);
         let start = Instant::now();
-        let findings = analyzer
+        let _findings = analyzer
             .analyze(Path::new("medium.rs"), medium_content.as_bytes())
             .unwrap();
         let duration = start.elapsed();
@@ -264,7 +264,7 @@ mod performance_tests {
         let many_placeholders = generate_file_with_many_placeholders(100);
         let analyzer = AiContentAnalyzer::new();
         let start = Instant::now();
-        let findings = analyzer
+        let _findings = analyzer
             .analyze(Path::new("placeholders.rs"), many_placeholders.as_bytes())
             .unwrap();
         let duration = start.elapsed();
@@ -279,7 +279,7 @@ mod performance_tests {
         let many_duplicates = generate_file_with_many_similar_functions(50);
         let analyzer = DuplicateAnalyzer::new().with_min_lines(3);
         let start = Instant::now();
-        let findings = analyzer
+        let _findings = analyzer
             .analyze(Path::new("duplicates.rs"), many_duplicates.as_bytes())
             .unwrap();
         let duration = start.elapsed();
@@ -305,7 +305,7 @@ mod performance_tests {
             let modified_content = format!("{}\n// Iteration {}\n", base_content, i);
 
             let start = Instant::now();
-            let findings = analyzer
+            let _findings = analyzer
                 .analyze(Path::new("test.rs"), modified_content.as_bytes())
                 .unwrap();
             total_duration += start.elapsed();
@@ -536,7 +536,7 @@ mod benchmark_tests {
             let content = generate_file_with_conflicts(size);
 
             let start = Instant::now();
-            let findings = analyzer
+            let _findings = analyzer
                 .analyze(Path::new("test.rs"), content.as_bytes())
                 .unwrap();
             let duration = start.elapsed();

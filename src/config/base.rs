@@ -38,20 +38,26 @@ impl Config {
         let content = std::fs::read_to_string(path)
             .with_context(|| format!("Failed to read config file: {}", path.display()))?;
         let processed_content = Self::process_env_vars(&content)?;
-        let config: Config = toml::from_str(&processed_content).with_context(|| {
-            // Try to get more specific error info
-            match toml::from_str::<toml::Value>(&processed_content) {
-                Ok(_) => format!(
-                    "Failed to parse config file: {} - structure mismatch",
-                    path.display()
-                ),
-                Err(e) => format!(
-                    "Failed to parse config file: {} - TOML syntax error: {}",
-                    path.display(),
-                    e
-                ),
-            }
+
+        // First, try to parse as TOML to get better error messages
+        let toml_value: toml::Value = toml::from_str(&processed_content).with_context(|| {
+            format!(
+                "Failed to parse config file: {} - TOML syntax error",
+                path.display()
+            )
         })?;
+
+        // Then try to deserialize into Config struct with better error handling
+        let config: Config = toml_value.try_into().map_err(|e| {
+            anyhow::anyhow!(
+                "Failed to parse config file: {} - configuration structure error: {}. \
+                 This may be due to missing required fields or type mismatches. \
+                 Consider using 'codeguardian init --default' to generate a valid config.",
+                path.display(),
+                e
+            )
+        })?;
+
         config.validate()?;
         Ok(config)
     }

@@ -6,10 +6,22 @@ on:
     - cron: '0 1 * * *'
   workflow_dispatch:
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+# Default permissions
+permissions:
+  contents: read
+
 jobs:
   comprehensive-analysis:
     name: 🔍 Comprehensive Nightly Analysis
     runs-on: ubuntu-latest
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}
+      cancel-in-progress: true
+
     timeout-minutes: 60
 
     steps:
@@ -23,6 +35,9 @@ jobs:
       with:
         toolchain: stable
         cache: true
+
+    - name: 📦 Install jq for JSON processing
+      run: sudo apt-get update && sudo apt-get install -y jq
 
     - name: 🔨 Build CodeGuardian
       run: cargo build --release --quiet

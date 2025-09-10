@@ -1,7 +1,7 @@
 #[cfg(feature = "ast")]
 use crate::ml::ast_analyzer::{AstAnalyzer, AstFeatures};
 use crate::ml::feature_extractor::FeatureExtractor;
-use crate::types::{Finding, Severity};
+use crate::types::Finding;
 use anyhow::Result;
 use std::collections::HashMap;
 use std::path::Path;
@@ -20,6 +20,7 @@ struct CachedFileAnalysis {
     ast_features: AstFeatures,
     #[cfg(not(feature = "ast"))]
     _placeholder: (),
+    #[allow(dead_code)]
     file_hash: u64,
     timestamp: std::time::SystemTime,
 }
@@ -188,6 +189,12 @@ impl EnhancedFeatureExtractor {
             cached_files: self.file_cache.len(),
             cache_size_bytes: self.file_cache.len() * std::mem::size_of::<CachedFileAnalysis>(),
         }
+    }
+}
+
+impl Default for EnhancedFeatureExtractor {
+    fn default() -> Self {
+        Self::new()
     }
 }
 

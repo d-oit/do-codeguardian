@@ -60,6 +60,34 @@ impl GitConflictAnalyzer {
                             .with_description("Unresolved merge conflict start marker found. This indicates incomplete merge resolution.".to_string())
                             .with_suggestion("Resolve the merge conflict by choosing the appropriate code and removing conflict markers".to_string()),
                         );
+                    } else if self.conflict_separator_pattern.is_match(line) {
+                        // Standalone separator (orphaned)
+                        findings.push(
+                            Finding::new(
+                                "git_conflict",
+                                "merge_conflict_separator",
+                                Severity::Critical,
+                                file_path.to_path_buf(),
+                                line_number,
+                                "Orphaned git merge conflict separator detected".to_string(),
+                            )
+                            .with_description("Merge conflict separator found without corresponding start marker.".to_string())
+                            .with_suggestion("Remove orphaned conflict markers and ensure proper merge resolution".to_string()),
+                        );
+                    } else if self.conflict_end_pattern.is_match(line) {
+                        // Standalone end marker (orphaned)
+                        findings.push(
+                            Finding::new(
+                                "git_conflict",
+                                "merge_conflict_end",
+                                Severity::Critical,
+                                file_path.to_path_buf(),
+                                line_number,
+                                "Orphaned git merge conflict end marker detected".to_string(),
+                            )
+                            .with_description("Merge conflict end marker found without corresponding start marker.".to_string())
+                            .with_suggestion("Remove orphaned conflict markers and ensure proper merge resolution".to_string()),
+                        );
                     }
                 }
                 ConflictState::InConflict => {

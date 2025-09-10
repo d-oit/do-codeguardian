@@ -26,6 +26,8 @@ jobs:
       uses: actions/checkout@v5
     - name: Initialize CodeQL
       uses: github/codeql-action/init@v3
+    - name: Autobuild
+      uses: github/codeql-action/autobuild@v3
       with:
         languages: ${{ matrix.language }}
 

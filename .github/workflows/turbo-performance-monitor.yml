@@ -1,3 +1,4 @@
+---
 name: 📊 Turbo Performance Monitor
 
 on:
@@ -11,14 +12,26 @@ on:
         default: 'standard'
         type: choice
         options:
-        - standard
-        - comprehensive
-        - stress-test
+          - standard
+          - comprehensive
+          - stress-test
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+# Default permissions
+permissions:
+  contents: read
 
 jobs:
   performance-benchmark:
     name: 🚀 Performance Benchmark
     runs-on: ubuntu-latest
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}
+      cancel-in-progress: true
+
     timeout-minutes: 15
 
     strategy:
@@ -35,62 +48,65 @@ jobs:
             size: "large"
 
     steps:
-    - name: 📥 Checkout repository
-      uses: actions/checkout@v5
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v5
 
-    - name: 🦀 Setup Rust
-      uses: actions-rust-lang/setup-rust-toolchain@v1
-      with:
-        toolchain: stable
-        cache: true
+      - name: 🦀 Setup Rust
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: stable
+          cache: true
 
-    - name: 🔨 Build CodeGuardian
-      run: cargo build --release --quiet
+      - name: 📦 Install jq for JSON processing
+        run: sudo apt-get update && sudo apt-get install -y jq
 
-    - name: 🧪 Generate Test Files
-      run: |
-        echo "🧪 Generating test files for ${{ matrix.test-scenario.name }}"
-        mkdir -p test-codebase
+      - name: 🔨 Build CodeGuardian
+        run: cargo build --release --quiet
 
-        # Generate test files based on scenario
-        for i in $(seq 1 ${{ matrix.test-scenario.file-count }}); do
-          cat > "test-codebase/test_file_$i.rs" << EOF
-        // Test file $i for performance benchmarking
-        use std::collections::HashMap;
+      - name: 🧪 Generate Test Files
+        run: |
+          echo "🧪 Generating test files for ${{ matrix.test-scenario.name }}"
+          mkdir -p test-codebase
 
-        fn main() {
-            let api_key = "sk-test-key-$i"; // Test secret
-            let mut data = HashMap::new();
+          # Generate test files based on scenario
+          for i in $(seq 1 ${{ matrix.test-scenario.file-count }}); do
+            cat > "test-codebase/test_file_$i.rs" << EOF
+          // Test file $i for performance benchmarking
+          use std::collections::HashMap;
 
-            // TODO: Optimize this function
-            for x in 0..100 {
-                for y in 0..100 {
-                    if x * y > 5000 {
-                        data.insert(format!("key_{}_{}", x, y), x + y);
-                    }
-                }
-            }
+          fn main() {
+              let api_key = "sk-test-key-$i"; // Test secret
+              let mut data = HashMap::new();
 
-            // FIXME: This is inefficient
-            let mut result = String::new();
-            for k in 0..1000 {
-                result = result + &format!("item_{}", k);
-            }
-        }
-        EOF
-        done
+              # TODO: Optimize this function
+              for x in 0..100 {
+                  for y in 0..100 {
+                      if x * y > 5000 {
+                          data.insert(format!("key_{}_{}", x, y), x + y);
+                      }
+                  }
+              }
 
-        echo "✅ Generated ${{ matrix.test-scenario.file-count }} test files"
+              # FIXME: This is inefficient
+              let mut result = String::new();
+              for k in 0..1000 {
+                  result = result + &format!("item_{}", k);
+              }
+          }
+          EOF
+          done
 
-    - name: ⚖️ Benchmark Standard vs Turbo
-      id: benchmark
-      run: |
-        echo "⚖️ Running Performance Benchmark: ${{ matrix.test-scenario.name }}"
-        echo "=============================================================="
+          echo "✅ Generated ${{ matrix.test-scenario.file-count }} test files"
 
-        # Benchmark standard analysis
-        echo "🐌 Standard Analysis..."
-        START_STANDARD=$(date +%s.%N)
+      - name: ⚖️ Benchmark Standard vs Turbo
+        id: benchmark
+        run: |
+          echo "⚖️ Running Performance Benchmark: ${{ matrix.test-scenario.name }}"
+          echo "=============================================================="
+
+          # Benchmark standard analysis
+          echo "🐌 Standard Analysis..."
+          START_STANDARD=$(date +%s.%N)
         if command -v timeout >/dev/null 2>&1; then
           timeout 300s ./target/release/do-codeguardian check test-codebase \
             --format json --out standard-bench.json 2>/dev/null || {
@@ -108,15 +124,15 @@ jobs:
         END_STANDARD=$(date +%s.%N)
         STANDARD_DURATION=$(echo "$END_STANDARD - $START_STANDARD" | bc -l)
 
-        # Benchmark turbo analysis
-        echo "🚀 Turbo Analysis..."
-        START_TURBO=$(date +%s.%N)
+          # Benchmark turbo analysis
+          echo "🚀 Turbo Analysis..."
+          START_TURBO=$(date +%s.%N)
         ./target/release/do-codeguardian turbo test-codebase \
           --format json --output turbo-bench.json --metrics
         END_TURBO=$(date +%s.%N)
         TURBO_DURATION=$(echo "$END_TURBO - $START_TURBO" | bc -l)
 
-        # Calculate metrics
+          # Calculate metrics
         if [ -f "standard-bench.json" ] && [ "$STANDARD_TIMEOUT" != "true" ]; then
           STANDARD_FILES=$(jq '.summary.total_files_scanned' standard-bench.json)
           STANDARD_FINDINGS=$(jq '.summary.total_findings' standard-bench.json)
@@ -131,41 +147,41 @@ jobs:
         TURBO_FINDINGS=$(jq '.summary.total_findings' turbo-bench.json)
         TURBO_SPEED=$(echo "scale=1; $TURBO_FILES / $TURBO_DURATION" | bc -l)
 
-        # Calculate speedup
+          # Calculate speedup
         if [ "$STANDARD_SPEED" != "timeout" ]; then
           SPEEDUP=$(echo "scale=1; $TURBO_SPEED / $STANDARD_SPEED" | bc -l)
         else
           SPEEDUP="∞"
         fi
 
-        # Output results
-        echo "📊 Benchmark Results:"
-        echo "===================="
-        echo "Standard: ${STANDARD_DURATION}s, $STANDARD_FILES files, $STANDARD_SPEED files/sec"
-        echo "Turbo: ${TURBO_DURATION}s, $TURBO_FILES files, $TURBO_SPEED files/sec"
-        echo "Speedup: ${SPEEDUP}x"
+          # Output results
+          echo "📊 Benchmark Results:"
+          echo "===================="
+          echo "Standard: ${STANDARD_DURATION}s, $STANDARD_FILES files, $STANDARD_SPEED files/sec"
+          echo "Turbo: ${TURBO_DURATION}s, $TURBO_FILES files, $TURBO_SPEED files/sec"
+          echo "Speedup: ${SPEEDUP}x"
 
-        # Set outputs
-        echo "standard_duration=${STANDARD_DURATION}" >> $GITHUB_OUTPUT
-        echo "turbo_duration=${TURBO_DURATION}" >> $GITHUB_OUTPUT
-        echo "standard_speed=${STANDARD_SPEED}" >> $GITHUB_OUTPUT
-        echo "turbo_speed=${TURBO_SPEED}" >> $GITHUB_OUTPUT
-        echo "speedup=${SPEEDUP}" >> $GITHUB_OUTPUT
-        echo "files_analyzed=${TURBO_FILES}" >> $GITHUB_OUTPUT
+          # Set outputs
+          echo "standard_duration=${STANDARD_DURATION}" >> $GITHUB_OUTPUT
+          echo "turbo_duration=${TURBO_DURATION}" >> $GITHUB_OUTPUT
+          echo "standard_speed=${STANDARD_SPEED}" >> $GITHUB_OUTPUT
+          echo "turbo_speed=${TURBO_SPEED}" >> $GITHUB_OUTPUT
+          echo "speedup=${SPEEDUP}" >> $GITHUB_OUTPUT
+          echo "files_analyzed=${TURBO_FILES}" >> $GITHUB_OUTPUT
 
     - name: 📈 Performance Report
       run: |
-        echo "📈 Performance Report - ${{ matrix.test-scenario.name }}"
-        echo "=================================================="
-        echo ""
-        echo "| Metric | Standard | Turbo | Improvement |"
-        echo "|--------|----------|-------|-------------|"
-        echo "| Duration | ${{ steps.benchmark.outputs.standard_duration }}s | ${{ steps.benchmark.outputs.turbo_duration }}s | ${{ steps.benchmark.outputs.speedup }}x faster |"
-        echo "| Speed | ${{ steps.benchmark.outputs.standard_speed }} files/sec | ${{ steps.benchmark.outputs.turbo_speed }} files/sec | ${{ steps.benchmark.outputs.speedup }}x faster |"
-        echo "| Files | ${{ steps.benchmark.outputs.files_analyzed }} | ${{ steps.benchmark.outputs.files_analyzed }} | Same |"
-        echo ""
+          echo "📈 Performance Report - ${{ matrix.test-scenario.name }}"
+          echo "=================================================="
+          echo ""
+          echo "| Metric | Standard | Turbo | Improvement |"
+          echo "|--------|----------|-------|-------------|"
+          echo "| Duration | ${{ steps.benchmark.outputs.standard_duration }}s | ${{ steps.benchmark.outputs.turbo_duration }}s | ${{ steps.benchmark.outputs.speedup }}x faster |"
+          echo "| Speed | ${{ steps.benchmark.outputs.standard_speed }} files/sec | ${{ steps.benchmark.outputs.turbo_speed }} files/sec | ${{ steps.benchmark.outputs.speedup }}x faster |"
+          echo "| Files | ${{ steps.benchmark.outputs.files_analyzed }} | ${{ steps.benchmark.outputs.files_analyzed }} | Same |"
+          echo ""
 
-        # Performance assertions
+          # Performance assertions
         MIN_SPEEDUP=5.0
         ACTUAL_SPEEDUP="${{ steps.benchmark.outputs.speedup }}"
 
@@ -190,21 +206,25 @@ jobs:
   performance-regression-check:
     name: 🔍 Performance Regression Check
     runs-on: ubuntu-latest
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}
+      cancel-in-progress: true
+
     needs: performance-benchmark
 
     steps:
-    - name: 📥 Download benchmark results
-      uses: actions/download-artifact@v5
-      with:
-        pattern: benchmark-*
-        merge-multiple: true
+      - name: 📥 Download benchmark results
+        uses: actions/download-artifact@v5
+        with:
+          pattern: benchmark-*
+          merge-multiple: true
 
     - name: 🔍 Analyze Performance Trends
       run: |
-        echo "🔍 Performance Regression Analysis"
-        echo "=================================="
+          echo "🔍 Performance Regression Analysis"
+          echo "=================================="
 
-        # Expected minimum performance thresholds
+          # Expected minimum performance thresholds
         declare -A MIN_SPEEDS=(
           ["small"]=200
           ["medium"]=150

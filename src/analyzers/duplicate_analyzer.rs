@@ -151,7 +151,7 @@ impl DuplicateAnalyzer {
             if let Some(model_path) = &self.config.ml_model_path {
                 if let Ok(classifier) = FannClassifier::load(model_path) {
                     // Extract features for ML classification
-                    if let Some(features) = self.extract_similarity_features(block1, block2) {
+                    if let Some(features) = self.extract_similarity_features(_block1, _block2) {
                         match classifier.predict(&features) {
                             Ok(score) => return Some(score as f64),
                             Err(_) => return None,
@@ -270,30 +270,59 @@ impl DuplicateAnalyzer {
         let lines: Vec<String> = content
             .lines()
             .map(|line| self.normalize_line(line))
+            .filter(|line| !line.is_empty()) // Remove empty lines completely
             .collect();
 
         let mut blocks = Vec::new();
         let mut current_block = Vec::new();
         let mut start_line = 0;
+        let mut brace_depth = 0;
+        let mut in_function = false;
 
         for (line_num, line) in lines.iter().enumerate() {
-            if line.is_empty() || line.starts_with("//") || line.starts_with('#') {
-                if current_block.len() >= self.config.min_lines {
+            // Skip comment lines
+            if line.starts_with("//") || line.starts_with('#') {
+                continue;
+            }
+
+            // Track function boundaries and brace depth
+            if line.contains("fn ") || line.contains("function ") || line.contains("def ") {
+                // Start of a new function - finish current block if it exists
+                if !current_block.is_empty() && current_block.len() >= self.config.min_lines {
                     blocks.push(CodeBlock {
                         lines: current_block.clone(),
-                        start_line: start_line + 1, // 1-indexed
+                        start_line: start_line + 1,
                         end_line: line_num,
                     });
                 }
                 current_block.clear();
-                start_line = line_num + 1;
-            } else {
-                current_block.push(line.clone());
+                start_line = line_num;
+                in_function = true;
+                brace_depth = 0;
+            }
+
+            // Count braces to track function boundaries
+            brace_depth += line.matches('{').count() as i32;
+            brace_depth -= line.matches('}').count() as i32;
+
+            current_block.push(line.clone());
+
+            // End of function when brace depth returns to 0
+            if in_function && brace_depth == 0 && line.contains('}') {
+                if current_block.len() >= self.config.min_lines {
+                    blocks.push(CodeBlock {
+                        lines: current_block.clone(),
+                        start_line: start_line + 1,
+                        end_line: line_num + 1,
+                    });
+                }
+                current_block.clear();
+                in_function = false;
             }
         }
 
-        // Don't forget the last block
-        if current_block.len() >= self.config.min_lines {
+        // Handle any remaining block
+        if !current_block.is_empty() && current_block.len() >= self.config.min_lines {
             blocks.push(CodeBlock {
                 lines: current_block,
                 start_line: start_line + 1,
@@ -361,7 +390,9 @@ impl DuplicateAnalyzer {
                     };
 
                 if similarity >= self.config.similarity_threshold
-                    && (self.is_security_relevant(&blocks[i]) || !self.config.focus_security)
+                    && (self.is_security_relevant(&blocks[i])
+                        || self.is_security_relevant(&blocks[j])
+                        || !self.config.focus_security)
                 {
                     let severity = self.calculate_severity(similarity, &blocks[i], &blocks[j]);
 
@@ -445,15 +476,35 @@ impl DuplicateAnalyzer {
         let mut patterns = Vec::new();
         let combined_text = format!("{} {}", block1.lines.join(" "), block2.lines.join(" "));
 
-        for pattern in &self.security_function_patterns {
-            if pattern.is_match(&combined_text) {
-                // Extract the matched pattern name for reporting
-                let pattern_str = pattern.as_str();
-                if let Some(name_start) = pattern_str.find('(') {
-                    if let Some(name_end) = pattern_str[name_start..].find(')') {
-                        let pattern_name = &pattern_str[name_start + 1..name_start + name_end];
-                        patterns.push(pattern_name.to_string());
-                    }
+        // Define pattern mappings for better reporting
+        let pattern_mappings = vec![
+            (
+                r"(?i)(authenticate|login|signin|verify|validate)",
+                "authentication",
+            ),
+            (
+                r"(?i)(authorize|permission|access|role|privilege)",
+                "authorization",
+            ),
+            (
+                r"(?i)(encrypt|decrypt|hash|crypto|cipher|key|token)",
+                "cryptography",
+            ),
+            (
+                r"(?i)(validate|sanitize|escape|filter|clean)",
+                "input_validation",
+            ),
+            (r"(?i)(error|exception|panic|fail|abort)", "error_handling"),
+            (
+                r"(?i)(password|secret|credential|session|cookie)",
+                "sensitive_data",
+            ),
+        ];
+
+        for (pattern_str, category) in pattern_mappings {
+            if let Ok(regex) = Regex::new(pattern_str) {
+                if regex.is_match(&combined_text) {
+                    patterns.push(category.to_string());
                 }
             }
         }
@@ -773,8 +824,8 @@ fn authenticate_admin(username: &str, password: &str) -> bool {
         let patterns = analyzer.detect_security_patterns_in_duplicate(&block1, &block2);
         assert!(!patterns.is_empty());
         assert!(
-            patterns.contains(&"authenticate".to_string())
-                || patterns.contains(&"validate".to_string())
+            patterns.contains(&"authentication".to_string())
+                || patterns.contains(&"input_validation".to_string())
         );
     }
 }

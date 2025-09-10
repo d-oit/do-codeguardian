@@ -15,7 +15,7 @@ mod edge_case_tests {
     #[test]
     fn test_file_exclusion_edge_cases() {
         let security_analyzer = SecurityAnalyzer::new();
-        let non_prod_analyzer = NonProductionAnalyzer::new();
+        let non_prod_analyzer = NonProductionAnalyzer::default();
 
         // Edge case 1: Files with "test" in middle of name (should NOT be excluded)
         let legitimate_files = [

@@ -22,6 +22,10 @@ on:
 env:
   CARGO_TERM_COLOR: always
 
+# Default permissions
+permissions:
+  contents: read
+
 jobs:
   turbo-analysis:
     name: 🚀 Turbo Security Analysis
@@ -49,6 +53,9 @@ jobs:
       with:
         toolchain: stable
         cache: true
+
+    - name: 📦 Install jq for JSON processing
+      run: sudo apt-get update && sudo apt-get install -y jq
 
     - name: 📦 Cache Rust dependencies
       uses: actions/cache@v4
@@ -88,7 +95,7 @@ jobs:
         # Run analysis with timing
         START_TIME=$(date +%s.%N)
 
-        timeout ${{ matrix.mode.timeout }} cargo run --release -- turbo . \
+        timeout ${{ matrix.mode.timeout }} ./target/release/do-codeguardian turbo . \
           ${{ matrix.mode.args }} \
           $EXTRA_ARGS \
           --format json \

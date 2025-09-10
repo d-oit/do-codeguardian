@@ -1,3 +1,4 @@
+---
 name: 🚀 Turbo Release Validation
 
 on:
@@ -11,14 +12,26 @@ on:
         default: 'comprehensive'
         type: choice
         options:
-        - basic
-        - comprehensive
-        - stress-test
+          - basic
+          - comprehensive
+          - stress-test
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+# Default permissions
+permissions:
+  contents: read
 
 jobs:
   release-validation:
     name: 🎯 Release Validation
     runs-on: ${{ matrix.os }}
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}
+      cancel-in-progress: true
+
     timeout-minutes: 30
 
     strategy:
@@ -33,83 +46,87 @@ jobs:
             target: x86_64-apple-darwin
 
     steps:
-    - name: 📥 Checkout repository
-      uses: actions/checkout@v5
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v5
 
-    - name: 🦀 Setup Rust
-      uses: actions-rust-lang/setup-rust-toolchain@v1
-      with:
-        toolchain: stable
-        target: ${{ matrix.target }}
-        cache: true
+      - name: 🦀 Setup Rust
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: stable
+          target: ${{ matrix.target }}
+          cache: true
 
-    - name: 🔨 Build Release Binary
-      run: |
-        echo "🔨 Building CodeGuardian for ${{ matrix.target }}"
-        cargo build --release --target ${{ matrix.target }}
-        echo "✅ Build complete"
+      - name: 📦 Install jq for JSON processing
+        run: sudo apt-get update && sudo apt-get install -y jq
 
-    - name: 🧪 Comprehensive Turbo Testing
-      shell: bash
-      run: |
-        echo "🧪 Comprehensive Turbo Testing on ${{ matrix.os }}"
-        echo "================================================"
+      - name: 🔨 Build Release Binary
+        run: |
+          echo "🔨 Building CodeGuardian for ${{ matrix.target }}"
+          cargo build --release --target ${{ matrix.target }}
+          echo "✅ Build complete"
 
-        # Set binary path based on OS
-        if [ "${{ matrix.os }}" = "windows-latest" ]; then
-          BINARY="./target/${{ matrix.target }}/release/codeguardian.exe"
-        else
-          BINARY="./target/${{ matrix.target }}/release/codeguardian"
-        fi
+      - name: 🧪 Comprehensive Turbo Testing
+        shell: bash
+        run: |
+          echo "🧪 Comprehensive Turbo Testing on ${{ matrix.os }}"
+          echo "================================================"
 
-        # Test 1: Basic functionality
-        echo "🔍 Test 1: Basic Turbo functionality"
-        $BINARY turbo --help > /dev/null
-        echo "✅ Help command works"
-
-        # Test 2: Self-analysis
-        echo "🔍 Test 2: Self-analysis performance"
-        START_TIME=$(date +%s 2>/dev/null || python -c "import time; print(int(time.time()))")
-
-        $BINARY turbo . \
-          --max-parallel 4 \
-          --memory-limit 512 \
-          --format json \
-          --output release-test.json \
-          --metrics
-
-        END_TIME=$(date +%s 2>/dev/null || python -c "import time; print(int(time.time()))")
-        DURATION=$((END_TIME - START_TIME))
-
-        echo "✅ Self-analysis completed in ${DURATION}s"
-
-        # Test 3: Validate results
-        echo "🔍 Test 3: Results validation"
-        if [[ -f "release-test.json" ]]; then
-          # Check if JSON is valid and has expected structure
-          if command -v jq >/dev/null 2>&1; then
-            FINDINGS=$(jq '.summary.total_findings' release-test.json)
-            FILES=$(jq '.summary.total_files_scanned' release-test.json)
-            echo "✅ Found $FINDINGS findings across $FILES files"
+          # Set binary path based on OS
+          if [ "${{ matrix.os }}" = "windows-latest" ]; then
+            BINARY="./target/${{ matrix.target }}/release/codeguardian.exe"
           else
-            echo "✅ Results file generated successfully"
+            BINARY="./target/${{ matrix.target }}/release/codeguardian"
           fi
-        else
-          echo "❌ Results file not generated"
-          exit 1
-        fi
 
-        # Test 4: Performance validation
-        echo "🔍 Test 4: Performance validation"
-        if [[ $DURATION -lt 30 ]]; then
-          echo "✅ Performance target met: ${DURATION}s < 30s"
-        else
+          # Test 1: Basic functionality
+          echo "🔍 Test 1: Basic Turbo functionality"
+          $BINARY turbo --help > /dev/null
+          echo "✅ Help command works"
+
+          # Test 2: Self-analysis
+          echo "🔍 Test 2: Self-analysis performance"
+          START_TIME=$(date +%s 2>/dev/null || \
+            python -c "import time; print(int(time.time()))")
+
+          $BINARY turbo . \
+            --max-parallel 4 \
+            --memory-limit 512 \
+            --format json \
+            --output release-test.json \
+            --metrics
+
+          END_TIME=$(date +%s 2>/dev/null || python -c "import time; print(int(time.time()))")
+          DURATION=$((END_TIME - START_TIME))
+
+          echo "✅ Self-analysis completed in ${DURATION}s"
+
+          # Test 3: Validate results
+          echo "🔍 Test 3: Results validation"
+          if [[ -f "release-test.json" ]]; then
+            # Check if JSON is valid and has expected structure
+            if command -v jq >/dev/null 2>&1; then
+              FINDINGS=$(jq '.summary.total_findings' release-test.json)
+              FILES=$(jq '.summary.total_files_scanned' release-test.json)
+              echo "✅ Found $FINDINGS findings across $FILES files"
+            else
+              echo "✅ Results file generated successfully"
+            fi
+          else
+            echo "❌ Results file not generated"
+            exit 1
+          fi
+
+          # Test 4: Performance validation
+          echo "🔍 Test 4: Performance validation"
+          if [[ $DURATION -lt 30 ]]; then
+            echo "✅ Performance target met: ${DURATION}s < 30s"
+          else
           echo "⚠️ Performance slower than expected: ${DURATION}s"
         fi
 
-    - name: 📤 Upload Release Artifacts
-      uses: actions/upload-artifact@v4
-      with:
+      - name: 📤 Upload Release Artifacts
+        uses: actions/upload-artifact@v4
+        with:
         name: release-validation-${{ matrix.target }}
         path: |
           release-test.json
@@ -118,14 +135,18 @@ jobs:
   release-performance-report:
     name: 📈 Release Performance Report
     runs-on: ubuntu-latest
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}
+      cancel-in-progress: true
+
     needs: release-validation
 
     steps:
-    - name: 📥 Download validation results
-      uses: actions/download-artifact@v5
-      with:
-        pattern: release-validation-*
-        merge-multiple: true
+      - name: 📥 Download validation results
+        uses: actions/download-artifact@v5
+        with:
+          pattern: release-validation-*
+          merge-multiple: true
 
     - name: 📊 Generate Performance Report
       run: |

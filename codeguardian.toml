@@ -1,11 +1,39 @@
-# CodeGuardian Configuration - Fixed Structure
+# CodeGuardian Configuration - Properly Structured
+# This configuration matches the expected schema in the codebase
 
 [output]
 directory = "analysis-results"
 format = "json"
+verbose = false
+generate_summary = true
+compress_output = true
+reports_subdirectory = "reports"
+data_subdirectory = "data"
+temp_subdirectory = "temp"
+historical_subdirectory = "historical"
+auto_archive = true
+max_reports_kept = 10
 
 [security]
 enabled = true
+fail_on_issues = false
+min_severity = "low"
+max_file_size = 10485760
+entropy_threshold = 4.5
+max_file_size_bytes = 52428800
+vulnerability_threshold = "medium"
+check_hardcoded_secrets = true
+check_unsafe_code = true
+check_dependencies = true
+secret_patterns = [
+    "(?i)(password|passwd|pwd)\\s*[:=]\\s*['\"][^'\"]{8,}['\"]",
+    "(?i)(api[_-]?key|apikey)\\s*[:=]\\s*['\"][^'\"]{16,}['\"]",
+    "(?i)(secret|token)\\s*[:=]\\s*['\"][^'\"]{16,}['\"]",
+    "(?i)(private[_-]?key)\\s*[:=]\\s*['\"][^'\"]{32,}['\"]"
+]
+check_sql_injection = true
+check_xss = true
+check_command_injection = true
 
 [git]
 conventional_commits = true
@@ -42,12 +70,46 @@ strict_mode = false
 
 [analyzers.non_production]
 enabled = true
+exclude_test_files = true
+exclude_example_files = true
+custom_test_directories = ["tests", "test", "spec", "specs", "__tests__", "testdata", "fixtures", "mocks"]
+custom_test_extensions = [".test.rs", ".spec.rs", ".integration.rs", ".e2e.rs"]
+fuzzy_test_patterns = [
+    "(?i)test.*\\.rs$",
+    "(?i)spec.*\\.rs$",
+    "(?i).*test.*",
+    "(?i).*spec.*"
+]
+
+[[analyzers.non_production.patterns]]
+pattern = "(?i)\\b(todo|fixme|hack|xxx)\\b"
+description = "Non-production code markers"
+severity = "medium"
+
+[[analyzers.non_production.patterns]]
+pattern = "(?i)\\bconsole\\.log\\b"
+description = "Debug logging statements"
+severity = "low"
+
+[[analyzers.non_production.patterns]]
+pattern = "(?i)\\b(todo|fixme|hack|xxx)\\b"
+description = "Non-production code markers"
+severity = "medium"
+
+[[analyzers.non_production.patterns]]
+pattern = "(?i)\\bconsole\\.log\\b"
+description = "Debug logging statements"
+severity = "low"
 
 [analyzers.dependency]
 enabled = true
 check_outdated = true
 check_vulnerabilities = true
+check_unused = true
+check_duplicates = true
 check_licenses = true
+max_age_days = 365
+vulnerability_databases = ["https://cve.mitre.org", "https://nvd.nist.gov"]
 
 [analyzers.performance_analyzer]
 enabled = true
@@ -87,18 +149,45 @@ max_file_size = 500
 max_line_length = 120
 
 [analyzers.broken_files]
-enabled = false
-detect_merge_conflicts = false
-detect_ai_placeholders = false
+enabled = true
+detect_merge_conflicts = true
+detect_ai_placeholders = true
 detect_duplicates = false
 
 [analyzers.broken_files.conflicts]
-fail_on_conflicts = false
+fail_on_conflicts = false  # Set to false to avoid failing on test files
+validate_syntax = true
+check_git_status = true
 
 [analyzers.broken_files.placeholders]
 severity = "medium"
-patterns = ["add content here", "implement this", "your code here", "placeholder", "todo: implement", "fill in the details", "complete this", "add your logic"]
+patterns = [
+    "add content here",
+    "implement this",
+    "your code here",
+    "placeholder",
+    "todo: implement",
+    "fill in the details",
+    "complete this",
+    "add your logic"
+]
 custom_patterns = []
+
+[analyzers.broken_files.duplicates]
+enabled = true
+min_lines = 10
+focus_security = true
+ignore_test_files = true
+max_files_to_compare = 1000
+enable_ml_similarity = false
+similarity_threshold = 0.8
+enable_github_prevention = false
+
+[analyzers.broken_files.duplicates.cache]
+enabled = true
+max_size_mb = 100
+expiration_hours = 24
+max_entries = 1000
 
 [analyzers.duplicate_analyzer]
 enabled = true
@@ -106,10 +195,9 @@ min_lines = 10
 focus_security = true
 ignore_test_files = true
 max_files_to_compare = 1000
-enable_ml_similarity = true
-ml_model_path = "enhanced-model.fann"
-similarity_threshold = 0.85
-enable_github_prevention = true
+enable_ml_similarity = false
+similarity_threshold = 0.8
+enable_github_prevention = false
 
 [analyzers.duplicate_analyzer.cache]
 enabled = true
@@ -132,10 +220,10 @@ escalation_threshold = 5
 
 [integrations]
 [integrations.github]
-enabled = true
+enabled = false
 repository = "d-oit/do-codeguardian"
 token = "${CODEGUARDIAN_GITHUB_TOKEN}"
-create_issues = true
+create_issues = false
 issue_labels = ["security", "codeguardian"]
 comment_prs = false
 min_severity = "high"

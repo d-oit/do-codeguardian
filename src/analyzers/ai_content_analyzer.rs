@@ -60,6 +60,8 @@ impl AiContentAnalyzer {
                 // Patterns indicating incomplete implementations
                 Regex::new(r"(?i)\b(not implemented|unimplemented|todo|fixme)\s*[!;]")
                     .expect("Failed to compile incomplete pattern regex"),
+                Regex::new(r"(?i)//\s*(TODO|FIXME):\s*(not implemented|incomplete)")
+                    .expect("Failed to compile TODO incomplete pattern regex"),
                 Regex::new(r"\bunimplemented!\(\)")
                     .expect("Failed to compile unimplemented pattern regex"),
                 Regex::new(r#"\bpanic!\s*\(\s*\"not implemented\"\s*\)"#)
@@ -103,8 +105,10 @@ impl AiContentAnalyzer {
                 continue;
             }
 
+            // Check if any pattern matches, but only add one finding per line
+            let mut found_match = false;
             for pattern in &self.placeholder_patterns {
-                if pattern.is_match(line) {
+                if pattern.is_match(line) && !found_match {
                     findings.push(
                         Finding::new(
                             "ai_content",
@@ -117,6 +121,7 @@ impl AiContentAnalyzer {
                         .with_description(format!("Line contains placeholder text that may indicate incomplete AI-generated code: '{}'", line.trim()))
                         .with_suggestion("Replace placeholder content with actual implementation or remove if not needed".to_string()),
                     );
+                    found_match = true;
                 }
             }
         }
@@ -196,6 +201,8 @@ impl AiContentAnalyzer {
                 if pattern.is_match(line) {
                     let severity = if line.contains("unimplemented!")
                         || line.contains("NotImplementedException")
+                        || line.contains("panic!(\"not implemented\")")
+                        || line.contains("raise NotImplementedError")
                     {
                         Severity::High
                     } else {
@@ -237,6 +244,11 @@ impl AiContentAnalyzer {
 
         // Skip JSDoc or similar
         if trimmed.starts_with("/**") || trimmed.starts_with("* ") {
+            return true;
+        }
+
+        // Skip module documentation comments (//!)
+        if trimmed.starts_with("//!") {
             return true;
         }
 

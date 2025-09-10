@@ -259,12 +259,11 @@ impl TrainingDataCollector {
     /// Simple heuristic classification based on patterns
     fn heuristic_classification(&self, finding: &Finding) -> bool {
         // High confidence true positives
-        if matches!(finding.severity, Severity::Critical | Severity::High) {
-            if finding.analyzer == "integrity"
-                || (finding.analyzer == "non_production" && finding.message.contains("secret"))
-            {
-                return true;
-            }
+        if matches!(finding.severity, Severity::Critical | Severity::High)
+            && (finding.analyzer == "integrity"
+                || (finding.analyzer == "non_production" && finding.message.contains("secret")))
+        {
+            return true;
         }
 
         // High confidence false positives
@@ -286,6 +285,18 @@ impl TrainingDataCollector {
 
     pub fn get_dataset(self) -> TrainingDataset {
         self.dataset
+    }
+}
+
+impl Default for TrainingDataCollector {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl Default for TrainingDataset {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
