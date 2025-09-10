@@ -1,0 +1,40 @@
+# Changelog
+
+All notable changes to this project will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [0.2.0-alpha.1] - 2025-09-10
+
+### Added
+- Comprehensive CI/CD pipeline overhaul with enhanced security, performance, and reliability
+- Improved build optimizations and performance enhancements
+- Enhanced codebase organization and file structure improvements
+
+### Fixed
+- Resolved all clippy linting warnings for cleaner code
+- Fixed CI workflow arguments and conflict detection issues
+- Corrected workflow failures related to issue handling
+
+### Changed
+- Reorganized codebase structure for better maintainability
+- Updated CI/CD workflows to allow git conflicts in release processes
+- Prepared codebase for v0.2.0 release cycle
+
+### Technical Details
+- **CI/CD Improvements**: Streamlined pipeline with better error handling and automated checks
+- **Linting Fixes**: Comprehensive code quality improvements across the entire codebase
+- **Build Optimizations**: Enhanced compilation performance and reduced build times
+
+**Note**: This is an alpha release intended for testing and feedback. Please report any issues encountered.
+
+### Contributors
+- Dominik Oswald (@d-oit)
+
+---
+
+## [0.1.0] - Initial Release
+- Initial release of CodeGuardian security analysis tool
+- Core functionality for code analysis and security scanning
+- Basic GitHub integration and CI/CD support
