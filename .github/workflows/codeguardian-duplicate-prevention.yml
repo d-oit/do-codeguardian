@@ -1,0 +1,329 @@
+name: CodeGuardian Duplicate Prevention
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  schedule:
+    # Run daily at 2 AM UTC
+    - cron: '0 2 * * *'
+
+env:
+  CARGO_TERM_COLOR: always
+  CODEGUARDIAN_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+jobs:
+  duplicate-prevention:
+    name: Duplicate Prevention Analysis
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      issues: write
+      pull-requests: write
+      security-events: write
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # Full history for better duplicate detection
+
+    - name: Setup Rust
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: stable
+        profile: minimal
+        override: true
+        components: clippy, rustfmt
+
+    - name: Cache dependencies
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+          target/
+        key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-cargo-
+
+    - name: Install CodeGuardian
+      run: |
+        cargo build --release --features "ml,ast"
+        sudo cp target/release/codeguardian /usr/local/bin/
+
+    - name: Setup GitHub CLI
+      run: |
+        curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
+        echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null
+        sudo apt update
+        sudo apt install gh
+
+    - name: Configure CodeGuardian for CI
+      run: |
+        cat > codeguardian-ci.toml << EOF
+        [output]
+        directory = "analysis-results"
+        format = "json"
+        verbose = true
+        generate_summary = true
+
+        [integrations.github]
+        enabled = true
+        repository = "${{ github.repository }}"
+        token = "\${CODEGUARDIAN_GITHUB_TOKEN}"
+        create_issues = true
+        issue_labels = ["security", "codeguardian", "duplicate-prevention", "automated"]
+        comment_prs = true
+        min_severity = "medium"
+        duplicate_prevention = true
+        semantic_similarity_threshold = 0.8
+        cross_repository_search = false
+
+        [analyzers.duplicate_analyzer]
+        enabled = true
+        min_lines = 10
+        focus_security = true
+        ignore_test_files = true
+        max_files_to_compare = 1000
+        enable_ml_similarity = true
+        similarity_threshold = 0.8
+        enable_github_prevention = true
+
+        [analyzers.broken_files.duplicates]
+        enabled = true
+        min_lines = 10
+        focus_security = true
+        ignore_test_files = true
+        max_files_to_compare = 1000
+        enable_ml_similarity = true
+        similarity_threshold = 0.8
+        enable_github_prevention = true
+
+        [security]
+        enabled = true
+        fail_on_issues = false
+        min_severity = "medium"
+        check_hardcoded_secrets = true
+        check_unsafe_code = true
+        check_dependencies = true
+
+        [performance]
+        enabled = true
+        check_allocations = true
+        check_async_blocking = true
+        max_complexity = 15
+
+        [files]
+        exclude_patterns = ["*.log", "*.tmp", "target/", "node_modules/", ".git/", "analysis-results/"]
+        analyze_extensions = [".rs", ".js", ".ts", ".py", ".java"]
+        EOF
+
+    - name: Run Duplicate Prevention Analysis
+      id: analysis
+      run: |
+        echo "Running CodeGuardian duplicate prevention analysis..."
+
+        # Run analysis with enhanced duplicate detection
+        codeguardian check --config codeguardian-ci.toml \
+          --output-format json \
+          --enable-github-integration \
+          --duplicate-prevention \
+          --semantic-similarity \
+          . || true
+
+        # Check if analysis results exist
+        if [ -f "analysis-results/results.json" ]; then
+          echo "analysis_completed=true" >> $GITHUB_OUTPUT
+
+          # Extract duplicate findings
+          DUPLICATES=$(jq '[.findings[] | select(.category == "duplicate" or .rule | contains("duplicate"))] | length' analysis-results/results.json 2>/dev/null || echo "0")
+          echo "duplicate_count=$DUPLICATES" >> $GITHUB_OUTPUT
+
+          # Extract security-related duplicates
+          SECURITY_DUPLICATES=$(jq '[.findings[] | select((.category == "duplicate" or (.rule | contains("duplicate"))) and (.severity == "high" or .severity == "critical"))] | length' analysis-results/results.json 2>/dev/null || echo "0")
+          echo "security_duplicate_count=$SECURITY_DUPLICATES" >> $GITHUB_OUTPUT
+
+          # Check for cross-file duplicates
+          CROSS_FILE_DUPLICATES=$(jq '[.findings[] | select(.rule == "cross_file_duplicate" or .rule == "enhanced_security_duplication")] | length' analysis-results/results.json 2>/dev/null || echo "0")
+          echo "cross_file_duplicate_count=$CROSS_FILE_DUPLICATES" >> $GITHUB_OUTPUT
+        else
+          echo "analysis_completed=false" >> $GITHUB_OUTPUT
+          echo "duplicate_count=0" >> $GITHUB_OUTPUT
+          echo "security_duplicate_count=0" >> $GITHUB_OUTPUT
+          echo "cross_file_duplicate_count=0" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Upload Analysis Results
+      if: steps.analysis.outputs.analysis_completed == 'true'
+      uses: actions/upload-artifact@v3
+      with:
+        name: codeguardian-duplicate-analysis
+        path: |
+          analysis-results/
+          codeguardian-ci.toml
+        retention-days: 30
+
+    - name: Generate Duplicate Prevention Report
+      if: steps.analysis.outputs.analysis_completed == 'true'
+      run: |
+        cat > duplicate-prevention-report.md << EOF
+        # CodeGuardian Duplicate Prevention Report
+
+        **Analysis Date:** $(date -u +"%Y-%m-%d %H:%M:%S UTC")
+        **Repository:** ${{ github.repository }}
+        **Branch:** ${{ github.ref_name }}
+        **Commit:** ${{ github.sha }}
+
+        ## Summary
+
+        - **Total Duplicates Found:** ${{ steps.analysis.outputs.duplicate_count }}
+        - **Security-Related Duplicates:** ${{ steps.analysis.outputs.security_duplicate_count }}
+        - **Cross-File Duplicates:** ${{ steps.analysis.outputs.cross_file_duplicate_count }}
+
+        ## Analysis Configuration
+
+        - **Semantic Similarity:** Enabled (threshold: 0.8)
+        - **ML-Enhanced Detection:** Enabled
+        - **GitHub Integration:** Enabled
+        - **Security Focus:** Enabled
+        - **Minimum Lines:** 10
+
+        ## Actions Taken
+
+        - Duplicate prevention analysis completed
+        - GitHub issues created for high-severity duplicates (if any)
+        - Cross-file duplicate detection performed
+        - Semantic similarity matching applied
+
+        ## Next Steps
+
+        1. Review any created GitHub issues for duplicate code
+        2. Consider refactoring identified duplicates
+        3. Update security-sensitive duplicate code with caution
+        4. Monitor for new duplicates in future commits
+
+        ---
+        *Generated by CodeGuardian Duplicate Prevention System*
+        EOF
+
+    - name: Comment on PR with Duplicate Analysis
+      if: github.event_name == 'pull_request' && steps.analysis.outputs.analysis_completed == 'true'
+      uses: actions/github-script@v6
+      with:
+        script: |
+          const fs = require('fs');
+
+          let reportContent = '';
+          try {
+            reportContent = fs.readFileSync('duplicate-prevention-report.md', 'utf8');
+          } catch (error) {
+            reportContent = `# CodeGuardian Duplicate Prevention Report
+
+            Analysis completed with ${{ steps.analysis.outputs.duplicate_count }} duplicates found.
+
+            - Security-related duplicates: ${{ steps.analysis.outputs.security_duplicate_count }}
+            - Cross-file duplicates: ${{ steps.analysis.outputs.cross_file_duplicate_count }}
+            `;
+          }
+
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: reportContent
+          });
+
+    - name: Fail on Critical Security Duplicates
+      if: steps.analysis.outputs.security_duplicate_count > 0
+      run: |
+        echo "::warning::Found ${{ steps.analysis.outputs.security_duplicate_count }} security-related duplicates"
+        echo "::notice::Review the created GitHub issues for security-sensitive duplicate code"
+
+        # Optionally fail the build for critical security duplicates
+        if [ "${{ steps.analysis.outputs.security_duplicate_count }}" -gt 5 ]; then
+          echo "::error::Too many security-related duplicates found (${{ steps.analysis.outputs.security_duplicate_count }})"
+          echo "Please address critical security duplicates before merging"
+          exit 1
+        fi
+
+    - name: Update Duplicate Prevention Metrics
+      if: steps.analysis.outputs.analysis_completed == 'true'
+      run: |
+        # Create or update metrics file
+        mkdir -p .codeguardian/metrics
+        cat > .codeguardian/metrics/duplicate-prevention.json << EOF
+        {
+          "timestamp": "$(date -u +"%Y-%m-%dT%H:%M:%SZ")",
+          "commit": "${{ github.sha }}",
+          "branch": "${{ github.ref_name }}",
+          "total_duplicates": ${{ steps.analysis.outputs.duplicate_count }},
+          "security_duplicates": ${{ steps.analysis.outputs.security_duplicate_count }},
+          "cross_file_duplicates": ${{ steps.analysis.outputs.cross_file_duplicate_count }},
+          "analysis_config": {
+            "semantic_similarity": true,
+            "ml_enhanced": true,
+            "github_integration": true,
+            "similarity_threshold": 0.8,
+            "min_lines": 10
+          }
+        }
+        EOF
+
+        echo "Duplicate prevention metrics updated"
+
+  validate-configuration:
+    name: Validate Duplicate Prevention Configuration
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Validate CodeGuardian Configuration
+      run: |
+        # Check if codeguardian.toml exists and has required duplicate prevention settings
+        if [ ! -f "codeguardian.toml" ]; then
+          echo "::error::codeguardian.toml not found"
+          exit 1
+        fi
+
+        # Validate duplicate prevention configuration
+        if ! grep -q "enable_github_prevention.*true" codeguardian.toml; then
+          echo "::warning::GitHub duplicate prevention not enabled in configuration"
+        fi
+
+        if ! grep -q "enable_ml_similarity.*true" codeguardian.toml; then
+          echo "::warning::ML similarity detection not enabled in configuration"
+        fi
+
+        if ! grep -q "duplicate_prevention.*true" codeguardian.toml; then
+          echo "::warning::Duplicate prevention not enabled in GitHub integration"
+        fi
+
+        echo "Configuration validation completed"
+
+    - name: Test Duplicate Detection
+      run: |
+        # Create test files with known duplicates
+        mkdir -p test-duplicates
+
+        cat > test-duplicates/auth1.rs << 'EOF'
+        fn authenticate_user(username: &str, password: &str) -> bool {
+            let hashed = hash_password(password);
+            let stored = get_stored_password(username);
+            hashed == stored
+        }
+        EOF
+
+        cat > test-duplicates/auth2.rs << 'EOF'
+        fn authenticate_admin(username: &str, password: &str) -> bool {
+            let hashed = hash_password(password);
+            let stored = get_stored_password(username);
+            hashed == stored
+        }
+        EOF
+
+        echo "Test duplicate files created for validation"

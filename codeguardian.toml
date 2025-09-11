@@ -179,9 +179,9 @@ min_lines = 10
 focus_security = true
 ignore_test_files = true
 max_files_to_compare = 1000
-enable_ml_similarity = false
+enable_ml_similarity = true
 similarity_threshold = 0.8
-enable_github_prevention = false
+enable_github_prevention = true
 
 [analyzers.broken_files.duplicates.cache]
 enabled = true
@@ -195,9 +195,9 @@ min_lines = 10
 focus_security = true
 ignore_test_files = true
 max_files_to_compare = 1000
-enable_ml_similarity = false
+enable_ml_similarity = true
 similarity_threshold = 0.8
-enable_github_prevention = false
+enable_github_prevention = true
 
 [analyzers.duplicate_analyzer.cache]
 enabled = true
@@ -220,13 +220,16 @@ escalation_threshold = 5
 
 [integrations]
 [integrations.github]
-enabled = false
+enabled = true
 repository = "d-oit/do-codeguardian"
 token = "${CODEGUARDIAN_GITHUB_TOKEN}"
-create_issues = false
-issue_labels = ["security", "codeguardian"]
-comment_prs = false
-min_severity = "high"
+create_issues = true
+issue_labels = ["security", "codeguardian", "duplicate-prevention"]
+comment_prs = true
+min_severity = "medium"
+duplicate_prevention = true
+semantic_similarity_threshold = 0.8
+cross_repository_search = false
 
 [integrations.gitlab]
 enabled = false
