@@ -36,6 +36,28 @@ impl GitConflictAnalyzer {
     /// Detect git merge conflict markers in file content
     fn detect_conflict_markers(&self, content: &str, file_path: &Path) -> Vec<Finding> {
         let mut findings = Vec::new();
+        let (final_state, conflict_start_line) = self.scan_for_conflict_patterns(content, file_path, &mut findings);
+
+        // If we're still in a conflict state at the end, it's malformed
+        if final_state != ConflictState::None {
+            findings.push(
+                Finding::new(
+                    "git_conflict",
+                    "malformed_conflict",
+                    Severity::Critical,
+                    file_path.to_path_buf(),
+                    conflict_start_line,
+                    "Malformed git merge conflict detected".to_string(),
+                )
+                .with_description("Merge conflict started but never properly closed. This indicates corrupted conflict markers.".to_string())
+                .with_suggestion("Check for missing conflict end markers and resolve the merge conflict properly".to_string()),
+            );
+        }
+
+        findings
+    }
+
+    fn scan_for_conflict_patterns(&self, content: &str, file_path: &Path, findings: &mut Vec<Finding>) -> (ConflictState, u32) {
         let mut conflict_state = ConflictState::None;
         let mut conflict_start_line = 0;
 
@@ -129,23 +151,7 @@ impl GitConflictAnalyzer {
             }
         }
 
-        // If we're still in a conflict state at the end, it's malformed
-        if conflict_state != ConflictState::None {
-            findings.push(
-                Finding::new(
-                    "git_conflict",
-                    "malformed_conflict",
-                    Severity::Critical,
-                    file_path.to_path_buf(),
-                    conflict_start_line,
-                    "Malformed git merge conflict detected".to_string(),
-                )
-                .with_description("Merge conflict started but never properly closed. This indicates corrupted conflict markers.".to_string())
-                .with_suggestion("Check for missing conflict end markers and resolve the merge conflict properly".to_string()),
-            );
-        }
-
-        findings
+        (conflict_state, conflict_start_line)
     }
 
     /// Validate file syntax if applicable (basic validation)
@@ -373,5 +379,45 @@ no conflicts here
         assert!(analyzer.supports_file(Path::new("test.toml")));
         assert!(!analyzer.supports_file(Path::new("test.exe")));
         assert!(!analyzer.supports_file(Path::new("test.png")));
+    }
+
+    #[test]
+    fn test_real_file_with_conflict() {
+        let analyzer = GitConflictAnalyzer::new();
+        let content = r#"fn main() {
+    println!("Hello world!");
+<<<<<<< HEAD
+    println!("This is the main branch version");
+=======
+    println!("This is the feature branch version");
+>>>>>>> feature-branch
+    println!("End of program");
+}"#;
+        let findings = analyzer
+            .analyze(Path::new("test_conflict.rs"), content.as_bytes())
+            .unwrap();
+
+        // Should detect all three conflict markers
+        assert_eq!(findings.len(), 3);
+        assert!(findings.iter().any(|f| f.rule == "merge_conflict_start"));
+        assert!(findings.iter().any(|f| f.rule == "merge_conflict_separator"));
+        assert!(findings.iter().any(|f| f.rule == "merge_conflict_end"));
+    }
+
+    #[test]
+    fn test_real_file_no_false_positives() {
+        let analyzer = GitConflictAnalyzer::new();
+        let content = r#"fn main() {
+    println!("Hello world!");
+    println!("This is normal code");
+    println!("No conflicts here");
+    println!("End of program");
+}"#;
+        let findings = analyzer
+            .analyze(Path::new("clean.rs"), content.as_bytes())
+            .unwrap();
+
+        // Should not detect any conflicts in clean code
+        assert_eq!(findings.len(), 0);
     }
 }

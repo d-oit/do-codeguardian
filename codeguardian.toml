@@ -270,3 +270,33 @@ enabled = true
 max_analysis_time_seconds = 30
 max_lines_per_file = 10000
 skip_large_files_bytes = 52428800
+
+
+# Dashboard Configuration
+[dashboard]
+enabled = false
+host = "127.0.0.1"
+port = 8080
+refresh_interval_seconds = 30
+max_history_days = 30
+enable_real_time = true
+
+# Automated Remediation Configuration
+[remediation]
+enabled = false
+auto_approve_low_risk = true
+require_approval_threshold = "Medium"
+max_concurrent_workflows = 5
+timeout_minutes = 30
+
+[remediation.integrations]
+github_enabled = true
+jira_enabled = false
+slack_enabled = false
+email_enabled = false
+
+[remediation.notifications]
+notify_on_start = true
+notify_on_completion = true
+notify_on_failure = true
+notify_on_approval_needed = true

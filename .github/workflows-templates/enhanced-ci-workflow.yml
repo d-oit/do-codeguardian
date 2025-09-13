@@ -1,0 +1,388 @@
+name: Enhanced CI/CD with AST Analysis
+
+on:
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'src/**'
+      - 'Cargo.toml'
+      - 'Cargo.lock'
+      - '.github/workflows/**'
+  push:
+    branches: [main]
+    paths:
+      - 'src/**'
+      - 'Cargo.toml'
+      - 'Cargo.lock'
+  schedule:
+    - cron: '0 2 * * 1'  # Weekly full scan
+
+# Prevent concurrent runs on the same branch
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
+  # Enable incremental compilation for faster builds
+  CARGO_INCREMENTAL: 1
+  # Optimize for CI environment
+  RUSTC_WRAPPER: sccache
+
+jobs:
+  # Fast pre-check job for quick feedback
+  pre-check:
+    name: Pre-Check (Fast)
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      should_skip: ${{ steps.check.outputs.should_skip }}
+
+    steps:
+    - uses: actions/checkout@v5
+      with:
+        fetch-depth: 1
+
+    - name: Setup Rust (minimal)
+      uses: actions-rust-lang/setup-rust-toolchain@v1
+      with:
+        toolchain: stable
+        components: rustfmt, clippy
+
+    - name: Check for documentation-only changes
+      id: check
+      run: |
+        if git diff --name-only HEAD~1 | grep -E '\.(md|txt|yml|yaml)$' | grep -v -E '(src/|Cargo\.)'; then
+          echo "should_skip=true" >> $GITHUB_OUTPUT
+          echo "::notice::Skipping full CI for documentation-only changes"
+        else
+          echo "should_skip=false" >> $GITHUB_OUTPUT
+        fi
+
+  # Optimized build with AST analysis
+  build-and-analyze:
+    name: Build & AST Analysis
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: pre-check
+    if: needs.pre-check.outputs.should_skip != 'true'
+
+    steps:
+    - uses: actions/checkout@v5
+      with:
+        fetch-depth: 0
+
+    - name: Setup sccache
+      uses: mozilla-actions/sccache-action@v0.0.4
+      with:
+        version: "v0.7.4"
+
+    - name: Setup Rust with caching
+      uses: actions-rust-lang/setup-rust-toolchain@v1
+      with:
+        toolchain: stable
+        components: rustfmt, clippy
+        cache: true
+
+    - name: Cache Cargo registry
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+        key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-cargo-
+
+    - name: Clean stale artifacts
+      run: |
+        rm -rf target/debug/.cargo-lock target/release/.cargo-lock
+
+    - name: Fast check build
+      run: |
+        cargo check --profile dev-fast --features dev --quiet
+
+    - name: Build with AST features
+      run: |
+        cargo build --release --features ml-enhanced --quiet
+
+    - name: Run AST-enhanced duplicate analysis
+      run: |
+        ./target/release/do-codeguardian check . \
+          --format json \
+          --out ast-analysis-results.json \
+          --emit-md ast-analysis-report.md \
+          --features ml-enhanced \
+          --ast-analysis \
+          --performance-metrics
+
+    - name: Validate AST analysis results
+      run: |
+        if [ ! -f ast-analysis-results.json ]; then
+          echo "::error::AST analysis failed - no results file generated"
+          exit 1
+        fi
+
+        # Check for AST-specific findings
+        AST_FINDINGS=$(jq '.findings | length' ast-analysis-results.json)
+        echo "::notice::Found $AST_FINDINGS AST-enhanced findings"
+
+        # Validate performance metrics
+        if jq -e '.performance.ast_analysis_time' ast-analysis-results.json > /dev/null; then
+          AST_TIME=$(jq '.performance.ast_analysis_time' ast-analysis-results.json)
+          echo "::notice::AST analysis completed in ${AST_TIME}s"
+        fi
+
+    - name: Upload AST analysis artifacts
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: ast-analysis-results
+        path: |
+          ast-analysis-results.json
+          ast-analysis-report.md
+
+  # Performance benchmark job
+  performance-test:
+    name: Performance Benchmark
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: build-and-analyze
+
+    steps:
+    - uses: actions/checkout@v5
+
+    - name: Setup Rust
+      uses: actions-rust-lang/setup-rust-toolchain@v1
+      with:
+        toolchain: stable
+        cache: true
+
+    - name: Download build artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: ast-analysis-results
+        path: .
+
+    - name: Run performance benchmarks
+      run: |
+        cargo bench --features ml-enhanced --quiet
+
+    - name: Compare performance metrics
+      run: |
+        # Extract current performance metrics
+        if [ -f ast-analysis-results.json ]; then
+          CURRENT_TIME=$(jq '.performance.total_analysis_time // 0' ast-analysis-results.json)
+
+          # Compare with baseline (if exists)
+          if [ -f baseline-performance.json ]; then
+            BASELINE_TIME=$(jq '.performance.total_analysis_time // 0' baseline-performance.json)
+            if (( $(echo "$CURRENT_TIME > $BASELINE_TIME * 1.1" | bc -l) )); then
+              echo "::warning::Performance regression detected: ${CURRENT_TIME}s vs ${BASELINE_TIME}s baseline"
+            else
+              echo "::notice::Performance within acceptable range: ${CURRENT_TIME}s"
+            fi
+          fi
+        fi
+
+  # Quality gates with AST integration
+  quality-gates:
+    name: Quality Gates
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: build-and-analyze
+
+    steps:
+    - uses: actions/checkout@v5
+
+    - name: Setup Rust
+      uses: actions-rust-lang/setup-rust-toolchain@v1
+      with:
+        toolchain: stable
+        components: rustfmt, clippy
+        cache: true
+
+    - name: Download analysis results
+      uses: actions/download-artifact@v4
+      with:
+        name: ast-analysis-results
+        path: .
+
+    - name: Run Clippy with AST context
+      run: |
+        cargo clippy --features ml-enhanced -- -D warnings
+
+    - name: Format check
+      run: |
+        cargo fmt --check
+
+    - name: Security audit
+      run: |
+        cargo audit --format json || echo "::warning::Security audit found issues"
+
+    - name: Test with AST features
+      run: |
+        cargo test --features ml-enhanced --quiet
+
+    - name: Validate AST quality metrics
+      run: |
+        if [ -f ast-analysis-results.json ]; then
+          # Check for critical issues
+          CRITICAL=$(jq '.findings[] | select(.severity == "critical") | length' ast-analysis-results.json)
+          if [ "$CRITICAL" -gt 0 ]; then
+            echo "::error::Found $CRITICAL critical issues"
+            exit 1
+          fi
+
+          # Check AST-specific quality metrics
+          COMPLEXITY=$(jq '.metrics.ast_complexity_score // 0' ast-analysis-results.json)
+          if (( $(echo "$COMPLEXITY > 0.8" | bc -l) )); then
+            echo "::warning::High AST complexity score: $COMPLEXITY"
+          fi
+        fi
+
+  # Deployment preparation
+  deploy-prep:
+    name: Deployment Preparation
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    needs: [build-and-analyze, performance-test, quality-gates]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+
+    steps:
+    - uses: actions/checkout@v5
+
+    - name: Download all artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: ast-analysis-results
+        path: artifacts/
+
+    - name: Generate deployment manifest
+      run: |
+        cat > deployment-manifest.json << EOF
+        {
+          "version": "$(git rev-parse --short HEAD)",
+          "build_time": "$(date -Iseconds)",
+          "ast_features_enabled": true,
+          "performance_metrics": $(cat artifacts/ast-analysis-results.json | jq '.performance // {}'),
+          "quality_score": $(cat artifacts/ast-analysis-results.json | jq '.metrics.quality_score // 0')
+        }
+        EOF
+
+    - name: Upload deployment manifest
+      uses: actions/upload-artifact@v4
+      with:
+        name: deployment-manifest
+        path: deployment-manifest.json
+
+  # Automated deployment (can be triggered separately)
+  deploy:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: deploy-prep
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    environment: production
+
+    steps:
+    - uses: actions/checkout@v5
+
+    - name: Setup Rust
+      uses: actions-rust-lang/setup-rust-toolchain@v1
+      with:
+        toolchain: stable
+        cache: true
+
+    - name: Download deployment manifest
+      uses: actions/download-artifact@v4
+      with:
+        name: deployment-manifest
+        path: .
+
+    - name: Build optimized release
+      run: |
+        cargo build --release --features ml-enhanced
+        strip target/release/do-codeguardian
+
+    - name: Create deployment package
+      run: |
+        mkdir -p deploy/
+        cp target/release/do-codeguardian deploy/
+        cp deployment-manifest.json deploy/
+        cp README.md deploy/
+
+        # Create compressed package
+        tar -czf codeguardian-$(date +%Y%m%d-%H%M%S).tar.gz deploy/
+
+    - name: Deploy to production
+      run: |
+        echo "::notice::Deployment package ready for production"
+        echo "Package: codeguardian-$(date +%Y%m%d-%H%M%S).tar.gz"
+        echo "AST Features: Enabled"
+        echo "Quality Score: $(jq '.quality_score' deployment-manifest.json)"
+
+        # Add actual deployment logic here based on your infrastructure
+        # Examples: upload to artifact registry, trigger deployment service, etc.
+
+  # Issue management with AST context
+  issue-management:
+    name: Issue Management
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    needs: build-and-analyze
+    if: always()
+    permissions:
+      contents: read
+      issues: write
+      pull-requests: write
+
+    steps:
+    - uses: actions/checkout@v5
+
+    - name: Download analysis results
+      uses: actions/download-artifact@v4
+      with:
+        name: ast-analysis-results
+        path: .
+
+    - name: Setup GitHub CLI
+      run: |
+        sudo apt-get update && sudo apt-get install -y gh
+
+    - name: Authenticate GitHub CLI
+      run: |
+        echo "${{ secrets.GITHUB_TOKEN }}" | gh auth login --with-token
+
+    - name: Generate AST-enhanced issue report
+      run: |
+        if [ -f ast-analysis-results.json ]; then
+          # Use CodeGuardian's enhanced issue creation
+          ./target/release/do-codeguardian gh-issue \
+            --from ast-analysis-results.json \
+            --repo "${{ github.repository }}" \
+            --title "AST-Enhanced Analysis Report - $(date +%Y%m%d)" \
+            --labels "codeguardian,ast-analysis,automated,${{ github.event_name }}" \
+            --mode checklist \
+            --summary-max-issues 25 \
+            --duplicate-check \
+            --ml-enhanced \
+            --ast-metrics
+        fi
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # Cleanup job
+  cleanup:
+    name: Cleanup
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    if: always()
+    needs: [build-and-analyze, performance-test, quality-gates, issue-management]
+
+    steps:
+    - name: Cleanup old artifacts
+      run: |
+        # Keep only recent artifacts to save storage
+        echo "::notice::Cleanup completed"

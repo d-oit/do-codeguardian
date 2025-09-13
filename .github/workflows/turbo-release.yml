@@ -121,16 +121,16 @@ jobs:
           if [[ $DURATION -lt 30 ]]; then
             echo "✅ Performance target met: ${DURATION}s < 30s"
           else
-          echo "⚠️ Performance slower than expected: ${DURATION}s"
-        fi
+            echo "⚠️ Performance slower than expected: ${DURATION}s"
+          fi
 
       - name: 📤 Upload Release Artifacts
         uses: actions/upload-artifact@v4
         with:
-        name: release-validation-${{ matrix.target }}
-        path: |
-          release-test.json
-        retention-days: 90
+          name: release-validation-${{ matrix.target }}
+          path: |
+            release-test.json
+          retention-days: 90
 
   release-performance-report:
     name: 📈 Release Performance Report
@@ -148,20 +148,20 @@ jobs:
           pattern: release-validation-*
           merge-multiple: true
 
-    - name: 📊 Generate Performance Report
-      run: |
-        echo "📊 CodeGuardian Release Performance Report"
-        echo "=========================================="
-        echo ""
-        echo "🚀 **Turbo Mode Performance Validation**"
-        echo ""
+      - name: 📊 Generate Performance Report
+        run: |
+          echo "📊 CodeGuardian Release Performance Report"
+          echo "=========================================="
+          echo ""
+          echo "🚀 **Turbo Mode Performance Validation**"
+          echo ""
 
-        echo "✅ **All platforms validated successfully**"
-        echo ""
-        echo "🎯 **Key Achievements:**"
-        echo "- ✅ Cross-platform compatibility verified"
-        echo "- ✅ Performance targets met on all platforms"
-        echo "- ✅ Memory usage within acceptable limits"
-        echo "- ✅ Results consistency across platforms"
-        echo ""
-        echo "🚀 **Ready for production deployment!**"
+          echo "✅ **All platforms validated successfully**"
+          echo ""
+          echo "🎯 **Key Achievements:**"
+          echo "- ✅ Cross-platform compatibility verified"
+          echo "- ✅ Performance targets met on all platforms"
+          echo "- ✅ Memory usage within acceptable limits"
+          echo "- ✅ Results consistency across platforms"
+          echo ""
+          echo "🚀 **Ready for production deployment!**"

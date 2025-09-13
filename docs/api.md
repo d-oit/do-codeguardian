@@ -1,10 +1,37 @@
 # API Reference
 
+## Core Analysis Engine
+
+### Analysis Registry
+CodeGuardian uses a modular analyzer registry system that automatically discovers and configures analyzers based on your configuration:
+
+```rust
+use codeguardian::analyzers::AnalyzerRegistry;
+use codeguardian::config::Config;
+
+// Create registry with configuration
+let config = Config::from_file("codeguardian.toml").await?;
+let registry = AnalyzerRegistry::with_config(&config);
+
+// Analyze a file
+let findings = registry.analyze_file(&file_path, &content).await?;
+```
+
+### Specialized Analyzers
+CodeGuardian includes specialized analyzers for different types of analysis:
+
+- **SecurityAnalyzer**: Multi-layered security analysis (SQL injection, XSS, command injection, secrets)
+- **PerformanceAnalyzer**: Code performance and optimization analysis
+- **DuplicateAnalyzer**: Cross-file duplicate code detection
+- **GitConflictAnalyzer**: Git merge conflict detection
+- **AiContentAnalyzer**: AI-generated placeholder detection
+- **DependencyAnalyzer**: License compliance and vulnerability scanning
+
 ## Output Formats
 
 ### JSON Format (Primary)
 
-The JSON format is the source of truth for all analysis results:
+The JSON format is the source of truth for all analysis results and includes comprehensive metadata:
 
 ```json
 {
@@ -22,21 +49,24 @@ The JSON format is the source of truth for all analysis results:
       "line_number": 25,
       "column": 12,
       "severity": "high",
-      "category": "security",
-      "analyzer": "security_analyzer",
-      "title": "Hardcoded secret detected",
-      "description": "Potential hardcoded API key found",
-      "code_snippet": "let api_key = \"sk-123456789\";",
-      "confidence": 0.95,
-      "cwe": "CWE-798",
-      "owasp": "A02:2021-Cryptographic Failures",
-      "recommendation": "Use environment variables or secure key management",
-      "references": [
-        "https://owasp.org/www-community/vulnerabilities/Use_of_hardcoded_passwords"
-      ],
-      "tags": ["secrets", "hardcoded", "api_key"],
-      "ml_confidence": 0.89,
-      "false_positive": false
+       "category": "security",
+       "analyzer": "security_analyzer",
+       "title": "Hardcoded secret detected",
+       "description": "Potential hardcoded API key found",
+       "code_snippet": "let api_key = \"sk-123456789\";",
+       "confidence": 0.95,
+       "cwe": "CWE-798",
+       "owasp": "A02:2021-Cryptographic Failures",
+       "recommendation": "Use environment variables or secure key management",
+       "references": [
+         "https://owasp.org/www-community/vulnerabilities/Use_of_hardcoded_passwords"
+       ],
+       "tags": ["secrets", "hardcoded", "api_key"],
+       "ml_confidence": 0.89,
+       "false_positive": false,
+       "analyzer_type": "secret_analyzer",
+       "severity_score": 8.5,
+       "impact_score": 7.2
     }
   ],
   "summary": {
@@ -77,8 +107,9 @@ interface Finding {
   line_number: number;           // Line number (1-based)
   column: number;                // Column number (1-based)
   severity: "critical" | "high" | "medium" | "low" | "info";
-  category: "security" | "performance" | "code_quality" | "dependency" | "integrity" | "naming" | "non_production";
-  analyzer: string;              // Analyzer that produced the finding
+   category: "security" | "performance" | "code_quality" | "dependency" | "integrity" | "naming" | "non_production" | "duplicate" | "git_conflict" | "ai_content" | "build_artifact";
+   analyzer: string;              // Analyzer that produced the finding (e.g., "secret_analyzer", "sql_injection_analyzer")
+   analyzer_type?: string;        // Specific analyzer type for categorization
   title: string;                 // Short title
   description: string;           // Detailed description
   code_snippet: string;          // Code context

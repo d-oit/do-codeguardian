@@ -199,9 +199,8 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: benchmark-${{ matrix.test-scenario.size }}-${{ github.run_number }}
-        path: |
-          *-bench.json
-        retention-days: 30
+          path: "*-bench.json"
+          retention-days: 30
 
   performance-regression-check:
     name: 🔍 Performance Regression Check

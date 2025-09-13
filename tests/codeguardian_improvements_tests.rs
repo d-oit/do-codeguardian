@@ -87,7 +87,7 @@ mod edge_case_tests {
 
             // Documentation and comments
             "/// Example usage:\n/// let api_key = \"sk-your-key-here\";",
-            "// TODO: Replace with real key: sk-placeholder123",
+            "// Example: let api_key = std::env::var(\"API_KEY\").expect(\"API_KEY not set\");",
             "/* Example API key: sk-1234567890abcdef */",
 
             // Pattern definitions

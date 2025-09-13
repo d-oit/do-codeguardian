@@ -2,7 +2,7 @@
 description: >-
   Use this agent for managing and orchestrating complex multi-step tasks across the CodeGuardian project.
   This agent should only be called manually by the user.
-mode: subagent
+mode: primary
 permission:
   edit: allow
   bash: deny

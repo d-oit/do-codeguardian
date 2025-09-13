@@ -1,14 +1,22 @@
 use clap::{Parser, Subcommand, ValueEnum};
 use std::path::PathBuf;
 
+pub mod bulk;
 pub mod check;
+#[cfg(feature = "dashboard")]
+pub mod dashboard;
 pub mod gh_issue;
 pub mod init;
+pub mod integrations;
 #[cfg(feature = "ml")]
 pub mod metrics;
+pub mod remediation;
 pub mod report;
 #[cfg(feature = "ml")]
 pub mod train;
+
+use integrations::IntegrationsArgs;
+use remediation::RemediationArgs;
 
 #[derive(Parser)]
 #[command(
@@ -71,6 +79,19 @@ pub enum Commands {
 
     /// Update and maintain documentation
     UpdateDocs(UpdateDocsArgs),
+
+    /// Dashboard management and monitoring
+    #[cfg(feature = "dashboard")]
+    Dashboard(DashboardArgs),
+
+    /// Automated remediation workflows
+    Remediation(RemediationArgs),
+
+    /// External system integrations
+    Integrations(IntegrationsArgs),
+
+    /// Bulk operations for multiple repositories and codebases
+    Bulk(bulk::BulkArgs),
 }
 
 #[derive(Parser)]
@@ -419,6 +440,10 @@ pub enum ReportFormat {
     Html,
     /// Plain text format
     Text,
+    /// JSON format
+    Json,
+    /// YAML format
+    Yaml,
 }
 
 #[derive(ValueEnum, Clone, Debug)]
@@ -447,6 +472,8 @@ impl std::fmt::Display for ReportFormat {
             ReportFormat::Markdown => write!(f, "markdown"),
             ReportFormat::Html => write!(f, "html"),
             ReportFormat::Text => write!(f, "text"),
+            ReportFormat::Json => write!(f, "json"),
+            ReportFormat::Yaml => write!(f, "yaml"),
         }
     }
 }
@@ -460,3 +487,6 @@ impl std::fmt::Display for GhMode {
         }
     }
 }
+
+// Note: Re-exports removed to avoid circular dependencies
+// Use the structs directly from cli module instead

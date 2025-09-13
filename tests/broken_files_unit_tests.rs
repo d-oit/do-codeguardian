@@ -30,7 +30,7 @@ mod git_conflict_unit_tests {
             let content = format!("some code\n{}\nmore code", line);
             let findings = analyzer
                 .analyze(Path::new("test.rs"), content.as_bytes())
-                .unwrap();
+                .expect("Failed to analyze test file for conflict markers");
 
             if should_match {
                 assert!(
@@ -152,7 +152,9 @@ fn main() {
     #[test]
     fn test_empty_file_handling() {
         let analyzer = GitConflictAnalyzer::new();
-        let findings = analyzer.analyze(Path::new("empty.rs"), b"").unwrap();
+        let findings = analyzer
+            .analyze(Path::new("empty.rs"), b"")
+            .expect("Failed to analyze empty file");
         assert_eq!(findings.len(), 0);
     }
 
@@ -173,7 +175,7 @@ fn main() {
 
         let findings = analyzer
             .analyze(Path::new("large.rs"), content.as_bytes())
-            .unwrap();
+            .expect("Failed to analyze large file with conflicts");
 
         // Should still detect conflicts in large files
         assert_eq!(findings.len(), 3); // start, separator, end
@@ -208,7 +210,7 @@ mod ai_content_unit_tests {
             let content = format!("fn test() {{\n    // {}\n}}", text);
             let findings = analyzer
                 .analyze(Path::new("test.rs"), content.as_bytes())
-                .unwrap();
+                .expect("Failed to analyze test file for conflict markers");
 
             let has_placeholder = findings.iter().any(|f| f.rule == "placeholder_content");
             assert_eq!(has_placeholder, should_detect, "Text: '{}'", text);
@@ -232,7 +234,7 @@ mod ai_content_unit_tests {
             let content = format!("{}\nfn test() {{}}", marker);
             let findings = analyzer
                 .analyze(Path::new("test.rs"), content.as_bytes())
-                .unwrap();
+                .expect("Failed to analyze test file for conflict markers");
 
             assert!(
                 findings.iter().any(|f| f.rule == "ai_generated_marker"),
@@ -288,7 +290,7 @@ mod ai_content_unit_tests {
             let content = format!("fn test() {{\n    {}\n}}", pattern);
             let findings = analyzer
                 .analyze(Path::new("test.rs"), content.as_bytes())
-                .unwrap();
+                .expect("Failed to analyze test file for conflict markers");
 
             let incomplete_finding = findings
                 .iter()
@@ -316,12 +318,18 @@ mod ai_content_unit_tests {
 
         let doc_content = r#"
 /// This is documentation
-/// TODO: add more examples
-/// implement this in the future
+/// Examples of AI-generated placeholder patterns:
+/// - "implement this functionality"
+/// - "add your code here"
+/// - "customize this section"
+/// - "complete the implementation"
 fn documented_function() {}
 
 //! Module documentation
-//! add content here for examples
+//! Examples for testing:
+//! - "fill in the details"
+//! - "modify as needed"
+//! - "replace with actual implementation"
 
 fn normal_function() {
     // TODO: implement this  <- should be detected
@@ -386,7 +394,7 @@ fn handle_this() {
 
         let analyzer = AiContentAnalyzer::new()
             .with_custom_patterns(custom_patterns)
-            .unwrap();
+            .expect("Failed to create analyzer with custom patterns");
 
         let content = r#"
 fn test() {
@@ -483,7 +491,7 @@ mod duplicate_analyzer_unit_tests {
             let content = format!("{}\n{}\n", input, input);
             let _findings = analyzer
                 .analyze(Path::new("test.rs"), content.as_bytes())
-                .unwrap();
+                .expect("Failed to analyze test file for line normalization");
 
             // If normalization works correctly, identical normalized lines should be detected
             // (though they need to meet minimum line requirements)
@@ -522,7 +530,7 @@ fn {}_copy() {{
 
             let findings = analyzer
                 .analyze(Path::new("security.rs"), content.as_bytes())
-                .unwrap();
+                .expect("Failed to analyze security functions for duplication");
 
             // Should detect security-relevant duplicates
             if !findings.is_empty() {
@@ -557,7 +565,7 @@ fn print_hello_copy() {
 
         let findings = analyzer
             .analyze(Path::new("utils.rs"), non_security_content.as_bytes())
-            .unwrap();
+            .expect("Failed to analyze non-security code with focus");
 
         // With security focus enabled, non-security duplicates should be ignored or low priority
         if !findings.is_empty() {
@@ -596,7 +604,7 @@ fn function_b() {
 
             let findings = analyzer
                 .analyze(Path::new("test.rs"), content.as_bytes())
-                .unwrap();
+                .expect("Failed to analyze test file for conflict markers");
 
             if should_detect {
                 assert!(
@@ -725,7 +733,7 @@ fn different_b() {
         for (content, should_detect, description) in test_cases {
             let findings = analyzer
                 .analyze(Path::new("test.rs"), content.as_bytes())
-                .unwrap();
+                .expect("Failed to analyze test file for conflict markers");
 
             if should_detect {
                 assert!(
@@ -930,10 +938,10 @@ fn validate_user_input_copy(input: &str) -> bool {
 
         let high_findings = analyzer
             .analyze(Path::new("crypto.rs"), high_risk_content.as_bytes())
-            .unwrap();
+            .expect("Failed to analyze high-risk security code");
         let medium_findings = analyzer
             .analyze(Path::new("validation.rs"), medium_risk_content.as_bytes())
-            .unwrap();
+            .expect("Failed to analyze medium-risk security code");
 
         // High-risk duplicates should have higher severity
         if !high_findings.is_empty() {

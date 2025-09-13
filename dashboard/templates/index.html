@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CodeGuardian - Duplicate Prevention Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            font-size: 2rem;
+            font-weight: 600;
+        }
+
+        .header p {
+            opacity: 0.9;
+            margin-top: 0.5rem;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .card {
+            background: white;
+            border-radius: 8px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transition: transform 0.2s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+        }
+
+        .card h3 {
+            color: #667eea;
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+        }
+
+        .metric {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.8rem;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .metric:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+
+        .metric-label {
+            font-weight: 500;
+            color: #666;
+        }
+
+        .metric-value {
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .metric-value.success {
+            color: #10b981;
+        }
+
+        .metric-value.warning {
+            color: #f59e0b;
+        }
+
+        .metric-value.error {
+            color: #ef4444;
+        }
+
+        .chart-container {
+            height: 300px;
+            background: #f8f9fa;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #666;
+            font-style: italic;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 0.5rem;
+        }
+
+        .status-indicator.healthy {
+            background-color: #10b981;
+        }
+
+        .status-indicator.warning {
+            background-color: #f59e0b;
+        }
+
+        .status-indicator.critical {
+            background-color: #ef4444;
+        }
+
+        .actions-panel {
+            background: white;
+            border-radius: 8px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-top: 2rem;
+        }
+
+        .actions-panel h3 {
+            color: #667eea;
+            margin-bottom: 1rem;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 6px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5a67d8;
+        }
+
+        .btn-secondary {
+            background: #e2e8f0;
+            color: #4a5568;
+        }
+
+        .btn-secondary:hover {
+            background: #cbd5e0;
+        }
+
+        .recommendations {
+            background: #fef3cd;
+            border: 1px solid #fde68a;
+            border-radius: 6px;
+            padding: 1rem;
+            margin-top: 1rem;
+        }
+
+        .recommendations h4 {
+            color: #92400e;
+            margin-bottom: 0.5rem;
+        }
+
+        .recommendations ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .recommendations li {
+            color: #78350f;
+            margin-bottom: 0.3rem;
+            padding-left: 1rem;
+            position: relative;
+        }
+
+        .recommendations li:before {
+            content: "→";
+            position: absolute;
+            left: 0;
+            color: #92400e;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .refresh-indicator {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            background: white;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            display: none;
+        }
+
+        .refresh-indicator.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🛡️ CodeGuardian Dashboard</h1>
+        <p>Unified Duplicate Prevention Monitoring</p>
+    </div>
+
+    <div class="refresh-indicator" id="refreshIndicator">
+        <div class="loading"></div>
+        <span>Updating...</span>
+    </div>
+
+    <div class="container">
+        <div class="dashboard-grid">
+            <!-- System Health Card -->
+            <div class="card">
+                <h3>System Health</h3>
+                <div class="metric">
+                    <span class="metric-label">
+                        <span class="status-indicator healthy"></span>
+                        API Success Rate
+                    </span>
+                    <span class="metric-value success" id="apiSuccessRate">99.7%</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Response Time</span>
+                    <span class="metric-value" id="responseTime">18ms</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Uptime</span>
+                    <span class="metric-value success" id="uptime">99.9%</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Active Connections</span>
+                    <span class="metric-value" id="activeConnections">42</span>
+                </div>
+            </div>
+
+            <!-- Duplicate Detection Card -->
+            <div class="card">
+                <h3>Duplicate Detection</h3>
+                <div class="metric">
+                    <span class="metric-label">Detection Rate</span>
+                    <span class="metric-value success" id="detectionRate">96%</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">False Positives</span>
+                    <span class="metric-value success" id="falsePositives">3.2%</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Total Duplicates Found</span>
+                    <span class="metric-value" id="totalDuplicates">1,247</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Processing Time</span>
+                    <span class="metric-value" id="processingTime">18s</span>
+                </div>
+            </div>
+
+            <!-- Prevention Effectiveness Card -->
+            <div class="card">
+                <h3>Prevention Effectiveness</h3>
+                <div class="metric">
+                    <span class="metric-label">Prevention Rate</span>
+                    <span class="metric-value success" id="preventionRate">94%</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Duplicates Prevented</span>
+                    <span class="metric-value success" id="duplicatesPrevented">856</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Time Saved</span>
+                    <span class="metric-value" id="timeSaved">127 hours</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Cost Savings</span>
+                    <span class="metric-value success" id="costSavings">$12,700</span>
+                </div>
+            </div>
+
+            <!-- Performance Metrics Card -->
+            <div class="card">
+                <h3>Performance Metrics</h3>
+                <div class="metric">
+                    <span class="metric-label">Throughput</span>
+                    <span class="metric-value" id="throughput">45/min</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Memory Usage</span>
+                    <span class="metric-value" id="memoryUsage">256 MB</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">CPU Usage</span>
+                    <span class="metric-value" id="cpuUsage">23%</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Queue Length</span>
+                    <span class="metric-value" id="queueLength">12</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts Section -->
+        <div class="dashboard-grid">
+            <div class="card">
+                <h3>Duplicate Trends (Last 7 Days)</h3>
+                <div class="chart-container" id="duplicateTrendsChart">
+                    Chart will be rendered here
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>Prevention Effectiveness</h3>
+                <div class="chart-container" id="preventionChart">
+                    Chart will be rendered here
+                </div>
+            </div>
+        </div>
+
+        <!-- Actions Panel -->
+        <div class="actions-panel">
+            <h3>Quick Actions</h3>
+            <div class="action-buttons">
+                <button class="btn btn-primary" onclick="refreshDashboard()">Refresh Data</button>
+                <button class="btn btn-secondary" onclick="generateReport()">Generate Report</button>
+                <button class="btn btn-secondary" onclick="viewWorkflows()">View Workflows</button>
+                <button class="btn btn-secondary" onclick="configureSettings()">Settings</button>
+            </div>
+
+            <div class="recommendations" id="recommendations">
+                <h4>Recommendations</h4>
+                <ul id="recommendationsList">
+                    <li>System is performing well - no immediate actions required</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Dashboard JavaScript functionality
+        let refreshInterval;
+        let isRealTimeEnabled = true;
+
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            loadDashboardData();
+            if (isRealTimeEnabled) {
+                startRealTimeUpdates();
+            }
+        });
+
+        // Load dashboard data from API
+        async function loadDashboardData() {
+            try {
+                const response = await fetch('/api/metrics/current');
+                const result = await response.json();
+
+                if (result.success && result.data) {
+                    updateDashboard(result.data);
+                }
+            } catch (error) {
+                console.error('Failed to load dashboard data:', error);
+            }
+        }
+
+        // Update dashboard with new data
+        function updateDashboard(data) {
+            // Update system health metrics
+            if (data.system_health) {
+                document.getElementById('apiSuccessRate').textContent =
+                    (data.system_health.api_success_rate * 100).toFixed(1) + '%';
+                document.getElementById('responseTime').textContent =
+                    data.system_health.average_response_time_ms.toFixed(0) + 'ms';
+                document.getElementById('uptime').textContent =
+                    (data.system_health.uptime_percentage).toFixed(1) + '%';
+                document.getElementById('activeConnections').textContent =
+                    data.system_health.active_connections;
+            }
+
+            // Update duplicate detection metrics
+            if (data.duplicate_stats) {
+                document.getElementById('detectionRate').textContent =
+                    (data.duplicate_stats.detection_accuracy * 100).toFixed(0) + '%';
+                document.getElementById('falsePositives').textContent =
+                    (data.duplicate_stats.false_positive_rate * 100).toFixed(1) + '%';
+                document.getElementById('totalDuplicates').textContent =
+                    data.duplicate_stats.total_duplicates_found.toLocaleString();
+            }
+
+            // Update prevention metrics
+            if (data.prevention_stats) {
+                document.getElementById('preventionRate').textContent =
+                    (data.prevention_stats.prevention_rate * 100).toFixed(0) + '%';
+                document.getElementById('duplicatesPrevented').textContent =
+                    data.prevention_stats.duplicates_prevented.toLocaleString();
+                document.getElementById('timeSaved').textContent =
+                    Math.round(data.prevention_stats.time_saved_hours) + ' hours';
+                document.getElementById('costSavings').textContent =
+                    '$' + Math.round(data.prevention_stats.cost_savings_estimate).toLocaleString();
+            }
+
+            // Update performance metrics
+            if (data.performance_metrics) {
+                document.getElementById('throughput').textContent =
+                    Math.round(data.performance_metrics.throughput_per_minute) + '/min';
+                document.getElementById('memoryUsage').textContent =
+                    Math.round(data.performance_metrics.memory_usage_mb) + ' MB';
+                document.getElementById('cpuUsage').textContent =
+                    Math.round(data.performance_metrics.cpu_usage_percentage) + '%';
+                document.getElementById('queueLength').textContent =
+                    data.performance_metrics.queue_length;
+            }
+
+            // Update processing time from performance metrics
+            if (data.performance_metrics) {
+                document.getElementById('processingTime').textContent =
+                    Math.round(data.performance_metrics.average_processing_time_ms / 1000) + 's';
+            }
+        }
+
+        // Start real-time updates
+        function startRealTimeUpdates() {
+            refreshInterval = setInterval(loadDashboardData, 30000); // Update every 30 seconds
+        }
+
+        // Stop real-time updates
+        function stopRealTimeUpdates() {
+            if (refreshInterval) {
+                clearInterval(refreshInterval);
+            }
+        }
+
+        // Refresh dashboard manually
+        async function refreshDashboard() {
+            const indicator = document.getElementById('refreshIndicator');
+            indicator.classList.add('active');
+
+            await loadDashboardData();
+
+            setTimeout(() => {
+                indicator.classList.remove('active');
+            }, 1000);
+        }
+
+        // Generate report
+        async function generateReport() {
+            try {
+                const response = await fetch('/api/reports/generate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        view_name: 'Overview',
+                        time_range: '7d'
+                    })
+                });
+
+                const result = await response.json();
+                if (result.success) {
+                    alert('Report generated successfully!');
+                } else {
+                    alert('Failed to generate report: ' + result.error);
+                }
+            } catch (error) {
+                alert('Failed to generate report: ' + error.message);
+            }
+        }
+
+        // View workflows
+        function viewWorkflows() {
+            window.open('/workflows', '_blank');
+        }
+
+        // Configure settings
+        function configureSettings() {
+            window.open('/settings', '_blank');
+        }
+
+        // Load recommendations
+        async function loadRecommendations() {
+            try {
+                const response = await fetch('/api/views/Overview');
+                const result = await response.json();
+
+                if (result.success && result.data.recommendations) {
+                    const list = document.getElementById('recommendationsList');
+                    list.innerHTML = '';
+
+                    result.data.recommendations.forEach(rec => {
+                        const li = document.createElement('li');
+                        li.textContent = rec;
+                        list.appendChild(li);
+                    });
+                }
+            } catch (error) {
+                console.error('Failed to load recommendations:', error);
+            }
+        }
+
+        // Load recommendations on page load
+        setTimeout(loadRecommendations, 1000);
+    </script>
+</body>
+</html>

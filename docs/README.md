@@ -12,6 +12,9 @@ Welcome to the CodeGuardian documentation! This directory contains comprehensive
 ### 🔧 User Guides
 - **[Basic Usage](user-guide/basic-usage.md)** - Learn the fundamental commands and workflows
 - **[Advanced Features](user-guide/advanced-features.md)** - Explore ML integration, turbo mode, and more
+- **[Dashboard Guide](user-guide/dashboard.md)** - Web-based monitoring and reporting
+- **[ML Guide](user-guide/ml.md)** - Machine learning configuration and training
+- **[Integrations Guide](user-guide/integrations.md)** - External system integrations
 - **[CI/CD Integration](user-guide/ci-cd-integration.md)** - Integrate with your development pipeline
 - **[GitHub Integration](user-guide/github-integration.md)** - Set up automated issue creation and management
 - **[Check Command Guide](user-guide/check.md)** - Comprehensive guide to the primary analysis command

@@ -4,6 +4,8 @@ pub mod ast_analyzer;
 pub mod enhanced_feature_extractor;
 pub mod fann_classifier;
 pub mod feature_extractor;
+pub mod multi_language_ast_analyzer;
+pub mod pattern_recognition;
 pub mod training_data;
 
 use crate::types::Finding;

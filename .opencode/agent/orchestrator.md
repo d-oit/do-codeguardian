@@ -20,7 +20,7 @@ description: >-
       The orchestrator provides strategic guidance, while swarm-orchestrator handles the actual parallel execution, load balancing, and result aggregation for optimal performance in swarm operations.
       </commentary>
     </example>
-mode: all
+mode: primary
 tools:
   write: false
   edit: false

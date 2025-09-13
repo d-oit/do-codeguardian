@@ -15,48 +15,55 @@ pub struct PerformanceAnalyzer {
 
 impl Default for PerformanceAnalyzer {
     fn default() -> Self {
-        Self::new()
+        Self::new().expect("Failed to create PerformanceAnalyzer with default patterns")
     }
 }
 
 impl PerformanceAnalyzer {
     /// Creates a new PerformanceAnalyzer with predefined patterns.
-    pub fn new() -> Self {
-        Self {
+    pub fn new() -> Result<Self, anyhow::Error> {
+        Ok(Self {
             nested_loop_patterns: vec![
                 // Detect nested for loops (simple heuristic)
-                Regex::new(r"for\s+.*\{[\s\S]*?for\s+.*\{").unwrap(),
+                Regex::new(r"for\s+.*\{[\s\S]*?for\s+.*\{")
+                    .map_err(|e| anyhow::anyhow!("Failed to compile nested for loop pattern: {}", e))?,
                 // Detect nested while loops
-                Regex::new(r"while\s+.*\{[\s\S]*?while\s+.*\{").unwrap(),
+                Regex::new(r"while\s+.*\{[\s\S]*?while\s+.*\{")
+                    .map_err(|e| anyhow::anyhow!("Failed to compile nested while loop pattern: {}", e))?,
                 // Detect for inside while or vice versa
                 Regex::new(r"(for\s+.*\{[\s\S]*?while\s+.*\{|while\s+.*\{[\s\S]*?for\s+.*\{)")
-                    .unwrap(),
+                    .map_err(|e| anyhow::anyhow!("Failed to compile mixed loop pattern: {}", e))?,
             ],
             inefficient_string_patterns: vec![
                 // String concatenation in loops using +=
                 Regex::new(
                     r"(for\s+.*\{[\s\S]*?(\w+)\s*\+=\s*.*|while\s+.*\{[\s\S]*?(\w+)\s*\+=\s*.*)",
                 )
-                .unwrap(),
+                .map_err(|e| anyhow::anyhow!("Failed to compile string concatenation pattern: {}", e))?,
                 // Direct string concatenation with +=
-                Regex::new(r"(\w+)\s*\+=\s*&?(format!|String::)").unwrap(),
+                Regex::new(r"(\w+)\s*\+=\s*&?(format!|String::)")
+                    .map_err(|e| anyhow::anyhow!("Failed to compile direct string concat pattern: {}", e))?,
             ],
             blocking_io_patterns: vec![
                 // Synchronous file operations in async functions
                 Regex::new(r"async\s+fn.*\{.*std::fs::(read_to_string|write|read|create_dir)")
-                    .unwrap(),
+                    .map_err(|e| anyhow::anyhow!("Failed to compile async file operations pattern: {}", e))?,
                 // Blocking I/O in tokio contexts
-                Regex::new(r"#\[tokio::main\].*std::fs::(read_to_string|write|read)").unwrap(),
+                Regex::new(r"#\[tokio::main\].*std::fs::(read_to_string|write|read)")
+                    .map_err(|e| anyhow::anyhow!("Failed to compile tokio blocking IO pattern: {}", e))?,
                 // Synchronous network operations
-                Regex::new(r"std::net::TcpListener::bind").unwrap(),
+                Regex::new(r"std::net::TcpListener::bind")
+                    .map_err(|e| anyhow::anyhow!("Failed to compile sync network pattern: {}", e))?,
             ],
             algorithmic_inefficiency_patterns: vec![
                 // Potential O(n^2) patterns with collect and iter
-                Regex::new(r"\.collect\(\)\s*\.\s*iter\(\)\s*\.\s*map").unwrap(),
+                Regex::new(r"\.collect\(\)\s*\.\s*iter\(\)\s*\.\s*map")
+                    .map_err(|e| anyhow::anyhow!("Failed to compile collect-iter pattern: {}", e))?,
                 // Inefficient sorting in loops
-                Regex::new(r"(for\s+.*\{|while\s+.*\{).*?\.sort\(\)").unwrap(),
+                Regex::new(r"(for\s+.*\{|while\s+.*\{).*?\.sort\(\)")
+                    .map_err(|e| anyhow::anyhow!("Failed to compile sort in loop pattern: {}", e))?,
             ],
-        }
+        })
     }
 
     /// Detects nested loops that may indicate algorithmic inefficiencies.
@@ -232,7 +239,7 @@ mod tests {
 
     #[test]
     fn test_detect_nested_loops() {
-        let analyzer = PerformanceAnalyzer::new();
+        let analyzer = PerformanceAnalyzer::new().unwrap();
         let content = r#"
         fn example() {
             for i in 0..10 {
@@ -242,9 +249,9 @@ mod tests {
             }
         }
         "#;
-        let temp_dir = tempdir().unwrap();
+        let temp_dir = tempdir().expect("Failed to create temp directory");
         let file_path = temp_dir.path().join("test.rs");
-        std::fs::write(&file_path, content).unwrap();
+        std::fs::write(&file_path, content).expect("Failed to write test file");
 
         let findings = analyzer.detect_nested_loops(content, &file_path);
         assert!(!findings.is_empty());
@@ -253,7 +260,7 @@ mod tests {
 
     #[test]
     fn test_detect_inefficient_strings() {
-        let analyzer = PerformanceAnalyzer::new();
+        let analyzer = PerformanceAnalyzer::new().unwrap();
         let content = r#"
         fn example() {
             let mut s = String::new();
@@ -262,9 +269,9 @@ mod tests {
             }
         }
         "#;
-        let temp_dir = tempdir().unwrap();
+        let temp_dir = tempdir().expect("Failed to create temp directory");
         let file_path = temp_dir.path().join("test.rs");
-        std::fs::write(&file_path, content).unwrap();
+        std::fs::write(&file_path, content).expect("Failed to write test file");
 
         let findings = analyzer.detect_inefficient_strings(content, &file_path);
         assert!(!findings.is_empty());
@@ -273,7 +280,7 @@ mod tests {
 
     #[test]
     fn test_supports_file() {
-        let analyzer = PerformanceAnalyzer::new();
+        let analyzer = PerformanceAnalyzer::new().unwrap();
         assert!(analyzer.supports_file(&PathBuf::from("test.rs")));
         assert!(!analyzer.supports_file(&PathBuf::from("test.js")));
     }

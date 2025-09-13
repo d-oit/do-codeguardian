@@ -12,33 +12,54 @@ CodeGuardian is a cutting-edge, security-first code analysis tool that combines 
 
 ## ✨ Key Features
 
-- 🔒 **Security-First Analysis**: Advanced vulnerability detection with ML-powered insights
-- 🤖 **Machine Learning Integration**: Intelligent code quality assessment and pattern recognition
-- 🚀 **Turbo Mode**: High-performance scanning for large codebases
-- 🔗 **GitHub Integration**: Automated issue creation, PR analysis, and workflow optimization
-- 📊 **Comprehensive Reporting**: Detailed analysis reports with actionable recommendations
-- ⚡ **CI/CD Ready**: Seamless integration with popular CI/CD pipelines
-- 📋 **License Compliance**: Automated dependency license checking and reporting
-- 🐳 **Container Support**: Docker and cloud-native deployment options
-- 📈 **Performance Monitoring**: Built-in benchmarking and optimization tools
+- 🔒 **Advanced Security Analysis**: Multi-layered vulnerability detection (SQL injection, XSS, command injection, secrets, hardcoded credentials)
+- 🤖 **AI-Powered ML Classification**: RUV-FANN neural networks with optional AST-enhanced features for 60-80% false positive reduction
+- 🚀 **Turbo Mode**: High-performance parallel analysis with adaptive resource management for large codebases
+- 🔗 **Comprehensive GitHub Integration**: Automated issue creation with duplicate prevention, PR analysis, and multiple workflow modes
+- 📊 **Intelligent Reporting**: JSON source-of-truth with human-readable, SARIF, and Markdown formats
+- ⚡ **CI/CD Optimization**: Diff-only analysis, baseline comparisons, and seamless pipeline integration
+- 🛠️ **Broken Files Detection**: Git merge conflicts, AI-generated placeholders, and duplicate code detection
+- 🔄 **Duplicate Prevention System**: Multi-strategy duplicate detection with cross-workflow coordination
+- 🏗️ **Extensible Architecture**: Plugin-based analyzer system with custom integrations (Azure DevOps, GitLab, Jira)
+- 📈 **Performance Intelligence**: Memory pooling, streaming analysis, and intelligent caching
+- 🎛️ **Advanced Configuration**: Preset configurations with environment variable support and validation
+- 🌐 **Web Dashboard**: Optional real-time monitoring and analysis visualization (feature-gated)
 
-## 🤖 Agent System
+## 🏗️ Architecture & Components
 
-CodeGuardian features a sophisticated agent system for specialized development and management tasks. The system includes consolidated and enhanced agents for optimal performance:
+CodeGuardian implements a modular, security-first architecture designed for high performance and extensibility:
 
-### Recent Consolidations
-- **Enhanced GitHub Workflow Manager**: Combines workflow management and optimization
-- **Enhanced Documentation Specialist**: Unified documentation creation and maintenance
-- **Enhanced Orchestrator**: Integrated task coordination and swarm management
+### Core Analysis Engine
+- **Security Analyzer**: Multi-layered security analysis with specialized detectors
+- **Performance Analyzer**: Code optimization and efficiency analysis
+- **Code Quality Analyzer**: Maintainability and best practices validation
+- **Dependency Analyzer**: License compliance and vulnerability scanning
+- **Integrity Analyzer**: File integrity and git history validation
+- **Naming Analyzer**: Consistent naming convention enforcement
 
-### New Specialized Agents
-- **Analyzer Orchestrator**: Coordinates comprehensive code analysis modules
-- **ML Pipeline Manager**: Manages machine learning workflows and model optimization
-- **Cache Intelligence Agent**: Optimizes caching performance and intelligence
-- **Streaming Processor**: Enhances streaming analysis performance
-- **Configuration Validator**: Ensures configuration integrity and best practices
+### Advanced Detection Systems
+- **Broken Files Detection**: Git conflicts, AI placeholders, duplicate code analysis
+- **ML Classification Engine**: RUV-FANN neural networks with optional AST enhancement
+- **Duplicate Prevention System**: Multi-strategy duplicate detection and management
+- **Streaming Analysis**: Memory-efficient processing of large files
 
-For detailed agent information, see [AGENTS.md](AGENTS.md) and the `.opencode/agent/` directory.
+### Integration Layer
+- **GitHub API Client**: Rate-limited, retry-enabled GitHub integration
+- **External Integrations**: Azure DevOps, GitLab, Jira, Confluence, Jenkins
+- **CI/CD Pipeline Support**: Native integration with major CI/CD platforms
+- **Webhook System**: Real-time notifications and external system integration
+
+### Performance & Optimization
+- **Parallel Processing**: Adaptive parallelism with resource management
+- **Intelligent Caching**: Multi-level caching with performance monitoring
+- **Memory Pooling**: Efficient memory management for large-scale analysis
+- **Turbo Mode**: High-performance analysis for enterprise codebases
+
+### Configuration & Management
+- **Preset Configurations**: Optimized configurations for different use cases
+- **Environment Integration**: Comprehensive environment variable support
+- **Configuration Validation**: Real-time validation and best practice enforcement
+- **Web Dashboard**: Optional real-time monitoring and visualization
 
 ## 🚀 Quick Start
 
@@ -67,77 +88,143 @@ docker run -v $(pwd):/workspace d-oit/codeguardian:latest analyze .
 
 ## 📖 Usage Examples
 
-### Basic Code Analysis
+### Comprehensive Security Analysis
 ```bash
-# Analyze current directory
-codeguardian check
+# Full security analysis with ML-powered false positive reduction
+codeguardian check . --format json --out security-audit.json --ml-model enhanced-model.fann
 
-# Analyze specific files
-codeguardian check src/main.rs src/lib.rs
+# Analyze with all detection systems enabled
+codeguardian check . \
+  --detect-broken-files \
+  --detect-conflicts \
+  --detect-placeholders \
+  --detect-duplicates \
+  --format json \
+  --out comprehensive-analysis.json
 
-# Generate detailed report
-codeguardian report --output analysis.json
+# High-performance analysis for large codebases
+codeguardian turbo . \
+  --max-parallel 16 \
+  --memory-limit 4096 \
+  --output large-scale-results.json \
+  --metrics
 ```
 
-### Security Scanning
+### Advanced GitHub Integration
 ```bash
-# Run security audit
-codeguardian security --deep-scan
+# Analyze pull request with duplicate prevention
+codeguardian check . \
+  --diff origin/main..HEAD \
+  --emit-gh \
+  --repo myorg/myrepo \
+  --gh-mode checklist \
+  --labels "security,automated,pr-analysis"
 
-# Check for vulnerabilities
-codeguardian vuln --severity high
+# Create GitHub issues with comprehensive reporting
+codeguardian gh-issue \
+  --from results.json \
+  --repo myorg/myrepo \
+  --mode children \
+  --title "Security Analysis Results" \
+  --summary-auto "Weekly security scan results"
+
+# Update existing issues instead of creating duplicates
+codeguardian gh-issue \
+  --from results.json \
+  --repo myorg/myrepo \
+  --mode checklist \
+  --update-existing
 ```
 
-### GitHub Integration
+### ML Model Training & Optimization
 ```bash
-# Initialize GitHub integration
-codeguardian init --github
+# Train ML model for false positive reduction
+codeguardian train \
+  --model-path enhanced-model.fann \
+  --epochs 2000 \
+  --bootstrap \
+  --enhanced
 
-# Analyze pull request
-codeguardian pr analyze 123
+# Analyze with trained model and feature importance analysis
+codeguardian check . \
+  --ml-model enhanced-model.fann \
+  --ml-threshold 0.8 \
+  --format json \
+  --out ml-optimized-results.json
 
-# Create issues for findings
-codeguardian issue create --auto
+# View ML model performance metrics
+codeguardian metrics --model enhanced-model.fann --show
 ```
 
-### Duplicate Issue Prevention
-CodeGuardian includes advanced duplicate prevention to avoid creating redundant GitHub issues:
-
+### Performance & Large-Scale Analysis
 ```bash
-# Manual duplicate detection
-codeguardian gh-issue --from results.json --prevent-duplicates
+# Memory-efficient streaming analysis for large files
+codeguardian check large-file.bin \
+  --streaming \
+  --parallel 8 \
+  --memory-limit 2048
 
-# CI/CD integration with automatic duplicate prevention
-# See: .github/workflows/codeguardian-ci-improved.yml
+# Baseline comparison for drift detection
+codeguardian check . \
+  --baseline baseline.json \
+  --only-new \
+  --format json \
+  --out drift-analysis.json
+
+# Performance benchmarking and optimization
+codeguardian turbo . \
+  --aggressive \
+  --metrics \
+  --output performance-report.json
 ```
 
-**Features:**
-- Multi-strategy duplicate detection (title, commit hash, semantic matching)
-- Intelligent issue updates instead of duplicate creation
-- Cross-workflow coordination and state sharing
-- Comprehensive validation and testing suite
-
-For detailed documentation, see [Duplicate Prevention Guide](docs/duplicate-prevention.md)
-
-### Performance Analysis
+### Configuration & Preset Usage
 ```bash
-# Run performance benchmarks
-codeguardian bench
+# Use enterprise-grade security preset
+codeguardian init --template enterprise
 
-# Optimize code patterns
-codeguardian optimize --target performance
+# Custom configuration with environment variables
+export CODEGUARDIAN_GITHUB_TOKEN="your_token_here"
+export CODEGUARDIAN_MEMORY_LIMIT="4096"
+codeguardian check . --config enterprise-security.toml
+
+# Validate configuration before use
+codeguardian validate --config codeguardian.toml
 ```
 
 ## 📚 Documentation
 
-Dive deeper into CodeGuardian's capabilities:
+Explore CodeGuardian's comprehensive documentation:
 
-- **[📖 User Guide](docs/user-guide/)** - Complete usage tutorials and workflows
-- **[🔧 API Reference](docs/api/)** - Programmatic integration and customization
-- **[🏗️ Architecture](docs/architecture/)** - Technical design and components
-- **[⚙️ Configuration](docs/configuration.md)** - Advanced setup and customization
-- **[🚀 CI/CD Integration](docs/user-guide/ci-cd-setup.md)** - Pipeline integration guides
-- **[🔍 Troubleshooting](docs/troubleshooting/)** - Common issues and solutions
+### 🚀 Getting Started
+- **[Quick Start Guide](docs/user-guide/quick-start.md)** - Get up and running in minutes
+- **[Installation Guide](docs/user-guide/installation.md)** - Platform-specific installation instructions
+- **[Basic Usage](docs/user-guide/basic-usage.md)** - Essential commands and workflows
+
+### 🔧 Core Features
+- **[Security Analysis](docs/user-guide/security-analysis.md)** - Advanced vulnerability detection
+- **[ML Integration](docs/user-guide/ml-integration.md)** - AI-powered false positive reduction
+- **[GitHub Integration](docs/user-guide/github-integration.md)** - Automated issue management
+- **[Duplicate Prevention](docs/duplicate-prevention.md)** - Intelligent duplicate detection
+- **[Turbo Mode](docs/user-guide/turbo-mode.md)** - High-performance analysis
+- **[Broken Files Detection](docs/user-guide/broken-files-detection.md)** - Conflict and placeholder detection
+
+### 🏗️ Technical Documentation
+- **[Architecture Overview](docs/architecture/overview.md)** - System design and components
+- **[API Reference](docs/api/index.md)** - Programmatic integration and customization
+- **[Configuration Guide](docs/configuration.md)** - Advanced setup and presets
+- **[Performance Tuning](docs/architecture/performance.md)** - Optimization and benchmarking
+
+### 🚀 Advanced Features
+- **[CI/CD Integration](docs/user-guide/ci-cd-integration.md)** - Pipeline integration guides
+- **[External Integrations](docs/integrations/index.md)** - Azure DevOps, GitLab, Jira integration
+- **[Dashboard Setup](docs/dashboard/setup.md)** - Web dashboard configuration
+- **[Remediation Workflows](docs/remediation/index.md)** - Automated remediation
+
+### 🔍 Troubleshooting & Support
+- **[Troubleshooting Guide](docs/troubleshooting/index.md)** - Common issues and solutions
+- **[FAQ](docs/troubleshooting/faq.md)** - Frequently asked questions
+- **[Performance Issues](docs/troubleshooting/performance.md)** - Optimization tips
 
 ## 🤝 Contributing
 
@@ -162,20 +249,73 @@ See our **[Contributing Guide](CONTRIBUTING.md)** for detailed guidelines.
 
 ## 🌟 Why CodeGuardian?
 
-- **🔐 Security by Design**: Built with security best practices from the ground up
-- **⚡ Performance Optimized**: Fast analysis even for large, complex codebases
-- **🤖 AI-Powered**: Machine learning enhances detection accuracy over time
-- **🔄 Continuous Integration**: Seamless integration with your development workflow
-- **📊 Data-Driven**: Comprehensive metrics and reporting for informed decisions
-- **🌍 Open Source**: Transparent, community-driven development
+### 🔐 Security-First Architecture
+- **Multi-Layered Analysis**: Specialized analyzers for different vulnerability types
+- **ML-Powered Accuracy**: 60-80% false positive reduction with neural networks
+- **Deterministic Results**: Stable finding IDs and reproducible analysis
+- **Secure by Default**: Conservative configuration with explicit opt-in for advanced features
 
-## 🏢 Use Cases
+### ⚡ Enterprise-Grade Performance
+- **Adaptive Parallelism**: Automatic CPU core detection and resource management
+- **Streaming Analysis**: Memory-efficient processing of large files and codebases
+- **Intelligent Caching**: Multi-level caching with performance monitoring
+- **Turbo Mode**: High-performance analysis for million-line codebases
 
-- **Enterprise Security**: Large-scale vulnerability assessment and compliance
-- **DevSecOps**: Integrate security scanning into CI/CD pipelines
-- **Code Review Automation**: Automated analysis for pull requests and commits
-- **Performance Optimization**: Identify and fix performance bottlenecks
-- **Quality Assurance**: Maintain consistent code standards across teams
+### 🤖 AI & Machine Learning
+- **RUV-FANN Integration**: Rust-optimized neural networks for pattern recognition
+- **AST-Enhanced Features**: Optional abstract syntax tree analysis for deeper insights
+- **Online Learning**: Continuous model improvement with user feedback
+- **Feature Importance Analysis**: Explainable AI for better understanding
+
+### 🔄 DevSecOps Integration
+- **GitHub Native**: Seamless integration with GitHub Issues, PRs, and Actions
+- **CI/CD Optimized**: Diff-only analysis, baseline comparisons, and fast feedback
+- **Duplicate Prevention**: Intelligent duplicate detection across workflows
+- **Webhook Support**: Real-time notifications and external system integration
+
+### 📊 Comprehensive Intelligence
+- **Multiple Output Formats**: JSON (source of truth), human-readable, SARIF, Markdown
+- **Advanced Reporting**: Executive summaries, trend analysis, and actionable insights
+- **Performance Metrics**: Built-in benchmarking and optimization recommendations
+- **Broken Files Detection**: Git conflicts, AI placeholders, and duplicate code analysis
+
+### 🌍 Enterprise Ready
+- **Extensible Architecture**: Plugin-based system for custom analyzers and integrations
+- **Multi-Platform Support**: Native binaries for Linux, macOS, Windows
+- **Configuration Management**: Environment-based configuration with validation
+- **Commercial Support**: Enterprise support and custom development options
+
+## 🏢 Use Cases & Applications
+
+### 🔒 Enterprise Security Teams
+- **Comprehensive Vulnerability Assessment**: Multi-layered security analysis with ML-powered accuracy
+- **Compliance Automation**: Automated compliance checking and reporting for standards (SOC2, ISO27001)
+- **Risk Management**: Continuous security monitoring with trend analysis and risk scoring
+- **Incident Response**: Rapid vulnerability detection and prioritization
+
+### 🚀 DevSecOps Teams
+- **CI/CD Pipeline Integration**: Seamless integration with GitHub Actions, Jenkins, GitLab CI
+- **Shift-Left Security**: Early vulnerability detection in development workflows
+- **Automated Remediation**: Intelligent remediation suggestions and workflow automation
+- **Security Gates**: Configurable quality gates for deployment pipelines
+
+### 👥 Development Teams
+- **Code Review Enhancement**: Automated analysis for pull requests with duplicate prevention
+- **Quality Standards**: Consistent code quality enforcement across large teams
+- **Performance Optimization**: Automated detection of performance bottlenecks and anti-patterns
+- **Technical Debt Management**: Continuous monitoring and reporting of code quality metrics
+
+### 🏗️ Platform Teams
+- **Infrastructure Security**: Container, Kubernetes, and cloud infrastructure analysis
+- **Dependency Management**: Automated license compliance and vulnerability scanning
+- **Large-Scale Analysis**: High-performance analysis for million-line codebases
+- **Custom Integration**: Extensible architecture for organization-specific requirements
+
+### 📊 Security Operations Centers (SOC)
+- **Continuous Monitoring**: Real-time security analysis with webhook notifications
+- **Threat Intelligence**: Pattern recognition and anomaly detection with ML
+- **Incident Correlation**: Cross-system vulnerability correlation and prioritization
+- **Reporting & Compliance**: Automated report generation for regulatory requirements
 
 ## 📞 Community & Support
 

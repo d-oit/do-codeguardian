@@ -8,6 +8,9 @@
     "false-positive-validator": {
       "model": "chutes/zai-org/GLM-4.5-FP8"
     },
+     " junior-developer": {
+      "model": "nvidia/deepseek-ai/deepseek-v3.1"
+    },
     "git": {
       "model": "nvidia/deepseek-ai/deepseek-v3.1"
     },

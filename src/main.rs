@@ -105,6 +105,19 @@ async fn main() -> Result<()> {
         Commands::Metrics(args) => {
             metrics::run(args)?;
         }
+        #[cfg(feature = "dashboard")]
+        Commands::Dashboard(args) => {
+            do_codeguardian::cli::dashboard::run(args, &config).await?;
+        }
+        Commands::Remediation(args) => {
+            do_codeguardian::cli::remediation::run(args, &config).await?;
+        }
+        Commands::Integrations(args) => {
+            do_codeguardian::cli::integrations::run(args, &config).await?;
+        }
+        Commands::Bulk(args) => {
+            do_codeguardian::cli::bulk::run(args, &config).await?;
+        }
     }
 
     info!("CodeGuardian CLI completed");

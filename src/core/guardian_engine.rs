@@ -1,3 +1,5 @@
+//! GuardianEngine - Main analysis engine for CodeGuardian
+
 use crate::analyzers::AnalyzerRegistry;
 use crate::cache::FileCache;
 use crate::config::Config;
@@ -6,14 +8,11 @@ use crate::types::{AnalysisResults, Finding};
 use crate::utils::progress::ProgressReporter;
 use crate::utils::security::{canonicalize_path_safe, should_follow_path};
 use anyhow::Result;
-use serde_json;
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
 use std::time::Instant;
 use tokio::fs;
 use walkdir::WalkDir;
-
-pub mod parallel_file_processor;
 
 pub struct GuardianEngine {
     config: Config,
@@ -27,7 +26,7 @@ pub struct GuardianEngine {
 impl GuardianEngine {
     pub async fn new(config: Config, progress: ProgressReporter) -> Result<Self> {
         let cache = Arc::new(Mutex::new(FileCache::load().await?));
-        let analyzer_registry = AnalyzerRegistry::with_config(&config);
+        let analyzer_registry = AnalyzerRegistry::with_config(&config)?;
 
         Ok(Self {
             config,

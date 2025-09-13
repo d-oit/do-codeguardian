@@ -7,6 +7,8 @@ use crate::github_api::GitHubApiClient;
 #[cfg(feature = "ml")]
 #[allow(unused_imports)]
 use crate::ml::fann_classifier::FannClassifier;
+#[cfg(feature = "ast")]
+use crate::ml::multi_language_ast_analyzer::{MultiLanguageAstAnalyzer, LanguageAstFeatures};
 use crate::types::{Finding, Severity};
 use anyhow::Result;
 use regex::Regex;
@@ -52,39 +54,45 @@ pub struct DuplicateResult {
 
 impl Default for DuplicateAnalyzer {
     fn default() -> Self {
-        Self::new()
+        Self::with_config(DuplicateAnalyzerConfig::default()).expect("Failed to create default DuplicateAnalyzer")
     }
 }
 
 impl DuplicateAnalyzer {
-    pub fn new() -> Self {
+    pub fn new() -> Result<Self, anyhow::Error> {
         Self::with_config(DuplicateAnalyzerConfig::default())
     }
 
-    pub fn with_config(config: DuplicateAnalyzerConfig) -> Self {
+    pub fn with_config(config: DuplicateAnalyzerConfig) -> Result<Self, anyhow::Error> {
         let security_patterns = vec![
             // Authentication patterns
-            Regex::new(r"(?i)(authenticate|login|signin|verify|validate)").unwrap(),
+            Regex::new(r"(?i)(authenticate|login|signin|verify|validate)")
+                .map_err(|e| anyhow::anyhow!("Failed to compile authentication pattern: {}", e))?,
             // Authorization patterns
-            Regex::new(r"(?i)(authorize|permission|access|role|privilege)").unwrap(),
+            Regex::new(r"(?i)(authorize|permission|access|role|privilege)")
+                .map_err(|e| anyhow::anyhow!("Failed to compile authorization pattern: {}", e))?,
             // Cryptographic patterns
-            Regex::new(r"(?i)(encrypt|decrypt|hash|crypto|cipher|key|token)").unwrap(),
+            Regex::new(r"(?i)(encrypt|decrypt|hash|crypto|cipher|key|token)")
+                .map_err(|e| anyhow::anyhow!("Failed to compile cryptographic pattern: {}", e))?,
             // Input validation patterns
-            Regex::new(r"(?i)(validate|sanitize|escape|filter|clean)").unwrap(),
+            Regex::new(r"(?i)(validate|sanitize|escape|filter|clean)")
+                .map_err(|e| anyhow::anyhow!("Failed to compile validation pattern: {}", e))?,
             // Error handling patterns
-            Regex::new(r"(?i)(error|exception|panic|fail|abort)").unwrap(),
+            Regex::new(r"(?i)(error|exception|panic|fail|abort)")
+                .map_err(|e| anyhow::anyhow!("Failed to compile error handling pattern: {}", e))?,
             // Security-sensitive operations
-            Regex::new(r"(?i)(password|secret|credential|session|cookie)").unwrap(),
+            Regex::new(r"(?i)(password|secret|credential|session|cookie)")
+                .map_err(|e| anyhow::anyhow!("Failed to compile security pattern: {}", e))?,
         ];
 
-        Self {
+        Ok(Self {
             config,
             security_function_patterns: security_patterns,
             #[cfg(feature = "ml")]
             github_client: None,
             cache: OptimizedCache::new(100, 50), // 100 entries, 50MB cache
             file_cache: HashMap::new(),
-        }
+        })
     }
 
     /// Set GitHub API client for duplicate issue prevention
@@ -679,7 +687,7 @@ mod tests {
             enable_github_prevention: false,
             cache: Default::default(),
         };
-        let analyzer = DuplicateAnalyzer::with_config(config);
+        let analyzer = DuplicateAnalyzer::with_config(config).expect("Failed to create analyzer with config for test");
         let content = r#"
 fn authenticate_user(username: &str, password: &str) -> bool {
     let hashed = hash_password(password);
@@ -695,13 +703,13 @@ fn authenticate_admin(username: &str, password: &str) -> bool {
 "#;
         let findings = analyzer
             .analyze(Path::new("auth.rs"), content.as_bytes())
-            .unwrap();
+            .expect("Failed to analyze file in test");
         assert!(findings.iter().any(|f| f.rule == "internal_duplication"));
     }
 
     #[test]
     fn test_normalize_line() {
-        let analyzer = DuplicateAnalyzer::new();
+        let analyzer = DuplicateAnalyzer::new().expect("Failed to create analyzer for test");
         assert_eq!(
             analyzer.normalize_line("  let x = 5;  // comment"),
             "let x = 5;"
@@ -714,7 +722,7 @@ fn authenticate_admin(username: &str, password: &str) -> bool {
 
     #[test]
     fn test_security_relevance() {
-        let analyzer = DuplicateAnalyzer::new();
+        let analyzer = DuplicateAnalyzer::new().expect("Failed to create analyzer for test");
         let security_block = CodeBlock {
             lines: vec!["authenticate_user".to_string(), "hash_password".to_string()],
             start_line: 1,
@@ -732,7 +740,7 @@ fn authenticate_admin(username: &str, password: &str) -> bool {
 
     #[test]
     fn test_ignore_test_files() {
-        let analyzer = DuplicateAnalyzer::new();
+        let analyzer = DuplicateAnalyzer::new().expect("Failed to create analyzer for test");
         assert!(analyzer.should_ignore_file(Path::new("tests/test_auth.rs")));
         assert!(analyzer.should_ignore_file(Path::new("src/auth_test.rs")));
         assert!(!analyzer.should_ignore_file(Path::new("src/auth.rs")));
@@ -740,7 +748,7 @@ fn authenticate_admin(username: &str, password: &str) -> bool {
 
     #[test]
     fn test_calculate_similarity() {
-        let analyzer = DuplicateAnalyzer::new();
+        let analyzer = DuplicateAnalyzer::new().expect("Failed to create analyzer for test");
         let block1 = CodeBlock {
             lines: vec![
                 "line1".to_string(),
@@ -775,7 +783,7 @@ fn authenticate_admin(username: &str, password: &str) -> bool {
 
     #[test]
     fn test_supports_file() {
-        let analyzer = DuplicateAnalyzer::new();
+        let analyzer = DuplicateAnalyzer::new().expect("Failed to create analyzer for test");
         assert!(analyzer.supports_file(Path::new("test.rs")));
         assert!(analyzer.supports_file(Path::new("test.js")));
         assert!(analyzer.supports_file(Path::new("test.py")));
@@ -785,7 +793,7 @@ fn authenticate_admin(username: &str, password: &str) -> bool {
 
     #[test]
     fn test_ml_similarity_calculation() {
-        let analyzer = DuplicateAnalyzer::new();
+        let analyzer = DuplicateAnalyzer::new().expect("Failed to create analyzer for test");
         let block1 = CodeBlock {
             lines: vec![
                 "fn authenticate()".to_string(),
@@ -809,7 +817,7 @@ fn authenticate_admin(username: &str, password: &str) -> bool {
 
     #[test]
     fn test_security_patterns_detection() {
-        let analyzer = DuplicateAnalyzer::new();
+        let analyzer = DuplicateAnalyzer::new().expect("Failed to create analyzer for test");
         let block1 = CodeBlock {
             lines: vec!["authenticate_user".to_string(), "hash_password".to_string()],
             start_line: 1,

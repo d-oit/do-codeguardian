@@ -1,4 +1,5 @@
 pub mod ai_content_analyzer;
+pub mod build_artifact_analyzer;
 pub mod dependency_analyzer;
 pub mod duplicate_analyzer;
 pub mod git_conflict_analyzer;
@@ -40,10 +41,10 @@ impl Clone for AnalyzerRegistry {
 
 impl AnalyzerRegistry {
     pub fn new() -> Self {
-        Self::with_config(&Config::default())
+        Self::with_config(&Config::default()).expect("Failed to create default analyzer registry")
     }
 
-    pub fn with_config(config: &Config) -> Self {
+    pub fn with_config(config: &Config) -> Result<Self> {
         let mut registry = Self {
             analyzers: Vec::new(),
         };
@@ -54,11 +55,12 @@ impl AnalyzerRegistry {
         registry.register(Box::new(non_production::NonProductionAnalyzer::new(
             &config.analyzers.non_production,
         )));
-        registry.register(Box::new(performance_analyzer::PerformanceAnalyzer::new()));
+        registry.register(Box::new(performance_analyzer::PerformanceAnalyzer::new()?));
         registry.register(Box::new(security_analyzer::SecurityAnalyzer::new()));
         registry.register(Box::new(dependency_analyzer::DependencyAnalyzer::new(
-            std::env::current_dir().unwrap(),
+            std::env::current_dir().map_err(|e| anyhow::anyhow!("Failed to get current directory: {}", e))?,
         )));
+        registry.register(Box::new(build_artifact_analyzer::BuildArtifactAnalyzer::new()));
 
         // Register broken files detection analyzers based on configuration
         if config.analyzers.broken_files.enabled {
@@ -95,7 +97,7 @@ impl AnalyzerRegistry {
             }
 
             if config.analyzers.broken_files.detect_duplicates {
-                let duplicate_analyzer = duplicate_analyzer::DuplicateAnalyzer::new()
+                let duplicate_analyzer = duplicate_analyzer::DuplicateAnalyzer::new()?
                     .with_min_lines(config.analyzers.broken_files.duplicates.min_lines)
                     .with_security_focus(config.analyzers.broken_files.duplicates.focus_security)
                     .with_test_files(!config.analyzers.broken_files.duplicates.ignore_test_files)
@@ -110,7 +112,7 @@ impl AnalyzerRegistry {
             }
         }
 
-        registry
+        Ok(registry)
     }
 
     pub fn register(&mut self, analyzer: Box<dyn Analyzer + Send + Sync>) {

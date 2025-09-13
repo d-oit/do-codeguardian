@@ -69,6 +69,7 @@ pub struct Finding {
     pub message: String,
     pub description: Option<String>,
     pub suggestion: Option<String>,
+    pub category: Option<String>,
     pub metadata: HashMap<String, serde_json::Value>,
 }
 
@@ -81,7 +82,7 @@ pub enum Severity {
     Info,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct ResultsSummary {
     pub total_files_scanned: usize,
     pub total_findings: usize,
@@ -171,6 +172,7 @@ impl Finding {
             message,
             description: None,
             suggestion: None,
+            category: None,
             metadata: HashMap::new(),
         }
     }
@@ -207,3 +209,41 @@ impl std::fmt::Display for Severity {
         }
     }
 }
+
+/// Report structure for bulk operations
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Report {
+    pub summary: ResultsSummary,
+    pub findings: Vec<Finding>,
+    pub metadata: ReportMetadata,
+}
+
+/// Report metadata
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ReportMetadata {
+    pub generated_at: DateTime<Utc>,
+    pub version: String,
+    pub config_hash: Option<String>,
+}
+
+impl Default for ReportMetadata {
+    fn default() -> Self {
+        Self {
+            generated_at: Utc::now(),
+            version: env!("CARGO_PKG_VERSION").to_string(),
+            config_hash: None,
+        }
+    }
+}
+
+/// Report summary for aggregation
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ReportSummary {
+    pub total_reports: usize,
+    pub total_findings: usize,
+    pub total_files: usize,
+    pub severity_breakdown: HashMap<String, usize>,
+}
+
+/// Re-export ReportFormat from CLI for convenience
+pub use crate::cli::ReportFormat;
