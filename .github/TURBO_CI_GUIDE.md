@@ -156,7 +156,7 @@ jobs:
           --metrics
 
     - name: Upload Results
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: nightly-security-report
         path: nightly-security.json
