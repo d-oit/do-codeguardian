@@ -5,6 +5,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.0-alpha.4] - 2025-09-13
+
+### Added
+- **TODO Implementation**: Completed implementation of pending TODO items across the codebase
+- **Verification Work**: Enhanced verification processes for code quality and functionality
+
+### Changed
+- **Refactoring**: Comprehensive code refactoring for improved maintainability and performance
+- **Linting Fixes**: Resolved remaining linting issues and improved code standards compliance
+
+### Technical Details
+- **Code Quality**: Addressed TODOs, refactored modules, and fixed lint warnings
+- **Verification**: Strengthened testing and validation workflows
+
+**Note**: This is an alpha release intended for testing and feedback. Please report any issues encountered.
+
+### Contributors
+- Dominik Oswald (@d-oit)
+
+---
+
 ## [0.2.0-alpha.3] - 2025-09-12
 
 ### Added
