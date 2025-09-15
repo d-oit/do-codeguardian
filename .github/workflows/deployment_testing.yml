@@ -36,7 +36,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
 
     - name: Setup Rust
       uses: dtolnay/rust-toolchain@stable
@@ -61,7 +61,7 @@ jobs:
     if: github.event.inputs.test_type == 'smoke' || github.event.inputs.test_type == 'full' || github.event_name == 'push' || github.event_name == 'pull_request'
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
 
     - name: Download build artifact
       uses: actions/download-artifact@v4
@@ -100,7 +100,7 @@ jobs:
     if: github.event.inputs.test_type == 'integration' || github.event.inputs.test_type == 'full' || github.event_name == 'push'
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
 
     - name: Setup Rust
       uses: dtolnay/rust-toolchain@stable
@@ -133,7 +133,7 @@ jobs:
     if: github.event.inputs.test_type == 'chaos' || github.event.inputs.test_type == 'full'
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
 
     - name: Download build artifact
       uses: actions/download-artifact@v4
@@ -202,7 +202,7 @@ jobs:
     if: github.event.inputs.test_type == 'full' || github.event_name == 'push'
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
 
     - name: Setup Rust
       uses: dtolnay/rust-toolchain@stable
@@ -288,7 +288,7 @@ jobs:
     environment: staging
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
 
     - name: Download build artifact
       uses: actions/download-artifact@v4
@@ -309,7 +309,7 @@ jobs:
     environment: production
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
 
     - name: Download build artifact
       uses: actions/download-artifact@v4
