@@ -1,6 +1,6 @@
 [package]
 name = "do-codeguardian"
-version = "0.2.0-alpha.5"
+version = "0.2.0"
 edition = "2021"
 authors = ["Dominik Oswald <6849456+d-oit@users.noreply.github.com>"]
 description = "CodeGuardian is a cutting-edge, security-first code analysis tool that combines machine learning, advanced static analysis, and seamless GitHub integration to help developers identify vulnerabilities, optimize performance, and maintain high code quality standards. Built with Rust for speed and reliability, it empowers teams to ship secure software faster."
