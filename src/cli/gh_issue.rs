@@ -265,7 +265,7 @@ fn generate_simple_body(results: &AnalysisResults, _args: &GhIssueArgs) -> Resul
     }
 
     // Use the markdown report generator
-    let markdown_report = crate::cli::report::generate_markdown(results)?;
+    let markdown_report = crate::cli::report::generate_markdown(results, None)?;
     body.push_str(&markdown_report);
 
     Ok(body)

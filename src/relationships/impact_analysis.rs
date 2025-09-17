@@ -2,9 +2,9 @@
 
 use super::graph::RelationshipGraph;
 use anyhow::Result;
+use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
-use chrono::{DateTime, Utc};
 
 /// Impact analyzer for relationship changes
 pub struct ImpactAnalyzer {
@@ -192,16 +192,23 @@ impl ImpactAnalyzer {
         let start_time = std::time::Instant::now();
 
         // Find all artifacts that could be impacted
-        let impacted_artifacts = self.find_impacted_artifacts(artifact_id, &change_type, graph).await?;
+        let impacted_artifacts = self
+            .find_impacted_artifacts(artifact_id, &change_type, graph)
+            .await?;
 
         // Calculate impact paths
-        let impact_paths = self.calculate_impact_paths(artifact_id, &impacted_artifacts, graph).await?;
+        let impact_paths = self
+            .calculate_impact_paths(artifact_id, &impacted_artifacts, graph)
+            .await?;
 
         // Assess risks
-        let risk_assessment = self.assess_risks(&change_type, &impacted_artifacts, &impact_paths).await?;
+        let risk_assessment = self
+            .assess_risks(&change_type, &impacted_artifacts, &impact_paths)
+            .await?;
 
         // Generate recommendations
-        let recommendations = self.generate_recommendations(&change_type, &risk_assessment, &impacted_artifacts);
+        let recommendations =
+            self.generate_recommendations(&change_type, &risk_assessment, &impacted_artifacts);
 
         let analysis_time = start_time.elapsed().as_millis() as u64;
 
@@ -279,7 +286,11 @@ impl ImpactAnalyzer {
         }
 
         // Sort by impact score descending
-        impacted.sort_by(|a, b| b.impact_score.partial_cmp(&a.impact_score).unwrap_or(std::cmp::Ordering::Equal));
+        impacted.sort_by(|a, b| {
+            b.impact_score
+                .partial_cmp(&a.impact_score)
+                .unwrap_or(std::cmp::Ordering::Equal)
+        });
 
         Ok(impacted)
     }
@@ -329,7 +340,7 @@ impl ImpactAnalyzer {
                     likelihood: 0.8,
                     impact_score: 0.9,
                 });
-            },
+            }
             ChangeType::ArtifactModified => {
                 risk_factors.push(RiskFactor {
                     factor_type: RiskFactorType::BreakingChange,
@@ -338,7 +349,7 @@ impl ImpactAnalyzer {
                     likelihood: 0.4,
                     impact_score: 0.6,
                 });
-            },
+            }
             _ => {
                 risk_factors.push(RiskFactor {
                     factor_type: RiskFactorType::UserExperienceImpact,
@@ -440,7 +451,9 @@ impl ImpactAnalyzer {
         };
 
         let required_skills = match impact_type {
-            ImpactType::SecurityImplication => vec!["Security".to_string(), "Code Review".to_string()],
+            ImpactType::SecurityImplication => {
+                vec!["Security".to_string(), "Code Review".to_string()]
+            }
             ImpactType::PerformanceImpact => vec!["Performance Optimization".to_string()],
             ImpactType::DirectDependency => vec!["Software Development".to_string()],
             _ => vec!["General Development".to_string()],
@@ -456,11 +469,17 @@ impl ImpactAnalyzer {
 
     /// Calculate overall risk level
     fn calculate_overall_risk(&self, risk_factors: &[RiskFactor]) -> RiskLevel {
-        if risk_factors.iter().any(|rf| rf.severity == RiskLevel::Critical) {
+        if risk_factors
+            .iter()
+            .any(|rf| rf.severity == RiskLevel::Critical)
+        {
             RiskLevel::Critical
         } else if risk_factors.iter().any(|rf| rf.severity == RiskLevel::High) {
             RiskLevel::High
-        } else if risk_factors.iter().any(|rf| rf.severity == RiskLevel::Medium) {
+        } else if risk_factors
+            .iter()
+            .any(|rf| rf.severity == RiskLevel::Medium)
+        {
             RiskLevel::Medium
         } else {
             RiskLevel::Low
@@ -469,17 +488,27 @@ impl ImpactAnalyzer {
 
     /// Calculate technical risk level
     fn calculate_technical_risk(&self, risk_factors: &[RiskFactor]) -> RiskLevel {
-        let technical_factors: Vec<_> = risk_factors.iter()
-            .filter(|rf| matches!(rf.factor_type,
-                RiskFactorType::BreakingChange |
-                RiskFactorType::PerformanceDegradation |
-                RiskFactorType::ServiceOutage
-            ))
+        let technical_factors: Vec<_> = risk_factors
+            .iter()
+            .filter(|rf| {
+                matches!(
+                    rf.factor_type,
+                    RiskFactorType::BreakingChange
+                        | RiskFactorType::PerformanceDegradation
+                        | RiskFactorType::ServiceOutage
+                )
+            })
             .collect();
 
-        if technical_factors.iter().any(|rf| rf.severity == RiskLevel::High) {
+        if technical_factors
+            .iter()
+            .any(|rf| rf.severity == RiskLevel::High)
+        {
             RiskLevel::High
-        } else if technical_factors.iter().any(|rf| rf.severity == RiskLevel::Medium) {
+        } else if technical_factors
+            .iter()
+            .any(|rf| rf.severity == RiskLevel::Medium)
+        {
             RiskLevel::Medium
         } else {
             RiskLevel::Low
@@ -488,17 +517,27 @@ impl ImpactAnalyzer {
 
     /// Calculate business risk level
     fn calculate_business_risk(&self, risk_factors: &[RiskFactor]) -> RiskLevel {
-        let business_factors: Vec<_> = risk_factors.iter()
-            .filter(|rf| matches!(rf.factor_type,
-                RiskFactorType::UserExperienceImpact |
-                RiskFactorType::ComplianceViolation |
-                RiskFactorType::ServiceOutage
-            ))
+        let business_factors: Vec<_> = risk_factors
+            .iter()
+            .filter(|rf| {
+                matches!(
+                    rf.factor_type,
+                    RiskFactorType::UserExperienceImpact
+                        | RiskFactorType::ComplianceViolation
+                        | RiskFactorType::ServiceOutage
+                )
+            })
             .collect();
 
-        if business_factors.iter().any(|rf| rf.severity == RiskLevel::High) {
+        if business_factors
+            .iter()
+            .any(|rf| rf.severity == RiskLevel::High)
+        {
             RiskLevel::High
-        } else if business_factors.iter().any(|rf| rf.severity == RiskLevel::Medium) {
+        } else if business_factors
+            .iter()
+            .any(|rf| rf.severity == RiskLevel::Medium)
+        {
             RiskLevel::Medium
         } else {
             RiskLevel::Low
@@ -507,13 +546,20 @@ impl ImpactAnalyzer {
 
     /// Calculate security risk level
     fn calculate_security_risk(&self, risk_factors: &[RiskFactor]) -> RiskLevel {
-        let security_factors: Vec<_> = risk_factors.iter()
+        let security_factors: Vec<_> = risk_factors
+            .iter()
             .filter(|rf| matches!(rf.factor_type, RiskFactorType::SecurityVulnerability))
             .collect();
 
-        if security_factors.iter().any(|rf| rf.severity == RiskLevel::Critical) {
+        if security_factors
+            .iter()
+            .any(|rf| rf.severity == RiskLevel::Critical)
+        {
             RiskLevel::Critical
-        } else if security_factors.iter().any(|rf| rf.severity == RiskLevel::High) {
+        } else if security_factors
+            .iter()
+            .any(|rf| rf.severity == RiskLevel::High)
+        {
             RiskLevel::High
         } else {
             RiskLevel::Low
@@ -522,13 +568,20 @@ impl ImpactAnalyzer {
 
     /// Calculate performance risk level
     fn calculate_performance_risk(&self, risk_factors: &[RiskFactor]) -> RiskLevel {
-        let performance_factors: Vec<_> = risk_factors.iter()
+        let performance_factors: Vec<_> = risk_factors
+            .iter()
             .filter(|rf| matches!(rf.factor_type, RiskFactorType::PerformanceDegradation))
             .collect();
 
-        if performance_factors.iter().any(|rf| rf.severity == RiskLevel::High) {
+        if performance_factors
+            .iter()
+            .any(|rf| rf.severity == RiskLevel::High)
+        {
             RiskLevel::High
-        } else if performance_factors.iter().any(|rf| rf.severity == RiskLevel::Medium) {
+        } else if performance_factors
+            .iter()
+            .any(|rf| rf.severity == RiskLevel::Medium)
+        {
             RiskLevel::Medium
         } else {
             RiskLevel::Low
@@ -542,24 +595,27 @@ impl ImpactAnalyzer {
         for risk_factor in risk_factors {
             match risk_factor.factor_type {
                 RiskFactorType::BreakingChange => {
-                    strategies.push("Implement comprehensive testing before deployment".to_string());
+                    strategies
+                        .push("Implement comprehensive testing before deployment".to_string());
                     strategies.push("Use feature flags to control rollout".to_string());
-                },
+                }
                 RiskFactorType::SecurityVulnerability => {
                     strategies.push("Conduct security review and penetration testing".to_string());
                     strategies.push("Implement additional security controls".to_string());
-                },
+                }
                 RiskFactorType::PerformanceDegradation => {
                     strategies.push("Perform load testing and performance monitoring".to_string());
                     strategies.push("Implement performance optimization measures".to_string());
-                },
+                }
                 RiskFactorType::ServiceOutage => {
-                    strategies.push("Plan for gradual rollout with rollback capability".to_string());
+                    strategies
+                        .push("Plan for gradual rollout with rollback capability".to_string());
                     strategies.push("Ensure monitoring and alerting are in place".to_string());
-                },
+                }
                 _ => {
-                    strategies.push("Monitor impact and be prepared to rollback if needed".to_string());
-                },
+                    strategies
+                        .push("Monitor impact and be prepared to rollback if needed".to_string());
+                }
             }
         }
 
@@ -582,13 +638,16 @@ impl ImpactAnalyzer {
         // General recommendations based on change type
         match change_type {
             ChangeType::ArtifactDeleted => {
-                recommendations.push("Verify all dependencies are updated before deletion".to_string());
+                recommendations
+                    .push("Verify all dependencies are updated before deletion".to_string());
                 recommendations.push("Create backup of artifact before deletion".to_string());
-            },
+            }
             ChangeType::ArtifactModified => {
-                recommendations.push("Run comprehensive test suite after modifications".to_string());
-                recommendations.push("Review all dependent components for compatibility".to_string());
-            },
+                recommendations
+                    .push("Run comprehensive test suite after modifications".to_string());
+                recommendations
+                    .push("Review all dependent components for compatibility".to_string());
+            }
             _ => {
                 recommendations.push("Monitor system behavior after change".to_string());
             }
@@ -597,16 +656,17 @@ impl ImpactAnalyzer {
         // Recommendations based on risk level
         match risk_assessment.overall_risk {
             RiskLevel::Critical => {
-                recommendations.push("Consider postponing change until risks are mitigated".to_string());
+                recommendations
+                    .push("Consider postponing change until risks are mitigated".to_string());
                 recommendations.push("Require additional approvals before proceeding".to_string());
-            },
+            }
             RiskLevel::High => {
                 recommendations.push("Implement additional safeguards and monitoring".to_string());
                 recommendations.push("Plan for immediate rollback capability".to_string());
-            },
+            }
             RiskLevel::Medium => {
                 recommendations.push("Proceed with caution and enhanced monitoring".to_string());
-            },
+            }
             RiskLevel::Low => {
                 recommendations.push("Standard change management procedures apply".to_string());
             }
@@ -616,7 +676,8 @@ impl ImpactAnalyzer {
         if impacted_artifacts.len() > 20 {
             recommendations.push("Consider breaking change into smaller increments".to_string());
         } else if impacted_artifacts.len() > 5 {
-            recommendations.push("Coordinate with teams responsible for impacted artifacts".to_string());
+            recommendations
+                .push("Coordinate with teams responsible for impacted artifacts".to_string());
         }
 
         recommendations

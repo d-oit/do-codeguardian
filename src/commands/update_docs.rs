@@ -27,6 +27,7 @@ use tracing::{debug, info, warn};
 ///
 /// * `config` - Configuration for the operation
 /// * `args` - Command line arguments for update-docs
+/// * `project_root` - Root directory of the project
 ///
 /// # Returns
 ///
@@ -38,15 +39,19 @@ use tracing::{debug, info, warn};
 /// - Documentation directory is not found
 /// - File operations fail
 /// - Documentation validation fails
-pub async fn execute_update_docs(config: &Config, args: &crate::cli::UpdateDocsArgs) -> Result<()> {
+pub async fn execute_update_docs(
+    config: &Config,
+    args: &crate::cli::UpdateDocsArgs,
+    project_root: &PathBuf,
+) -> Result<()> {
     info!("Starting documentation update process");
 
     // Define documentation paths
     let docs_paths = vec![
-        PathBuf::from("docs"),
-        PathBuf::from("README.md"),
-        PathBuf::from("CONTRIBUTING.md"),
-        PathBuf::from("CHANGELOG.md"),
+        project_root.join("docs"),
+        project_root.join("README.md"),
+        project_root.join("CONTRIBUTING.md"),
+        project_root.join("CHANGELOG.md"),
     ];
 
     // Check if documentation directories exist
@@ -66,23 +71,23 @@ pub async fn execute_update_docs(config: &Config, args: &crate::cli::UpdateDocsA
     // Update documentation based on flags
     if args.api || args.force {
         info!("Updating API documentation");
-        update_api_docs(config).await?;
+        update_api_docs(config, project_root).await?;
     }
 
     if args.user_guide || args.force {
         info!("Updating user guide documentation");
-        update_user_guide(config).await?;
+        update_user_guide(config, project_root).await?;
     }
 
     if args.config || args.force {
         info!("Updating configuration documentation");
-        update_config_docs(config).await?;
+        update_config_docs(config, project_root).await?;
     }
 
     // Always validate documentation structure
     if !args.validate_only {
         info!("Validating documentation structure");
-        validate_docs_structure(config).await?;
+        validate_docs_structure(config, project_root).await?;
     }
 
     info!("Documentation update completed successfully");
@@ -90,8 +95,8 @@ pub async fn execute_update_docs(config: &Config, args: &crate::cli::UpdateDocsA
 }
 
 /// Update API documentation files
-async fn update_api_docs(_config: &Config) -> Result<()> {
-    let api_docs_path = PathBuf::from("docs/api");
+async fn update_api_docs(_config: &Config, project_root: &PathBuf) -> Result<()> {
+    let api_docs_path = project_root.join("docs/api");
 
     if !api_docs_path.exists() {
         info!("Creating API documentation directory");
@@ -130,8 +135,8 @@ When adding new API functionality, please update this documentation accordingly.
 }
 
 /// Update user guide documentation
-async fn update_user_guide(_config: &Config) -> Result<()> {
-    let user_guide_path = PathBuf::from("docs/user-guide");
+async fn update_user_guide(_config: &Config, project_root: &PathBuf) -> Result<()> {
+    let user_guide_path = project_root.join("docs/user-guide");
 
     if !user_guide_path.exists() {
         info!("Creating user guide directory");
@@ -828,8 +833,8 @@ codeguardian update-docs --config
 }
 
 /// Update configuration documentation
-async fn update_config_docs(_config: &Config) -> Result<()> {
-    let config_docs_path = PathBuf::from("docs/config");
+async fn update_config_docs(_config: &Config, project_root: &PathBuf) -> Result<()> {
+    let config_docs_path = project_root.join("docs/config");
 
     if !config_docs_path.exists() {
         info!("Creating configuration documentation directory");
@@ -886,38 +891,37 @@ verbose = false
 }
 
 /// Validate documentation structure
-async fn validate_docs_structure(_config: &Config) -> Result<()> {
+async fn validate_docs_structure(_config: &Config, project_root: &PathBuf) -> Result<()> {
     info!("Validating documentation structure");
 
     // Check for required documentation files
     let required_files = vec![
-        "README.md",
-        "docs/README.md",
-        "docs/api/index.md",
-        "docs/user-guide/installation.md",
-        "docs/config/README.md",
+        project_root.join("README.md"),
+        project_root.join("docs/README.md"),
+        project_root.join("docs/api/index.md"),
+        project_root.join("docs/user-guide/installation.md"),
+        project_root.join("docs/config/README.md"),
     ];
 
     for file in required_files {
-        let path = PathBuf::from(file);
-        if !path.exists() {
-            warn!("Missing documentation file: {}", file);
+        if !file.exists() {
+            warn!("Missing documentation file: {}", file.display());
         } else {
-            debug!("Found documentation file: {}", file);
+            debug!("Found documentation file: {}", file.display());
         }
     }
 
     // Validate markdown syntax (basic check)
-    validate_markdown_files()?;
+    validate_markdown_files(project_root)?;
 
     Ok(())
 }
 
 /// Validate markdown files for basic syntax
-fn validate_markdown_files() -> Result<()> {
+fn validate_markdown_files(project_root: &PathBuf) -> Result<()> {
     use std::fs;
 
-    let docs_dir = PathBuf::from("docs");
+    let docs_dir = project_root.join("docs");
 
     if !docs_dir.exists() {
         return Ok(());

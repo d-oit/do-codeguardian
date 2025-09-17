@@ -2,8 +2,8 @@
 
 use super::{RemediationWorkflow, WorkflowStatus};
 use anyhow::Result;
-use std::collections::HashMap;
 use chrono::Utc;
+use std::collections::HashMap;
 
 /// Workflow manager for handling remediation workflows
 pub struct WorkflowManager {
@@ -21,7 +21,9 @@ impl WorkflowManager {
 
     /// Add a new workflow
     pub fn add_workflow(&mut self, workflow: RemediationWorkflow) -> Result<()> {
-        let active_count = self.workflows.values()
+        let active_count = self
+            .workflows
+            .values()
             .filter(|w| matches!(w.status, WorkflowStatus::InProgress))
             .count() as u32;
 
@@ -50,7 +52,8 @@ impl WorkflowManager {
 
     /// List workflows by status
     pub fn list_workflows_by_status(&self, status: &WorkflowStatus) -> Vec<&RemediationWorkflow> {
-        self.workflows.values()
+        self.workflows
+            .values()
             .filter(|w| std::mem::discriminant(&w.status) == std::mem::discriminant(status))
             .collect()
     }
@@ -72,8 +75,10 @@ impl WorkflowManager {
         let initial_count = self.workflows.len();
 
         self.workflows.retain(|_, workflow| {
-            !matches!(workflow.status, WorkflowStatus::Completed | WorkflowStatus::Failed | WorkflowStatus::Cancelled)
-                || workflow.updated_at > cutoff
+            !matches!(
+                workflow.status,
+                WorkflowStatus::Completed | WorkflowStatus::Failed | WorkflowStatus::Cancelled
+            ) || workflow.updated_at > cutoff
         });
 
         initial_count - self.workflows.len()

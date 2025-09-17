@@ -192,8 +192,11 @@ impl BuildArtifactAnalyzer {
             // Check if it's in a build directory
             if let Some(parent) = path.parent() {
                 let parent_str = parent.to_string_lossy();
-                if parent_str.contains("target/") || parent_str.contains("build/")
-                    || parent_str.contains("dist/") || parent_str.contains("out/") {
+                if parent_str.contains("target/")
+                    || parent_str.contains("build/")
+                    || parent_str.contains("dist/")
+                    || parent_str.contains("out/")
+                {
                     return true;
                 }
             }
@@ -241,7 +244,10 @@ impl BuildArtifactAnalyzer {
                 }
                 _ => {
                     // For binary artifacts, try to extract dependency info
-                    if matches!(self.determine_artifact_type(path), ArtifactType::Binary | ArtifactType::SharedLibrary) {
+                    if matches!(
+                        self.determine_artifact_type(path),
+                        ArtifactType::Binary | ArtifactType::SharedLibrary
+                    ) {
                         dependencies.extend(self.extract_binary_dependencies(path)?);
                     }
                 }
@@ -310,7 +316,9 @@ impl BuildArtifactAnalyzer {
                 if let Ok(stdout) = String::from_utf8(output.stdout) {
                     for line in stdout.lines() {
                         if line.contains("=>") {
-                            if let Some(lib) = line.split("=>").nth(1).and_then(|s| s.split('(').next()) {
+                            if let Some(lib) =
+                                line.split("=>").nth(1).and_then(|s| s.split('(').next())
+                            {
                                 deps.push(lib.trim().to_string());
                             }
                         }
@@ -322,9 +330,13 @@ impl BuildArtifactAnalyzer {
         // Try otool on macOS
         #[cfg(target_os = "macos")]
         {
-            if let Ok(output) = Command::new("otool").args(&["-L", &path.to_string_lossy()]).output() {
+            if let Ok(output) = Command::new("otool")
+                .args(&["-L", &path.to_string_lossy()])
+                .output()
+            {
                 if let Ok(stdout) = String::from_utf8(output.stdout) {
-                    for line in stdout.lines().skip(1) { // Skip first line
+                    for line in stdout.lines().skip(1) {
+                        // Skip first line
                         if let Some(lib) = line.split('(').next() {
                             deps.push(lib.trim().to_string());
                         }
@@ -336,15 +348,20 @@ impl BuildArtifactAnalyzer {
         Ok(deps)
     }
 
-    fn group_artifacts_by_hash(&mut self, artifacts: Vec<BuildArtifact>) -> Result<Vec<DuplicateArtifact>> {
+    fn group_artifacts_by_hash(
+        &mut self,
+        artifacts: Vec<BuildArtifact>,
+    ) -> Result<Vec<DuplicateArtifact>> {
         let mut hash_groups: HashMap<String, Vec<BuildArtifact>> = HashMap::new();
 
         // Group artifacts by hash
         for artifact in artifacts {
-            hash_groups.entry(artifact.hash.clone())
+            hash_groups
+                .entry(artifact.hash.clone())
                 .or_default()
                 .push(artifact.clone());
-            self.hash_cache.entry(artifact.hash.clone())
+            self.hash_cache
+                .entry(artifact.hash.clone())
                 .or_default()
                 .push(artifact.path.clone());
         }
@@ -355,7 +372,8 @@ impl BuildArtifactAnalyzer {
             if artifacts.len() > 1 {
                 let total_wasted_space = artifacts.iter().skip(1).map(|a| a.size).sum();
                 let conflict_level = self.assess_conflict_level(&artifacts);
-                let cleanup_recommendation = self.generate_cleanup_recommendation(&artifacts, conflict_level.clone());
+                let cleanup_recommendation =
+                    self.generate_cleanup_recommendation(&artifacts, conflict_level.clone());
 
                 duplicates.push(DuplicateArtifact {
                     hash,
@@ -387,7 +405,8 @@ impl BuildArtifactAnalyzer {
         }
 
         // Check for dependency conflicts
-        let dep_sets: Vec<HashSet<_>> = artifacts.iter()
+        let dep_sets: Vec<HashSet<_>> = artifacts
+            .iter()
             .map(|a| a.dependencies.iter().cloned().collect())
             .collect();
 
@@ -409,30 +428,47 @@ impl BuildArtifactAnalyzer {
         }
     }
 
-    fn generate_cleanup_recommendation(&self, artifacts: &[BuildArtifact], conflict_level: ConflictLevel) -> String {
+    fn generate_cleanup_recommendation(
+        &self,
+        artifacts: &[BuildArtifact],
+        conflict_level: ConflictLevel,
+    ) -> String {
         match conflict_level {
             ConflictLevel::Critical => {
                 "CRITICAL: Multiple artifact types with dependency conflicts detected. \
-                 Manual review required before cleanup. Consider rebuilding from clean state.".to_string()
+                 Manual review required before cleanup. Consider rebuilding from clean state."
+                    .to_string()
             }
             ConflictLevel::High => {
-                format!("HIGH PRIORITY: Found {} duplicate artifacts with conflicts. \
-                        Recommend keeping the newest version and removing others.", artifacts.len())
+                format!(
+                    "HIGH PRIORITY: Found {} duplicate artifacts with conflicts. \
+                        Recommend keeping the newest version and removing others.",
+                    artifacts.len()
+                )
             }
             ConflictLevel::Medium => {
-                format!("MEDIUM: {} duplicate artifacts wasting {} bytes. \
-                        Safe to remove all but one.", artifacts.len(),
-                       artifacts.iter().skip(1).map(|a| a.size).sum::<u64>())
+                format!(
+                    "MEDIUM: {} duplicate artifacts wasting {} bytes. \
+                        Safe to remove all but one.",
+                    artifacts.len(),
+                    artifacts.iter().skip(1).map(|a| a.size).sum::<u64>()
+                )
             }
             ConflictLevel::Low => {
-                format!("LOW: {} duplicate artifacts. Automated cleanup recommended.", artifacts.len())
+                format!(
+                    "LOW: {} duplicate artifacts. Automated cleanup recommended.",
+                    artifacts.len()
+                )
             }
             ConflictLevel::None => "No conflicts detected.".to_string(),
         }
     }
 
     /// Resolve conflicts and generate cleanup actions
-    pub fn resolve_conflicts(&self, duplicates: &[DuplicateArtifact]) -> Result<Vec<CleanupAction>> {
+    pub fn resolve_conflicts(
+        &self,
+        duplicates: &[DuplicateArtifact],
+    ) -> Result<Vec<CleanupAction>> {
         let mut actions = Vec::new();
 
         for duplicate in duplicates {
@@ -448,14 +484,16 @@ impl BuildArtifactAnalyzer {
         let mut recommendations = Vec::new();
 
         let total_wasted = duplicates.iter().map(|d| d.total_wasted_space).sum::<u64>();
-        if total_wasted > 1024 * 1024 * 100 { // 100MB
+        if total_wasted > 1024 * 1024 * 100 {
+            // 100MB
             recommendations.push(format!(
                 "Clean {} MB of duplicate build artifacts to reduce disk usage",
                 total_wasted / (1024 * 1024)
             ));
         }
 
-        let critical_duplicates: Vec<_> = duplicates.iter()
+        let critical_duplicates: Vec<_> = duplicates
+            .iter()
             .filter(|d| matches!(d.conflict_level, ConflictLevel::Critical))
             .collect();
 
@@ -468,8 +506,10 @@ impl BuildArtifactAnalyzer {
 
         // Check for build system specific optimizations
         if self.detect_cargo_build() {
-            recommendations.push("Consider using 'cargo build --release' for optimized artifacts".to_string());
-            recommendations.push("Enable incremental compilation with CARGO_INCREMENTAL=1".to_string());
+            recommendations
+                .push("Consider using 'cargo build --release' for optimized artifacts".to_string());
+            recommendations
+                .push("Enable incremental compilation with CARGO_INCREMENTAL=1".to_string());
         }
 
         recommendations
@@ -485,17 +525,17 @@ impl BuildArtifactAnalyzer {
 
         for action in actions {
             match action {
-                CleanupAction::Remove { path, reason: _ } => {
-                    match fs::remove_file(path) {
-                        Ok(_) => {
-                            report.files_removed.push(path.clone());
-                            report.space_saved += self.get_file_size(path);
-                        }
-                        Err(e) => {
-                            report.errors.push(format!("Failed to remove {}: {}", path.display(), e));
-                        }
+                CleanupAction::Remove { path, reason: _ } => match fs::remove_file(path) {
+                    Ok(_) => {
+                        report.files_removed.push(path.clone());
+                        report.space_saved += self.get_file_size(path);
                     }
-                }
+                    Err(e) => {
+                        report
+                            .errors
+                            .push(format!("Failed to remove {}: {}", path.display(), e));
+                    }
+                },
                 CleanupAction::Keep { .. } => {
                     // Nothing to do for keep actions
                 }
@@ -573,7 +613,9 @@ impl ConflictResolver {
             _ => {
                 // Apply resolution strategies
                 let to_keep = self.select_artifacts_to_keep(&duplicate.artifacts);
-                let to_remove: Vec<_> = duplicate.artifacts.iter()
+                let to_remove: Vec<_> = duplicate
+                    .artifacts
+                    .iter()
                     .filter(|a| !to_keep.contains(&a.path))
                     .collect();
 
@@ -587,7 +629,10 @@ impl ConflictResolver {
                 for artifact in to_remove {
                     actions.push(CleanupAction::Remove {
                         path: artifact.path.clone(),
-                        reason: format!("Duplicate of kept artifact, saving {} bytes", artifact.size),
+                        reason: format!(
+                            "Duplicate of kept artifact, saving {} bytes",
+                            artifact.size
+                        ),
                     });
                 }
             }
@@ -611,9 +656,10 @@ impl ConflictResolver {
                     }
                 }
                 ResolutionStrategy::KeepByPath(pattern) => {
-                    if let Some(matched) = artifacts.iter().find(|a|
-                        a.path.to_string_lossy().contains(pattern)
-                    ) {
+                    if let Some(matched) = artifacts
+                        .iter()
+                        .find(|a| a.path.to_string_lossy().contains(pattern))
+                    {
                         return vec![matched.path.clone()];
                     }
                 }
@@ -625,12 +671,18 @@ impl ConflictResolver {
         }
 
         // Default: keep first one
-        artifacts.first().map(|a| a.path.clone()).into_iter().collect()
+        artifacts
+            .first()
+            .map(|a| a.path.clone())
+            .into_iter()
+            .collect()
     }
 
     fn find_newest<'a>(&self, artifacts: &'a [BuildArtifact]) -> Option<&'a BuildArtifact> {
         artifacts.iter().max_by_key(|a| {
-            a.path.metadata().ok()
+            a.path
+                .metadata()
+                .ok()
                 .and_then(|m| m.modified().ok())
                 .unwrap_or(std::time::SystemTime::UNIX_EPOCH)
         })
@@ -655,7 +707,10 @@ impl Analyzer for BuildArtifactAnalyzer {
     fn supports_file(&self, file_path: &Path) -> bool {
         // Support build-related files and directories
         if let Some(file_name) = file_path.file_name().and_then(|n| n.to_str()) {
-            matches!(file_name, "Cargo.toml" | "package.json" | "requirements.txt" | "pom.xml" | "build.gradle")
+            matches!(
+                file_name,
+                "Cargo.toml" | "package.json" | "requirements.txt" | "pom.xml" | "build.gradle"
+            )
         } else {
             false
         }
@@ -683,10 +738,22 @@ mod tests {
     fn test_artifact_type_detection() {
         let analyzer = BuildArtifactAnalyzer::new();
 
-        assert_eq!(analyzer.determine_artifact_type(Path::new("lib.so")), ArtifactType::SharedLibrary);
-        assert_eq!(analyzer.determine_artifact_type(Path::new("lib.a")), ArtifactType::Archive);
-        assert_eq!(analyzer.determine_artifact_type(Path::new("main.o")), ArtifactType::ObjectFile);
-        assert_eq!(analyzer.determine_artifact_type(Path::new("app.exe")), ArtifactType::Binary);
+        assert_eq!(
+            analyzer.determine_artifact_type(Path::new("lib.so")),
+            ArtifactType::SharedLibrary
+        );
+        assert_eq!(
+            analyzer.determine_artifact_type(Path::new("lib.a")),
+            ArtifactType::Archive
+        );
+        assert_eq!(
+            analyzer.determine_artifact_type(Path::new("main.o")),
+            ArtifactType::ObjectFile
+        );
+        assert_eq!(
+            analyzer.determine_artifact_type(Path::new("app.exe")),
+            ArtifactType::Binary
+        );
     }
 
     #[test]
@@ -727,8 +794,12 @@ mod tests {
 
         // Create build artifacts
         let artifacts = vec![
-            analyzer.analyze_file(&file1)?.ok_or_else(|| anyhow::anyhow!("Failed to analyze file1"))?,
-            analyzer.analyze_file(&file2)?.ok_or_else(|| anyhow::anyhow!("Failed to analyze file2"))?,
+            analyzer
+                .analyze_file(&file1)?
+                .ok_or_else(|| anyhow::anyhow!("Failed to analyze file1"))?,
+            analyzer
+                .analyze_file(&file2)?
+                .ok_or_else(|| anyhow::anyhow!("Failed to analyze file2"))?,
         ];
 
         let duplicates = analyzer.group_artifacts_by_hash(artifacts)?;

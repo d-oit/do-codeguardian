@@ -111,24 +111,41 @@ impl IntegrationManager {
 
     async fn send_github_notification(&self, message: &str, workflow_id: &str) -> Result<()> {
         // In a real implementation, this would create GitHub issues or comments
-        tracing::info!("GitHub notification sent for workflow {}: {}", workflow_id, message);
+        tracing::info!(
+            "GitHub notification sent for workflow {}: {}",
+            workflow_id,
+            message
+        );
         Ok(())
     }
 
     async fn send_slack_notification(&self, message: &str, workflow_id: &str) -> Result<()> {
         // In a real implementation, this would send Slack messages
-        tracing::info!("Slack notification sent for workflow {}: {}", workflow_id, message);
+        tracing::info!(
+            "Slack notification sent for workflow {}: {}",
+            workflow_id,
+            message
+        );
         Ok(())
     }
 
     async fn send_email_notification(&self, message: &str, workflow_id: &str) -> Result<()> {
         // In a real implementation, this would send emails
-        tracing::info!("Email notification sent for workflow {}: {}", workflow_id, message);
+        tracing::info!(
+            "Email notification sent for workflow {}: {}",
+            workflow_id,
+            message
+        );
         Ok(())
     }
 
     /// Create pull request for remediation changes
-    pub async fn create_pull_request(&self, title: &str, _description: &str, _branch: &str) -> Result<String> {
+    pub async fn create_pull_request(
+        &self,
+        title: &str,
+        _description: &str,
+        _branch: &str,
+    ) -> Result<String> {
         if !self.config.github.enabled {
             return Err(anyhow::anyhow!("GitHub integration not enabled"));
         }

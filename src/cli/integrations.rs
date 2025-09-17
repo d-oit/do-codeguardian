@@ -102,20 +102,42 @@ async fn list_integrations(_manager: &IntegrationManager) -> Result<()> {
     println!("\n🔗 CodeGuardian External System Integrations\n");
 
     let systems = vec![
-        ("jira", "Atlassian Jira", "Issue tracking and project management"),
-        ("confluence", "Atlassian Confluence", "Documentation and knowledge management"),
-        ("jenkins", "Jenkins", "CI/CD automation and build management"),
+        (
+            "jira",
+            "Atlassian Jira",
+            "Issue tracking and project management",
+        ),
+        (
+            "confluence",
+            "Atlassian Confluence",
+            "Documentation and knowledge management",
+        ),
+        (
+            "jenkins",
+            "Jenkins",
+            "CI/CD automation and build management",
+        ),
         ("gitlab", "GitLab", "DevOps platform with integrated CI/CD"),
-        ("bitbucket", "Bitbucket", "Git repository management and CI/CD"),
+        (
+            "bitbucket",
+            "Bitbucket",
+            "Git repository management and CI/CD",
+        ),
         ("azure_devops", "Azure DevOps", "Microsoft DevOps platform"),
     ];
 
-    println!("{:<15} {:<20} {:<50} {:<10}", "System", "Name", "Description", "Status");
+    println!(
+        "{:<15} {:<20} {:<50} {:<10}",
+        "System", "Name", "Description", "Status"
+    );
     println!("{}", "-".repeat(95));
 
     for (system_id, name, description) in systems {
         let status = "Available"; // In real implementation, check if enabled
-        println!("{:<15} {:<20} {:<50} {:<10}", system_id, name, description, status);
+        println!(
+            "{:<15} {:<20} {:<50} {:<10}",
+            system_id, name, description, status
+        );
     }
 
     println!("\nUse --health-check <system> to test connectivity");
@@ -146,7 +168,10 @@ async fn check_integration_health(manager: &mut IntegrationManager, system: &str
         }
 
         if !system_health.features_available.is_empty() {
-            println!("   Available Features: {}", system_health.features_available.join(", "));
+            println!(
+                "   Available Features: {}",
+                system_health.features_available.join(", ")
+            );
         }
 
         if let Some(error) = &system_health.last_error {
@@ -159,8 +184,14 @@ async fn check_integration_health(manager: &mut IntegrationManager, system: &str
     Ok(())
 }
 
-async fn search_duplicates_across_systems(manager: &mut IntegrationManager, query: &str) -> Result<()> {
-    println!("🔍 Searching for duplicates across all systems: '{}'", query);
+async fn search_duplicates_across_systems(
+    manager: &mut IntegrationManager,
+    query: &str,
+) -> Result<()> {
+    println!(
+        "🔍 Searching for duplicates across all systems: '{}'",
+        query
+    );
 
     manager.initialize().await?;
 
@@ -176,7 +207,9 @@ async fn search_duplicates_across_systems(manager: &mut IntegrationManager, quer
         include_closed: false,
     };
 
-    let results = manager.search_duplicates_across_systems(&search_query).await?;
+    let results = manager
+        .search_duplicates_across_systems(&search_query)
+        .await?;
 
     if results.is_empty() {
         println!("No duplicates found across any system.");
@@ -184,11 +217,15 @@ async fn search_duplicates_across_systems(manager: &mut IntegrationManager, quer
     }
 
     println!("\n📋 Found {} potential duplicates:\n", results.len());
-    println!("{:<10} {:<50} {:<15} {:<10}", "System", "Title", "Status", "Score");
+    println!(
+        "{:<10} {:<50} {:<15} {:<10}",
+        "System", "Title", "Status", "Score"
+    );
     println!("{}", "-".repeat(85));
 
     for result in results {
-        println!("{:<10} {:<50} {:<15} {:<10.2}",
+        println!(
+            "{:<10} {:<50} {:<15} {:<10.2}",
             result.source_system,
             truncate_string(&result.title, 48),
             result.status,
@@ -199,9 +236,18 @@ async fn search_duplicates_across_systems(manager: &mut IntegrationManager, quer
     Ok(())
 }
 
-async fn create_issue_across_systems(manager: &mut IntegrationManager, args: &IntegrationsArgs) -> Result<()> {
-    let title = args.title.as_ref().ok_or_else(|| anyhow::anyhow!("Title is required for issue creation"))?;
-    let description = args.description.as_ref().ok_or_else(|| anyhow::anyhow!("Description is required for issue creation"))?;
+async fn create_issue_across_systems(
+    manager: &mut IntegrationManager,
+    args: &IntegrationsArgs,
+) -> Result<()> {
+    let title = args
+        .title
+        .as_ref()
+        .ok_or_else(|| anyhow::anyhow!("Title is required for issue creation"))?;
+    let description = args
+        .description
+        .as_ref()
+        .ok_or_else(|| anyhow::anyhow!("Description is required for issue creation"))?;
 
     println!("📝 Creating issue across all systems: '{}'", title);
 
@@ -222,7 +268,10 @@ async fn create_issue_across_systems(manager: &mut IntegrationManager, args: &In
     let results = manager.create_issue_across_systems(&issue_request).await?;
 
     println!("\n📋 Issue Creation Results:\n");
-    println!("{:<15} {:<10} {:<30} {:<50}", "System", "Success", "Issue ID", "URL");
+    println!(
+        "{:<15} {:<10} {:<30} {:<50}",
+        "System", "Success", "Issue ID", "URL"
+    );
     println!("{}", "-".repeat(105));
 
     for result in results {
@@ -230,8 +279,14 @@ async fn create_issue_across_systems(manager: &mut IntegrationManager, args: &In
         let issue_id = result.issue_id.as_deref().unwrap_or("N/A");
         let url = result.issue_url.as_deref().unwrap_or("N/A");
 
-        println!("{} {:<14} {:<10} {:<30} {:<50}",
-            success_icon, result.system, result.success, issue_id, truncate_string(url, 48));
+        println!(
+            "{} {:<14} {:<10} {:<30} {:<50}",
+            success_icon,
+            result.system,
+            result.success,
+            issue_id,
+            truncate_string(url, 48)
+        );
 
         if let Some(error) = &result.error {
             println!("   Error: {}", error);
@@ -241,7 +296,10 @@ async fn create_issue_across_systems(manager: &mut IntegrationManager, args: &In
     Ok(())
 }
 
-async fn generate_unified_report(manager: &mut IntegrationManager, args: &IntegrationsArgs) -> Result<()> {
+async fn generate_unified_report(
+    manager: &mut IntegrationManager,
+    args: &IntegrationsArgs,
+) -> Result<()> {
     println!("📊 Generating unified report: {}", args.report_type);
 
     manager.initialize().await?;
@@ -257,7 +315,10 @@ async fn generate_unified_report(manager: &mut IntegrationManager, args: &Integr
     let report = manager.generate_unified_report(&report_request).await?;
 
     println!("\n📊 Unified Report - {}", report.report_type);
-    println!("Generated: {}", report.generated_at.format("%Y-%m-%d %H:%M:%S UTC"));
+    println!(
+        "Generated: {}",
+        report.generated_at.format("%Y-%m-%d %H:%M:%S UTC")
+    );
     println!("\n📈 Summary:");
     println!("  Total Systems: {}", report.summary.total_systems);
     println!("  Total Issues: {}", report.summary.total_issues);
@@ -266,11 +327,15 @@ async fn generate_unified_report(manager: &mut IntegrationManager, args: &Integr
 
     if !report.system_reports.is_empty() {
         println!("\n📋 System Breakdown:");
-        println!("{:<15} {:<12} {:<12} {:<12}", "System", "Issues", "Duplicates", "Rate %");
+        println!(
+            "{:<15} {:<12} {:<12} {:<12}",
+            "System", "Issues", "Duplicates", "Rate %"
+        );
         println!("{}", "-".repeat(55));
 
         for (system, system_report) in &report.system_reports {
-            println!("{:<15} {:<12} {:<12} {:<12.2}",
+            println!(
+                "{:<15} {:<12} {:<12} {:<12.2}",
                 system,
                 system_report.total_issues,
                 system_report.duplicates_found,
@@ -282,7 +347,11 @@ async fn generate_unified_report(manager: &mut IntegrationManager, args: &Integr
     Ok(())
 }
 
-async fn trigger_workflow_across_systems(manager: &mut IntegrationManager, workflow: &str, args: &IntegrationsArgs) -> Result<()> {
+async fn trigger_workflow_across_systems(
+    manager: &mut IntegrationManager,
+    workflow: &str,
+    args: &IntegrationsArgs,
+) -> Result<()> {
     println!("🚀 Triggering workflow '{}' across systems", workflow);
 
     manager.initialize().await?;
@@ -303,7 +372,10 @@ async fn trigger_workflow_across_systems(manager: &mut IntegrationManager, workf
     let results = manager.trigger_workflows(&workflow_request).await?;
 
     println!("\n🚀 Workflow Trigger Results:\n");
-    println!("{:<15} {:<10} {:<30} {:<50}", "System", "Success", "Workflow ID", "URL");
+    println!(
+        "{:<15} {:<10} {:<30} {:<50}",
+        "System", "Success", "Workflow ID", "URL"
+    );
     println!("{}", "-".repeat(105));
 
     for result in results {
@@ -311,8 +383,14 @@ async fn trigger_workflow_across_systems(manager: &mut IntegrationManager, workf
         let workflow_id = result.workflow_id.as_deref().unwrap_or("N/A");
         let url = result.workflow_url.as_deref().unwrap_or("N/A");
 
-        println!("{} {:<14} {:<10} {:<30} {:<50}",
-            success_icon, result.system, result.success, workflow_id, truncate_string(url, 48));
+        println!(
+            "{} {:<14} {:<10} {:<30} {:<50}",
+            success_icon,
+            result.system,
+            result.success,
+            workflow_id,
+            truncate_string(url, 48)
+        );
 
         if let Some(error) = &result.error {
             println!("   Error: {}", error);
@@ -342,13 +420,19 @@ async fn init_integration_config() -> Result<()> {
 
 async fn enable_integration(system: &str) -> Result<()> {
     println!("✅ Enabling integration: {}", system);
-    println!("💡 Update your configuration file to set {}.enabled = true", system);
+    println!(
+        "💡 Update your configuration file to set {}.enabled = true",
+        system
+    );
     Ok(())
 }
 
 async fn disable_integration(system: &str) -> Result<()> {
     println!("❌ Disabling integration: {}", system);
-    println!("💡 Update your configuration file to set {}.enabled = false", system);
+    println!(
+        "💡 Update your configuration file to set {}.enabled = false",
+        system
+    );
     Ok(())
 }
 

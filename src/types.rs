@@ -192,6 +192,11 @@ impl Finding {
         self
     }
 
+    pub fn with_category(mut self, category: String) -> Self {
+        self.category = Some(category);
+        self
+    }
+
     pub fn with_metadata(mut self, key: String, value: serde_json::Value) -> Self {
         self.metadata.insert(key, value);
         self

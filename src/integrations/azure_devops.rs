@@ -2,12 +2,12 @@
 
 use super::traits::*;
 use super::SystemConfig;
-use async_trait::async_trait;
 use anyhow::Result;
+use async_trait::async_trait;
+use base64::{engine::general_purpose::STANDARD as BASE64, Engine as _};
+use chrono::Utc;
 use reqwest::Client;
 use std::collections::HashMap;
-use chrono::Utc;
-use base64::{Engine as _, engine::general_purpose::STANDARD as BASE64};
 
 /// Azure DevOps client implementation
 pub struct AzureDevOpsClient {
@@ -34,7 +34,7 @@ impl AzureDevOpsClient {
             super::AuthConfig::Token { token } => {
                 let credentials = BASE64.encode(format!(":{}", token));
                 Ok(format!("Basic {}", credentials))
-            },
+            }
             _ => Err(anyhow::anyhow!("Unsupported auth type for Azure DevOps")),
         }
     }
@@ -60,7 +60,10 @@ impl ExternalSystemClient for AzureDevOpsClient {
         })
     }
 
-    async fn search_duplicates(&self, _query: &DuplicateSearchQuery) -> Result<Vec<DuplicateSearchResult>> {
+    async fn search_duplicates(
+        &self,
+        _query: &DuplicateSearchQuery,
+    ) -> Result<Vec<DuplicateSearchResult>> {
         // Simplified implementation
         Ok(vec![])
     }
@@ -77,7 +80,10 @@ impl ExternalSystemClient for AzureDevOpsClient {
         Err(anyhow::anyhow!("Not implemented"))
     }
 
-    async fn trigger_workflow(&self, _request: &WorkflowTriggerRequest) -> Result<TriggeredWorkflow> {
+    async fn trigger_workflow(
+        &self,
+        _request: &WorkflowTriggerRequest,
+    ) -> Result<TriggeredWorkflow> {
         Err(anyhow::anyhow!("Not implemented"))
     }
 

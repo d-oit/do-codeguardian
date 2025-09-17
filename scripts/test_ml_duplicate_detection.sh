@@ -5,6 +5,11 @@
 
 set -e
 
+# Environment variables with fallbacks
+MODEL_PATH="${CODEGUARDIAN_MODEL_PATH:-.codeguardian/models/duplicate_similarity.fann}"
+CONFIG_PATH="${CODEGUARDIAN_CONFIG_PATH:-codeguardian.toml}"
+BINARY_PATH="${CODEGUARDIAN_BINARY_PATH:-./target/release/do-codeguardian}"
+
 echo "🧪 Testing ML-Enhanced Duplicate Detection"
 echo "=========================================="
 
@@ -52,14 +57,14 @@ EOF
 
 # Run CodeGuardian analysis
 echo "🔍 Running CodeGuardian analysis..."
-./target/release/do-codeguardian check /tmp/test_duplicates.rs
+${BINARY_PATH} check /tmp/test_duplicates.rs
 
 # Check if ML model is being used
 echo ""
 echo "🔧 Checking ML model integration..."
-if [ -f ".codeguardian/models/duplicate_similarity.fann" ]; then
+if [ -f "${MODEL_PATH}" ]; then
     echo "✅ ML model file exists"
-    MODEL_SIZE=$(stat -c%s ".codeguardian/models/duplicate_similarity.fann" 2>/dev/null || stat -f%z ".codeguardian/models/duplicate_similarity.fann" 2>/dev/null || echo "0")
+    MODEL_SIZE=$(stat -c%s "${MODEL_PATH}" 2>/dev/null || stat -f%z "${MODEL_PATH}" 2>/dev/null || echo "0")
     echo "📊 Model size: $MODEL_SIZE bytes"
 else
     echo "❌ ML model file not found"
@@ -68,7 +73,7 @@ fi
 # Test configuration
 echo ""
 echo "⚙️  Configuration check..."
-if grep -q "enable_ml_similarity = true" codeguardian.toml; then
+if grep -q "enable_ml_similarity = true" "${CONFIG_PATH}"; then
     echo "✅ ML similarity is enabled in configuration"
 else
     echo "❌ ML similarity is not enabled in configuration"
@@ -78,7 +83,7 @@ fi
 echo ""
 echo "⚡ Performance test..."
 START_TIME=$(date +%s.%3N)
-./target/release/do-codeguardian check /tmp/test_duplicates.rs > /dev/null 2>&1
+${BINARY_PATH} check /tmp/test_duplicates.rs > /dev/null 2>&1
 END_TIME=$(date +%s.%3N)
 EXECUTION_TIME=$(echo "$END_TIME - $START_TIME" | bc 2>/dev/null || echo "0")
 echo "⏱️  Analysis completed in ${EXECUTION_TIME}s"

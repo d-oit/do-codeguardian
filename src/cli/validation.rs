@@ -254,7 +254,7 @@ async fn configure_validation(
 
     // Save configuration
     let config_json = serde_json::to_string_pretty(&config)?;
-    std::fs::write(".codeguardian/validation_config.json", config_json)?;
+    std::fs::write(&get_validation_config_path(), config_json)?;
 
     println!("✅ Validation configuration updated:");
     println!("   - Enabled: {}", config.enabled);
@@ -681,9 +681,13 @@ fn load_findings_from_file(path: &PathBuf) -> Result<Vec<Finding>> {
     Ok(findings)
 }
 
+fn get_validation_config_path() -> PathBuf {
+    PathBuf::from(".codeguardian/validation_config.json")
+}
+
 fn load_validation_config() -> Result<ValidationConfig> {
-    let config_path = ".codeguardian/validation_config.json";
-    if std::path::Path::new(config_path).exists() {
+    let config_path = get_validation_config_path();
+    if std::path::Path::new(&config_path).exists() {
         let content = std::fs::read_to_string(config_path)?;
         let config: ValidationConfig = serde_json::from_str(&content)?;
         Ok(config)

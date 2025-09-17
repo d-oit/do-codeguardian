@@ -68,10 +68,10 @@ mod tests {
     fn test_calculate() {
         assert_eq!(calculate(2, 2), 4);
     }
-    }
-    "#,
+}
+"#,
     )
-    .expect("Failed to write file");
+    .unwrap();
 
     let mut cmd = Command::cargo_bin("do-codeguardian").expect("Failed to find do-codeguardian binary");
     cmd.arg("check")
@@ -423,13 +423,6 @@ async fn main() {
 
     let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
     axum::Server::bind(&addr)
-        .serve(app)
-        .await
-        .unwrap();
-}
-"#,
-    )
-    .unwrap();
         .serve(app.into_make_service())
         .await
         .unwrap();

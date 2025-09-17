@@ -15,6 +15,13 @@ NC='\033[0m' # No Color
 TEST_REPO="${TEST_REPO:-$GITHUB_REPOSITORY}"
 TEST_DIR="/tmp/codeguardian-duplicate-test"
 TEST_RESULTS_FILE="$TEST_DIR/results.json"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Helper function to source scripts with absolute paths
+source_script() {
+    local script="$1"
+    source "$SCRIPT_DIR/$script"
+}
 
 # Print colored output
 log_info() {
@@ -40,8 +47,8 @@ cleanup() {
     fi
 
     # Cleanup cache
-    if [ -f "./scripts/github-issue-utils.sh" ]; then
-        source ./scripts/github-issue-utils.sh
+    if [ -f "$SCRIPT_DIR/github-issue-utils.sh" ]; then
+        source_script github-issue-utils.sh
         cleanup_cache
     fi
 }
@@ -92,7 +99,7 @@ setup_test() {
 EOF
 
     # Make scripts executable
-    chmod +x ./scripts/github-issue-utils.sh
+    chmod +x "$SCRIPT_DIR/github-issue-utils.sh"
 
     log_success "Test environment setup complete"
 }
@@ -101,13 +108,13 @@ EOF
 test_script_loading() {
     log_info "Testing script loading..."
 
-    if [ ! -f "./scripts/github-issue-utils.sh" ]; then
+    if [ ! -f "$SCRIPT_DIR/github-issue-utils.sh" ]; then
         log_error "github-issue-utils.sh not found"
         return 1
     fi
 
     # Source the script
-    if ! source ./scripts/github-issue-utils.sh; then
+    if ! source_script github-issue-utils.sh; then
         log_error "Failed to source github-issue-utils.sh"
         return 1
     fi
@@ -131,7 +138,7 @@ test_script_loading() {
 test_title_generation() {
     log_info "Testing title generation..."
 
-    source ./scripts/github-issue-utils.sh
+    source_script github-issue-utils.sh
 
     # Test with commit hash
     GITHUB_PR_NUMBER=""
@@ -150,7 +157,7 @@ test_title_generation() {
 test_keyword_extraction() {
     log_info "Testing keyword extraction..."
 
-    source ./scripts/github-utils.sh
+    source_script github-issue-utils.sh
 
     title="Security vulnerability in authentication module"
     body="Critical security issue found with potential SQL injection vulnerabilities and authentication bypass"
@@ -172,7 +179,7 @@ test_keyword_extraction() {
 test_duplicate_detection_negative() {
     log_info "Testing duplicate detection (negative case)..."
 
-    source ./scripts/github-issue-utils.sh
+    source_script github-issue-utils.sh
 
     # Use a unique title that shouldn't match anything
     unique_title="CodeGuardian Test - Unique Title $(date +%s)$RANDOM"
@@ -193,7 +200,7 @@ test_duplicate_detection_negative() {
 test_github_connectivity() {
     log_info "Testing GitHub API connectivity..."
 
-    source ./scripts/github-issue-utils.sh
+    source_script github-issue-utils.sh
 
     # Test basic GitHub CLI functionality
     if exec_gh_with_retry issue list --repo "$TEST_REPO" --limit 1 --json number >/dev/null 2>&1; then
@@ -209,7 +216,7 @@ test_github_connectivity() {
 test_cache_functionality() {
     log_info "Testing cache functionality..."
 
-    source ./scripts/github-issue-utils.sh
+    source_script github-issue-utils.sh
 
     # Test cache directory creation
     if [ -d "$GITHUB_ISSUE_CACHE_DIR" ]; then
@@ -235,7 +242,7 @@ test_cache_functionality() {
 test_integration_dry_run() {
     log_info "Testing integration (dry run)..."
 
-    source ./scripts/github-issue-utils.sh
+    source_script github-issue-utils.sh
 
     # Create temporary body file
     temp_body="$(mktemp)"

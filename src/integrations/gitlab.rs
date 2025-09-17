@@ -2,12 +2,12 @@
 
 use super::traits::*;
 use super::SystemConfig;
-use async_trait::async_trait;
 use anyhow::Result;
+use async_trait::async_trait;
+use chrono::{DateTime, Utc};
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use chrono::{DateTime, Utc};
 
 /// GitLab client implementation
 pub struct GitLabClient {
@@ -31,9 +31,7 @@ impl GitLabClient {
 
     fn get_auth_header(&self) -> Result<String> {
         match &self.config.auth {
-            super::AuthConfig::Token { token } => {
-                Ok(format!("Bearer {}", token))
-            },
+            super::AuthConfig::Token { token } => Ok(format!("Bearer {}", token)),
             _ => Err(anyhow::anyhow!("Unsupported auth type for GitLab")),
         }
     }
@@ -42,7 +40,8 @@ impl GitLabClient {
         let url = format!("{}/api/v4/{}", self.base_url, endpoint);
         let auth_header = self.get_auth_header()?;
 
-        let response = self.client
+        let response = self
+            .client
             .get(&url)
             .header("Authorization", auth_header)
             .header("Accept", "application/json")
@@ -57,11 +56,16 @@ impl GitLabClient {
         }
     }
 
-    async fn post_request<T: Serialize, R: for<'de> Deserialize<'de>>(&self, endpoint: &str, data: &T) -> Result<R> {
+    async fn post_request<T: Serialize, R: for<'de> Deserialize<'de>>(
+        &self,
+        endpoint: &str,
+        data: &T,
+    ) -> Result<R> {
         let url = format!("{}/api/v4/{}", self.base_url, endpoint);
         let auth_header = self.get_auth_header()?;
 
-        let response = self.client
+        let response = self
+            .client
             .post(&url)
             .header("Authorization", auth_header)
             .header("Content-Type", "application/json")
@@ -100,7 +104,7 @@ impl ExternalSystemClient for GitLabClient {
                         "duplicate_detection".to_string(),
                     ],
                 })
-            },
+            }
             Err(e) => Ok(SystemHealth {
                 status: HealthStatus::Unhealthy,
                 response_time_ms: None,
@@ -110,7 +114,10 @@ impl ExternalSystemClient for GitLabClient {
         }
     }
 
-    async fn search_duplicates(&self, query: &DuplicateSearchQuery) -> Result<Vec<DuplicateSearchResult>> {
+    async fn search_duplicates(
+        &self,
+        query: &DuplicateSearchQuery,
+    ) -> Result<Vec<DuplicateSearchResult>> {
         let search_url = format!(
             "issues?search={}&per_page={}",
             urlencoding::encode(&query.title),
@@ -147,11 +154,17 @@ impl ExternalSystemClient for GitLabClient {
         let gitlab_issue = GitLabIssueCreation {
             title: issue.title.clone(),
             description: Some(issue.description.clone()),
-            labels: if issue.labels.is_empty() { None } else { Some(issue.labels.join(",")) },
+            labels: if issue.labels.is_empty() {
+                None
+            } else {
+                Some(issue.labels.join(","))
+            },
         };
 
         let project_id = issue.project_key.as_deref().unwrap_or("1");
-        let created: GitLabIssue = self.post_request(&format!("projects/{}/issues", project_id), &gitlab_issue).await?;
+        let created: GitLabIssue = self
+            .post_request(&format!("projects/{}/issues", project_id), &gitlab_issue)
+            .await?;
 
         Ok(CreatedIssue {
             id: created.iid.to_string(),
@@ -166,11 +179,17 @@ impl ExternalSystemClient for GitLabClient {
         let mut update_data = serde_json::Map::new();
 
         if let Some(title) = &update.title {
-            update_data.insert("title".to_string(), serde_json::Value::String(title.clone()));
+            update_data.insert(
+                "title".to_string(),
+                serde_json::Value::String(title.clone()),
+            );
         }
 
         if let Some(description) = &update.description {
-            update_data.insert("description".to_string(), serde_json::Value::String(description.clone()));
+            update_data.insert(
+                "description".to_string(),
+                serde_json::Value::String(description.clone()),
+            );
         }
 
         if let Some(status) = &update.status {
@@ -179,14 +198,18 @@ impl ExternalSystemClient for GitLabClient {
                 "open" => "reopen",
                 _ => return Ok(()),
             };
-            update_data.insert("state_event".to_string(), serde_json::Value::String(state_event.to_string()));
+            update_data.insert(
+                "state_event".to_string(),
+                serde_json::Value::String(state_event.to_string()),
+            );
         }
 
         let project_id = "1"; // Would need to be passed or configured
         let url = format!("projects/{}/issues/{}", project_id, issue_id);
         let auth_header = self.get_auth_header()?;
 
-        let response = self.client
+        let response = self
+            .client
             .put(format!("{}/api/v4/{}", self.base_url, url))
             .header("Authorization", auth_header)
             .header("Content-Type", "application/json")
@@ -197,7 +220,10 @@ impl ExternalSystemClient for GitLabClient {
         if response.status().is_success() {
             Ok(())
         } else {
-            Err(anyhow::anyhow!("Failed to update GitLab issue: {}", response.status()))
+            Err(anyhow::anyhow!(
+                "Failed to update GitLab issue: {}",
+                response.status()
+            ))
         }
     }
 
@@ -209,17 +235,19 @@ impl ExternalSystemClient for GitLabClient {
         self.update_issue(issue_id, &update).await
     }
 
-    async fn trigger_workflow(&self, request: &WorkflowTriggerRequest) -> Result<TriggeredWorkflow> {
+    async fn trigger_workflow(
+        &self,
+        request: &WorkflowTriggerRequest,
+    ) -> Result<TriggeredWorkflow> {
         let trigger_data = GitLabPipelineTrigger {
             r#ref: request.branch.clone().unwrap_or_else(|| "main".to_string()),
             variables: request.parameters.clone(),
         };
 
         let project_id = "1"; // Would need to be configured
-        let pipeline: GitLabPipeline = self.post_request(
-            &format!("projects/{}/pipeline", project_id),
-            &trigger_data
-        ).await?;
+        let pipeline: GitLabPipeline = self
+            .post_request(&format!("projects/{}/pipeline", project_id), &trigger_data)
+            .await?;
 
         Ok(TriggeredWorkflow {
             id: pipeline.id.to_string(),
@@ -234,8 +262,14 @@ impl ExternalSystemClient for GitLabClient {
         let issues: Vec<GitLabIssue> = self.make_request("issues?per_page=100").await?;
 
         let total_issues = issues.len() as u64;
-        let duplicates_found = issues.iter()
-            .filter(|issue| issue.labels.iter().any(|label| label.to_lowercase().contains("duplicate")))
+        let duplicates_found = issues
+            .iter()
+            .filter(|issue| {
+                issue
+                    .labels
+                    .iter()
+                    .any(|label| label.to_lowercase().contains("duplicate"))
+            })
             .count() as u64;
 
         Ok(SystemReport {
@@ -249,9 +283,10 @@ impl ExternalSystemClient for GitLabClient {
             } else {
                 0.0
             },
-            time_period: request.start_date.zip(request.end_date).map(|(start, end)| {
-                super::traits::TimePeriod { start, end }
-            }),
+            time_period: request
+                .start_date
+                .zip(request.end_date)
+                .map(|(start, end)| super::traits::TimePeriod { start, end }),
             metrics: HashMap::new(),
             details: vec![],
         })

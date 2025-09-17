@@ -1,6 +1,6 @@
 //! Graph visualization for relationships
 
-use super::{RelationshipSearchResult, Artifact, Relationship};
+use super::{Artifact, Relationship, RelationshipSearchResult};
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -211,12 +211,16 @@ impl GraphVisualizer {
     }
 
     /// Generate visualization from search results
-    pub async fn generate_visualization(&self, search_result: &RelationshipSearchResult) -> Result<GraphVisualization> {
+    pub async fn generate_visualization(
+        &self,
+        search_result: &RelationshipSearchResult,
+    ) -> Result<GraphVisualization> {
         let start_time = std::time::Instant::now();
 
         // Limit nodes and edges based on configuration
         let limited_relationships = self.limit_relationships(&search_result.relationships);
-        let limited_artifacts = self.limit_artifacts(&search_result.artifacts, &limited_relationships);
+        let limited_artifacts =
+            self.limit_artifacts(&search_result.artifacts, &limited_relationships);
 
         // Generate nodes
         let nodes = self.generate_nodes(&limited_artifacts).await?;
@@ -232,7 +236,8 @@ impl GraphVisualizer {
         let metadata = self.generate_metadata(&nodes, &edges, generation_time);
 
         // Configure interactive features
-        let interactive_features = self.generate_interactive_features(&limited_artifacts, &limited_relationships);
+        let interactive_features =
+            self.generate_interactive_features(&limited_artifacts, &limited_relationships);
 
         Ok(GraphVisualization {
             nodes,
@@ -248,7 +253,11 @@ impl GraphVisualizer {
         let mut limited = relationships.to_vec();
 
         // Sort by strength descending
-        limited.sort_by(|a, b| b.strength.partial_cmp(&a.strength).unwrap_or(std::cmp::Ordering::Equal));
+        limited.sort_by(|a, b| {
+            b.strength
+                .partial_cmp(&a.strength)
+                .unwrap_or(std::cmp::Ordering::Equal)
+        });
 
         // Limit to max_edges
         limited.truncate(self.config.max_edges);
@@ -257,15 +266,23 @@ impl GraphVisualizer {
     }
 
     /// Limit artifacts based on relationships and configuration
-    fn limit_artifacts(&self, artifacts: &HashMap<String, Artifact>, relationships: &[Relationship]) -> HashMap<String, Artifact> {
+    fn limit_artifacts(
+        &self,
+        artifacts: &HashMap<String, Artifact>,
+        relationships: &[Relationship],
+    ) -> HashMap<String, Artifact> {
         let mut artifact_scores = HashMap::new();
 
         // Calculate importance scores based on relationship count and strength
         for relationship in relationships {
-            let source_score = artifact_scores.entry(relationship.source_artifact_id.clone()).or_insert(0.0);
+            let source_score = artifact_scores
+                .entry(relationship.source_artifact_id.clone())
+                .or_insert(0.0);
             *source_score += relationship.strength;
 
-            let target_score = artifact_scores.entry(relationship.target_artifact_id.clone()).or_insert(0.0);
+            let target_score = artifact_scores
+                .entry(relationship.target_artifact_id.clone())
+                .or_insert(0.0);
             *target_score += relationship.strength;
         }
 
@@ -285,7 +302,10 @@ impl GraphVisualizer {
     }
 
     /// Generate visualization nodes
-    async fn generate_nodes(&self, artifacts: &HashMap<String, Artifact>) -> Result<Vec<VisualizationNode>> {
+    async fn generate_nodes(
+        &self,
+        artifacts: &HashMap<String, Artifact>,
+    ) -> Result<Vec<VisualizationNode>> {
         let mut nodes = Vec::new();
 
         for artifact in artifacts.values() {
@@ -311,7 +331,10 @@ impl GraphVisualizer {
     }
 
     /// Generate visualization edges
-    async fn generate_edges(&self, relationships: &[Relationship]) -> Result<Vec<VisualizationEdge>> {
+    async fn generate_edges(
+        &self,
+        relationships: &[Relationship],
+    ) -> Result<Vec<VisualizationEdge>> {
         let mut edges = Vec::new();
 
         for relationship in relationships {
@@ -343,15 +366,17 @@ impl GraphVisualizer {
     }
 
     /// Calculate node size based on configured metric
-    fn calculate_node_size(&self, artifact: &Artifact, _all_artifacts: &HashMap<String, Artifact>) -> f64 {
+    fn calculate_node_size(
+        &self,
+        artifact: &Artifact,
+        _all_artifacts: &HashMap<String, Artifact>,
+    ) -> f64 {
         match self.config.node_size_metric {
             NodeSizeMetric::RelationshipCount => {
                 // This would require relationship count data
                 10.0 // Default size
-            },
-            NodeSizeMetric::FileSize => {
-                artifact.size_bytes.unwrap_or(1000) as f64 / 1000.0 + 5.0
-            },
+            }
+            NodeSizeMetric::FileSize => artifact.size_bytes.unwrap_or(1000) as f64 / 1000.0 + 5.0,
             NodeSizeMetric::Importance => {
                 // Calculate importance based on various factors
                 let base_size = 8.0;
@@ -362,7 +387,7 @@ impl GraphVisualizer {
                     _ => 0.9,
                 };
                 base_size * type_multiplier
-            },
+            }
             NodeSizeMetric::Uniform => 10.0,
         }
     }
@@ -370,31 +395,28 @@ impl GraphVisualizer {
     /// Calculate node color based on configured scheme
     fn calculate_node_color(&self, artifact: &Artifact) -> String {
         match &self.config.color_scheme {
-            ColorScheme::ArtifactType => {
-                match artifact.artifact_type {
-                    super::ArtifactType::SourceCode => "#3498db".to_string(),
-                    super::ArtifactType::Documentation => "#2ecc71".to_string(),
-                    super::ArtifactType::Configuration => "#f39c12".to_string(),
-                    super::ArtifactType::Issue => "#e74c3c".to_string(),
-                    super::ArtifactType::TestFile => "#9b59b6".to_string(),
-                    _ => "#95a5a6".to_string(),
-                }
+            ColorScheme::ArtifactType => match artifact.artifact_type {
+                super::ArtifactType::SourceCode => "#3498db".to_string(),
+                super::ArtifactType::Documentation => "#2ecc71".to_string(),
+                super::ArtifactType::Configuration => "#f39c12".to_string(),
+                super::ArtifactType::Issue => "#e74c3c".to_string(),
+                super::ArtifactType::TestFile => "#9b59b6".to_string(),
+                _ => "#95a5a6".to_string(),
             },
             ColorScheme::Repository => {
                 // Generate color based on repository name hash
                 let hash = self.hash_string(artifact.repository.as_deref().unwrap_or("default"));
                 self.hash_to_color(hash)
-            },
+            }
             ColorScheme::System => {
                 let hash = self.hash_string(artifact.system.as_deref().unwrap_or("default"));
                 self.hash_to_color(hash)
-            },
+            }
             ColorScheme::RelationshipStrength => "#3498db".to_string(), // Not applicable for nodes
-            ColorScheme::Custom(colors) => {
-                colors.get(&format!("{:?}", artifact.artifact_type))
-                    .cloned()
-                    .unwrap_or_else(|| "#95a5a6".to_string())
-            },
+            ColorScheme::Custom(colors) => colors
+                .get(&format!("{:?}", artifact.artifact_type))
+                .cloned()
+                .unwrap_or_else(|| "#95a5a6".to_string()),
         }
     }
 
@@ -403,10 +425,8 @@ impl GraphVisualizer {
         match self.config.edge_thickness_metric {
             EdgeThicknessMetric::Strength => {
                 1.0 + (relationship.strength * 4.0) // 1-5 pixel range
-            },
-            EdgeThicknessMetric::Confidence => {
-                1.0 + (relationship.confidence * 4.0)
-            },
+            }
+            EdgeThicknessMetric::Confidence => 1.0 + (relationship.confidence * 4.0),
             EdgeThicknessMetric::Uniform => 2.0,
         }
     }
@@ -436,9 +456,15 @@ impl GraphVisualizer {
     }
 
     /// Calculate layout for nodes and edges
-    async fn calculate_layout(&self, nodes: &[VisualizationNode], edges: &[VisualizationEdge]) -> Result<LayoutData> {
+    async fn calculate_layout(
+        &self,
+        nodes: &[VisualizationNode],
+        edges: &[VisualizationEdge],
+    ) -> Result<LayoutData> {
         match self.config.layout_algorithm {
-            LayoutAlgorithm::ForceDirected => self.calculate_force_directed_layout(nodes, edges).await,
+            LayoutAlgorithm::ForceDirected => {
+                self.calculate_force_directed_layout(nodes, edges).await
+            }
             LayoutAlgorithm::Hierarchical => self.calculate_hierarchical_layout(nodes, edges).await,
             LayoutAlgorithm::Circular => self.calculate_circular_layout(nodes, edges).await,
             LayoutAlgorithm::Grid => self.calculate_grid_layout(nodes, edges).await,
@@ -447,7 +473,11 @@ impl GraphVisualizer {
     }
 
     /// Calculate force-directed layout
-    async fn calculate_force_directed_layout(&self, _nodes: &[VisualizationNode], _edges: &[VisualizationEdge]) -> Result<LayoutData> {
+    async fn calculate_force_directed_layout(
+        &self,
+        _nodes: &[VisualizationNode],
+        _edges: &[VisualizationEdge],
+    ) -> Result<LayoutData> {
         // Simplified force-directed layout
         let bounds = BoundingBox {
             min_x: 0.0,
@@ -460,12 +490,20 @@ impl GraphVisualizer {
             algorithm: LayoutAlgorithm::ForceDirected,
             bounds,
             scale: 1.0,
-            center: Position { x: 400.0, y: 300.0, z: None },
+            center: Position {
+                x: 400.0,
+                y: 300.0,
+                z: None,
+            },
         })
     }
 
     /// Calculate hierarchical layout
-    async fn calculate_hierarchical_layout(&self, _nodes: &[VisualizationNode], _edges: &[VisualizationEdge]) -> Result<LayoutData> {
+    async fn calculate_hierarchical_layout(
+        &self,
+        _nodes: &[VisualizationNode],
+        _edges: &[VisualizationEdge],
+    ) -> Result<LayoutData> {
         let bounds = BoundingBox {
             min_x: 0.0,
             max_x: 1000.0,
@@ -477,12 +515,20 @@ impl GraphVisualizer {
             algorithm: LayoutAlgorithm::Hierarchical,
             bounds,
             scale: 1.0,
-            center: Position { x: 500.0, y: 400.0, z: None },
+            center: Position {
+                x: 500.0,
+                y: 400.0,
+                z: None,
+            },
         })
     }
 
     /// Calculate circular layout
-    async fn calculate_circular_layout(&self, _nodes: &[VisualizationNode], _edges: &[VisualizationEdge]) -> Result<LayoutData> {
+    async fn calculate_circular_layout(
+        &self,
+        _nodes: &[VisualizationNode],
+        _edges: &[VisualizationEdge],
+    ) -> Result<LayoutData> {
         let bounds = BoundingBox {
             min_x: -300.0,
             max_x: 300.0,
@@ -494,12 +540,20 @@ impl GraphVisualizer {
             algorithm: LayoutAlgorithm::Circular,
             bounds,
             scale: 1.0,
-            center: Position { x: 0.0, y: 0.0, z: None },
+            center: Position {
+                x: 0.0,
+                y: 0.0,
+                z: None,
+            },
         })
     }
 
     /// Calculate grid layout
-    async fn calculate_grid_layout(&self, nodes: &[VisualizationNode], _edges: &[VisualizationEdge]) -> Result<LayoutData> {
+    async fn calculate_grid_layout(
+        &self,
+        nodes: &[VisualizationNode],
+        _edges: &[VisualizationEdge],
+    ) -> Result<LayoutData> {
         let grid_size = (nodes.len() as f64).sqrt().ceil() as usize;
         let cell_size = 100.0;
         let total_size = grid_size as f64 * cell_size;
@@ -515,12 +569,20 @@ impl GraphVisualizer {
             algorithm: LayoutAlgorithm::Grid,
             bounds,
             scale: 1.0,
-            center: Position { x: total_size / 2.0, y: total_size / 2.0, z: None },
+            center: Position {
+                x: total_size / 2.0,
+                y: total_size / 2.0,
+                z: None,
+            },
         })
     }
 
     /// Calculate radial layout
-    async fn calculate_radial_layout(&self, _nodes: &[VisualizationNode], _edges: &[VisualizationEdge]) -> Result<LayoutData> {
+    async fn calculate_radial_layout(
+        &self,
+        _nodes: &[VisualizationNode],
+        _edges: &[VisualizationEdge],
+    ) -> Result<LayoutData> {
         let radius = 250.0;
         let bounds = BoundingBox {
             min_x: -radius,
@@ -533,12 +595,21 @@ impl GraphVisualizer {
             algorithm: LayoutAlgorithm::Radial,
             bounds,
             scale: 1.0,
-            center: Position { x: 0.0, y: 0.0, z: None },
+            center: Position {
+                x: 0.0,
+                y: 0.0,
+                z: None,
+            },
         })
     }
 
     /// Generate visualization metadata
-    fn generate_metadata(&self, nodes: &[VisualizationNode], edges: &[VisualizationEdge], generation_time_ms: u64) -> VisualizationMetadata {
+    fn generate_metadata(
+        &self,
+        nodes: &[VisualizationNode],
+        edges: &[VisualizationEdge],
+        generation_time_ms: u64,
+    ) -> VisualizationMetadata {
         let mut nodes_by_type = HashMap::new();
         for node in nodes {
             *nodes_by_type.entry(node.artifact_type.clone()).or_insert(0) += 1;
@@ -546,11 +617,17 @@ impl GraphVisualizer {
 
         let mut edges_by_type = HashMap::new();
         for edge in edges {
-            *edges_by_type.entry(edge.relationship_type.clone()).or_insert(0) += 1;
+            *edges_by_type
+                .entry(edge.relationship_type.clone())
+                .or_insert(0) += 1;
         }
 
         let total_degree: usize = nodes.len() * 2; // Simplified calculation
-        let average_degree = if nodes.is_empty() { 0.0 } else { total_degree as f64 / nodes.len() as f64 };
+        let average_degree = if nodes.is_empty() {
+            0.0
+        } else {
+            total_degree as f64 / nodes.len() as f64
+        };
 
         VisualizationMetadata {
             total_nodes: nodes.len(),
@@ -562,14 +639,18 @@ impl GraphVisualizer {
                 nodes_by_type,
                 edges_by_type,
                 average_degree,
-                max_degree: 10, // Simplified
+                max_degree: 10,          // Simplified
                 connected_components: 1, // Simplified
             },
         }
     }
 
     /// Generate interactive features
-    fn generate_interactive_features(&self, artifacts: &HashMap<String, Artifact>, relationships: &[Relationship]) -> InteractiveFeatures {
+    fn generate_interactive_features(
+        &self,
+        artifacts: &HashMap<String, Artifact>,
+        relationships: &[Relationship],
+    ) -> InteractiveFeatures {
         let mut artifact_types = HashSet::new();
         let mut repositories = HashSet::new();
         let mut systems = HashSet::new();

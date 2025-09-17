@@ -58,9 +58,12 @@ impl AnalyzerRegistry {
         registry.register(Box::new(performance_analyzer::PerformanceAnalyzer::new()?));
         registry.register(Box::new(security_analyzer::SecurityAnalyzer::new()));
         registry.register(Box::new(dependency_analyzer::DependencyAnalyzer::new(
-            std::env::current_dir().map_err(|e| anyhow::anyhow!("Failed to get current directory: {}", e))?,
+            std::env::current_dir()
+                .map_err(|e| anyhow::anyhow!("Failed to get current directory: {}", e))?,
         )));
-        registry.register(Box::new(build_artifact_analyzer::BuildArtifactAnalyzer::new()));
+        registry.register(Box::new(
+            build_artifact_analyzer::BuildArtifactAnalyzer::new(),
+        ));
 
         // Register broken files detection analyzers based on configuration
         if config.analyzers.broken_files.enabled {

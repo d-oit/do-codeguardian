@@ -3,12 +3,12 @@
 //! Provides unified interfaces for integrating with various external systems
 //! including issue trackers, documentation platforms, and CI/CD systems.
 
-pub mod jira;
-pub mod confluence;
-pub mod jenkins;
-pub mod gitlab;
-pub mod bitbucket;
 pub mod azure_devops;
+pub mod bitbucket;
+pub mod confluence;
+pub mod gitlab;
+pub mod jenkins;
+pub mod jira;
 pub mod traits;
 
 use anyhow::Result;
@@ -38,7 +38,10 @@ impl Default for IntegrationsConfig {
         systems.insert("jenkins".to_string(), SystemConfig::jenkins_default());
         systems.insert("gitlab".to_string(), SystemConfig::gitlab_default());
         systems.insert("bitbucket".to_string(), SystemConfig::bitbucket_default());
-        systems.insert("azure_devops".to_string(), SystemConfig::azure_devops_default());
+        systems.insert(
+            "azure_devops".to_string(),
+            SystemConfig::azure_devops_default(),
+        );
 
         Self {
             enabled: false,
@@ -263,20 +266,33 @@ impl IntegrationManager {
     }
 
     /// Create a client for a specific external system
-    async fn create_client(&self, system_name: &str, config: &SystemConfig) -> Result<Box<dyn ExternalSystemClient>> {
+    async fn create_client(
+        &self,
+        system_name: &str,
+        config: &SystemConfig,
+    ) -> Result<Box<dyn ExternalSystemClient>> {
         match system_name {
             "jira" => Ok(Box::new(jira::JiraClient::new(config.clone()).await?)),
-            "confluence" => Ok(Box::new(confluence::ConfluenceClient::new(config.clone()).await?)),
+            "confluence" => Ok(Box::new(
+                confluence::ConfluenceClient::new(config.clone()).await?,
+            )),
             "jenkins" => Ok(Box::new(jenkins::JenkinsClient::new(config.clone()).await?)),
             "gitlab" => Ok(Box::new(gitlab::GitLabClient::new(config.clone()).await?)),
-            "bitbucket" => Ok(Box::new(bitbucket::BitbucketClient::new(config.clone()).await?)),
-            "azure_devops" => Ok(Box::new(azure_devops::AzureDevOpsClient::new(config.clone()).await?)),
+            "bitbucket" => Ok(Box::new(
+                bitbucket::BitbucketClient::new(config.clone()).await?,
+            )),
+            "azure_devops" => Ok(Box::new(
+                azure_devops::AzureDevOpsClient::new(config.clone()).await?,
+            )),
             _ => Err(anyhow::anyhow!("Unsupported system: {}", system_name)),
         }
     }
 
     /// Search for duplicates across all enabled systems
-    pub async fn search_duplicates_across_systems(&self, query: &DuplicateSearchQuery) -> Result<Vec<DuplicateSearchResult>> {
+    pub async fn search_duplicates_across_systems(
+        &self,
+        query: &DuplicateSearchQuery,
+    ) -> Result<Vec<DuplicateSearchResult>> {
         let mut all_results = Vec::new();
 
         for (system_name, client) in &self.clients {
@@ -289,7 +305,7 @@ impl IntegrationManager {
                                 result.source_system = system_name.clone();
                             }
                             all_results.extend(results);
-                        },
+                        }
                         Err(e) => {
                             tracing::warn!("Failed to search duplicates in {}: {}", system_name, e);
                         }
@@ -299,13 +315,20 @@ impl IntegrationManager {
         }
 
         // Sort by relevance score
-        all_results.sort_by(|a, b| b.relevance_score.partial_cmp(&a.relevance_score).unwrap_or(std::cmp::Ordering::Equal));
+        all_results.sort_by(|a, b| {
+            b.relevance_score
+                .partial_cmp(&a.relevance_score)
+                .unwrap_or(std::cmp::Ordering::Equal)
+        });
 
         Ok(all_results)
     }
 
     /// Create issues across multiple systems
-    pub async fn create_issue_across_systems(&self, issue: &IssueCreationRequest) -> Result<Vec<IssueCreationResult>> {
+    pub async fn create_issue_across_systems(
+        &self,
+        issue: &IssueCreationRequest,
+    ) -> Result<Vec<IssueCreationResult>> {
         let mut results = Vec::new();
 
         for (system_name, client) in &self.clients {
@@ -320,7 +343,7 @@ impl IntegrationManager {
                                 issue_url: Some(result.url),
                                 error: None,
                             });
-                        },
+                        }
                         Err(e) => {
                             results.push(IssueCreationResult {
                                 system: system_name.clone(),
@@ -340,7 +363,10 @@ impl IntegrationManager {
     }
 
     /// Trigger workflows across multiple systems
-    pub async fn trigger_workflows(&self, workflow_request: &WorkflowTriggerRequest) -> Result<Vec<WorkflowTriggerResult>> {
+    pub async fn trigger_workflows(
+        &self,
+        workflow_request: &WorkflowTriggerRequest,
+    ) -> Result<Vec<WorkflowTriggerResult>> {
         let mut results = Vec::new();
 
         for (system_name, client) in &self.clients {
@@ -355,7 +381,7 @@ impl IntegrationManager {
                                 workflow_url: Some(result.url),
                                 error: None,
                             });
-                        },
+                        }
                         Err(e) => {
                             results.push(WorkflowTriggerResult {
                                 system: system_name.clone(),
@@ -375,7 +401,10 @@ impl IntegrationManager {
     }
 
     /// Generate unified reports across all systems
-    pub async fn generate_unified_report(&self, report_request: &ReportRequest) -> Result<UnifiedReport> {
+    pub async fn generate_unified_report(
+        &self,
+        report_request: &ReportRequest,
+    ) -> Result<UnifiedReport> {
         let mut system_reports = HashMap::new();
 
         for (system_name, client) in &self.clients {
@@ -384,7 +413,7 @@ impl IntegrationManager {
                     match client.generate_report(report_request).await {
                         Ok(report) => {
                             system_reports.insert(system_name.clone(), report);
-                        },
+                        }
                         Err(e) => {
                             tracing::warn!("Failed to generate report from {}: {}", system_name, e);
                         }
@@ -401,7 +430,10 @@ impl IntegrationManager {
         })
     }
 
-    fn generate_report_summary(&self, system_reports: &HashMap<String, SystemReport>) -> ReportSummary {
+    fn generate_report_summary(
+        &self,
+        system_reports: &HashMap<String, SystemReport>,
+    ) -> ReportSummary {
         let total_issues = system_reports.values().map(|r| r.total_issues).sum();
         let total_duplicates = system_reports.values().map(|r| r.duplicates_found).sum();
         let systems_count = system_reports.len();
@@ -433,7 +465,10 @@ impl IntegrationManager {
             system_health.insert(system_name.clone(), health);
         }
 
-        let healthy_systems = system_health.values().filter(|h| h.status == HealthStatus::Healthy).count();
+        let healthy_systems = system_health
+            .values()
+            .filter(|h| h.status == HealthStatus::Healthy)
+            .count();
         let total_systems = system_health.len();
 
         Ok(IntegrationHealthStatus {

@@ -1,0 +1,52 @@
+# Test configuration for regression tests
+# This ensures consistent behavior across test runs
+
+[analysis]
+enabled_analyzers = ["security", "performance", "non_production", "git_conflict", "ai_content"]
+severity_levels = ["critical", "high", "medium", "low", "info"]
+max_file_size_mb = 10
+timeout_seconds = 30
+
+[analyzers.security]
+enabled = true
+patterns = ["sql_injection", "xss", "path_traversal", "secrets", "command_injection"]
+
+[analyzers.performance]
+enabled = true
+check_nested_loops = true
+check_large_functions = true
+max_function_lines = 100
+
+[analyzers.non_production]
+enabled = true
+check_debug_statements = true
+check_todo_comments = false # Don't flag all TODOs, let AI analyzer handle context
+patterns = ["println!", "eprintln!", "dbg!", "print!"]
+
+[analyzers.git_conflict]
+enabled = true
+fail_on_conflicts = false # Don't fail tests on conflicts in test content
+check_malformed = true
+
+[analyzers.ai_content]
+enabled = true
+check_incomplete_implementations = true
+check_placeholders = true
+ignore_documentation = true # Our improvement: ignore doc comments
+ignore_test_code = true # Our improvement: ignore test modules
+
+[output]
+format = "json"
+include_suggestions = true
+include_metadata = true
+
+[integrations.github]
+enabled = false # Disable for tests to avoid token requirements
+
+[cache]
+enabled = false # Disable cache for consistent test results
+
+[reporting]
+include_summary = true
+group_by_severity = true
+show_progress = false # Don't show progress bars in tests

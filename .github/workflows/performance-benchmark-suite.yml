@@ -1,0 +1,432 @@
+---
+name: 🚀 Performance Benchmark Suite
+
+on:
+  schedule:
+    # Run comprehensive benchmarks daily at 2 AM UTC
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+    inputs:
+      benchmark_type:
+        description: 'Type of benchmark to run'
+        required: true
+        default: 'comprehensive'
+        type: choice
+        options:
+          - comprehensive
+          - regression-only
+          - load-testing-only
+          - optimization-only
+          - quick-check
+      fail_on_regression:
+        description: 'Fail workflow on performance regression'
+        required: false
+        default: true
+        type: boolean
+  pull_request:
+    paths:
+      - 'src/**'
+      - 'benches/**'
+      - 'Cargo.toml'
+      - 'Cargo.lock'
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'src/**'
+      - 'benches/**'
+      - 'Cargo.toml'
+      - 'Cargo.lock'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+  checks: write
+
+jobs:
+  performance-benchmark-suite:
+    name: 🚀 Performance Benchmark Suite
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    strategy:
+      matrix:
+        benchmark_suite:
+          - name: "Regression Detection"
+            bench_name: "performance_regression_suite"
+            measurement_time: 15
+          - name: "Load Testing"
+            bench_name: "load_testing_benchmark"
+            measurement_time: 20
+          - name: "Metrics Collection"
+            bench_name: "performance_metrics_benchmark"
+            measurement_time: 15
+          - name: "Optimization Analysis"
+            bench_name: "optimization_recommendations_benchmark"
+            measurement_time: 15
+
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: 🦀 Setup Rust
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: stable
+          components: rustfmt, clippy
+          cache: true
+
+      - name: 📦 Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y jq gnuplot
+
+      - name: 🔨 Build CodeGuardian (Release)
+        run: cargo build --release --quiet
+
+      - name: 📊 Run ${{ matrix.benchmark_suite.name }} Benchmarks
+        id: run_benchmarks
+        run: |
+          echo "🚀 Running ${{ matrix.benchmark_suite.name }} benchmarks..."
+          echo "=============================================================="
+
+          # Create benchmark results directory
+          mkdir -p benchmark_results
+
+          # Run the specific benchmark suite
+          if cargo bench \
+            --bench ${{ matrix.benchmark_suite.bench_name }} \
+            --profile bench \
+            -- --measurement-time ${{ matrix.benchmark_suite.measurement_time }} \
+            --output-format json \
+            > benchmark_results/${{ matrix.benchmark_suite.bench_name }}_results.json; then
+
+            echo "✅ ${{ matrix.benchmark_suite.name }} benchmarks completed successfully"
+            echo "benchmark_status=success" >> $GITHUB_OUTPUT
+
+            # Extract key metrics for reporting
+            if [ -f "benchmark_results/${{ matrix.benchmark_suite.bench_name }}_results.json" ]; then
+              # Calculate average times and other metrics
+              jq -r '.benchmarks[] | select(.name) | "\(.name): \(.criterion_estimates.mean.point_estimate) \(.criterion_estimates.mean.unit)"' \
+                benchmark_results/${{ matrix.benchmark_suite.bench_name }}_results.json || echo "Metrics extraction failed"
+            fi
+
+          else
+            echo "❌ ${{ matrix.benchmark_suite.name }} benchmarks failed"
+            echo "benchmark_status=failure" >> $GITHUB_OUTPUT
+            exit 1
+          fi
+
+      - name: 📈 Generate Benchmark Report
+        if: steps.run_benchmarks.outputs.benchmark_status == 'success'
+        run: |
+          echo "📊 Generating benchmark report for ${{ matrix.benchmark_suite.name }}"
+
+          REPORT_FILE="benchmark_results/${{ matrix.benchmark_suite.bench_name }}_report.md"
+
+          cat > "$REPORT_FILE" << EOF
+          # ${{ matrix.benchmark_suite.name }} Benchmark Report
+          Generated: $(date)
+          Benchmark Suite: ${{ matrix.benchmark_suite.bench_name }}
+          Measurement Time: ${{ matrix.benchmark_suite.measurement_time }}s
+
+          ## Summary
+          - Status: ✅ Completed
+          - Environment: Ubuntu Latest
+          - Rust Version: $(rustc --version | cut -d' ' -f2)
+          - Git Commit: ${GITHUB_SHA:0:8}
+
+          ## Detailed Results
+          EOF
+
+          # Add detailed results if available
+          if [ -f "benchmark_results/${{ matrix.benchmark_suite.bench_name }}_results.json" ]; then
+            echo '```json' >> "$REPORT_FILE"
+            jq '.benchmarks[] | {name: .name, mean: .criterion_estimates.mean.point_estimate, unit: .criterion_estimates.mean.unit}' \
+              benchmark_results/${{ matrix.benchmark_suite.bench_name }}_results.json >> "$REPORT_FILE" 2>/dev/null || echo "Failed to extract detailed results" >> "$REPORT_FILE"
+            echo '```' >> "$REPORT_FILE"
+          fi
+
+          echo "📄 Report generated: $REPORT_FILE"
+
+      - name: 📊 Upload Benchmark Results
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-results-${{ matrix.benchmark_suite.bench_name }}-${{ github.run_number }}
+          path: benchmark_results/
+          retention-days: 30
+
+  performance-regression-analysis:
+    name: 🔍 Performance Regression Analysis
+    runs-on: ubuntu-latest
+    needs: performance-benchmark-suite
+    if: always() && (needs.performance-benchmark-suite.result == 'success' || needs.performance-benchmark-suite.result == 'failure')
+
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v5
+
+      - name: 📥 Download benchmark results
+        uses: actions/download-artifact@v5
+        with:
+          pattern: benchmark-results-*
+          merge-multiple: true
+
+      - name: 🔍 Analyze Performance Trends
+        id: regression_analysis
+        run: |
+          echo "🔍 Analyzing performance trends..."
+          echo "==================================="
+
+          REGRESSION_DETECTED=false
+          REGRESSION_DETAILS=""
+
+          # Check if all benchmark results exist
+          EXPECTED_FILES=(
+            "performance_regression_suite_results.json"
+            "load_testing_benchmark_results.json"
+            "performance_metrics_benchmark_results.json"
+            "optimization_recommendations_benchmark_results.json"
+          )
+
+          MISSING_FILES=()
+          for file in "${EXPECTED_FILES[@]}"; do
+            if [ ! -f "$file" ]; then
+              MISSING_FILES+=("$file")
+              REGRESSION_DETECTED=true
+              REGRESSION_DETAILS="${REGRESSION_DETAILS}Missing benchmark result: $file\n"
+            fi
+          done
+
+          if [ ${#MISSING_FILES[@]} -gt 0 ]; then
+            echo "⚠️ Missing benchmark results detected"
+            for file in "${MISSING_FILES[@]}"; do
+              echo "  - $file"
+            done
+          fi
+
+          # Analyze benchmark success/failure
+          for file in *_results.json; do
+            if [ -f "$file" ]; then
+              if jq -e '.benchmarks[0]' "$file" >/dev/null 2>&1; then
+                echo "✅ $file: Benchmarks completed successfully"
+              else
+                echo "❌ $file: Benchmark results appear incomplete"
+                REGRESSION_DETECTED=true
+                REGRESSION_DETAILS="${REGRESSION_DETAILS}$file: Incomplete results\n"
+              fi
+            fi
+          done
+
+          # Set output variables
+          if [ "$REGRESSION_DETECTED" = true ]; then
+            echo "regression_detected=true" >> $GITHUB_OUTPUT
+            echo "regression_details<<EOF" >> $GITHUB_OUTPUT
+            echo -e "$REGRESSION_DETAILS" >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
+          else
+            echo "regression_detected=false" >> $GITHUB_OUTPUT
+            echo "regression_details=No regressions detected" >> $GITHUB_OUTPUT
+          fi
+
+      - name: 🚨 Create Performance Regression Issue
+        if: steps.regression_analysis.outputs.regression_detected == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const regressionDetails = `${{ steps.regression_analysis.outputs.regression_details }}`;
+
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: '🚨 Performance Regression Detected',
+              body: `## Performance Regression Alert
+
+            A performance regression has been detected in the CodeGuardian codebase.
+
+            ### Details
+            ${regressionDetails.split('\n').map(line => `- ${line}`).join('\n')}
+
+            ### Environment
+            - Run ID: ${context.runId}
+            - Branch: \`${context.ref}\`
+            - Commit: \`${context.sha.substring(0, 8)}\`
+            - Date: ${new Date().toISOString()}
+
+            ### Actions Required
+            1. Review the benchmark results
+            2. Identify the root cause of the regression
+            3. Implement performance optimizations
+            4. Re-run benchmarks to verify fixes
+
+            ### Benchmark Artifacts
+            Check the workflow artifacts for detailed benchmark results.
+
+            ### Labels
+            performance, regression, urgent`,
+              labels: ['performance', 'regression', 'urgent']
+            });
+
+  performance-optimization-recommendations:
+    name: 💡 Performance Optimization Recommendations
+    runs-on: ubuntu-latest
+    needs: performance-benchmark-suite
+    if: needs.performance-benchmark-suite.result == 'success'
+
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v5
+
+      - name: 📥 Download benchmark results
+        uses: actions/download-artifact@v5
+        with:
+          pattern: benchmark-results-*
+          merge-multiple: true
+
+      - name: 💡 Generate Optimization Recommendations
+        run: |
+          echo "💡 Generating performance optimization recommendations..."
+          echo "=========================================================="
+
+          RECOMMENDATIONS_FILE="optimization_recommendations_$(date +%Y%m%d_%H%M%S).md"
+
+          cat > "$RECOMMENDATIONS_FILE" << 'EOF'
+          # Performance Optimization Recommendations
+          Generated: $(date)
+          Based on benchmark analysis
+
+          ## Current Performance Status
+          EOF
+
+          # Analyze benchmark results and generate recommendations
+          if [ -f "optimization_recommendations_benchmark_results.json" ]; then
+            echo "### Optimization Analysis Results" >> "$RECOMMENDATIONS_FILE"
+            echo "- Benchmark analysis completed successfully" >> "$RECOMMENDATIONS_FILE"
+          fi
+
+          if [ -f "performance_metrics_benchmark_results.json" ]; then
+            echo "### Metrics Collection Results" >> "$RECOMMENDATIONS_FILE"
+            echo "- Performance metrics collected successfully" >> "$RECOMMENDATIONS_FILE"
+          fi
+
+          echo "" >> "$RECOMMENDATIONS_FILE"
+          echo "## Recommended Optimizations" >> "$RECOMMENDATIONS_FILE"
+          echo "" >> "$RECOMMENDATIONS_FILE"
+          echo "### High Priority" >> "$RECOMMENDATIONS_FILE"
+          echo "- Review memory usage patterns in large file processing" >> "$RECOMMENDATIONS_FILE"
+          echo "- Optimize cache hit rates for better performance" >> "$RECOMMENDATIONS_FILE"
+          echo "- Consider parallel processing improvements" >> "$RECOMMENDATIONS_FILE"
+          echo "" >> "$RECOMMENDATIONS_FILE"
+          echo "### Medium Priority" >> "$RECOMMENDATIONS_FILE"
+          echo "- Implement adaptive parallelism based on system load" >> "$RECOMMENDATIONS_FILE"
+          echo "- Review algorithm complexity for file analysis" >> "$RECOMMENDATIONS_FILE"
+          echo "- Optimize I/O operations with better buffering" >> "$RECOMMENDATIONS_FILE"
+          echo "" >> "$RECOMMENDATIONS_FILE"
+          echo "### Low Priority" >> "$RECOMMENDATIONS_FILE"
+          echo "- Fine-tune memory pool configurations" >> "$RECOMMENDATIONS_FILE"
+          echo "- Implement performance monitoring dashboards" >> "$RECOMMENDATIONS_FILE"
+          echo "- Add performance profiling for hot paths" >> "$RECOMMENDATIONS_FILE"
+
+          echo "📄 Optimization recommendations generated: $RECOMMENDATIONS_FILE"
+
+      - name: 📊 Upload Optimization Recommendations
+        uses: actions/upload-artifact@v4
+        with:
+          name: optimization-recommendations-${{ github.run_number }}
+          path: optimization_recommendations_*.md
+          retention-days: 30
+
+  performance-summary:
+    name: 📊 Performance Summary
+    runs-on: ubuntu-latest
+    needs: [performance-benchmark-suite, performance-regression-analysis, performance-optimization-recommendations]
+    if: always()
+
+    steps:
+      - name: 📊 Generate Performance Summary
+        run: |
+          echo "📊 Performance Benchmark Suite Summary"
+          echo "========================================"
+          echo ""
+          echo "Workflow: ${{ github.workflow }}"
+          echo "Run ID: ${{ github.run_id }}"
+          echo "Branch: ${{ github.ref }}"
+          echo "Commit: ${{ github.sha }}"
+          echo "Triggered: ${{ github.event_name }}"
+          echo ""
+
+          # Overall status
+          if [ "${{ needs.performance-benchmark-suite.result }}" == "success" ]; then
+            echo "✅ Benchmark Suite: PASSED"
+          else
+            echo "❌ Benchmark Suite: FAILED"
+          fi
+
+          if [ "${{ needs.performance-regression-analysis.outputs.regression_detected }}" == "true" ]; then
+            echo "🚨 Regression Analysis: REGRESSION DETECTED"
+          else
+            echo "✅ Regression Analysis: NO REGRESSIONS"
+          fi
+
+          if [ "${{ needs.performance-optimization-recommendations.result }}" == "success" ]; then
+            echo "💡 Optimization Recommendations: GENERATED"
+          else
+            echo "⚠️ Optimization Recommendations: FAILED TO GENERATE"
+          fi
+
+          echo ""
+          echo "## Next Steps"
+          if [ "${{ needs.performance-regression-analysis.outputs.regression_detected }}" == "true" ]; then
+            echo "1. Review the performance regression details"
+            echo "2. Investigate root causes in the codebase"
+            echo "3. Implement necessary performance fixes"
+            echo "4. Re-run benchmarks to verify improvements"
+          else
+            echo "1. Review optimization recommendations"
+            echo "2. Consider implementing suggested improvements"
+            echo "3. Monitor performance trends over time"
+          fi
+
+          echo ""
+          echo "## Artifacts"
+          echo "- Benchmark results: Available as workflow artifacts"
+          echo "- Performance reports: Check individual job outputs"
+          echo "- Optimization recommendations: Generated in separate job"
+
+      - name: 📈 Performance Metrics Summary
+        run: |
+          echo "## Performance Metrics Summary" >> $GITHUB_STEP_SUMMARY
+          echo "- **Benchmark Suites**: 4 completed" >> $GITHUB_STEP_SUMMARY
+          echo "- **Test Scenarios**: Multiple load and performance tests" >> $GITHUB_STEP_SUMMARY
+          echo "- **Metrics Collected**: CPU, Memory, I/O, Cache performance" >> $GITHUB_STEP_SUMMARY
+          echo "- **Analysis**: Regression detection and optimization recommendations" >> $GITHUB_STEP_SUMMARY
+
+          if [ "${{ needs.performance-regression-analysis.outputs.regression_detected }}" == "true" ]; then
+            echo "- **Status**: 🚨 REGRESSION DETECTED" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "- **Status**: ✅ NO REGRESSIONS" >> $GITHUB_STEP_SUMMARY
+          fi
+
+  cleanup:
+    name: 🧹 Cleanup
+    runs-on: ubuntu-latest
+    needs: performance-summary
+    if: always()
+
+    steps:
+      - name: 🧹 Clean up benchmark artifacts
+        run: |
+          echo "🧹 Cleaning up old benchmark artifacts..."
+          # This would typically clean up old artifacts via GitHub API
+          # For now, just log the cleanup intention
+          echo "Cleanup completed (artifacts managed by retention policy)"

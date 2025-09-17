@@ -76,6 +76,10 @@ pub enum CodeGuardianError {
     /// Timeout error
     #[error("Operation timed out: {0}")]
     Timeout(String),
+
+    /// Retention policy errors
+    #[error("Retention error: {0}")]
+    Retention(String),
 }
 
 impl CodeGuardianError {

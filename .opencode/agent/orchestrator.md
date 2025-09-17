@@ -25,7 +25,7 @@ tools:
   write: false
   edit: false
   bash: false
-  read: true
+  read: false
   grep: false
   glob: false
   task: true

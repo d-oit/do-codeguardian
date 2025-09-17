@@ -36,12 +36,14 @@ codeguardian check [OPTIONS] [PATHS]...
 | `--parallel <NUM>` | Number of parallel workers (0 = auto) | `usize` | `0` | No |
 | `--quiet` | Suppress all output except errors | `FLAG` | `false` | No |
 | `--baseline <FILE>` | Baseline file for drift analysis | `PATH` | - | No |
-| `--ml-model <PATH>` | Path to ML model for false positive reduction | `STRING` | - | No |
-| `--config <FILE>` | Configuration file path | `PATH` | - | No |
-| `--exclude <PATTERN>` | Patterns to exclude from analysis | `STRING` | - | No |
-| `--include <PATTERN>` | Patterns to include in analysis | `STRING` | - | No |
-| `--output <FILE>` | Output file for results (alias for --out) | `PATH` | - | No |
-| `--verbose` | Verbose output | `FLAG` | `false` | No |
+| `--ml-threshold <THRESHOLD>` | ML threshold for anomaly detection (0.0-1.0) | `f64` | - | No |
+| `--detect-broken-files` | Enable all broken file detection | `FLAG` | `false` | No |
+| `--detect-conflicts` | Detect git merge conflicts | `FLAG` | `false` | No |
+| `--detect-placeholders` | Detect AI-generated placeholders | `FLAG` | `false` | No |
+| `--detect-duplicates` | Detect duplicate code | `FLAG` | `false` | No |
+| `--fail-on-conflicts` | Fail fast on merge conflicts (CI/CD) | `FLAG` | `false` | No |
+| `--streaming` | Enable streaming analysis for large files | `FLAG` | `false` | No |
+| `--only-new` | Only analyze files that are new compared to baseline | `FLAG` | `false` | No |
 
 ### OutputFormat Values
 - `json`: JSON output for programmatic use (source of truth)
@@ -99,7 +101,7 @@ codeguardian check . \
 
 # Use trained ML model for false positive reduction
 codeguardian check . \
-  --ml-model enhanced-model.fann \
+  --ml-threshold 0.7 \
   --format json \
   --out ml-results.json
 ```
@@ -108,99 +110,15 @@ codeguardian check . \
 
 ### Common Errors
 - **Configuration Error**: Missing or invalid configuration file
-  ```bash
-  codeguardian check . --config nonexistent.toml
-  # Error: Failed to read config file: No such file or directory
-  ```
-
 - **GitHub Integration Error**: Missing repository specification or invalid format
-  ```bash
-  codeguardian check . --emit-gh --repo invalid-format
-  # Error: Invalid repository format. Expected: owner/repo
-  ```
-
 - **File System Error**: Permission denied or path not found
-  ```bash
-  codeguardian check /root/private/
-  # Error: Permission denied (os error 13)
-  ```
-
 - **Resource Error**: Memory exhaustion or timeout exceeded
-  ```bash
-  codeguardian check large-file.bin
-  # Error: File size 500MB exceeds maximum allowed size 100MB
-  ```
-
-### Recovery Procedures
-1. **Configuration Issues**: Check configuration file exists and validate syntax
-   ```bash
-   ls -la codeguardian.toml
-   codeguardian check . --config codeguardian.toml --verbose
-   ```
-
-2. **GitHub Token Issues**: Verify token is set and has proper permissions
-   ```bash
-   echo $GITHUB_TOKEN | head -c 10
-   curl -H "Authorization: token $GITHUB_TOKEN" https://api.github.com/user
-   ```
-
-3. **Performance Issues**: Reduce parallelism or exclude problematic directories
-   ```bash
-   codeguardian check . --parallel 2 --exclude "node_modules/**"
-   ```
-
-4. **Network Issues**: Check connectivity and repository access
-   ```bash
-   ping github.com
-   curl https://api.github.com/repos/myorg/myrepo
-   ```
 
 ## Security Considerations
-- **Input Validation**: All input paths are validated and sanitized to prevent directory traversal attacks
-- **File Size Limits**: Maximum file size limits (default 10MB) prevent resource exhaustion attacks
-- **Pattern Validation**: Include/exclude patterns are validated to prevent regex injection
-- **Sensitive Data Redaction**: Automatic detection and redaction of secrets, tokens, and credentials
-- **HTTPS Only**: All GitHub API communications use HTTPS with certificate validation
-- **Token Security**: GitHub tokens are handled securely and never logged in plain text
-- **Sandboxing**: Analysis runs in isolated environment to prevent code execution
-- **Resource Limits**: Memory and CPU limits prevent resource exhaustion
-- **Timeout Protection**: Analysis timeouts prevent infinite loops and resource consumption
-
-## Best Practices
-
-### Security Considerations
-- **Regular Token Rotation**: Rotate GitHub tokens regularly and use fine-grained permissions
-- **Environment Isolation**: Run analysis in isolated environments to prevent credential leakage
-- **Configuration Auditing**: Regularly audit configuration files for sensitive data exposure
-- **Network Security**: Use VPN or secure networks when analyzing sensitive codebases
-
-### Performance Optimization Tips
-- **Use Parallel Processing**: Leverage `--parallel` option for multi-core systems (default auto-detection)
-- **Enable Caching**: Use baseline files for incremental analysis in CI/CD pipelines
-- **Diff-Only Analysis**: Use `--diff` or `--only-changed` for pull request analysis
-- **Selective Analysis**: Use `--include`/`--exclude` patterns to focus on relevant code
-- **ML Model Usage**: Train and use ML models for significant false positive reduction (60-80%)
-
-### Common Pitfalls to Avoid
-- **Missing Repository Specification**: Always specify `--repo owner/repo` when using `--emit-gh`
-- **Incorrect Diff Format**: Use proper git diff format like `origin/main..HEAD` for PR analysis
-- **Large File Analysis**: Avoid analyzing very large binary files that may cause timeouts
-- **Token Permission Issues**: Ensure GitHub tokens have `repo` and `issues` permissions
-- **Configuration Conflicts**: Don't mix multiple configuration sources without validation
-
-### Integration Recommendations
-- **CI/CD Integration**: Use JSON output format for programmatic processing in pipelines
-- **GitHub Actions**: Combine with `--emit-gh` and `--diff` for automated PR analysis
-- **Pre-commit Hooks**: Integrate with pre-commit for developer workflow
-- **Scheduled Scans**: Set up regular scans for security drift detection
-- **Multi-Repository**: Use consistent configuration across related repositories
-
-### Maintenance Guidelines
-- **Regular Updates**: Keep CodeGuardian updated for latest security rules and performance improvements
-- **Model Retraining**: Retrain ML models quarterly or when false positive rates increase
-- **Configuration Review**: Review and update configuration files with new analysis requirements
-- **Result Archival**: Archive analysis results for trend analysis and compliance reporting
-- **Team Training**: Ensure team members understand analysis results and remediation steps
+- **Input Validation**: All input paths are validated and sanitized
+- **File Size Limits**: Maximum file size limits prevent resource exhaustion
+- **HTTPS Only**: All GitHub API communications use HTTPS
+- **Token Security**: GitHub tokens are handled securely
 
 ## See Also
 - [`codeguardian report`](report.md) - Convert analysis results to different formats
@@ -208,7 +126,3 @@ codeguardian check . \
 - [`codeguardian turbo`](turbo.md) - High-performance analysis for large codebases
 - [`codeguardian train`](train.md) - Train ML model for false positive reduction
 - [`codeguardian init`](init.md) - Initialize configuration with presets
-- [`codeguardian metrics`](metrics.md) - View ML model performance metrics
-- [Configuration Guide](../configuration.md) - Configuration options and presets
-- [CI/CD Setup Guide](../user-guide/ci-cd-setup.md) - CI/CD integration examples
-- [GitHub Integration Guide](../user-guide/github-integration.md) - GitHub workflow integration

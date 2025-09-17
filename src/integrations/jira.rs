@@ -2,14 +2,14 @@
 
 use super::traits::*;
 use super::SystemConfig;
-use async_trait::async_trait;
+use crate::config::base::Config;
 use anyhow::Result;
+use async_trait::async_trait;
+use base64::{engine::general_purpose::STANDARD as BASE64, Engine as _};
+use chrono::{DateTime, Utc};
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use chrono::{DateTime, Utc};
-use base64::{Engine as _, engine::general_purpose::STANDARD as BASE64};
-use crate::config::base::Config;
 
 /// Jira client implementation
 pub struct JiraClient {
@@ -36,10 +36,8 @@ impl JiraClient {
             super::AuthConfig::BasicAuth { username, token } => {
                 let credentials = BASE64.encode(format!("{}:{}", username, token));
                 Ok(format!("Basic {}", credentials))
-            },
-            super::AuthConfig::Token { token } => {
-                Ok(format!("Bearer {}", token))
-            },
+            }
+            super::AuthConfig::Token { token } => Ok(format!("Bearer {}", token)),
             _ => Err(anyhow::anyhow!("Unsupported auth type for Jira")),
         }
     }
@@ -48,7 +46,8 @@ impl JiraClient {
         let url = format!("{}/rest/api/3/{}", self.base_url, endpoint);
         let auth_header = self.get_auth_header()?;
 
-        let response = self.client
+        let response = self
+            .client
             .get(&url)
             .header("Authorization", auth_header)
             .header("Accept", "application/json")
@@ -63,11 +62,16 @@ impl JiraClient {
         }
     }
 
-    async fn post_request<T: Serialize, R: for<'de> Deserialize<'de>>(&self, endpoint: &str, data: &T) -> Result<R> {
+    async fn post_request<T: Serialize, R: for<'de> Deserialize<'de>>(
+        &self,
+        endpoint: &str,
+        data: &T,
+    ) -> Result<R> {
         let url = format!("{}/rest/api/3/{}", self.base_url, endpoint);
         let auth_header = self.get_auth_header()?;
 
-        let response = self.client
+        let response = self
+            .client
             .post(&url)
             .header("Authorization", auth_header)
             .header("Content-Type", "application/json")
@@ -106,7 +110,7 @@ impl ExternalSystemClient for JiraClient {
                         "reporting".to_string(),
                     ],
                 })
-            },
+            }
             Err(e) => Ok(SystemHealth {
                 status: HealthStatus::Unhealthy,
                 response_time_ms: None,
@@ -116,7 +120,10 @@ impl ExternalSystemClient for JiraClient {
         }
     }
 
-    async fn search_duplicates(&self, query: &DuplicateSearchQuery) -> Result<Vec<DuplicateSearchResult>> {
+    async fn search_duplicates(
+        &self,
+        query: &DuplicateSearchQuery,
+    ) -> Result<Vec<DuplicateSearchResult>> {
         let jql = format!(
             "text ~ \"{}\" AND project = \"{}\" ORDER BY created DESC",
             query.title,
@@ -135,7 +142,8 @@ impl ExternalSystemClient for JiraClient {
             ],
         };
 
-        let search_result: JiraSearchResponse = self.post_request("search", &search_request).await?;
+        let search_result: JiraSearchResponse =
+            self.post_request("search", &search_request).await?;
 
         let mut results = Vec::new();
         for issue in search_result.issues {
@@ -181,7 +189,11 @@ impl ExternalSystemClient for JiraClient {
                         IssuePriority::Trivial => "Lowest".to_string(),
                     },
                 }),
-                labels: if issue.labels.is_empty() { None } else { Some(issue.labels.clone()) },
+                labels: if issue.labels.is_empty() {
+                    None
+                } else {
+                    Some(issue.labels.clone())
+                },
             },
         };
 
@@ -204,7 +216,10 @@ impl ExternalSystemClient for JiraClient {
         }
 
         if let Some(description) = &update.description {
-            fields.insert("description", serde_json::Value::String(description.clone()));
+            fields.insert(
+                "description",
+                serde_json::Value::String(description.clone()),
+            );
         }
 
         let update_request = serde_json::json!({
@@ -214,7 +229,8 @@ impl ExternalSystemClient for JiraClient {
         let url = format!("issue/{}", issue_id);
         let auth_header = self.get_auth_header()?;
 
-        let response = self.client
+        let response = self
+            .client
             .put(format!("{}/rest/api/3/{}", self.base_url, url))
             .header("Authorization", auth_header)
             .header("Content-Type", "application/json")
@@ -225,7 +241,10 @@ impl ExternalSystemClient for JiraClient {
         if response.status().is_success() {
             Ok(())
         } else {
-            Err(anyhow::anyhow!("Failed to update Jira issue: {}", response.status()))
+            Err(anyhow::anyhow!(
+                "Failed to update Jira issue: {}",
+                response.status()
+            ))
         }
     }
 
@@ -244,7 +263,8 @@ impl ExternalSystemClient for JiraClient {
         let url = format!("issue/{}/transitions", issue_id);
         let auth_header = self.get_auth_header()?;
 
-        let response = self.client
+        let response = self
+            .client
             .post(format!("{}/rest/api/3/{}", self.base_url, url))
             .header("Authorization", auth_header)
             .header("Content-Type", "application/json")
@@ -255,11 +275,17 @@ impl ExternalSystemClient for JiraClient {
         if response.status().is_success() {
             Ok(())
         } else {
-            Err(anyhow::anyhow!("Failed to close Jira issue: {}", response.status()))
+            Err(anyhow::anyhow!(
+                "Failed to close Jira issue: {}",
+                response.status()
+            ))
         }
     }
 
-    async fn trigger_workflow(&self, _request: &WorkflowTriggerRequest) -> Result<TriggeredWorkflow> {
+    async fn trigger_workflow(
+        &self,
+        _request: &WorkflowTriggerRequest,
+    ) -> Result<TriggeredWorkflow> {
         // Jira doesn't have traditional workflows like CI/CD systems
         // This could be implemented as triggering automation rules or transitions
         Err(anyhow::anyhow!("Workflow triggering not supported in Jira"))
@@ -275,14 +301,28 @@ impl ExternalSystemClient for JiraClient {
         let search_request = JiraSearchRequest {
             jql,
             max_results: 1000,
-            fields: vec!["summary".to_string(), "status".to_string(), "created".to_string()],
+            fields: vec![
+                "summary".to_string(),
+                "status".to_string(),
+                "created".to_string(),
+            ],
         };
 
-        let search_result: JiraSearchResponse = self.post_request("search", &search_request).await?;
+        let search_result: JiraSearchResponse =
+            self.post_request("search", &search_request).await?;
 
         let total_issues = search_result.total as u64;
-        let duplicates_found = search_result.issues.iter()
-            .filter(|issue| issue.fields.status.name.to_lowercase().contains("duplicate"))
+        let duplicates_found = search_result
+            .issues
+            .iter()
+            .filter(|issue| {
+                issue
+                    .fields
+                    .status
+                    .name
+                    .to_lowercase()
+                    .contains("duplicate")
+            })
             .count() as u64;
 
         Ok(SystemReport {
@@ -296,9 +336,10 @@ impl ExternalSystemClient for JiraClient {
             } else {
                 0.0
             },
-            time_period: request.start_date.zip(request.end_date).map(|(start, end)| {
-                super::traits::TimePeriod { start, end }
-            }),
+            time_period: request
+                .start_date
+                .zip(request.end_date)
+                .map(|(start, end)| super::traits::TimePeriod { start, end }),
             metrics: HashMap::new(),
             details: vec![],
         })

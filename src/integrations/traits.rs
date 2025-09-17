@@ -1,10 +1,10 @@
 //! Traits and interfaces for external system integrations
 
-use async_trait::async_trait;
 use anyhow::Result;
+use async_trait::async_trait;
+use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use chrono::{DateTime, Utc};
 use std::collections::HashMap;
 
 /// Main trait for external system clients
@@ -17,7 +17,10 @@ pub trait ExternalSystemClient: Send + Sync {
     async fn health_check(&self) -> Result<SystemHealth>;
 
     /// Search for duplicate issues/content
-    async fn search_duplicates(&self, query: &DuplicateSearchQuery) -> Result<Vec<DuplicateSearchResult>>;
+    async fn search_duplicates(
+        &self,
+        query: &DuplicateSearchQuery,
+    ) -> Result<Vec<DuplicateSearchResult>>;
 
     /// Create a new issue
     async fn create_issue(&self, issue: &IssueCreationRequest) -> Result<CreatedIssue>;
@@ -29,7 +32,8 @@ pub trait ExternalSystemClient: Send + Sync {
     async fn close_issue(&self, issue_id: &str, resolution: &IssueResolution) -> Result<()>;
 
     /// Trigger a workflow/pipeline
-    async fn trigger_workflow(&self, request: &WorkflowTriggerRequest) -> Result<TriggeredWorkflow>;
+    async fn trigger_workflow(&self, request: &WorkflowTriggerRequest)
+        -> Result<TriggeredWorkflow>;
 
     /// Generate system-specific report
     async fn generate_report(&self, request: &ReportRequest) -> Result<SystemReport>;
@@ -288,13 +292,22 @@ impl<T: BulkOperationSupport> BulkOperations for T {}
 #[async_trait]
 pub trait BulkOperationSupport: ExternalSystemClient {
     /// Create multiple issues in batch
-    async fn create_issues_bulk(&self, issues: &[IssueCreationRequest]) -> Result<Vec<BulkOperationResult>>;
+    async fn create_issues_bulk(
+        &self,
+        issues: &[IssueCreationRequest],
+    ) -> Result<Vec<BulkOperationResult>>;
 
     /// Update multiple issues in batch
-    async fn update_issues_bulk(&self, updates: &[(String, IssueUpdate)]) -> Result<Vec<BulkOperationResult>>;
+    async fn update_issues_bulk(
+        &self,
+        updates: &[(String, IssueUpdate)],
+    ) -> Result<Vec<BulkOperationResult>>;
 
     /// Search for duplicates across multiple queries
-    async fn search_duplicates_bulk(&self, queries: &[DuplicateSearchQuery]) -> Result<Vec<Vec<DuplicateSearchResult>>>;
+    async fn search_duplicates_bulk(
+        &self,
+        queries: &[DuplicateSearchQuery],
+    ) -> Result<Vec<Vec<DuplicateSearchResult>>>;
 }
 
 /// Result of bulk operation
@@ -312,7 +325,10 @@ pub struct BulkOperationResult {
 #[async_trait]
 pub trait AdvancedSearchSupport: ExternalSystemClient {
     /// Perform semantic search using ML models
-    async fn semantic_search(&self, query: &SemanticSearchQuery) -> Result<Vec<DuplicateSearchResult>>;
+    async fn semantic_search(
+        &self,
+        query: &SemanticSearchQuery,
+    ) -> Result<Vec<DuplicateSearchResult>>;
 
     /// Search with custom filters and sorting
     async fn advanced_search(&self, query: &AdvancedSearchQuery) -> Result<SearchResults>;

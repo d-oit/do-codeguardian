@@ -27,7 +27,7 @@ echo 'export PATH="$HOME/.cargo/bin:$PATH"' >> ~/.bashrc
 cargo install --root ~/.local do-codeguardian
 
 # Or use sudo for system installation
-sudo cargo install do-do-codeguardian
+sudo cargo install do-codeguardian
 ```
 
 #### Build failures during installation
@@ -37,7 +37,7 @@ rustup update stable
 
 # Clean and rebuild
 cargo clean
-cargo install do-do-codeguardian
+cargo install do-codeguardian
 
 # Check for missing system dependencies
 # Ubuntu/Debian
@@ -568,7 +568,7 @@ env:
       exit 0
     fi
 
-    ./target/release/do-do-codeguardian check . \
+    ./target/release/do-codeguardian check . \
       --diff origin/main..HEAD \
       --format json \
       --out results.json
@@ -614,7 +614,7 @@ env:
 - name: Run scheduled scan
   timeout-minutes: 30
   run: |
-    ./target/release/do-do-codeguardian check . \
+    ./target/release/do-codeguardian check . \
       --format json \
       --out results.json \
       --timeout 1800 \
@@ -966,7 +966,7 @@ If you continue to experience issues:
 #### Regular Maintenance
 ```bash
 # Update CodeGuardian regularly
-cargo install do-do-codeguardian --force
+cargo install do-codeguardian --force
 
 # Clear cache periodically
 do-codeguardian cache clear

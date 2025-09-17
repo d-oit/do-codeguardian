@@ -5,6 +5,12 @@
 
 set -e
 
+# Environment variables with fallbacks
+TRAINING_DIR="${CODEGUARDIAN_TRAINING_DIR:-.codeguardian/training}"
+MODEL_DIR="${CODEGUARDIAN_MODEL_DIR:-.codeguardian/models}"
+MODEL_PATH="${CODEGUARDIAN_MODEL_PATH:-${MODEL_DIR}/duplicate_similarity.fann}"
+BINARY_PATH="${CODEGUARDIAN_BINARY_PATH:-./target/release/do-codeguardian}"
+
 echo "🤖 CodeGuardian ML Model Training for Duplicate Detection"
 echo "======================================================="
 
@@ -22,13 +28,11 @@ echo "🔨 Building with ML features..."
 cargo build --release --features ml --quiet
 
 # Create training data directory
-TRAINING_DIR=".codeguardian/training"
-MODEL_DIR=".codeguardian/models"
-mkdir -p "$TRAINING_DIR" "$MODEL_DIR"
+mkdir -p "${TRAINING_DIR}" "${MODEL_DIR}"
 
 # Generate synthetic training data for duplicate detection
 echo "📊 Generating training data..."
-cat > "$TRAINING_DIR/duplicate_training.json" << 'EOF'
+cat > "${TRAINING_DIR}/duplicate_training.json" << 'EOF'
 {
   "examples": [
     {
@@ -121,7 +125,7 @@ fn main() -> Result<()> {
     println!("Training duplicate detection model...");
 
     // Load training data
-    let dataset = TrainingDataset::load_from_file_async(".codeguardian/training/duplicate_training.json")?;
+    let dataset = TrainingDataset::load_from_file_async("${TRAINING_DIR}/duplicate_training.json")?;
 
     println!("Loaded {} training examples", dataset.examples.len());
 
@@ -145,8 +149,8 @@ fn main() -> Result<()> {
     println!("Training completed with final error: {:.6}", final_error);
 
     // Save the trained model
-    classifier.save(".codeguardian/models/duplicate_similarity.fann")?;
-    println!("Model saved to .codeguardian/models/duplicate_similarity.fann");
+    classifier.save("${MODEL_PATH}")?;
+    println!("Model saved to ${MODEL_PATH}");
 
     // Test the model
     println!("Testing model predictions...");
@@ -171,11 +175,11 @@ if [ -n "$ANYHOW_LIB" ] && [ -n "$SERDE_JSON_LIB" ]; then
     # For now, let's use a simpler approach
     echo "🏃 Running training simulation..."
     echo "✅ Model training completed (simulated)"
-    echo "📊 Model saved to .codeguardian/models/duplicate_similarity.fann"
+    echo "📊 Model saved to ${MODEL_PATH}"
 else
     echo "⚠️  Library dependencies not found, using existing model"
     if [ -f "enhanced-model.fann" ]; then
-        cp enhanced-model.fann .codeguardian/models/duplicate_similarity.fann
+        cp enhanced-model.fann "${MODEL_PATH}"
         echo "✅ Using existing enhanced model as duplicate similarity model"
     fi
 fi
@@ -183,8 +187,8 @@ fi
 # Validate the model
 echo ""
 echo "🔍 Validating trained model..."
-if [ -f ".codeguardian/models/duplicate_similarity.fann" ]; then
-    MODEL_SIZE=$(stat -c%s ".codeguardian/models/duplicate_similarity.fann" 2>/dev/null || stat -f%z ".codeguardian/models/duplicate_similarity.fann" 2>/dev/null || echo "0")
+if [ -f "${MODEL_PATH}" ]; then
+    MODEL_SIZE=$(stat -c%s "${MODEL_PATH}" 2>/dev/null || stat -f%z "${MODEL_PATH}" 2>/dev/null || echo "0")
     echo "✅ Model file created ($MODEL_SIZE bytes)"
 else
     echo "❌ Model file not created"
@@ -199,7 +203,7 @@ echo "✅ ML model trained/loaded"
 echo "✅ Model validated"
 echo ""
 echo "🚀 Duplicate detection ML model is ready!"
-echo "   Model: .codeguardian/models/duplicate_similarity.fann"
+echo "   Model: ${MODEL_PATH}"
 echo "   Training examples: 10"
 echo "   Features: 8 (basic similarity metrics)"
 echo "   Architecture: 8-16-8-1"

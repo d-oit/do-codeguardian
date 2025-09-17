@@ -2,13 +2,13 @@
 
 use super::traits::*;
 use super::SystemConfig;
-use async_trait::async_trait;
 use anyhow::Result;
+use async_trait::async_trait;
+use base64::{engine::general_purpose::STANDARD as BASE64, Engine as _};
+use chrono::{DateTime, Utc};
 use reqwest::Client;
 use serde::Deserialize;
 use std::collections::HashMap;
-use chrono::{DateTime, Utc};
-use base64::{Engine as _, engine::general_purpose::STANDARD as BASE64};
 
 /// Jenkins client implementation
 pub struct JenkinsClient {
@@ -32,13 +32,11 @@ impl JenkinsClient {
 
     fn get_auth_header(&self) -> Result<String> {
         match &self.config.auth {
-            super::AuthConfig::ApiKey { key } => {
-                Ok(format!("Bearer {}", key))
-            },
+            super::AuthConfig::ApiKey { key } => Ok(format!("Bearer {}", key)),
             super::AuthConfig::BasicAuth { username, token } => {
                 let credentials = BASE64.encode(format!("{}:{}", username, token));
                 Ok(format!("Basic {}", credentials))
-            },
+            }
             _ => Err(anyhow::anyhow!("Unsupported auth type for Jenkins")),
         }
     }
@@ -47,7 +45,8 @@ impl JenkinsClient {
         let url = format!("{}/{}", self.base_url, endpoint);
         let auth_header = self.get_auth_header()?;
 
-        let response = self.client
+        let response = self
+            .client
             .get(&url)
             .header("Authorization", auth_header)
             .header("Accept", "application/json")
@@ -66,9 +65,7 @@ impl JenkinsClient {
         let url = format!("{}/{}", self.base_url, endpoint);
         let auth_header = self.get_auth_header()?;
 
-        let mut request = self.client
-            .post(&url)
-            .header("Authorization", auth_header);
+        let mut request = self.client.post(&url).header("Authorization", auth_header);
 
         if let Some(body) = data {
             request = request
@@ -109,7 +106,7 @@ impl ExternalSystemClient for JenkinsClient {
                         "pipeline_execution".to_string(),
                     ],
                 })
-            },
+            }
             Err(e) => Ok(SystemHealth {
                 status: HealthStatus::Unhealthy,
                 response_time_ms: None,
@@ -119,19 +116,23 @@ impl ExternalSystemClient for JenkinsClient {
         }
     }
 
-    async fn search_duplicates(&self, query: &DuplicateSearchQuery) -> Result<Vec<DuplicateSearchResult>> {
+    async fn search_duplicates(
+        &self,
+        query: &DuplicateSearchQuery,
+    ) -> Result<Vec<DuplicateSearchResult>> {
         // Jenkins doesn't have traditional duplicate search, but we can search for similar job names
-        let jobs: JenkinsJobs = self.make_request("api/json?tree=jobs[name,url,lastBuild[timestamp]]").await?;
+        let jobs: JenkinsJobs = self
+            .make_request("api/json?tree=jobs[name,url,lastBuild[timestamp]]")
+            .await?;
 
         let mut results = Vec::new();
         for job in jobs.jobs {
             let similarity_score = calculate_similarity(&query.title, &job.name);
 
             if similarity_score >= query.similarity_threshold {
-                let created_at = job.last_build
-                    .and_then(|build| {
-                        DateTime::from_timestamp_millis(build.timestamp)
-                    })
+                let created_at = job
+                    .last_build
+                    .and_then(|build| DateTime::from_timestamp_millis(build.timestamp))
                     .unwrap_or_else(Utc::now);
 
                 results.push(DuplicateSearchResult {
@@ -166,7 +167,10 @@ impl ExternalSystemClient for JenkinsClient {
         Err(anyhow::anyhow!("Issue closing not supported in Jenkins"))
     }
 
-    async fn trigger_workflow(&self, request: &WorkflowTriggerRequest) -> Result<TriggeredWorkflow> {
+    async fn trigger_workflow(
+        &self,
+        request: &WorkflowTriggerRequest,
+    ) -> Result<TriggeredWorkflow> {
         let job_name = &request.workflow_name;
         let endpoint = if request.parameters.is_empty() {
             format!("job/{}/build", job_name)
@@ -189,7 +193,8 @@ impl ExternalSystemClient for JenkinsClient {
             let url = format!("{}/{}", self.base_url, endpoint);
             let auth_header = self.get_auth_header()?;
 
-            let response = self.client
+            let response = self
+                .client
                 .post(&url)
                 .header("Authorization", auth_header)
                 .header("Content-Type", "application/x-www-form-urlencoded")
@@ -200,7 +205,10 @@ impl ExternalSystemClient for JenkinsClient {
             if response.status().is_success() {
                 response.text().await?
             } else {
-                return Err(anyhow::anyhow!("Failed to trigger Jenkins job: {}", response.status()));
+                return Err(anyhow::anyhow!(
+                    "Failed to trigger Jenkins job: {}",
+                    response.status()
+                ));
             }
         };
 
@@ -217,7 +225,9 @@ impl ExternalSystemClient for JenkinsClient {
     }
 
     async fn generate_report(&self, request: &ReportRequest) -> Result<SystemReport> {
-        let jobs: JenkinsJobs = self.make_request("api/json?tree=jobs[name,builds[number,result,timestamp]]").await?;
+        let jobs: JenkinsJobs = self
+            .make_request("api/json?tree=jobs[name,builds[number,result,timestamp]]")
+            .await?;
 
         let mut total_builds = 0u64;
         let mut failed_builds = 0u64;
@@ -225,7 +235,8 @@ impl ExternalSystemClient for JenkinsClient {
         for job in &jobs.jobs {
             if let Some(builds) = &job.builds {
                 total_builds += builds.len() as u64;
-                failed_builds += builds.iter()
+                failed_builds += builds
+                    .iter()
                     .filter(|build| build.result.as_deref() == Some("FAILURE"))
                     .count() as u64;
             }
@@ -242,12 +253,19 @@ impl ExternalSystemClient for JenkinsClient {
             } else {
                 0.0
             },
-            time_period: request.start_date.zip(request.end_date).map(|(start, end)| {
-                super::traits::TimePeriod { start, end }
-            }),
+            time_period: request
+                .start_date
+                .zip(request.end_date)
+                .map(|(start, end)| super::traits::TimePeriod { start, end }),
             metrics: HashMap::from([
-                ("total_jobs".to_string(), serde_json::Value::Number(serde_json::Number::from(jobs.jobs.len()))),
-                ("total_builds".to_string(), serde_json::Value::Number(serde_json::Number::from(total_builds))),
+                (
+                    "total_jobs".to_string(),
+                    serde_json::Value::Number(serde_json::Number::from(jobs.jobs.len())),
+                ),
+                (
+                    "total_builds".to_string(),
+                    serde_json::Value::Number(serde_json::Number::from(total_builds)),
+                ),
             ]),
             details: vec![],
         })
@@ -275,7 +293,9 @@ impl ExternalSystemClient for JenkinsClient {
 
 impl JenkinsClient {
     async fn get_next_build_number(&self, job_name: &str) -> Result<u32> {
-        let job_info: JenkinsJobInfo = self.make_request(&format!("job/{}/api/json", job_name)).await?;
+        let job_info: JenkinsJobInfo = self
+            .make_request(&format!("job/{}/api/json", job_name))
+            .await?;
         Ok(job_info.next_build_number)
     }
 }

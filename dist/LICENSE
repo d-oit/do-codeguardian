@@ -1,0 +1,124 @@
+# License
+
+## MIT License
+
+Copyright (c) 2025 d.o.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+## Third-Party Licenses
+
+CodeGuardian includes or depends on software with the following licenses:
+
+### Rust and Cargo
+
+CodeGuardian is built with Rust, which is distributed under the Apache License 2.0 and MIT License.
+
+### Dependencies
+
+| Package | License | Purpose |
+|---------|---------|---------|
+| `tokio` | MIT | Async runtime |
+| `serde` | MIT/Apache-2.0 | Serialization |
+| `anyhow` | MIT/Apache-2.0 | Error handling |
+| `thiserror` | MIT/Apache-2.0 | Error handling |
+| `clap` | MIT/Apache-2.0 | CLI parsing |
+| `reqwest` | MIT/Apache-2.0 | HTTP client |
+| `rayon` | MIT/Apache-2.0 | Parallel processing |
+| `regex` | MIT/Apache-2.0 | Regular expressions |
+| `fann` | MIT | Neural networks |
+| `rusqlite` | MIT | SQLite database |
+| `uuid` | MIT/Apache-2.0 | UUID generation |
+| `base64` | MIT/Apache-2.0 | Base64 encoding |
+| `hex` | MIT/Apache-2.0 | Hex encoding |
+| `sha2` | MIT/Apache-2.0 | SHA-2 hashing |
+| `aes-gcm` | MIT/Apache-2.0 | AES encryption |
+| `argon2` | MIT/Apache-2.0 | Password hashing |
+| `rand` | MIT/Apache-2.0 | Random number generation |
+| `chrono` | MIT/Apache-2.0 | Date/time handling |
+| `itertools` | MIT/Apache-2.0 | Iterator utilities |
+| `once_cell` | MIT/Apache-2.0 | Lazy initialization |
+| `parking_lot` | MIT/Apache-2.0 | Synchronization primitives |
+| `dashmap` | MIT | Concurrent HashMap |
+| `lru` | MIT | LRU cache |
+| `indicatif` | MIT | Progress bars |
+| `console` | MIT | Terminal styling |
+| `dialoguer` | MIT | Interactive prompts |
+| `tempfile` | MIT/Apache-2.0 | Temporary files |
+| `walkdir` | MIT/Apache-2.0 | Directory traversal |
+| `glob` | MIT/Apache-2.0 | Glob patterns |
+| `toml` | MIT/Apache-2.0 | TOML parsing |
+| `json` | MIT/Apache-2.0 | JSON parsing |
+| `yaml-rust` | MIT/Apache-2.0 | YAML parsing |
+| `csv` | MIT/Apache-2.0 | CSV parsing |
+| `tar` | MIT/Apache-2.0 | Tar archive handling |
+| `flate2` | MIT/Apache-2.0 | GZIP compression |
+| `brotli` | MIT | Brotli compression |
+| `zstd` | MIT | Zstandard compression |
+| `ring` | ISC | Cryptographic primitives |
+| `webpki` | ISC | Web PKI verification |
+| `rustls` | ISC/Apache-2.0 | TLS implementation |
+| `native-tls` | MIT/Apache-2.0 | TLS implementation |
+| `openssl` | OpenSSL | TLS implementation |
+| `libz-sys` | MIT | zlib bindings |
+| `libgit2-sys` | MIT | libgit2 bindings |
+| `libssh2-sys` | MIT | libssh2 bindings |
+| `libsqlite3-sys` | MIT | SQLite bindings |
+
+### License Compatibility
+
+All dependencies are compatible with the MIT License. The project maintains license compliance by:
+
+1. **Automated license checking** during builds
+2. **Dependency vulnerability scanning** with `cargo audit`
+3. **License compatibility verification** with `cargo license`
+4. **Regular dependency updates** to address security issues
+
+### Security Considerations
+
+CodeGuardian prioritizes security in its dependency choices:
+
+- **Memory-safe languages**: All core dependencies are written in Rust or memory-safe languages
+- **Minimal attack surface**: Only essential dependencies are included
+- **Regular security audits**: Dependencies are regularly scanned for vulnerabilities
+- **Timely updates**: Security patches are applied promptly
+
+## Commercial Use
+
+The MIT License allows for commercial use of CodeGuardian without restrictions. Organizations can:
+
+- Use CodeGuardian in commercial products
+- Modify and distribute CodeGuardian
+- Provide commercial support services
+- Integrate CodeGuardian into proprietary software
+
+## Contributing
+
+When contributing to CodeGuardian, you agree to license your contributions under the same MIT License. This ensures that all contributions remain freely available to the community.
+
+## Support
+
+For questions about licensing or commercial support:
+
+- 📖 **[Documentation](docs/)** - License FAQ and details
+- 💬 **[Discussions](https://github.com/d-oit/codeguardian/discussions)** - Community discussions
+
+## Acknowledgments
+
+CodeGuardian builds upon the excellent work of the Rust community and open-source ecosystem. We are grateful for the contributions of all dependency maintainers and the broader open-source community that makes this project possible.

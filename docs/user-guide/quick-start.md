@@ -15,7 +15,7 @@ Before you begin, ensure you have:
 ### Option 1: Install from Crates.io (Recommended)
 
 ```bash
-cargo install do-do-codeguardian
+cargo install do-codeguardian
 ```
 
 ### Option 2: Install from Source
@@ -152,7 +152,7 @@ streaming_threshold_mb = 5
 ### Common Issues
 
 **"Command not found"**
-- Ensure CodeGuardian is installed: `cargo install do-do-codeguardian`
+- Ensure CodeGuardian is installed: `cargo install do-codeguardian`
 - Check your PATH includes Cargo's bin directory
 
 **"Permission denied"**

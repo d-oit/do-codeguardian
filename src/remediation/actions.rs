@@ -15,7 +15,11 @@ pub async fn merge_duplicate_code(
     target_file: &str,
     merge_strategy: &MergeStrategy,
 ) -> Result<()> {
-    tracing::info!("Merging duplicate code: {:?} -> {}", source_files, target_file);
+    tracing::info!(
+        "Merging duplicate code: {:?} -> {}",
+        source_files,
+        target_file
+    );
 
     // Create backup of target file
     let backup_path = format!("{}.backup.{}", target_file, chrono::Utc::now().timestamp());
@@ -30,7 +34,7 @@ pub async fn merge_duplicate_code(
                     tracing::info!("Removed duplicate file: {}", source_file);
                 }
             }
-        },
+        }
         MergeStrategy::KeepLast => {
             // Use the last file as the target
             if let Some(last_file) = source_files.last() {
@@ -43,7 +47,7 @@ pub async fn merge_duplicate_code(
                     }
                 }
             }
-        },
+        }
         MergeStrategy::KeepMostRecent => {
             // Find the most recently modified file
             let mut most_recent = target_file;
@@ -68,7 +72,7 @@ pub async fn merge_duplicate_code(
                     fs::remove_file(source_file)?;
                 }
             }
-        },
+        }
         MergeStrategy::KeepMostComplex => {
             // Find the file with the most lines of code
             let mut most_complex = target_file;
@@ -92,15 +96,18 @@ pub async fn merge_duplicate_code(
                     fs::remove_file(source_file)?;
                 }
             }
-        },
+        }
         MergeStrategy::Manual => {
             // For manual strategy, just log the action - human intervention required
             tracing::warn!("Manual merge strategy selected - human intervention required");
             return Ok(());
-        },
+        }
     }
 
-    tracing::info!("Code merge completed successfully. Backup created at: {}", backup_path);
+    tracing::info!(
+        "Code merge completed successfully. Backup created at: {}",
+        backup_path
+    );
     Ok(())
 }
 
@@ -110,8 +117,11 @@ pub async fn refactor_duplicate_function(
     source_locations: &[CodeLocation],
     target_location: &CodeLocation,
 ) -> Result<()> {
-    tracing::info!("Refactoring duplicate function: {} across {} locations",
-        function_name, source_locations.len());
+    tracing::info!(
+        "Refactoring duplicate function: {} across {} locations",
+        function_name,
+        source_locations.len()
+    );
 
     // Create a common utility file if it doesn't exist
     let utils_file = format!("{}_utils.rs", function_name.to_lowercase());
@@ -147,7 +157,10 @@ pub async fn refactor_duplicate_function(
     // Also update the target location
     replace_function_with_import(target_location, function_name, &utils_file)?;
 
-    tracing::info!("Function refactoring completed. Utility file created: {:?}", utils_path);
+    tracing::info!(
+        "Function refactoring completed. Utility file created: {:?}",
+        utils_path
+    );
     Ok(())
 }
 
@@ -157,7 +170,11 @@ pub async fn close_duplicate_issue(
     duplicate_of: &str,
     comment: &str,
 ) -> Result<()> {
-    tracing::info!("Closing duplicate issue: {} (duplicate of {})", issue_id, duplicate_of);
+    tracing::info!(
+        "Closing duplicate issue: {} (duplicate of {})",
+        issue_id,
+        duplicate_of
+    );
 
     // This would integrate with GitHub API or other issue tracking systems
     // For now, we'll simulate the action
@@ -167,8 +184,12 @@ pub async fn close_duplicate_issue(
     // 2. Close the issue
     // 3. Link it to the original issue
 
-    tracing::info!("Issue {} closed as duplicate of {} with comment: {}",
-        issue_id, duplicate_of, comment);
+    tracing::info!(
+        "Issue {} closed as duplicate of {} with comment: {}",
+        issue_id,
+        duplicate_of,
+        comment
+    );
 
     Ok(())
 }
@@ -179,7 +200,11 @@ pub async fn consolidate_documentation(
     target_doc: &str,
     merge_sections: &[String],
 ) -> Result<()> {
-    tracing::info!("Consolidating documentation: {:?} -> {}", source_docs, target_doc);
+    tracing::info!(
+        "Consolidating documentation: {:?} -> {}",
+        source_docs,
+        target_doc
+    );
 
     // Create backup of target document
     let backup_path = format!("{}.backup.{}", target_doc, chrono::Utc::now().timestamp());
@@ -194,7 +219,9 @@ pub async fn consolidate_documentation(
 
             // Extract specified sections and merge them
             for section in merge_sections {
-                if let Some(section_content) = extract_documentation_section(&source_content, section) {
+                if let Some(section_content) =
+                    extract_documentation_section(&source_content, section)
+                {
                     if !target_content.contains(&section_content) {
                         target_content.push_str(&format!("\n\n{}\n", section_content));
                     }
@@ -210,7 +237,10 @@ pub async fn consolidate_documentation(
     // Write the consolidated content
     fs::write(target_doc, target_content)?;
 
-    tracing::info!("Documentation consolidation completed. Backup created at: {}", backup_path);
+    tracing::info!(
+        "Documentation consolidation completed. Backup created at: {}",
+        backup_path
+    );
     Ok(())
 }
 
@@ -265,19 +295,22 @@ pub async fn create_pull_request(
         .output()?;
 
     if !output.status.success() {
-        return Err(anyhow!("Failed to create branch: {}",
-            String::from_utf8_lossy(&output.stderr)));
+        return Err(anyhow!(
+            "Failed to create branch: {}",
+            String::from_utf8_lossy(&output.stderr)
+        ));
     }
 
     // Add changed files
     for file in files_changed {
-        let output = Command::new("git")
-            .args(["add", file])
-            .output()?;
+        let output = Command::new("git").args(["add", file]).output()?;
 
         if !output.status.success() {
-            tracing::warn!("Failed to add file {}: {}", file,
-                String::from_utf8_lossy(&output.stderr));
+            tracing::warn!(
+                "Failed to add file {}: {}",
+                file,
+                String::from_utf8_lossy(&output.stderr)
+            );
         }
     }
 
@@ -288,8 +321,10 @@ pub async fn create_pull_request(
         .output()?;
 
     if !output.status.success() {
-        return Err(anyhow!("Failed to commit changes: {}",
-            String::from_utf8_lossy(&output.stderr)));
+        return Err(anyhow!(
+            "Failed to commit changes: {}",
+            String::from_utf8_lossy(&output.stderr)
+        ));
     }
 
     // Push branch
@@ -298,8 +333,10 @@ pub async fn create_pull_request(
         .output()?;
 
     if !output.status.success() {
-        return Err(anyhow!("Failed to push branch: {}",
-            String::from_utf8_lossy(&output.stderr)));
+        return Err(anyhow!(
+            "Failed to push branch: {}",
+            String::from_utf8_lossy(&output.stderr)
+        ));
     }
 
     // In a real implementation, this would create a PR via GitHub API
@@ -313,7 +350,8 @@ pub async fn create_pull_request(
 /// Helper function to count lines of code in a file
 fn count_lines_of_code(file_path: &str) -> Result<usize> {
     let content = fs::read_to_string(file_path)?;
-    let lines = content.lines()
+    let lines = content
+        .lines()
         .filter(|line| !line.trim().is_empty() && !line.trim().starts_with("//"))
         .count();
     Ok(lines)
@@ -461,21 +499,19 @@ fn json_to_toml_value(json_value: &serde_json::Value) -> Result<toml::Value> {
             } else {
                 Err(anyhow!("Invalid number format"))
             }
-        },
+        }
         serde_json::Value::String(s) => Ok(toml::Value::String(s.clone())),
         serde_json::Value::Array(arr) => {
-            let toml_arr: Result<Vec<toml::Value>> = arr.iter()
-                .map(json_to_toml_value)
-                .collect();
+            let toml_arr: Result<Vec<toml::Value>> = arr.iter().map(json_to_toml_value).collect();
             Ok(toml::Value::Array(toml_arr?))
-        },
+        }
         serde_json::Value::Object(obj) => {
             let mut toml_table = toml::value::Table::new();
             for (k, v) in obj {
                 toml_table.insert(k.clone(), json_to_toml_value(v)?);
             }
             Ok(toml::Value::Table(toml_table))
-        },
+        }
     }
 }
 
@@ -500,7 +536,8 @@ fn set_nested_value(config: &mut toml::Value, key: &str, value: toml::Value) -> 
         } else {
             // Navigate to the next level
             if let toml::Value::Table(ref mut table) = current {
-                current = table.entry(k.to_string())
+                current = table
+                    .entry(k.to_string())
                     .or_insert_with(|| toml::Value::Table(toml::value::Table::new()));
             }
         }
@@ -510,7 +547,11 @@ fn set_nested_value(config: &mut toml::Value, key: &str, value: toml::Value) -> 
 }
 
 /// Set nested value in JSON
-fn set_nested_json_value(config: &mut serde_json::Value, key: &str, value: serde_json::Value) -> Result<()> {
+fn set_nested_json_value(
+    config: &mut serde_json::Value,
+    key: &str,
+    value: serde_json::Value,
+) -> Result<()> {
     let keys: Vec<&str> = key.split('.').collect();
     let mut current = config;
 
@@ -523,7 +564,8 @@ fn set_nested_json_value(config: &mut serde_json::Value, key: &str, value: serde
         } else {
             // Navigate to the next level
             if let serde_json::Value::Object(ref mut map) = current {
-                current = map.entry(k.to_string())
+                current = map
+                    .entry(k.to_string())
                     .or_insert_with(|| serde_json::Value::Object(serde_json::Map::new()));
             }
         }
@@ -533,7 +575,11 @@ fn set_nested_json_value(config: &mut serde_json::Value, key: &str, value: serde
 }
 
 /// Set nested value in YAML
-fn set_nested_yaml_value(config: &mut serde_yaml::Value, key: &str, value: serde_yaml::Value) -> Result<()> {
+fn set_nested_yaml_value(
+    config: &mut serde_yaml::Value,
+    key: &str,
+    value: serde_yaml::Value,
+) -> Result<()> {
     let keys: Vec<&str> = key.split('.').collect();
     let mut current = config;
 
@@ -548,7 +594,10 @@ fn set_nested_yaml_value(config: &mut serde_yaml::Value, key: &str, value: serde
             if let serde_yaml::Value::Mapping(ref mut map) = current {
                 let key_value = serde_yaml::Value::String(k.to_string());
                 if !map.contains_key(&key_value) {
-                    map.insert(key_value.clone(), serde_yaml::Value::Mapping(serde_yaml::Mapping::new()));
+                    map.insert(
+                        key_value.clone(),
+                        serde_yaml::Value::Mapping(serde_yaml::Mapping::new()),
+                    );
                 }
                 current = map.get_mut(&key_value).unwrap();
             }

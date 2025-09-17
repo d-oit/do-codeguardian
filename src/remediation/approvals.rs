@@ -2,8 +2,8 @@
 
 use super::{ApprovalRequest, RiskLevel};
 use anyhow::Result;
-use std::collections::HashMap;
 use chrono::{DateTime, Utc};
+use std::collections::HashMap;
 
 /// Approval manager for handling workflow approvals
 pub struct ApprovalManager {
@@ -39,7 +39,8 @@ impl ApprovalManager {
 
     /// Submit an approval request
     pub fn submit_approval_request(&mut self, request: ApprovalRequest) -> Result<()> {
-        self.pending_approvals.insert(request.workflow_id.clone(), request);
+        self.pending_approvals
+            .insert(request.workflow_id.clone(), request);
         Ok(())
     }
 
@@ -54,7 +55,12 @@ impl ApprovalManager {
     }
 
     /// Approve a workflow
-    pub fn approve_workflow(&mut self, workflow_id: &str, approved_by: String, reason: Option<String>) -> Result<()> {
+    pub fn approve_workflow(
+        &mut self,
+        workflow_id: &str,
+        approved_by: String,
+        reason: Option<String>,
+    ) -> Result<()> {
         if let Some(_request) = self.pending_approvals.remove(workflow_id) {
             let record = ApprovalRecord {
                 workflow_id: workflow_id.to_string(),
@@ -66,12 +72,20 @@ impl ApprovalManager {
             self.approval_history.push(record);
             Ok(())
         } else {
-            Err(anyhow::anyhow!("No pending approval found for workflow: {}", workflow_id))
+            Err(anyhow::anyhow!(
+                "No pending approval found for workflow: {}",
+                workflow_id
+            ))
         }
     }
 
     /// Reject a workflow
-    pub fn reject_workflow(&mut self, workflow_id: &str, rejected_by: String, reason: String) -> Result<()> {
+    pub fn reject_workflow(
+        &mut self,
+        workflow_id: &str,
+        rejected_by: String,
+        reason: String,
+    ) -> Result<()> {
         if let Some(_request) = self.pending_approvals.remove(workflow_id) {
             let record = ApprovalRecord {
                 workflow_id: workflow_id.to_string(),
@@ -83,7 +97,10 @@ impl ApprovalManager {
             self.approval_history.push(record);
             Ok(())
         } else {
-            Err(anyhow::anyhow!("No pending approval found for workflow: {}", workflow_id))
+            Err(anyhow::anyhow!(
+                "No pending approval found for workflow: {}",
+                workflow_id
+            ))
         }
     }
 
@@ -94,7 +111,8 @@ impl ApprovalManager {
 
     /// Get approval history for a workflow
     pub fn get_approval_history(&self, workflow_id: &str) -> Vec<&ApprovalRecord> {
-        self.approval_history.iter()
+        self.approval_history
+            .iter()
             .filter(|record| record.workflow_id == workflow_id)
             .collect()
     }

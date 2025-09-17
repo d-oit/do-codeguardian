@@ -2,14 +2,14 @@
 
 use super::traits::*;
 use super::SystemConfig;
-use async_trait::async_trait;
+use crate::config::base::Config;
 use anyhow::Result;
+use async_trait::async_trait;
+use base64::{engine::general_purpose::STANDARD as BASE64, Engine as _};
+use chrono::{DateTime, Utc};
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use chrono::{DateTime, Utc};
-use base64::{Engine as _, engine::general_purpose::STANDARD as BASE64};
-use crate::config::base::Config;
 
 /// Confluence client implementation
 pub struct ConfluenceClient {
@@ -36,10 +36,8 @@ impl ConfluenceClient {
             super::AuthConfig::BasicAuth { username, token } => {
                 let credentials = BASE64.encode(format!("{}:{}", username, token));
                 Ok(format!("Basic {}", credentials))
-            },
-            super::AuthConfig::Token { token } => {
-                Ok(format!("Bearer {}", token))
-            },
+            }
+            super::AuthConfig::Token { token } => Ok(format!("Bearer {}", token)),
             _ => Err(anyhow::anyhow!("Unsupported auth type for Confluence")),
         }
     }
@@ -48,7 +46,8 @@ impl ConfluenceClient {
         let url = format!("{}/rest/api/{}", self.base_url, endpoint);
         let auth_header = self.get_auth_header()?;
 
-        let response = self.client
+        let response = self
+            .client
             .get(&url)
             .header("Authorization", auth_header)
             .header("Accept", "application/json")
@@ -59,15 +58,23 @@ impl ConfluenceClient {
             let data = response.json::<T>().await?;
             Ok(data)
         } else {
-            Err(anyhow::anyhow!("Confluence API error: {}", response.status()))
+            Err(anyhow::anyhow!(
+                "Confluence API error: {}",
+                response.status()
+            ))
         }
     }
 
-    async fn post_request<T: Serialize, R: for<'de> Deserialize<'de>>(&self, endpoint: &str, data: &T) -> Result<R> {
+    async fn post_request<T: Serialize, R: for<'de> Deserialize<'de>>(
+        &self,
+        endpoint: &str,
+        data: &T,
+    ) -> Result<R> {
         let url = format!("{}/rest/api/{}", self.base_url, endpoint);
         let auth_header = self.get_auth_header()?;
 
-        let response = self.client
+        let response = self
+            .client
             .post(&url)
             .header("Authorization", auth_header)
             .header("Content-Type", "application/json")
@@ -79,7 +86,10 @@ impl ConfluenceClient {
             let result = response.json::<R>().await?;
             Ok(result)
         } else {
-            Err(anyhow::anyhow!("Confluence API error: {}", response.status()))
+            Err(anyhow::anyhow!(
+                "Confluence API error: {}",
+                response.status()
+            ))
         }
     }
 }
@@ -93,7 +103,10 @@ impl ExternalSystemClient for ConfluenceClient {
     async fn health_check(&self) -> Result<SystemHealth> {
         let start = std::time::Instant::now();
 
-        match self.make_request::<ConfluenceSpaceList>("space?limit=1").await {
+        match self
+            .make_request::<ConfluenceSpaceList>("space?limit=1")
+            .await
+        {
             Ok(_) => {
                 let response_time = start.elapsed().as_millis() as u64;
                 Ok(SystemHealth {
@@ -106,7 +119,7 @@ impl ExternalSystemClient for ConfluenceClient {
                         "duplicate_detection".to_string(),
                     ],
                 })
-            },
+            }
             Err(e) => Ok(SystemHealth {
                 status: HealthStatus::Unhealthy,
                 response_time_ms: None,
@@ -116,11 +129,11 @@ impl ExternalSystemClient for ConfluenceClient {
         }
     }
 
-    async fn search_duplicates(&self, query: &DuplicateSearchQuery) -> Result<Vec<DuplicateSearchResult>> {
-        let cql = format!(
-            "title ~ \"{}\" OR text ~ \"{}\"",
-            query.title, query.title
-        );
+    async fn search_duplicates(
+        &self,
+        query: &DuplicateSearchQuery,
+    ) -> Result<Vec<DuplicateSearchResult>> {
+        let cql = format!("title ~ \"{}\" OR text ~ \"{}\"", query.title, query.title);
 
         let search_url = format!(
             "content/search?cql={}&limit={}",
@@ -183,7 +196,8 @@ impl ExternalSystemClient for ConfluenceClient {
 
     async fn update_issue(&self, issue_id: &str, update: &IssueUpdate) -> Result<()> {
         // Get current page version first
-        let current_page: ConfluencePage = self.make_request(&format!("content/{}", issue_id)).await?;
+        let current_page: ConfluencePage =
+            self.make_request(&format!("content/{}", issue_id)).await?;
 
         let mut update_data = serde_json::json!({
             "version": {
@@ -208,7 +222,8 @@ impl ExternalSystemClient for ConfluenceClient {
         let url = format!("content/{}", issue_id);
         let auth_header = self.get_auth_header()?;
 
-        let response = self.client
+        let response = self
+            .client
             .put(format!("{}/rest/api/{}", self.base_url, url))
             .header("Authorization", auth_header)
             .header("Content-Type", "application/json")
@@ -219,7 +234,10 @@ impl ExternalSystemClient for ConfluenceClient {
         if response.status().is_success() {
             Ok(())
         } else {
-            Err(anyhow::anyhow!("Failed to update Confluence page: {}", response.status()))
+            Err(anyhow::anyhow!(
+                "Failed to update Confluence page: {}",
+                response.status()
+            ))
         }
     }
 
@@ -228,7 +246,8 @@ impl ExternalSystemClient for ConfluenceClient {
         let url = format!("content/{}", issue_id);
         let auth_header = self.get_auth_header()?;
 
-        let response = self.client
+        let response = self
+            .client
             .delete(format!("{}/rest/api/{}", self.base_url, url))
             .header("Authorization", auth_header)
             .send()
@@ -237,12 +256,20 @@ impl ExternalSystemClient for ConfluenceClient {
         if response.status().is_success() {
             Ok(())
         } else {
-            Err(anyhow::anyhow!("Failed to delete Confluence page: {}", response.status()))
+            Err(anyhow::anyhow!(
+                "Failed to delete Confluence page: {}",
+                response.status()
+            ))
         }
     }
 
-    async fn trigger_workflow(&self, _request: &WorkflowTriggerRequest) -> Result<TriggeredWorkflow> {
-        Err(anyhow::anyhow!("Workflow triggering not supported in Confluence"))
+    async fn trigger_workflow(
+        &self,
+        _request: &WorkflowTriggerRequest,
+    ) -> Result<TriggeredWorkflow> {
+        Err(anyhow::anyhow!(
+            "Workflow triggering not supported in Confluence"
+        ))
     }
 
     async fn generate_report(&self, request: &ReportRequest) -> Result<SystemReport> {
@@ -260,7 +287,9 @@ impl ExternalSystemClient for ConfluenceClient {
         let search_result: ConfluenceSearchResponse = self.make_request(&search_url).await?;
 
         let total_issues = search_result.size as u64;
-        let duplicates_found = search_result.results.iter()
+        let duplicates_found = search_result
+            .results
+            .iter()
             .filter(|page| page.title.to_lowercase().contains("duplicate"))
             .count() as u64;
 
@@ -275,9 +304,10 @@ impl ExternalSystemClient for ConfluenceClient {
             } else {
                 0.0
             },
-            time_period: request.start_date.zip(request.end_date).map(|(start, end)| {
-                super::traits::TimePeriod { start, end }
-            }),
+            time_period: request
+                .start_date
+                .zip(request.end_date)
+                .map(|(start, end)| super::traits::TimePeriod { start, end }),
             metrics: HashMap::new(),
             details: vec![],
         })

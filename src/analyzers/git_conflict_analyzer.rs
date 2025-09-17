@@ -36,7 +36,14 @@ impl GitConflictAnalyzer {
     /// Detect git merge conflict markers in file content
     fn detect_conflict_markers(&self, content: &str, file_path: &Path) -> Vec<Finding> {
         let mut findings = Vec::new();
-        let (final_state, conflict_start_line) = self.scan_for_conflict_patterns(content, file_path, &mut findings);
+
+        // Skip analysis if this appears to be test content
+        if self.is_test_content(content, file_path) {
+            return findings;
+        }
+
+        let (final_state, conflict_start_line) =
+            self.scan_for_conflict_patterns(content, file_path, &mut findings);
 
         // If we're still in a conflict state at the end, it's malformed
         if final_state != ConflictState::None {
@@ -57,7 +64,82 @@ impl GitConflictAnalyzer {
         findings
     }
 
-    fn scan_for_conflict_patterns(&self, content: &str, file_path: &Path, findings: &mut Vec<Finding>) -> (ConflictState, u32) {
+    /// Check if content appears to be test code containing intentional conflict markers
+    fn is_test_content(&self, content: &str, file_path: &Path) -> bool {
+        // Check if file is in test directory or has test in name
+        if file_path.to_string_lossy().contains("/test")
+            || file_path.to_string_lossy().contains("test_")
+            || file_path
+                .file_name()
+                .is_some_and(|name| name.to_string_lossy().contains("test"))
+        {
+            return true;
+        }
+
+        // Check for test module or test function markers
+        let is_in_test_context = content.contains("#[test]")
+            || content.contains("#[cfg(test)]")
+            || content.contains("mod tests")
+            || content.contains("mod test");
+
+        // If we're in test context and we find conflict markers, it's likely test data
+        if is_in_test_context
+            && (content.contains("<<<<<<<")
+                || content.contains("=======")
+                || content.contains(">>>>>>>"))
+        {
+            return true;
+        }
+
+        false
+    }
+
+    /// Check if a conflict marker is within a string literal or test function
+    fn is_in_string_literal_or_test(&self, lines: &[&str], line_index: usize) -> bool {
+        // Look for surrounding context that indicates this is test data
+        let start = line_index.saturating_sub(15);
+        let end = (line_index + 5).min(lines.len());
+
+        // Check if we're inside a raw string literal
+        let mut in_raw_string = false;
+        for i in start..=line_index {
+            if i < lines.len() {
+                let line = lines[i];
+                if line.contains("r#\"") || line.contains("= r#") {
+                    in_raw_string = true;
+                }
+                if in_raw_string && line.contains("\"#") && i > start {
+                    in_raw_string = false;
+                }
+            }
+        }
+
+        if in_raw_string {
+            return true;
+        }
+
+        // Check for test function context
+        for i in start..end {
+            if i < lines.len() {
+                let line = lines[i];
+                if line.trim_start().starts_with("let content = r#")
+                    || line.trim_start().starts_with("let content = \"")
+                    || (line.contains("#[test]") && i <= line_index)
+                    || (line.contains("fn test_") && i <= line_index)
+                {
+                    return true;
+                }
+            }
+        }
+        false
+    }
+
+    fn scan_for_conflict_patterns(
+        &self,
+        content: &str,
+        file_path: &Path,
+        findings: &mut Vec<Finding>,
+    ) -> (ConflictState, u32) {
         let mut conflict_state = ConflictState::None;
         let mut conflict_start_line = 0;
 
@@ -400,7 +482,9 @@ no conflicts here
         // Should detect all three conflict markers
         assert_eq!(findings.len(), 3);
         assert!(findings.iter().any(|f| f.rule == "merge_conflict_start"));
-        assert!(findings.iter().any(|f| f.rule == "merge_conflict_separator"));
+        assert!(findings
+            .iter()
+            .any(|f| f.rule == "merge_conflict_separator"));
         assert!(findings.iter().any(|f| f.rule == "merge_conflict_end"));
     }
 

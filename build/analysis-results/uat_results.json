@@ -1,0 +1,38 @@
+{
+  "schema_version": "1.0.0",
+  "tool_metadata": {
+    "name": "codeguardian",
+    "version": "0.2.0-alpha.5",
+    "config_hash": "049e06d89f3be000",
+    "timestamp": "2025-09-17T06:49:13.252280290Z"
+  },
+  "findings": [
+    {
+      "id": "performance_nest",
+      "analyzer": "performance",
+      "rule": "nested_loops",
+      "severity": "Medium",
+      "file": "/workspaces/do-codeguardian/uat_test_files/test_duplicate.rs",
+      "line": 6,
+      "column": null,
+      "message": "Potential nested loop detected",
+      "description": "Nested loops can lead to O(n^2) or higher time complexity. Consider optimizing the algorithm.",
+      "suggestion": "Review the algorithm for potential optimizations, such as using hash maps or breaking early.",
+      "category": null,
+      "metadata": {}
+    }
+  ],
+  "summary": {
+    "total_files_scanned": 2,
+    "total_findings": 1,
+    "findings_by_severity": {
+      "Medium": 1
+    },
+    "findings_by_analyzer": {
+      "performance": 1
+    },
+    "scan_duration_ms": 172
+  },
+  "config_hash": "049e06d89f3be000",
+  "timestamp": "2025-09-17T06:49:13.252280632Z"
+}

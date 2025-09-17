@@ -50,8 +50,11 @@ pub async fn run(args: DashboardArgs, config: &Config) -> Result<()> {
 
         let service = DashboardService::new(dashboard_config.clone());
 
-        tracing::info!("Starting CodeGuardian Dashboard on {}:{}",
-            dashboard_config.host, dashboard_config.port);
+        tracing::info!(
+            "Starting CodeGuardian Dashboard on {}:{}",
+            dashboard_config.host,
+            dashboard_config.port
+        );
 
         service.start().await?;
     } else if args.generate_report {
@@ -59,7 +62,8 @@ pub async fn run(args: DashboardArgs, config: &Config) -> Result<()> {
         let service = DashboardService::new(dashboard_config);
 
         // Find the requested view
-        let view = dashboard_config.custom_views
+        let view = dashboard_config
+            .custom_views
             .iter()
             .find(|v| v.name == args.view)
             .ok_or_else(|| anyhow::anyhow!("View '{}' not found", args.view))?;

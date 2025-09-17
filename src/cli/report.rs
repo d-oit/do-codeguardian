@@ -1,5 +1,8 @@
 use crate::cli::ReportArgs;
 use crate::config::Config;
+use crate::output::ai::EnhancedAnalysisResults;
+use crate::output::storage::organizer::ResultsOrganizer;
+use crate::output::storage::{OrganizationStrategy, QueryCriteria, StorageConfig};
 use crate::types::AnalysisResults;
 use crate::utils::formatting::{format_finding_id, severity_emoji};
 use crate::utils::path_utils::{ensure_output_directory, resolve_input_path, resolve_output_path};
@@ -10,21 +13,36 @@ use anyhow::Result;
 use regex::Regex;
 use tokio::fs;
 
-pub async fn run(mut args: ReportArgs, config: &Config) -> Result<()> {
-    // Resolve input path using consolidated utility
-    args.from = resolve_input_path(&args.from, "results.json", config);
-
-    // Load results from JSON file
-    let json_content = fs::read_to_string(&args.from).await?;
-    let results: AnalysisResults = serde_json::from_str(&json_content)?;
+pub async fn run(args: ReportArgs, config: &Config) -> Result<()> {
+    let (results, enhanced_results) = if args.hierarchical_storage {
+        // Use hierarchical storage retrieval
+        load_results_from_hierarchical_storage(&args).await?
+    } else {
+        // Use legacy flat file loading for backward compatibility
+        load_results_from_flat_files(&args).await?
+    };
 
     // Generate report based on format
     let report_content = match args.format {
-        crate::cli::ReportFormat::Markdown => generate_markdown(&results)?,
-        crate::cli::ReportFormat::Html => generate_html(&results)?,
-        crate::cli::ReportFormat::Text => generate_text(&results)?,
-        crate::cli::ReportFormat::Json => serde_json::to_string_pretty(&results)?,
-        crate::cli::ReportFormat::Yaml => serde_yaml::to_string(&results)?,
+        crate::cli::ReportFormat::Markdown => {
+            generate_markdown(&results, enhanced_results.as_ref())?
+        }
+        crate::cli::ReportFormat::Html => generate_html(&results, enhanced_results.as_ref())?,
+        crate::cli::ReportFormat::Text => generate_text(&results, enhanced_results.as_ref())?,
+        crate::cli::ReportFormat::Json => {
+            if let Some(enhanced) = &enhanced_results {
+                serde_json::to_string_pretty(enhanced)?
+            } else {
+                serde_json::to_string_pretty(&results)?
+            }
+        }
+        crate::cli::ReportFormat::Yaml => {
+            if let Some(enhanced) = &enhanced_results {
+                serde_yaml::to_string(enhanced)?
+            } else {
+                serde_yaml::to_string(&results)?
+            }
+        }
     };
 
     // Output to file or stdout
@@ -40,11 +58,183 @@ pub async fn run(mut args: ReportArgs, config: &Config) -> Result<()> {
     Ok(())
 }
 
-pub fn generate_markdown(results: &AnalysisResults) -> Result<String> {
+async fn load_results_from_hierarchical_storage(
+    args: &ReportArgs,
+) -> Result<(AnalysisResults, Option<EnhancedAnalysisResults>)> {
+    // Create storage configuration
+    let storage_config = StorageConfig {
+        base_directory: args.storage_dir.clone(),
+        organization_strategy: OrganizationStrategy::HierarchicalTimeBased, // Default for retrieval
+        enable_compression: true, // Assume compression for retrieval
+        max_results_per_directory: 1000,
+        enable_indexing: true,
+        retention_days: Some(365),
+        enable_deduplication: true,
+    };
+
+    // Initialize results organizer
+    let organizer = ResultsOrganizer::new(storage_config)?;
+
+    let results;
+    let enhanced_results;
+
+    if let Some(result_id) = &args.result_id {
+        // Retrieve specific result by ID
+        if let Some((retrieved_results, retrieved_outputs)) =
+            organizer.retrieve_results(result_id)?
+        {
+            results = retrieved_results;
+
+            // Find enhanced results in outputs
+            enhanced_results = retrieved_outputs
+                .iter()
+                .find(|(format, _)| format == "enhanced")
+                .and_then(|(_, content)| serde_json::from_str(content).ok());
+
+            if enhanced_results.is_some() {
+                tracing::info!("Loaded AI-enhanced results from hierarchical storage");
+            }
+        } else {
+            return Err(anyhow::anyhow!(
+                "Result with ID '{}' not found in hierarchical storage",
+                result_id
+            ));
+        }
+    } else {
+        // Query results based on criteria
+        let mut criteria = QueryCriteria::default();
+
+        if let Some(project) = &args.query_project {
+            criteria.project = Some(project.clone());
+        }
+
+        if let Some(repository) = &args.query_repository {
+            criteria.repository = Some(repository.clone());
+        }
+
+        if let Some(date_range) = &args.query_date_range {
+            if let Some((start, end)) = parse_date_range(date_range) {
+                criteria.date_range = Some((start, end));
+            }
+        }
+
+        if let Some(tags_str) = &args.query_tags {
+            criteria.tags = tags_str.split(',').map(|s| s.trim().to_string()).collect();
+        }
+
+        criteria.limit = args.query_limit;
+
+        let query_results = organizer.query_results(&criteria);
+
+        if query_results.is_empty() {
+            return Err(anyhow::anyhow!(
+                "No results found matching the query criteria"
+            ));
+        }
+
+        // Use the most recent result
+        let metadata = &query_results[0];
+        if let Some((retrieved_results, retrieved_outputs)) =
+            organizer.retrieve_results(&metadata.id)?
+        {
+            results = retrieved_results;
+
+            // Find enhanced results in outputs
+            enhanced_results = retrieved_outputs
+                .iter()
+                .find(|(format, _)| format == "enhanced")
+                .and_then(|(_, content)| serde_json::from_str(content).ok());
+
+            tracing::info!(
+                "Loaded results from hierarchical storage (ID: {})",
+                metadata.id
+            );
+        } else {
+            return Err(anyhow::anyhow!(
+                "Failed to retrieve result with ID '{}'",
+                metadata.id
+            ));
+        }
+    }
+
+    Ok((results, enhanced_results))
+}
+
+async fn load_results_from_flat_files(
+    args: &ReportArgs,
+) -> Result<(AnalysisResults, Option<EnhancedAnalysisResults>)> {
+    // Resolve input path using consolidated utility
+    let input_path = resolve_input_path(&args.from, "results.json", &Config::default());
+
+    // Load results from JSON file
+    let json_content = fs::read_to_string(&input_path).await?;
+    let results: AnalysisResults = serde_json::from_str(&json_content)?;
+
+    // Load enhanced results if available and requested
+    let enhanced_results = if args.ai_enhance {
+        let enhanced_path = input_path.with_extension("enhanced.json");
+        if enhanced_path.exists() {
+            match fs::read_to_string(&enhanced_path).await {
+                Ok(content) => match serde_json::from_str::<EnhancedAnalysisResults>(&content) {
+                    Ok(enhanced) => {
+                        tracing::info!(
+                            "Loaded AI-enhanced results from: {}",
+                            enhanced_path.display()
+                        );
+                        Some(enhanced)
+                    }
+                    Err(e) => {
+                        tracing::warn!(
+                            "Failed to parse enhanced results: {}. Using standard results.",
+                            e
+                        );
+                        None
+                    }
+                },
+                Err(_) => {
+                    tracing::warn!(
+                        "Enhanced results file not found: {}. Using standard results.",
+                        enhanced_path.display()
+                    );
+                    None
+                }
+            }
+        } else {
+            tracing::info!(
+                "AI enhancement requested but no enhanced results found. Using standard results."
+            );
+            None
+        }
+    } else {
+        None
+    };
+
+    Ok((results, enhanced_results))
+}
+
+fn parse_date_range(date_range: &str) -> Option<(String, String)> {
+    let parts: Vec<&str> = date_range.split(':').collect();
+    if parts.len() == 2 {
+        Some((parts[0].to_string(), parts[1].to_string()))
+    } else {
+        None
+    }
+}
+
+pub fn generate_markdown(
+    results: &AnalysisResults,
+    enhanced_results: Option<&EnhancedAnalysisResults>,
+) -> Result<String> {
     let mut md = String::new();
     md.push_str(&generate_header(results));
     md.push_str(&generate_summary(results));
     md.push_str(&generate_detailed_findings(results));
+
+    // Add AI insights if available
+    if let Some(enhanced) = enhanced_results {
+        md.push_str(&generate_ai_insights(enhanced));
+    }
+
     md.push_str(&generate_footer());
     Ok(md)
 }
@@ -158,6 +348,60 @@ fn generate_detailed_findings(results: &AnalysisResults) -> String {
     md
 }
 
+fn generate_ai_insights(enhanced: &EnhancedAnalysisResults) -> String {
+    let mut md = String::new();
+
+    if !enhanced.insights.is_empty() {
+        md.push_str("## 🤖 AI-Generated Insights\n\n");
+
+        for insight in &enhanced.insights {
+            md.push_str(&format!("### {}\n\n", insight.title));
+            md.push_str(&format!(
+                "**Priority:** {} | **Confidence:** {:.1}%\n\n",
+                insight.priority,
+                insight.confidence * 100.0
+            ));
+            md.push_str(&format!("{}\n\n", insight.description));
+
+            if !insight.recommendations.is_empty() {
+                md.push_str("**Recommendations:**\n\n");
+                for rec in &insight.recommendations {
+                    md.push_str(&format!(
+                        "- **{}** (Priority: {}): {}\n",
+                        rec.action, rec.priority, rec.expected_benefit
+                    ));
+                    if let Some(details) = &rec.implementation_details {
+                        md.push_str(&format!("  - *Details:* {}\n", details));
+                    }
+                    md.push('\n');
+                }
+            }
+
+            md.push_str(&format!(
+                "**Affected Findings:** {}\n\n",
+                insight.affected_findings.len()
+            ));
+        }
+    }
+
+    if !enhanced.relationships.is_empty() {
+        md.push_str("## 🔗 Finding Relationships\n\n");
+
+        for rel in &enhanced.relationships {
+            md.push_str(&format!(
+                "- **{}** ↔ **{}**: {} (Strength: {:.1}%)\n",
+                rel.source_id,
+                rel.target_id,
+                rel.description,
+                rel.strength * 100.0
+            ));
+        }
+        md.push('\n');
+    }
+
+    md
+}
+
 fn generate_footer() -> String {
     let mut md = String::new();
     md.push_str("---\n");
@@ -165,9 +409,12 @@ fn generate_footer() -> String {
     md
 }
 
-pub fn generate_html(results: &AnalysisResults) -> Result<String> {
+pub fn generate_html(
+    results: &AnalysisResults,
+    enhanced_results: Option<&EnhancedAnalysisResults>,
+) -> Result<String> {
     // Generate markdown content
-    let markdown_content = generate_markdown(results)?;
+    let markdown_content = generate_markdown(results, enhanced_results)?;
 
     Ok(format!(
         r#"<!DOCTYPE html>
@@ -456,7 +703,10 @@ pub fn generate_html(results: &AnalysisResults) -> Result<String> {
     ))
 }
 
-pub fn generate_text(results: &AnalysisResults) -> Result<String> {
+pub fn generate_text(
+    results: &AnalysisResults,
+    enhanced_results: Option<&EnhancedAnalysisResults>,
+) -> Result<String> {
     let mut text = String::new();
 
     text.push_str("CODEGUARDIAN ANALYSIS REPORT\n");
@@ -509,6 +759,56 @@ pub fn generate_text(results: &AnalysisResults) -> Result<String> {
         }
     } else {
         text.push_str("No issues found.\n\n");
+    }
+
+    // Add AI insights if available
+    if let Some(enhanced) = enhanced_results {
+        if !enhanced.insights.is_empty() {
+            text.push_str("AI-GENERATED INSIGHTS\n");
+            text.push_str("---------------------\n\n");
+
+            for insight in &enhanced.insights {
+                text.push_str(&format!("INSIGHT: {}\n", insight.title));
+                text.push_str(&format!(
+                    "Priority: {} | Confidence: {:.1}%\n",
+                    insight.priority,
+                    insight.confidence * 100.0
+                ));
+                text.push_str(&format!("Description: {}\n", insight.description));
+
+                if !insight.recommendations.is_empty() {
+                    text.push_str("Recommendations:\n");
+                    for rec in &insight.recommendations {
+                        text.push_str(&format!(
+                            "  - {} (Priority: {})\n",
+                            rec.action, rec.priority
+                        ));
+                        text.push_str(&format!("    Expected Benefit: {}\n", rec.expected_benefit));
+                    }
+                }
+
+                text.push_str(&format!(
+                    "Affected Findings: {}\n\n",
+                    insight.affected_findings.len()
+                ));
+            }
+        }
+
+        if !enhanced.relationships.is_empty() {
+            text.push_str("FINDING RELATIONSHIPS\n");
+            text.push_str("---------------------\n\n");
+
+            for rel in &enhanced.relationships {
+                text.push_str(&format!(
+                    "- {} <-> {}: {} (Strength: {:.1}%)\n",
+                    rel.source_id,
+                    rel.target_id,
+                    rel.description,
+                    rel.strength * 100.0
+                ));
+            }
+            text.push('\n');
+        }
     }
 
     Ok(text)

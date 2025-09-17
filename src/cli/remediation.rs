@@ -73,7 +73,9 @@ pub async fn run(args: RemediationArgs, _config: &Config) -> Result<()> {
     } else if let Some(workflow_id) = args.approve {
         approve_workflow(&mut service, &workflow_id).await?;
     } else if let Some(workflow_id) = args.reject {
-        let reason = args.reason.unwrap_or_else(|| "No reason provided".to_string());
+        let reason = args
+            .reason
+            .unwrap_or_else(|| "No reason provided".to_string());
         reject_workflow(&mut service, &workflow_id, &reason).await?;
     } else if let Some(workflow_id) = args.show_log {
         show_workflow_log(&service, &workflow_id)?;
@@ -90,7 +92,10 @@ async fn create_workflow_from_file(
     service: &mut RemediationService,
     findings_file: &PathBuf,
 ) -> Result<()> {
-    tracing::info!("Creating remediation workflow from findings file: {:?}", findings_file);
+    tracing::info!(
+        "Creating remediation workflow from findings file: {:?}",
+        findings_file
+    );
 
     // Read findings from file
     let content = tokio::fs::read_to_string(findings_file).await?;
@@ -138,8 +143,10 @@ fn list_workflows(service: &RemediationService) -> Result<()> {
     }
 
     println!("\n📋 Active Remediation Workflows\n");
-    println!("{:<36} {:<30} {:<15} {:<10} {:<8}",
-        "ID", "Title", "Status", "Risk", "Actions");
+    println!(
+        "{:<36} {:<30} {:<15} {:<10} {:<8}",
+        "ID", "Title", "Status", "Risk", "Actions"
+    );
     println!("{}", "-".repeat(100));
 
     for workflow in workflows {
@@ -154,7 +161,8 @@ fn list_workflows(service: &RemediationService) -> Result<()> {
             WorkflowStatus::Cancelled => "🚫",
         };
 
-        println!("{} {:<35} {:<30} {:<15} {:<10} {:<8}",
+        println!(
+            "{} {:<35} {:<30} {:<15} {:<10} {:<8}",
             status_icon,
             &workflow.id[..8],
             truncate_string(&workflow.title, 28),
@@ -179,8 +187,14 @@ fn show_workflow_status(service: &RemediationService, workflow_id: &str) -> Resu
     println!("Description: {}", workflow.description);
     println!("Status: {:?}", workflow.status);
     println!("Risk Level: {:?}", workflow.risk_level);
-    println!("Created: {}", workflow.created_at.format("%Y-%m-%d %H:%M:%S UTC"));
-    println!("Updated: {}", workflow.updated_at.format("%Y-%m-%d %H:%M:%S UTC"));
+    println!(
+        "Created: {}",
+        workflow.created_at.format("%Y-%m-%d %H:%M:%S UTC")
+    );
+    println!(
+        "Updated: {}",
+        workflow.updated_at.format("%Y-%m-%d %H:%M:%S UTC")
+    );
     println!("Created By: {}", workflow.created_by);
 
     if let Some(approved_by) = &workflow.approved_by {
@@ -188,11 +202,26 @@ fn show_workflow_status(service: &RemediationService, workflow_id: &str) -> Resu
     }
 
     println!("\n🎯 Impact Assessment");
-    println!("Files Affected: {}", workflow.estimated_impact.files_affected);
-    println!("Lines Changed: {}", workflow.estimated_impact.lines_of_code_changed);
-    println!("Breaking Changes: {}", workflow.estimated_impact.breaking_changes);
-    println!("Estimated Time: {} minutes", workflow.estimated_impact.estimated_time_minutes);
-    println!("Confidence: {:.1}%", workflow.estimated_impact.confidence_score * 100.0);
+    println!(
+        "Files Affected: {}",
+        workflow.estimated_impact.files_affected
+    );
+    println!(
+        "Lines Changed: {}",
+        workflow.estimated_impact.lines_of_code_changed
+    );
+    println!(
+        "Breaking Changes: {}",
+        workflow.estimated_impact.breaking_changes
+    );
+    println!(
+        "Estimated Time: {} minutes",
+        workflow.estimated_impact.estimated_time_minutes
+    );
+    println!(
+        "Confidence: {:.1}%",
+        workflow.estimated_impact.confidence_score * 100.0
+    );
 
     println!("\n🔧 Planned Actions ({})", workflow.actions.len());
     for (i, action) in workflow.actions.iter().enumerate() {
@@ -202,7 +231,8 @@ fn show_workflow_status(service: &RemediationService, workflow_id: &str) -> Resu
     if !workflow.execution_log.is_empty() {
         println!("\n📝 Execution Log");
         for entry in &workflow.execution_log {
-            println!("  [{}] {}: {}",
+            println!(
+                "  [{}] {}: {}",
                 entry.timestamp.format("%H:%M:%S"),
                 entry.status.to_uppercase(),
                 entry.message
@@ -260,7 +290,8 @@ fn show_workflow_log(service: &RemediationService, workflow_id: &str) -> Result<
             _ => "ℹ️",
         };
 
-        println!("{} [{}] {}: {}",
+        println!(
+            "{} [{}] {}: {}",
             status_icon,
             entry.timestamp.format("%Y-%m-%d %H:%M:%S"),
             entry.status.to_uppercase(),
@@ -281,7 +312,11 @@ async fn cancel_workflow(service: &mut RemediationService, workflow_id: &str) ->
     // In a real implementation, this would properly cancel the workflow
     // For now, we'll just reject it with a cancellation reason
     service
-        .reject_workflow(workflow_id, "cli-user".to_string(), "Cancelled by user".to_string())
+        .reject_workflow(
+            workflow_id,
+            "cli-user".to_string(),
+            "Cancelled by user".to_string(),
+        )
         .await?;
 
     println!("🚫 Workflow {} cancelled", workflow_id);

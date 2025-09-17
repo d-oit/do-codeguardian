@@ -261,7 +261,7 @@ cargo tarpaulin --lib --out Stdout
 cargo tarpaulin --features "ml,ast" --out Html
 
 # Coverage for specific module
-cargo tarpaulin --lib --packages do-do-codeguardian --out Html
+cargo tarpaulin --lib --packages do-codeguardian --out Html
 ```
 
 For more information, see the [GitHub Actions workflow](.github/workflows/coverage.yml) and [tarpaulin configuration](tarpaulin.toml).

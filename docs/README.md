@@ -11,11 +11,10 @@ Welcome to the CodeGuardian documentation! This directory contains comprehensive
 
 ### 🔧 User Guides
 - **[Basic Usage](user-guide/basic-usage.md)** - Learn the fundamental commands and workflows
-- **[Advanced Features](user-guide/advanced-features.md)** - Explore ML integration, turbo mode, and more
 - **[Dashboard Guide](user-guide/dashboard.md)** - Web-based monitoring and reporting
 - **[ML Guide](user-guide/ml.md)** - Machine learning configuration and training
 - **[Integrations Guide](user-guide/integrations.md)** - External system integrations
-- **[CI/CD Integration](user-guide/ci-cd-integration.md)** - Integrate with your development pipeline
+- **[CI/CD Integration](user-guide/ci-cd-setup.md)** - Integrate with your development pipeline
 - **[GitHub Integration](user-guide/github-integration.md)** - Set up automated issue creation and management
 - **[Check Command Guide](user-guide/check.md)** - Comprehensive guide to the primary analysis command
 
@@ -25,25 +24,19 @@ Welcome to the CodeGuardian documentation! This directory contains comprehensive
 - **[Security Model](architecture/security.md)** - Security-first design principles
 - **[Performance Guide](architecture/performance.md)** - Optimize for speed and efficiency
 
-### 🚀 Deployment & Operations
-- **[Deployment Guide](deployment/index.md)** - Deploy CodeGuardian in production environments
-- **[Docker Guide](deployment/docker.md)** - Containerized deployment options
-- **[Cloud Deployment](deployment/cloud.md)** - AWS, GCP, and Azure integration
-
-### 🔍 Troubleshooting & Support
 - **[Troubleshooting Guide](troubleshooting/index.md)** - Common issues and solutions
 - **[FAQ](troubleshooting/faq.md)** - Frequently asked questions
 - **[Performance Tuning](troubleshooting/performance.md)** - Optimize performance and memory usage
 
 ### 💡 Examples & Templates
 - **[Usage Examples](examples/index.md)** - Real-world usage scenarios
-- **[Configuration Templates](examples/templates.md)** - Pre-configured setups for different use cases
-- **[CI/CD Examples](examples/ci-cd-examples.md)** - Complete pipeline configurations
+
+### 🔍 Validation & Testing
+- **[Validation Reports](validation-reports/index.md)** - Version-specific validation and UAT reports organized by release
+- **[Report Organization Guide](validation-reports/index.md#report-organization)** - How to find and access historical validation data
 
 ### 🤝 Contributing
 - **[Contributing Guide](../CONTRIBUTING.md)** - How to contribute to CodeGuardian
-- **[Development Setup](contributing/development-setup.md)** - Set up your development environment
-- **[Code Style Guide](contributing/code-style.md)** - Code standards and best practices
 
 ## 🎯 Documentation Standards
 
@@ -68,8 +61,8 @@ This documentation follows these standards:
 If you can't find what you're looking for:
 
 1. Check the [Troubleshooting Guide](troubleshooting/index.md)
-2. Search existing [GitHub Issues](https://github.com/d-oit/do-do-codeguardian/issues)
-3. Ask in [GitHub Discussions](https://github.com/d-oit/do-do-codeguardian/discussions)
+2. Search existing [GitHub Issues](https://github.com/d-oit/do-codeguardian/issues)
+3. Ask in [GitHub Discussions](https://github.com/d-oit/do-codeguardian/discussions)
 4. Review the [FAQ](troubleshooting/faq.md)
 
 ## 📝 Contributing to Documentation
@@ -85,6 +78,6 @@ We welcome documentation contributions! See our [Contributing Guide](../CONTRIBU
 
 <div align="center">
 
-**[🏠 Back to Main README](../README.md)** | **[🐛 Report Documentation Issues](https://github.com/d-oit/do-do-codeguardian/issues/new?labels=documentation)** | **[💬 Discuss Documentation](https://github.com/d-oit/do-do-codeguardian/discussions/categories/documentation)**
+**[🏠 Back to Main README](../README.md)** | **[🐛 Report Documentation Issues](https://github.com/d-oit/do-codeguardian/issues/new?labels=documentation)** | **[💬 Discuss Documentation](https://github.com/d-oit/do-codeguardian/discussions/categories/documentation)**
 
 </div>

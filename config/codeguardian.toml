@@ -1,0 +1,327 @@
+# CodeGuardian Configuration - Properly Structured
+# This configuration matches the expected schema in the codebase
+
+[output]
+directory = "build/analysis-results"
+format = "json"
+verbose = false
+generate_summary = true
+compress_output = true
+reports_subdirectory = "reports"
+data_subdirectory = "data"
+temp_subdirectory = "temp"
+historical_subdirectory = "historical"
+auto_archive = true
+max_reports_kept = 10
+
+[security]
+enabled = true
+fail_on_issues = false
+min_severity = "low"
+max_file_size = 10485760
+entropy_threshold = 4.5
+max_file_size_bytes = 52428800
+vulnerability_threshold = "medium"
+check_hardcoded_secrets = true
+check_unsafe_code = true
+check_dependencies = true
+secret_patterns = [
+    "(?i)(password|passwd|pwd)\\s*[:=]\\s*['\"][^'\"]{8,}['\"]",
+    "(?i)(api[_-]?key|apikey)\\s*[:=]\\s*['\"][^'\"]{16,}['\"]",
+    "(?i)(secret|token)\\s*[:=]\\s*['\"][^'\"]{16,}['\"]",
+    "(?i)(private[_-]?key)\\s*[:=]\\s*['\"][^'\"]{32,}['\"]"
+]
+check_sql_injection = true
+check_xss = true
+check_command_injection = true
+
+[git]
+conventional_commits = true
+commit_template = "{type}({scope}): {description}"
+require_signed_commits = false
+
+[performance]
+enabled = true
+check_allocations = true
+check_async_blocking = true
+max_complexity = 15
+max_function_length = 150
+enable_profiling = false
+max_memory_usage_mb = 512
+max_cpu_usage_percent = 80
+
+[analyzers]
+[analyzers.integrity]
+enabled = true
+hash_algorithm = "Blake3"
+baseline_file = "build/.codeguardian/integrity.baseline"
+auto_update_baseline = false
+check_permissions = true
+check_binary_files = false
+verify_checksums = true
+max_file_size = 5242880
+
+[analyzers.lint_drift]
+enabled = false
+config_files = ["Cargo.toml", "package.json", ".eslintrc.json"]
+baseline_file = "build/.codeguardian/lint_drift.baseline"
+auto_update_baseline = false
+strict_mode = false
+
+[analyzers.non_production]
+enabled = true
+exclude_test_files = true
+exclude_example_files = true
+custom_test_directories = ["tests", "test", "spec", "specs", "__tests__", "testdata", "fixtures", "mocks"]
+custom_test_extensions = [".test.rs", ".spec.rs", ".integration.rs", ".e2e.rs"]
+fuzzy_test_patterns = [
+    "(?i)test.*\\.rs$",
+    "(?i)spec.*\\.rs$",
+    "(?i).*test.*",
+    "(?i).*spec.*"
+]
+
+[[analyzers.non_production.patterns]]
+pattern = "(?i)\\b(todo|fixme|hack|xxx)\\b"
+description = "Non-production code markers"
+severity = "medium"
+
+[[analyzers.non_production.patterns]]
+pattern = "(?i)\\bconsole\\.log\\b"
+description = "Debug logging statements"
+severity = "low"
+
+[[analyzers.non_production.patterns]]
+pattern = "(?i)\\b(todo|fixme|hack|xxx)\\b"
+description = "Non-production code markers"
+severity = "medium"
+
+[[analyzers.non_production.patterns]]
+pattern = "(?i)\\bconsole\\.log\\b"
+description = "Debug logging statements"
+severity = "low"
+
+[analyzers.dependency]
+enabled = true
+check_outdated = true
+check_vulnerabilities = true
+check_unused = true
+check_duplicates = true
+check_licenses = true
+max_age_days = 365
+vulnerability_databases = ["https://cve.mitre.org", "https://nvd.nist.gov"]
+
+[analyzers.performance_analyzer]
+enabled = true
+check_nested_loops = true
+check_string_operations = true
+check_blocking_io = true
+check_algorithms = true
+check_memory_usage = true
+check_io_operations = true
+max_complexity = 10
+max_function_length = 50
+max_loop_depth = 3
+
+[analyzers.security_analyzer]
+enabled = true
+check_sql_injection = true
+check_xss = true
+check_command_injection = true
+check_hardcoded_secrets = true
+check_vulnerabilities = true
+check_permissions = true
+check_secrets = true
+min_entropy_threshold = 3.5
+
+[analyzers.code_quality]
+enabled = true
+check_magic_numbers = true
+check_complex_conditions = true
+check_deep_nesting = true
+check_commented_code = true
+check_complexity = true
+check_duplication = true
+check_naming = true
+max_complexity = 10
+max_nesting_depth = 6
+max_file_size = 500
+max_line_length = 120
+
+[analyzers.broken_files]
+enabled = true
+detect_merge_conflicts = true
+detect_ai_placeholders = true
+detect_duplicates = false
+
+[analyzers.broken_files.conflicts]
+fail_on_conflicts = false  # Set to false to avoid failing on test files
+validate_syntax = true
+check_git_status = true
+
+[analyzers.broken_files.placeholders]
+severity = "medium"
+patterns = [
+    "add content here",
+    "implement this",
+    "your code here",
+    "placeholder",
+    "todo: implement",
+    "fill in the details",
+    "complete this",
+    "add your logic"
+]
+custom_patterns = []
+
+[analyzers.broken_files.duplicates]
+enabled = true
+min_lines = 10
+focus_security = true
+ignore_test_files = true
+max_files_to_compare = 1000
+enable_ml_similarity = true
+similarity_threshold = 0.8
+enable_github_prevention = true
+
+[analyzers.broken_files.duplicates.cache]
+enabled = true
+max_size_mb = 100
+expiration_hours = 24
+max_entries = 1000
+
+[analyzers.duplicate_analyzer]
+enabled = true
+min_lines = 10
+focus_security = true
+ignore_test_files = true
+max_files_to_compare = 1000
+enable_ml_similarity = true
+similarity_threshold = 0.8
+enable_github_prevention = true
+
+[analyzers.duplicate_analyzer.cache]
+enabled = true
+max_size_mb = 100
+expiration_hours = 24
+max_entries = 1000
+
+[files]
+include_patterns = []
+exclude_patterns = ["*.log", "*.tmp", "target/", "node_modules/", ".git/"]
+analyze_extensions = [".rs", ".js", ".ts", ".py", ".java"]
+skip_binaries = true
+max_file_size_bytes = 10485760
+skip_large_files = true
+
+[severity]
+custom_levels = ["info", "low", "medium", "high", "critical"]
+enable_escalation = true
+escalation_threshold = 5
+
+[integrations]
+[integrations.github]
+enabled = false
+repository = "d-oit/do-codeguardian"
+token = "${CODEGUARDIAN_GITHUB_TOKEN}"
+create_issues = true
+issue_labels = ["security", "codeguardian", "duplicate-prevention"]
+comment_prs = true
+min_severity = "medium"
+duplicate_prevention = true
+semantic_similarity_threshold = 0.8
+cross_repository_search = false
+
+[integrations.gitlab]
+enabled = false
+project = ""
+token = "${CODEGUARDIAN_GITLAB_TOKEN}"
+create_issues = false
+issue_labels = ["security", "codeguardian"]
+comment_mrs = false
+min_severity = "high"
+
+[analysis]
+enabled = true
+analyze_binaries = false
+timeout_seconds = 300
+parallel_processing = true
+max_workers = 4
+enable_caching = true
+cache_dir = "build/.codeguardian/cache"
+cache_expiration_days = 7
+enable_ai_enhancement = false
+
+[ai]
+enabled = true
+enable_semantic_enrichment = true
+enable_relationship_detection = true
+enable_insight_generation = true
+enable_context_analysis = false
+min_confidence_threshold = 0.7
+max_processing_time = 300
+enable_historical_analysis = false
+model_cache_directory = "build/.codeguardian/models"
+
+[optimization]
+enable_optimized_analyzers = true
+enable_file_caching = true
+max_parallel_workers = 4
+max_memory_file_size = 10485760
+streaming_chunk_size = 65536
+max_findings_per_file = 50
+pattern_cache_size = 1000
+
+[optimization.cache_cleanup]
+enabled = true
+max_age_days = 7
+max_size_mb = 100
+cleanup_frequency = 10
+
+[optimization.early_termination]
+enabled = true
+max_analysis_time_seconds = 30
+max_lines_per_file = 10000
+skip_large_files_bytes = 52428800
+
+[retention]
+enabled = true
+results_dir = "build/analysis-results"
+max_age_days = 30
+max_size_mb = 1000
+min_results_to_keep = 10
+enable_integrity_check = true
+integrity_check_frequency_days = 7
+enable_auto_repair = false
+backup_corrupted_files = true
+backup_dir = "build/analysis-results/backup"
+enable_integrity_reporting = true
+integrity_report_path = "build/analysis-results/integrity-report.json"
+
+# Dashboard Configuration
+[dashboard]
+enabled = false
+host = "127.0.0.1"
+port = 8080
+refresh_interval_seconds = 30
+max_history_days = 30
+enable_real_time = true
+
+# Automated Remediation Configuration
+[remediation]
+enabled = false
+auto_approve_low_risk = true
+require_approval_threshold = "Medium"
+max_concurrent_workflows = 5
+timeout_minutes = 30
+
+[remediation.integrations]
+github_enabled = true
+jira_enabled = false
+slack_enabled = false
+email_enabled = false
+
+[remediation.notifications]
+notify_on_start = true
+notify_on_completion = true
+notify_on_failure = true
+notify_on_approval_needed = true

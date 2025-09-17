@@ -1,9 +1,9 @@
 //! Relationship graph implementation
 
-use super::{Artifact, Relationship, RelationshipQuery, RelationshipPath, RelationshipType};
+use super::{Artifact, Relationship, RelationshipPath, RelationshipQuery, RelationshipType};
 use anyhow::Result;
-use std::collections::{HashMap, HashSet, VecDeque};
 use chrono::{DateTime, Utc};
+use std::collections::{HashMap, HashSet, VecDeque};
 
 /// Graph-based storage for relationships
 pub struct RelationshipGraph {
@@ -35,14 +35,17 @@ impl RelationshipGraph {
     pub fn add_artifact(&mut self, artifact: &Artifact) -> Result<()> {
         self.artifacts.insert(artifact.id.clone(), artifact.clone());
         self.adjacency_list.entry(artifact.id.clone()).or_default();
-        self.reverse_adjacency.entry(artifact.id.clone()).or_default();
+        self.reverse_adjacency
+            .entry(artifact.id.clone())
+            .or_default();
         Ok(())
     }
 
     /// Add a relationship to the graph
     pub fn add_relationship(&mut self, relationship: &Relationship) -> Result<()> {
         // Add to relationships map
-        self.relationships.insert(relationship.id.clone(), relationship.clone());
+        self.relationships
+            .insert(relationship.id.clone(), relationship.clone());
 
         // Update adjacency lists
         self.adjacency_list
@@ -93,7 +96,9 @@ impl RelationshipGraph {
     fn matches_query(&self, relationship: &Relationship, query: &RelationshipQuery) -> bool {
         // Check artifact ID
         if let Some(artifact_id) = &query.artifact_id {
-            if relationship.source_artifact_id != *artifact_id && relationship.target_artifact_id != *artifact_id {
+            if relationship.source_artifact_id != *artifact_id
+                && relationship.target_artifact_id != *artifact_id
+            {
                 return false;
             }
         }
@@ -134,10 +139,14 @@ impl RelationshipGraph {
 
         // Check artifact type
         if let Some(artifact_type) = &query.artifact_type {
-            let source_matches = self.artifacts.get(&relationship.source_artifact_id)
+            let source_matches = self
+                .artifacts
+                .get(&relationship.source_artifact_id)
                 .map(|a| a.artifact_type == *artifact_type)
                 .unwrap_or(false);
-            let target_matches = self.artifacts.get(&relationship.target_artifact_id)
+            let target_matches = self
+                .artifacts
+                .get(&relationship.target_artifact_id)
                 .map(|a| a.artifact_type == *artifact_type)
                 .unwrap_or(false);
 
@@ -148,11 +157,15 @@ impl RelationshipGraph {
 
         // Check repository
         if let Some(repository) = &query.repository {
-            let source_matches = self.artifacts.get(&relationship.source_artifact_id)
+            let source_matches = self
+                .artifacts
+                .get(&relationship.source_artifact_id)
                 .and_then(|a| a.repository.as_ref())
                 .map(|r| r == repository)
                 .unwrap_or(false);
-            let target_matches = self.artifacts.get(&relationship.target_artifact_id)
+            let target_matches = self
+                .artifacts
+                .get(&relationship.target_artifact_id)
                 .and_then(|a| a.repository.as_ref())
                 .map(|r| r == repository)
                 .unwrap_or(false);
@@ -164,11 +177,15 @@ impl RelationshipGraph {
 
         // Check system
         if let Some(system) = &query.system {
-            let source_matches = self.artifacts.get(&relationship.source_artifact_id)
+            let source_matches = self
+                .artifacts
+                .get(&relationship.source_artifact_id)
                 .and_then(|a| a.system.as_ref())
                 .map(|s| s == system)
                 .unwrap_or(false);
-            let target_matches = self.artifacts.get(&relationship.target_artifact_id)
+            let target_matches = self
+                .artifacts
+                .get(&relationship.target_artifact_id)
                 .and_then(|a| a.system.as_ref())
                 .map(|s| s == system)
                 .unwrap_or(false);
@@ -203,9 +220,16 @@ impl RelationshipGraph {
         let mut visited = HashSet::new();
 
         // Initialize with starting artifact
-        queue.push_back((start_id.to_string(), vec![start_id.to_string()], vec![], 0u32, 1.0f64));
+        queue.push_back((
+            start_id.to_string(),
+            vec![start_id.to_string()],
+            vec![],
+            0u32,
+            1.0f64,
+        ));
 
-        while let Some((current_id, path, relationships, depth, total_strength)) = queue.pop_front() {
+        while let Some((current_id, path, relationships, depth, total_strength)) = queue.pop_front()
+        {
             if depth >= max_depth {
                 continue;
             }
@@ -261,7 +285,11 @@ impl RelationshipGraph {
         }
 
         // Sort paths by strength (descending)
-        paths.sort_by(|a, b| b.total_strength.partial_cmp(&a.total_strength).unwrap_or(std::cmp::Ordering::Equal));
+        paths.sort_by(|a, b| {
+            b.total_strength
+                .partial_cmp(&a.total_strength)
+                .unwrap_or(std::cmp::Ordering::Equal)
+        });
 
         Ok(paths)
     }
@@ -276,7 +304,9 @@ impl RelationshipGraph {
         let mut counts = HashMap::new();
 
         for relationship in self.relationships.values() {
-            *counts.entry(relationship.relationship_type.clone()).or_insert(0) += 1;
+            *counts
+                .entry(relationship.relationship_type.clone())
+                .or_insert(0) += 1;
         }
 
         Ok(counts)
@@ -305,21 +335,33 @@ impl RelationshipGraph {
     fn remove_relationship(&mut self, relationship_id: &str) -> Result<()> {
         if let Some(relationship) = self.relationships.remove(relationship_id) {
             // Remove from adjacency lists
-            if let Some(outgoing) = self.adjacency_list.get_mut(&relationship.source_artifact_id) {
+            if let Some(outgoing) = self
+                .adjacency_list
+                .get_mut(&relationship.source_artifact_id)
+            {
                 outgoing.retain(|id| id != relationship_id);
             }
 
-            if let Some(incoming) = self.reverse_adjacency.get_mut(&relationship.target_artifact_id) {
+            if let Some(incoming) = self
+                .reverse_adjacency
+                .get_mut(&relationship.target_artifact_id)
+            {
                 incoming.retain(|id| id != relationship_id);
             }
 
             // If bidirectional, remove reverse entries too
             if relationship.bidirectional {
-                if let Some(outgoing) = self.adjacency_list.get_mut(&relationship.target_artifact_id) {
+                if let Some(outgoing) = self
+                    .adjacency_list
+                    .get_mut(&relationship.target_artifact_id)
+                {
                     outgoing.retain(|id| id != relationship_id);
                 }
 
-                if let Some(incoming) = self.reverse_adjacency.get_mut(&relationship.source_artifact_id) {
+                if let Some(incoming) = self
+                    .reverse_adjacency
+                    .get_mut(&relationship.source_artifact_id)
+                {
                     incoming.retain(|id| id != relationship_id);
                 }
             }

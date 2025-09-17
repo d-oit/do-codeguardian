@@ -48,6 +48,13 @@ feature_extraction = "enhanced"
 cache_enabled = true
 cache_max_age_days = 30
 parallel_processing = true
+
+[retention]
+enabled = true
+max_age_days = 30
+max_size_mb = 500
+enable_integrity_check = true
+enable_integrity_reporting = true
 memory_optimization = true
 compression_enabled = true
 

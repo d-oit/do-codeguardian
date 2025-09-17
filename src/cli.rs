@@ -12,6 +12,8 @@ pub mod integrations;
 pub mod metrics;
 pub mod remediation;
 pub mod report;
+pub mod retention;
+pub mod threshold_tuning;
 #[cfg(feature = "ml")]
 pub mod train;
 
@@ -41,6 +43,10 @@ pub struct Cli {
     /// Suppress all output except errors
     #[arg(short, long)]
     pub quiet: bool,
+
+    /// Enable AI-enhanced analysis with semantic insights and recommendations
+    #[arg(long)]
+    pub ai_enhance: bool,
 
     #[command(subcommand)]
     pub command: Commands,
@@ -92,6 +98,13 @@ pub enum Commands {
 
     /// Bulk operations for multiple repositories and codebases
     Bulk(bulk::BulkArgs),
+
+    /// Retention policy management
+    Retention(retention::RetentionArgs),
+
+    /// Tune monitoring thresholds for different environments
+    #[command(name = "tune-thresholds")]
+    TuneThresholds(threshold_tuning::ThresholdTuningArgs),
 }
 
 #[derive(Parser)]
@@ -104,7 +117,7 @@ pub struct CheckArgs {
     #[arg(long, default_value = "json")]
     pub format: OutputFormat,
 
-    /// Output file for results
+    /// Output file for results (legacy flat file mode)
     #[arg(long, default_value = "results.json")]
     pub out: PathBuf,
 
@@ -187,11 +200,39 @@ pub struct CheckArgs {
     /// Fail fast on merge conflicts (CI/CD)
     #[arg(long)]
     pub fail_on_conflicts: bool,
+
+    /// Enable AI-enhanced analysis with semantic insights and recommendations
+    #[arg(long)]
+    pub ai_enhance: bool,
+
+    /// Use hierarchical storage organization (default: true)
+    #[arg(long, default_value = "true")]
+    pub hierarchical_storage: bool,
+
+    /// Storage base directory for hierarchical organization
+    #[arg(long, default_value = "analysis-results")]
+    pub storage_dir: PathBuf,
+
+    /// Storage organization strategy (by_date, by_project, hybrid, hierarchical_time_based)
+    #[arg(long, default_value = "hierarchical_time_based")]
+    pub storage_strategy: String,
+
+    /// Enable compression for stored results
+    #[arg(long)]
+    pub storage_compress: bool,
+
+    /// Project name for storage organization
+    #[arg(long)]
+    pub project_name: Option<String>,
+
+    /// Repository URL for storage organization
+    #[arg(long)]
+    pub repository_url: Option<String>,
 }
 
 #[derive(Parser)]
 pub struct ReportArgs {
-    /// Input results file
+    /// Input results file (legacy flat file mode)
     #[arg(long, default_value = "results.json")]
     pub from: PathBuf,
 
@@ -202,6 +243,42 @@ pub struct ReportArgs {
     /// Output format
     #[arg(long, default_value = "markdown")]
     pub format: ReportFormat,
+
+    /// Include AI-enhanced insights in the report
+    #[arg(long)]
+    pub ai_enhance: bool,
+
+    /// Use hierarchical storage organization (default: true)
+    #[arg(long, default_value = "true")]
+    pub hierarchical_storage: bool,
+
+    /// Storage base directory for hierarchical organization
+    #[arg(long, default_value = "analysis-results")]
+    pub storage_dir: PathBuf,
+
+    /// Query results by project name
+    #[arg(long)]
+    pub query_project: Option<String>,
+
+    /// Query results by repository URL
+    #[arg(long)]
+    pub query_repository: Option<String>,
+
+    /// Query results by date range (YYYY-MM-DD:YYYY-MM-DD)
+    #[arg(long)]
+    pub query_date_range: Option<String>,
+
+    /// Query results by tags (comma-separated)
+    #[arg(long)]
+    pub query_tags: Option<String>,
+
+    /// Limit number of results to retrieve
+    #[arg(long)]
+    pub query_limit: Option<usize>,
+
+    /// Result ID to retrieve from hierarchical storage
+    #[arg(long)]
+    pub result_id: Option<String>,
 }
 
 #[derive(Parser)]

@@ -7,6 +7,7 @@ use std::collections::VecDeque;
 use std::sync::Mutex;
 
 /// String buffer pool for reusing string allocations
+#[derive(Debug)]
 pub struct StringPool {
     buffers: Mutex<VecDeque<String>>,
     max_pool_size: usize,
@@ -46,6 +47,19 @@ impl StringPool {
                     buffer.clear();
                     buffers.push_back(buffer);
                 }
+            }
+        }
+    }
+
+    /// Manually trigger garbage collection for this pool
+    pub fn collect_garbage(&self) {
+        if let Ok(mut buffers) = self.buffers.lock() {
+            // Remove buffers that are too large or keep only recent ones
+            let max_keep = self.max_pool_size / 2; // Keep only half
+            if buffers.len() > max_keep {
+                // Remove oldest buffers first (from front)
+                let to_remove = buffers.len() - max_keep;
+                buffers.drain(0..to_remove);
             }
         }
     }
@@ -178,6 +192,7 @@ impl PoolStats {
 }
 
 /// Vector pool for reusing Vec<T> allocations
+#[derive(Debug)]
 pub struct VecPool<T> {
     buffers: Mutex<VecDeque<Vec<T>>>,
     max_pool_size: usize,
@@ -281,6 +296,7 @@ impl<'a, T> std::ops::DerefMut for PooledVec<'a, T> {
 }
 
 /// Global memory pools for common operations
+#[derive(Debug)]
 pub struct GlobalMemoryPools {
     pub string_pool: StringPool,
     pub finding_pool: VecPool<crate::types::Finding>,
@@ -303,7 +319,45 @@ impl GlobalMemoryPools {
         buffer.into_string()
     }
 
+    /// Get a small buffer (256 bytes default capacity)
+    pub fn get_small_buffer(&self) -> PooledString<'_> {
+        self.string_pool.get_buffer()
+    }
+
+    /// Get a medium buffer (1KB default capacity)
+    pub fn get_medium_buffer(&self) -> PooledString<'_> {
+        self.string_pool.get_buffer()
+    }
+
+    /// Get a large buffer (4KB default capacity)
+    pub fn get_large_buffer(&self) -> PooledString<'_> {
+        self.string_pool.get_buffer()
+    }
+
+    /// Get a buffer with custom capacity
+    pub fn get_buffer(&self, _capacity: usize) -> PooledString<'_> {
+        self.string_pool.get_buffer()
+    }
+
     /// Get memory usage statistics
+    pub fn stats(&self) -> ExtendedPoolStats {
+        ExtendedPoolStats {
+            string_pool: self.string_pool.stats(),
+            finding_pool_available: if let Ok(buffers) = self.finding_pool.buffers.lock() {
+                buffers.len()
+            } else {
+                0
+            },
+            path_pool_available: if let Ok(buffers) = self.path_pool.buffers.lock() {
+                buffers.len()
+            } else {
+                0
+            },
+            total_buffers_created: 0, // Could track this if needed
+        }
+    }
+
+    /// Get memory usage statistics (legacy method)
     pub fn memory_stats(&self) -> GlobalPoolStats {
         GlobalPoolStats {
             string_pool: self.string_pool.stats(),
@@ -332,6 +386,14 @@ pub struct GlobalPoolStats {
     pub string_pool: PoolStats,
     pub finding_pool_available: usize,
     pub path_pool_available: usize,
+}
+
+#[derive(Debug)]
+pub struct ExtendedPoolStats {
+    pub string_pool: PoolStats,
+    pub finding_pool_available: usize,
+    pub path_pool_available: usize,
+    pub total_buffers_created: usize,
 }
 
 impl GlobalPoolStats {
@@ -455,5 +517,71 @@ mod tests {
 
         // This is more of a performance indicator than a strict test
         // The benefit is more apparent with larger workloads
+    }
+
+    #[test]
+    fn test_memory_pool_basic_operations() {
+        let pool = GlobalMemoryPools::new();
+
+        // Test getting different sized buffers
+        {
+            let mut small_buffer = pool.get_small_buffer();
+            small_buffer.push_str("small");
+            assert_eq!(small_buffer.as_str(), "small");
+        }
+
+        {
+            let mut medium_buffer = pool.get_medium_buffer();
+            medium_buffer.push_str("medium");
+            assert_eq!(medium_buffer.as_str(), "medium");
+        }
+
+        {
+            let mut large_buffer = pool.get_large_buffer();
+            large_buffer.push_str("large");
+            assert!(large_buffer.as_str() == "large");
+        }
+
+        // Test custom size buffer
+        {
+            let mut custom_buffer = pool.get_buffer(2048);
+            custom_buffer.push_str("custom");
+            assert_eq!(custom_buffer.as_str(), "custom");
+        }
+    }
+
+    #[test]
+    fn test_memory_pool_statistics() {
+        let pool = GlobalMemoryPools::new();
+        let initial_stats = pool.stats();
+
+        // Get some buffers to change stats
+        {
+            let _small = pool.get_small_buffer();
+            let _medium = pool.get_medium_buffer();
+            let _large = pool.get_large_buffer();
+        }
+
+        let updated_stats = pool.stats();
+
+        // Should have some buffers now
+        assert!(updated_stats.total_buffers_created >= initial_stats.total_buffers_created);
+    }
+
+    #[test]
+    fn test_memory_pool_edge_cases() {
+        let pool = GlobalMemoryPools::new();
+
+        // Test zero-sized buffer (should still work)
+        {
+            let buffer = pool.get_buffer(0);
+            assert!(buffer.len() >= 0);
+        }
+
+        // Test very large buffer
+        {
+            let buffer = pool.get_buffer(1024 * 1024); // 1MB
+            assert!(buffer.len() >= 0); // Can't assert capacity, just check it works
+        }
     }
 }

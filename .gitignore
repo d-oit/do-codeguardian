@@ -34,8 +34,6 @@ __pycache__/
 # Shell history
 *.history
 
-# Ignore local config
-examples/codeguardian.toml
 
 # Ignore compiled binaries
 *.exe
@@ -54,17 +52,8 @@ examples/codeguardian.toml
 cobertura.xml
 tarpaulin-report.html
 tarpaulin-report.json
+coverage/
 
-# Test result files
-final-test.json
-*-test.json
-analysis-results.json
-*.backup
-simple.toml
-metrics.json
-
-# Analysis results directory
-analysis-results/*
-!analysis-results/README.md
-!analysis-results/.gitkeep
-!analysis-results/github_duplicate_prevention_analysis.md
+# Temporary validation reports
+/uat_report.md
+/validation_report_*.md

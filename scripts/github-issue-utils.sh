@@ -7,11 +7,11 @@ set -euo pipefail
 # Default configuration
 GITHUB_API_MAX_RETRIES=${GITHUB_API_MAX_RETRIES:-3}
 GITHUB_API_RETRY_DELAY=${GITHUB_API_RETRY_DELAY:-2}
-GITHUB_ISSUE_CACHE_DIR=${GITHUB_ISSUE_CACHE_DIR:-/tmp/github-issue-cache}
+GITHUB_ISSUE_CACHE_DIR=${GITHUB_ISSUE_CACHE_DIR:-${XDG_CACHE_HOME:-$HOME/.cache}/codeguardian/github-issues}
 GITHUB_ISSUE_CACHE_TTL=${GITHUB_ISSUE_CACHE_TTL:-3600} # 1 hour
 
 # Initialize cache directory
-mkdir -p "$GITHUB_API_CACHE_DIR"
+mkdir -p "$GITHUB_ISSUE_CACHE_DIR"
 
 # Function to execute GitHub CLI with retry logic
 exec_gh_with_retry() {

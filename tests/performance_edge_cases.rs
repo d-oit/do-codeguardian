@@ -405,7 +405,7 @@ pub struct Config {
 }
 
 impl Config {
-    pub fn new() -> Self {
+    fn new() -> Self {
         Self {
             api_key: "sk-proj-BaselinePerformanceTest123456789".to_string(),
         }

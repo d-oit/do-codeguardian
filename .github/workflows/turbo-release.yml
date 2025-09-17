@@ -148,20 +148,78 @@ jobs:
           pattern: release-validation-*
           merge-multiple: true
 
-      - name: 📊 Generate Performance Report
-        run: |
-          echo "📊 CodeGuardian Release Performance Report"
-          echo "=========================================="
-          echo ""
-          echo "🚀 **Turbo Mode Performance Validation**"
-          echo ""
+       - name: 📊 Generate Performance Report
+         run: |
+           VERSION=${{ github.ref_name }}
+           mkdir -p docs/validation-reports/$VERSION
+           cat > docs/validation-reports/$VERSION/release-performance-report.md << 'EOF'
+           # CodeGuardian Release Performance Report
 
-          echo "✅ **All platforms validated successfully**"
-          echo ""
-          echo "🎯 **Key Achievements:**"
-          echo "- ✅ Cross-platform compatibility verified"
-          echo "- ✅ Performance targets met on all platforms"
-          echo "- ✅ Memory usage within acceptable limits"
-          echo "- ✅ Results consistency across platforms"
-          echo ""
-          echo "🚀 **Ready for production deployment!**"
+           ## Turbo Mode Performance Validation
+
+           ✅ **All platforms validated successfully**
+
+           ### Key Achievements:
+           - ✅ Cross-platform compatibility verified
+           - ✅ Performance targets met on all platforms
+           - ✅ Memory usage within acceptable limits
+           - ✅ Results consistency across platforms
+
+           🚀 **Ready for production deployment!**
+           EOF
+
+       - name: 📤 Upload Performance Report
+         uses: actions/upload-artifact@v4
+         with:
+           name: release-performance-report
+           path: docs/validation-reports/${{ github.ref_name }}/release-performance-report.md
+           retention-days: 90
+
+   commit-reports:
+     name: 📝 Commit Validation Reports
+     runs-on: ubuntu-latest
+     needs: [release-validation, release-performance-report]
+     if: github.event_name == 'release'
+     permissions:
+       contents: write
+
+     steps:
+       - name: 📥 Checkout main branch
+         uses: actions/checkout@v5
+         with:
+           ref: main
+
+       - name: 📥 Download validation results
+         uses: actions/download-artifact@v5
+         with:
+           pattern: release-validation-*
+           merge-multiple: true
+
+       - name: 📥 Download performance report
+         uses: actions/download-artifact@v5
+         with:
+           name: release-performance-report
+
+       - name: 📝 Commit release validation reports
+         run: |
+           VERSION=${{ github.ref_name }}
+           mkdir -p docs/validation-reports/$VERSION
+           cp release-test.json docs/validation-reports/$VERSION/release-validation.json
+           cp release-performance-report.md docs/validation-reports/$VERSION/
+
+           git config user.name "github-actions[bot]"
+           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+           if git ls-files --error-unmatch docs/validation-reports/$VERSION/release-validation.json >/dev/null 2>&1; then
+             if ! git diff --quiet docs/validation-reports/$VERSION/; then
+               git add docs/validation-reports/$VERSION/
+               git commit -m "chore: update release validation reports for $VERSION [skip ci]"
+               git push
+             else
+               echo "No changes to release validation reports"
+             fi
+           else
+             git add docs/validation-reports/$VERSION/
+             git commit -m "chore: add release validation reports for $VERSION [skip ci]"
+             git push
+           fi

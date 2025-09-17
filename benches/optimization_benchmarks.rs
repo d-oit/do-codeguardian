@@ -289,42 +289,23 @@ fn bench_overall_optimization_impact(c: &mut Criterion) {
     group.bench_function("baseline_engine_no_optimizations", |b| {
         b.iter(|| {
             rt.block_on(async {
-                let config = Config::minimal();
-                let mut engine = GuardianEngine::new_with_ml(config, Default::default(), None)
-                    .await
-                    .unwrap();
-
-                let file_paths: Vec<PathBuf> = test_files
-                    .iter()
-                    .take(2)
-                    .map(|(file, _, _)| file.path().to_path_buf())
-                    .collect();
-
-                // Force minimal optimizations
-                let result = engine.analyze_files(&file_paths, 1).await;
-                black_box(result.unwrap());
+                let config = Config::default();
+                let engine = GuardianEngine::new(config).unwrap();
+                let _results = engine.analyze_files(&test_files, None).await.unwrap();
             });
         });
     });
 
-    // Optimized: Full engine with all optimizations enabled
+    // Optimized: Engine with all optimizations enabled
     group.bench_function("optimized_engine_full_optimizations", |b| {
         b.iter(|| {
             rt.block_on(async {
-                let config = Config::minimal();
-                let mut engine = GuardianEngine::new_with_ml(config, Default::default(), None)
-                    .await
-                    .unwrap();
-
-                let file_paths: Vec<PathBuf> = test_files
-                    .iter()
-                    .take(2)
-                    .map(|(file, _, _)| file.path().to_path_buf())
-                    .collect();
-
-                // Use full optimizations (should be 2x+ faster)
-                let result = engine.analyze_files(&file_paths, 4).await;
-                black_box(result.unwrap());
+                let mut config = Config::default();
+                config.performance.enable_parallel_processing = true;
+                config.performance.enable_memory_pool = true;
+                config.performance.enable_caching = true;
+                let engine = GuardianEngine::new(config).unwrap();
+                let _results = engine.analyze_files(&test_files, None).await.unwrap();
             });
         });
     });
@@ -332,11 +313,102 @@ fn bench_overall_optimization_impact(c: &mut Criterion) {
     group.finish();
 }
 
+/// Benchmark parallel output processing capabilities
+fn bench_parallel_output_processing(c: &mut Criterion) {
+    let rt = Runtime::new().unwrap();
+
+    let mut group = c.benchmark_group("parallel_output_processing");
+
+    // Generate test analysis results
+    let test_results = generate_test_analysis_results();
+
+    // Sequential output generation
+    group.bench_function("sequential_multiple_formats", |b| {
+        b.iter(|| {
+            rt.block_on(async {
+                let formats = vec![
+                    do_codeguardian::output::OutputFormat::Json,
+                    do_codeguardian::output::OutputFormat::Html,
+                    do_codeguardian::output::OutputFormat::Markdown,
+                    do_codeguardian::output::OutputFormat::Sarif,
+                ];
+
+                let mut results = std::collections::HashMap::new();
+                for format in &formats {
+                    let output =
+                        do_codeguardian::output::format_results(&test_results, *format).unwrap();
+                    results.insert(*format, output);
+                }
+
+                black_box(results);
+            });
+        });
+    });
+
+    // Parallel output generation
+    group.bench_function("parallel_multiple_formats", |b| {
+        b.iter(|| {
+            rt.block_on(async {
+                use do_codeguardian::output::{OutputFormat, ParallelOutputProcessor};
+
+                let processor = ParallelOutputProcessor::new().unwrap();
+                let formats = vec![
+                    OutputFormat::Json,
+                    OutputFormat::Html,
+                    OutputFormat::Markdown,
+                    OutputFormat::Sarif,
+                ];
+
+                let results = processor
+                    .process_multiple_formats(&test_results, formats)
+                    .await
+                    .unwrap();
+                black_box(results);
+            });
+        });
+    });
+
+    group.finish();
+}
+
+/// Generate test analysis results for benchmarking
+fn generate_test_analysis_results() -> do_codeguardian::types::AnalysisResults {
+    use chrono::Utc;
+    use do_codeguardian::types::{AnalysisResults, Finding, Severity};
+
+    let mut results = AnalysisResults::new("benchmark_test".to_string());
+
+    // Add some test findings
+    for i in 0..100 {
+        results.findings.push(Finding {
+            id: format!("test-finding-{}", i),
+            analyzer: "test_analyzer".to_string(),
+            rule: "test_rule".to_string(),
+            severity: Severity::Medium,
+            file: std::path::PathBuf::from(format!("test_file_{}.rs", i)),
+            line: i as u32 + 1,
+            column: Some(10),
+            message: format!("Test finding message {}", i),
+            description: Some(format!("Test description {}", i)),
+            suggestion: Some("Fix this issue".to_string()),
+            category: Some("test".to_string()),
+            metadata: std::collections::HashMap::new(),
+        });
+    }
+
+    results.summary.total_findings = 100;
+    results.summary.total_files_scanned = 10;
+    results.timestamp = Utc::now();
+
+    results
+}
+
 criterion_group!(
     benches,
     bench_memory_pool_optimizations,
     bench_async_caching_optimizations,
     bench_parallelism_optimizations,
-    bench_overall_optimization_impact
+    bench_overall_optimization_impact,
+    bench_parallel_output_processing
 );
 criterion_main!(benches);

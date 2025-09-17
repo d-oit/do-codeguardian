@@ -5,6 +5,46 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.0-alpha.5] - 2025-09-17
+
+### Added
+- **Swarm Intelligence Analysis**: Implemented advanced RYAN, FLASH, and SOCRATES agents for multi-perspective code review
+- **Enterprise Integrations**: Comprehensive support for Azure DevOps, Bitbucket, GitLab, Jenkins, Jira, and Confluence
+- **Enhanced ML Capabilities**: Transformer classifiers, advanced pattern recognition, and multi-language AST analysis
+- **Dashboard System**: Web-based dashboard for real-time security analysis monitoring and visualization
+- **Remediation Workflows**: Automated approval workflows and integration capabilities for security issue resolution
+- **Validation Pipeline**: Comprehensive validation system with confidence scoring and manual review framework
+- **Cross-file Analysis**: Build artifact and cross-file duplicate detection for comprehensive security scanning
+- **Performance Benchmarks**: Chaos engineering and enterprise-scale load testing frameworks
+- **CI/CD Enhancements**: Automated deployment workflows with performance monitoring and chaos testing
+
+### Changed
+- **Core Architecture**: Major refactoring with modular design including relationships, remediation, and integrations modules
+- **CLI Expansion**: New subcommands for dashboard, integrations, remediation, and validation workflows
+- **Configuration System**: Enhanced checklist management with synchronization capabilities
+- **Security Analysis**: Strengthened with build artifact scanning and cross-file duplicate detection
+- **CodeQL Integration**: Updated to v3.30.3 with enhanced security analysis capabilities
+
+### Fixed
+- **CodeQL Workflow**: Removed unexpected 'profile' parameter causing GitHub Actions warnings (#63)
+- **Workflow Actions**: Updated actions/upload-artifact to v4 for improved reliability
+- **Documentation**: Enhanced TURBO_CI_GUIDE.md with comprehensive CI/CD integration examples
+- **Linting Issues**: Comprehensive code cleanup and formatting improvements
+
+### Technical Details
+- **New Modules**: Added dashboard/, integrations/, relationships/, remediation/ with extensive functionality
+- **ML Architecture**: Multi-language AST analyzer, pattern recognition, and transformer classifiers
+- **Performance**: Memory pool implementation, optimized caching, and enterprise-scale testing
+- **Security**: Enhanced validation pipeline, confidence scoring, and remediation workflows
+- **Integration**: Complete enterprise integration framework with 6+ external systems
+
+**Note**: This is an alpha release intended for testing and feedback. Please report any issues encountered.
+
+### Contributors
+- Dominik Oswald (@d-oit)
+
+---
+
 ## [0.2.0-alpha.4] - 2025-09-13
 
 ### Added

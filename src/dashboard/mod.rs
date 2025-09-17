@@ -11,9 +11,9 @@ pub mod reports;
 
 use crate::types::Finding;
 use anyhow::Result;
+use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use chrono::{DateTime, Utc};
 
 /// Dashboard configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -130,7 +130,10 @@ pub enum TimeRange {
     Last7Days,
     Last30Days,
     Last90Days,
-    Custom { start: DateTime<Utc>, end: DateTime<Utc> },
+    Custom {
+        start: DateTime<Utc>,
+        end: DateTime<Utc>,
+    },
 }
 
 /// Chart configuration for dashboard views
@@ -343,7 +346,13 @@ impl DashboardService {
 
     /// Generate dashboard report
     pub fn generate_report(&self, view: &CustomView) -> Result<DashboardReport> {
-        let metrics = self.get_metrics_for_range(&view.filters.time_range.as_ref().unwrap_or(&TimeRange::Last7Days));
+        let metrics = self.get_metrics_for_range(
+            &view
+                .filters
+                .time_range
+                .as_ref()
+                .unwrap_or(&TimeRange::Last7Days),
+        );
 
         Ok(DashboardReport {
             view_name: view.name.clone(),
@@ -359,55 +368,83 @@ impl DashboardService {
             return DashboardSummary::default();
         }
 
-        let total_duplicates: u64 = metrics.iter().map(|m| m.duplicate_stats.total_duplicates_found).sum();
-        let avg_accuracy: f64 = metrics.iter().map(|m| m.duplicate_stats.detection_accuracy).sum::<f64>() / metrics.len() as f64;
-        let avg_prevention_rate: f64 = metrics.iter().map(|m| m.prevention_stats.prevention_rate).sum::<f64>() / metrics.len() as f64;
+        let total_duplicates: u64 = metrics
+            .iter()
+            .map(|m| m.duplicate_stats.total_duplicates_found)
+            .sum();
+        let avg_accuracy: f64 = metrics
+            .iter()
+            .map(|m| m.duplicate_stats.detection_accuracy)
+            .sum::<f64>()
+            / metrics.len() as f64;
+        let avg_prevention_rate: f64 = metrics
+            .iter()
+            .map(|m| m.prevention_stats.prevention_rate)
+            .sum::<f64>()
+            / metrics.len() as f64;
 
         DashboardSummary {
             total_duplicates_detected: total_duplicates,
             average_detection_accuracy: avg_accuracy,
             average_prevention_rate: avg_prevention_rate,
-            total_time_saved_hours: metrics.iter().map(|m| m.prevention_stats.time_saved_hours).sum(),
-            system_uptime: metrics.last().map(|m| m.system_health.uptime_percentage).unwrap_or(0.0),
+            total_time_saved_hours: metrics
+                .iter()
+                .map(|m| m.prevention_stats.time_saved_hours)
+                .sum(),
+            system_uptime: metrics
+                .last()
+                .map(|m| m.system_health.uptime_percentage)
+                .unwrap_or(0.0),
         }
     }
 
-    fn generate_charts_data(&self, charts: &[ChartConfig], metrics: &[&DashboardMetrics]) -> Result<HashMap<String, serde_json::Value>> {
+    fn generate_charts_data(
+        &self,
+        charts: &[ChartConfig],
+        metrics: &[&DashboardMetrics],
+    ) -> Result<HashMap<String, serde_json::Value>> {
         let mut charts_data = HashMap::new();
 
         for chart in charts {
-            let data = match chart.data_source {
-                DataSource::DuplicateMetrics => {
-                    let data: Vec<_> = metrics.iter().map(|m| {
+            let data =
+                match chart.data_source {
+                    DataSource::DuplicateMetrics => {
+                        let data: Vec<_> = metrics
+                            .iter()
+                            .map(|m| {
+                                serde_json::json!({
+                                    "timestamp": m.timestamp,
+                                    "total": m.duplicate_stats.total_duplicates_found,
+                                    "accuracy": m.duplicate_stats.detection_accuracy
+                                })
+                            })
+                            .collect();
+                        serde_json::Value::Array(data)
+                    }
+                    DataSource::PreventionStats => {
+                        let data: Vec<_> = metrics
+                            .iter()
+                            .map(|m| {
+                                serde_json::json!({
+                                    "timestamp": m.timestamp,
+                                    "prevented": m.prevention_stats.duplicates_prevented,
+                                    "created": m.prevention_stats.duplicates_created,
+                                    "rate": m.prevention_stats.prevention_rate
+                                })
+                            })
+                            .collect();
+                        serde_json::Value::Array(data)
+                    }
+                    DataSource::SystemMetrics => {
+                        let latest = metrics.last().unwrap();
                         serde_json::json!({
-                            "timestamp": m.timestamp,
-                            "total": m.duplicate_stats.total_duplicates_found,
-                            "accuracy": m.duplicate_stats.detection_accuracy
+                            "api_success_rate": latest.system_health.api_success_rate,
+                            "response_time": latest.system_health.average_response_time_ms,
+                            "uptime": latest.system_health.uptime_percentage
                         })
-                    }).collect();
-                    serde_json::Value::Array(data)
-                },
-                DataSource::PreventionStats => {
-                    let data: Vec<_> = metrics.iter().map(|m| {
-                        serde_json::json!({
-                            "timestamp": m.timestamp,
-                            "prevented": m.prevention_stats.duplicates_prevented,
-                            "created": m.prevention_stats.duplicates_created,
-                            "rate": m.prevention_stats.prevention_rate
-                        })
-                    }).collect();
-                    serde_json::Value::Array(data)
-                },
-                DataSource::SystemMetrics => {
-                    let latest = metrics.last().unwrap();
-                    serde_json::json!({
-                        "api_success_rate": latest.system_health.api_success_rate,
-                        "response_time": latest.system_health.average_response_time_ms,
-                        "uptime": latest.system_health.uptime_percentage
-                    })
-                },
-                DataSource::PerformanceMetrics => {
-                    let data: Vec<_> = metrics.iter().map(|m| {
+                    }
+                    DataSource::PerformanceMetrics => {
+                        let data: Vec<_> = metrics.iter().map(|m| {
                         serde_json::json!({
                             "timestamp": m.timestamp,
                             "processing_time": m.performance_metrics.average_processing_time_ms,
@@ -415,10 +452,10 @@ impl DashboardService {
                             "memory": m.performance_metrics.memory_usage_mb
                         })
                     }).collect();
-                    serde_json::Value::Array(data)
-                },
-                _ => serde_json::Value::Null,
-            };
+                        serde_json::Value::Array(data)
+                    }
+                    _ => serde_json::Value::Null,
+                };
 
             charts_data.insert(chart.title.clone(), data);
         }
@@ -432,27 +469,37 @@ impl DashboardService {
         if let Some(latest) = metrics.last() {
             // Check detection accuracy
             if latest.duplicate_stats.detection_accuracy < 0.95 {
-                recommendations.push("Consider retraining ML models to improve detection accuracy".to_string());
+                recommendations.push(
+                    "Consider retraining ML models to improve detection accuracy".to_string(),
+                );
             }
 
             // Check false positive rate
             if latest.duplicate_stats.false_positive_rate > 0.05 {
-                recommendations.push("High false positive rate detected - review detection thresholds".to_string());
+                recommendations.push(
+                    "High false positive rate detected - review detection thresholds".to_string(),
+                );
             }
 
             // Check system performance
             if latest.performance_metrics.average_processing_time_ms > 30000.0 {
-                recommendations.push("Processing times are above target - consider performance optimization".to_string());
+                recommendations.push(
+                    "Processing times are above target - consider performance optimization"
+                        .to_string(),
+                );
             }
 
             // Check prevention effectiveness
             if latest.prevention_stats.prevention_rate < 0.90 {
-                recommendations.push("Prevention rate is below target - review prevention strategies".to_string());
+                recommendations.push(
+                    "Prevention rate is below target - review prevention strategies".to_string(),
+                );
             }
         }
 
         if recommendations.is_empty() {
-            recommendations.push("System is performing well - no immediate actions required".to_string());
+            recommendations
+                .push("System is performing well - no immediate actions required".to_string());
         }
 
         recommendations

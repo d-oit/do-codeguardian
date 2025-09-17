@@ -1,0 +1,3 @@
+[analyzers.broken_files]
+enabled = true
+detect_merge_conflicts = false

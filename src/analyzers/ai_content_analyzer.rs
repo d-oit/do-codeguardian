@@ -194,11 +194,21 @@ impl AiContentAnalyzer {
     fn detect_incomplete_implementations(&self, content: &str, file_path: &Path) -> Vec<Finding> {
         let mut findings = Vec::new();
 
+        // Skip analysis if this appears to be test content
+        if self.is_test_content(content, file_path) {
+            return findings;
+        }
+
         for (line_num, line) in content.lines().enumerate() {
             let line_number = (line_num + 1) as u32;
 
             for pattern in &self.incomplete_patterns {
                 if pattern.is_match(line) {
+                    // Skip if this is in a comment, documentation, or string literal
+                    if self.is_in_comment_or_string(line) {
+                        continue;
+                    }
+
                     let severity = if line.contains("unimplemented!")
                         || line.contains("NotImplementedException")
                         || line.contains("panic!(\"not implemented\")")
@@ -312,6 +322,52 @@ impl AiContentAnalyzer {
             || path_str.contains("\\templates")
             || path_str.contains("/.github")
             || path_str.contains("\\.github")
+        {
+            return true;
+        }
+
+        false
+    }
+
+    /// Check if content appears to be test code
+    fn is_test_content(&self, content: &str, file_path: &Path) -> bool {
+        // Check if file is in test directory or has test in name
+        if file_path.to_string_lossy().contains("/test")
+            || file_path.to_string_lossy().contains("test_")
+            || file_path
+                .file_name()
+                .is_some_and(|name| name.to_string_lossy().contains("test"))
+        {
+            return true;
+        }
+
+        // Check for test module or test function markers
+        content.contains("#[test]")
+            || content.contains("#[cfg(test)]")
+            || content.contains("mod tests")
+            || content.contains("mod test")
+    }
+
+    /// Check if a line is within a comment, documentation, or string literal
+    fn is_in_comment_or_string(&self, line: &str) -> bool {
+        let trimmed = line.trim();
+
+        // Check for various comment types
+        if trimmed.starts_with("//")
+            || trimmed.starts_with("///")
+            || trimmed.starts_with("/**")
+            || trimmed.starts_with("*")
+            || trimmed.starts_with("#")
+            || trimmed.starts_with("<!--")
+        {
+            return true;
+        }
+
+        // Check for string literals containing placeholders
+        if (trimmed.contains("\"") && trimmed.contains("TODO"))
+            || (trimmed.contains("\"") && trimmed.contains("FIXME"))
+            || (trimmed.contains("r#") && trimmed.contains("unimplemented"))
+            || trimmed.starts_with("let content = ")
         {
             return true;
         }

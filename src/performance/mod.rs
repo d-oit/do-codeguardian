@@ -4,6 +4,10 @@
 //! and profiling tools to ensure CodeGuardian maintains high performance.
 
 pub mod memory_pool;
+
+pub use memory_pool::{
+    GlobalMemoryPools, GlobalPoolStats, PoolStats, PooledString, PooledVec, StringPool, VecPool,
+};
 pub mod optimizer;
 pub mod profiler;
 

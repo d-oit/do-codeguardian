@@ -78,7 +78,7 @@ Get help with using or configuring CodeGuardian.
 
 ## Getting Started
 
-1. Navigate to the [Discussions tab](https://github.com/d-oit/do-do-codeguardian/discussions)
+1. Navigate to the [Discussions tab](https://github.com/d-oit/do-codeguardian/discussions)
 2. Choose the appropriate category
 3. Use the provided templates to structure your discussion
 4. Engage with the community by responding to others' discussions

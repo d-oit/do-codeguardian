@@ -2,7 +2,7 @@
 //!
 //! Provides HTTP endpoints for the unified duplicate prevention dashboard
 
-use super::{DashboardConfig, DashboardService, CustomView};
+use super::{CustomView, DashboardConfig, DashboardService};
 use anyhow::Result;
 use axum::{
     extract::{Query, State},
@@ -71,9 +71,14 @@ pub async fn start_dashboard_server(config: &DashboardConfig) -> Result<()> {
 
     let app = create_router(state);
 
-    let listener = tokio::net::TcpListener::bind(format!("{}:{}", config.host, config.port)).await?;
+    let listener =
+        tokio::net::TcpListener::bind(format!("{}:{}", config.host, config.port)).await?;
 
-    tracing::info!("Dashboard server starting on {}:{}", config.host, config.port);
+    tracing::info!(
+        "Dashboard server starting on {}:{}",
+        config.host,
+        config.port
+    );
 
     axum::serve(listener, app).await?;
 
@@ -85,10 +90,8 @@ fn create_router(state: Arc<DashboardState>) -> Router {
     Router::new()
         // Static file serving for dashboard assets
         .nest_service("/static", ServeDir::new("dashboard/static"))
-
         // Main dashboard page
         .route("/", get(dashboard_index))
-
         // API endpoints
         .route("/api/health", get(health_check))
         .route("/api/metrics", get(get_metrics))
@@ -97,14 +100,11 @@ fn create_router(state: Arc<DashboardState>) -> Router {
         .route("/api/views/:view_name", get(get_view_data))
         .route("/api/reports", get(get_reports))
         .route("/api/reports/generate", post(generate_report))
-
         // Real-time endpoints
         .route("/api/stream/metrics", get(stream_metrics))
-
         // Configuration endpoints
         .route("/api/config", get(get_config))
         .route("/api/config", post(update_config))
-
         .layer(
             ServiceBuilder::new()
                 .layer(CorsLayer::permissive())
@@ -115,11 +115,13 @@ fn create_router(state: Arc<DashboardState>) -> Router {
 
 /// Dashboard index page
 async fn dashboard_index() -> Html<&'static str> {
-    Html(include_str!("../../dashboard/templates/index.html"))
+    Html(include_str!("templates/index.html"))
 }
 
 /// Health check endpoint
-async fn health_check(State(state): State<Arc<DashboardState>>) -> Json<ApiResponse<HashMap<String, String>>> {
+async fn health_check(
+    State(state): State<Arc<DashboardState>>,
+) -> Json<ApiResponse<HashMap<String, String>>> {
     let mut health_info = HashMap::new();
     health_info.insert("status".to_string(), "healthy".to_string());
     health_info.insert("version".to_string(), env!("CARGO_PKG_VERSION").to_string());
@@ -147,7 +149,8 @@ async fn get_metrics(
 ) -> Json<ApiResponse<Vec<super::DashboardMetrics>>> {
     let service = state.service.read().await;
 
-    let time_range = params.time_range
+    let time_range = params
+        .time_range
         .as_deref()
         .and_then(|s| parse_time_range(s))
         .unwrap_or(super::TimeRange::Last7Days);
@@ -159,9 +162,7 @@ async fn get_metrics(
 }
 
 /// Get available dashboard views
-async fn get_views(
-    State(state): State<Arc<DashboardState>>,
-) -> Json<ApiResponse<Vec<CustomView>>> {
+async fn get_views(State(state): State<Arc<DashboardState>>) -> Json<ApiResponse<Vec<CustomView>>> {
     let views = state.config.custom_views.clone();
     Json(ApiResponse::success(views))
 }
@@ -173,7 +174,9 @@ async fn get_view_data(
 ) -> Result<Json<ApiResponse<super::DashboardReport>>, StatusCode> {
     let service = state.service.read().await;
 
-    let view = state.config.custom_views
+    let view = state
+        .config
+        .custom_views
         .iter()
         .find(|v| v.name == view_name)
         .ok_or(StatusCode::NOT_FOUND)?;
@@ -185,9 +188,7 @@ async fn get_view_data(
 }
 
 /// Get available reports
-async fn get_reports(
-    State(state): State<Arc<DashboardState>>,
-) -> Json<ApiResponse<Vec<String>>> {
+async fn get_reports(State(state): State<Arc<DashboardState>>) -> Json<ApiResponse<Vec<String>>> {
     let report_types = vec![
         "duplicate_summary".to_string(),
         "prevention_effectiveness".to_string(),
@@ -205,7 +206,9 @@ async fn generate_report(
 ) -> Result<Json<ApiResponse<super::DashboardReport>>, StatusCode> {
     let service = state.service.read().await;
 
-    let view = state.config.custom_views
+    let view = state
+        .config
+        .custom_views
         .iter()
         .find(|v| v.name == request.view_name)
         .ok_or(StatusCode::NOT_FOUND)?;
@@ -219,7 +222,12 @@ async fn generate_report(
 /// Stream real-time metrics (Server-Sent Events)
 async fn stream_metrics(
     State(state): State<Arc<DashboardState>>,
-) -> Result<axum::response::Sse<impl futures::Stream<Item = Result<axum::response::sse::Event, std::convert::Infallible>>>, StatusCode> {
+) -> Result<
+    axum::response::Sse<
+        impl futures::Stream<Item = Result<axum::response::sse::Event, std::convert::Infallible>>,
+    >,
+    StatusCode,
+> {
     use axum::response::sse::{Event, Sse};
     use futures::stream::{self, Stream};
     use std::time::Duration;
@@ -233,8 +241,7 @@ async fn stream_metrics(
 
         let service = state.service.read().await;
         if let Some(metrics) = service.get_current_metrics() {
-            let event = Event::default()
-                .data(serde_json::to_string(metrics).unwrap_or_default());
+            let event = Event::default().data(serde_json::to_string(metrics).unwrap_or_default());
             Some((Ok(event), state))
         } else {
             Some((Ok(Event::default().data("{}")), state))
@@ -258,7 +265,9 @@ async fn update_config(
 ) -> Json<ApiResponse<String>> {
     // In a real implementation, you would update the configuration
     // and possibly restart services as needed
-    Json(ApiResponse::success("Configuration updated successfully".to_string()))
+    Json(ApiResponse::success(
+        "Configuration updated successfully".to_string(),
+    ))
 }
 
 /// Request structure for generating reports
@@ -320,10 +329,22 @@ mod tests {
 
     #[test]
     fn test_parse_time_range() {
-        assert!(matches!(parse_time_range("24h"), Some(super::super::TimeRange::Last24Hours)));
-        assert!(matches!(parse_time_range("7d"), Some(super::super::TimeRange::Last7Days)));
-        assert!(matches!(parse_time_range("30d"), Some(super::super::TimeRange::Last30Days)));
-        assert!(matches!(parse_time_range("90d"), Some(super::super::TimeRange::Last90Days)));
+        assert!(matches!(
+            parse_time_range("24h"),
+            Some(super::super::TimeRange::Last24Hours)
+        ));
+        assert!(matches!(
+            parse_time_range("7d"),
+            Some(super::super::TimeRange::Last7Days)
+        ));
+        assert!(matches!(
+            parse_time_range("30d"),
+            Some(super::super::TimeRange::Last30Days)
+        ));
+        assert!(matches!(
+            parse_time_range("90d"),
+            Some(super::super::TimeRange::Last90Days)
+        ));
         assert!(parse_time_range("invalid").is_none());
     }
 }

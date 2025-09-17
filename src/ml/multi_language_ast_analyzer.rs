@@ -44,15 +44,42 @@ impl MultiLanguageAstAnalyzer {
         let mut analyzers = HashMap::new();
 
         // Register language analyzers
-        analyzers.insert("rust".to_string(), Box::new(RustAstAnalyzer::new()) as Box<dyn LanguageAstAnalyzer>);
-        analyzers.insert("python".to_string(), Box::new(PythonAstAnalyzer::new()) as Box<dyn LanguageAstAnalyzer>);
-        analyzers.insert("javascript".to_string(), Box::new(JavaScriptAstAnalyzer::new()) as Box<dyn LanguageAstAnalyzer>);
-        analyzers.insert("typescript".to_string(), Box::new(TypeScriptAstAnalyzer::new()) as Box<dyn LanguageAstAnalyzer>);
-        analyzers.insert("java".to_string(), Box::new(JavaAstAnalyzer::new()) as Box<dyn LanguageAstAnalyzer>);
-        analyzers.insert("cpp".to_string(), Box::new(CppAstAnalyzer::new()) as Box<dyn LanguageAstAnalyzer>);
-        analyzers.insert("c".to_string(), Box::new(CAstAnalyzer::new()) as Box<dyn LanguageAstAnalyzer>);
-        analyzers.insert("go".to_string(), Box::new(GoAstAnalyzer::new()) as Box<dyn LanguageAstAnalyzer>);
-        analyzers.insert("php".to_string(), Box::new(PHPAstAnalyzer::new()) as Box<dyn LanguageAstAnalyzer>);
+        analyzers.insert(
+            "rust".to_string(),
+            Box::new(RustAstAnalyzer::new()) as Box<dyn LanguageAstAnalyzer>,
+        );
+        analyzers.insert(
+            "python".to_string(),
+            Box::new(PythonAstAnalyzer::new()) as Box<dyn LanguageAstAnalyzer>,
+        );
+        analyzers.insert(
+            "javascript".to_string(),
+            Box::new(JavaScriptAstAnalyzer::new()) as Box<dyn LanguageAstAnalyzer>,
+        );
+        analyzers.insert(
+            "typescript".to_string(),
+            Box::new(TypeScriptAstAnalyzer::new()) as Box<dyn LanguageAstAnalyzer>,
+        );
+        analyzers.insert(
+            "java".to_string(),
+            Box::new(JavaAstAnalyzer::new()) as Box<dyn LanguageAstAnalyzer>,
+        );
+        analyzers.insert(
+            "cpp".to_string(),
+            Box::new(CppAstAnalyzer::new()) as Box<dyn LanguageAstAnalyzer>,
+        );
+        analyzers.insert(
+            "c".to_string(),
+            Box::new(CAstAnalyzer::new()) as Box<dyn LanguageAstAnalyzer>,
+        );
+        analyzers.insert(
+            "go".to_string(),
+            Box::new(GoAstAnalyzer::new()) as Box<dyn LanguageAstAnalyzer>,
+        );
+        analyzers.insert(
+            "php".to_string(),
+            Box::new(PHPAstAnalyzer::new()) as Box<dyn LanguageAstAnalyzer>,
+        );
 
         Self { analyzers }
     }
@@ -117,13 +144,14 @@ impl MultiLanguageAstAnalyzer {
         }
 
         // Count comments
-        let comment_count = lines.iter()
+        let comment_count = lines
+            .iter()
             .filter(|line| {
                 let trimmed = line.trim();
-                trimmed.starts_with("//") ||
-                trimmed.starts_with("#") ||
-                trimmed.starts_with("/*") ||
-                trimmed.contains("*/")
+                trimmed.starts_with("//")
+                    || trimmed.starts_with("#")
+                    || trimmed.starts_with("/*")
+                    || trimmed.contains("*/")
             })
             .count() as f32;
 
@@ -143,10 +171,17 @@ impl MultiLanguageAstAnalyzer {
     }
 
     /// Calculate similarity between two AST feature sets
-    pub fn calculate_ast_similarity(&self, features1: &LanguageAstFeatures, features2: &LanguageAstFeatures) -> f64 {
+    pub fn calculate_ast_similarity(
+        &self,
+        features1: &LanguageAstFeatures,
+        features2: &LanguageAstFeatures,
+    ) -> f64 {
         if features1.language != features2.language {
             // Different languages - use token-based similarity only
-            return self.calculate_token_similarity(&features1.token_frequencies, &features2.token_frequencies);
+            return self.calculate_token_similarity(
+                &features1.token_frequencies,
+                &features2.token_frequencies,
+            );
         }
 
         // Same language - use comprehensive similarity
@@ -154,22 +189,38 @@ impl MultiLanguageAstAnalyzer {
         let mut weight_total = 0.0;
 
         // Complexity similarity (weighted 0.2)
-        let complexity_sim = 1.0 - (features1.complexity_score - features2.complexity_score).abs() / 10.0;
+        let complexity_sim =
+            1.0 - (features1.complexity_score - features2.complexity_score).abs() / 10.0;
         similarity += complexity_sim * 0.2;
         weight_total += 0.2;
 
         // Function count similarity (weighted 0.15)
-        let func_sim = 1.0 - (features1.function_count - features2.function_count).abs() / features1.function_count.max(features2.function_count).max(1.0);
+        let func_sim = 1.0
+            - (features1.function_count - features2.function_count).abs()
+                / features1
+                    .function_count
+                    .max(features2.function_count)
+                    .max(1.0);
         similarity += func_sim * 0.15;
         weight_total += 0.15;
 
         // Type definition similarity (weighted 0.15)
-        let type_sim = 1.0 - (features1.type_definition_count - features2.type_definition_count).abs() / features1.type_definition_count.max(features2.type_definition_count).max(1.0);
+        let type_sim = 1.0
+            - (features1.type_definition_count - features2.type_definition_count).abs()
+                / features1
+                    .type_definition_count
+                    .max(features2.type_definition_count)
+                    .max(1.0);
         similarity += type_sim * 0.15;
         weight_total += 0.15;
 
         // Control flow similarity (weighted 0.1)
-        let control_sim = 1.0 - (features1.control_flow_count - features2.control_flow_count).abs() / features1.control_flow_count.max(features2.control_flow_count).max(1.0);
+        let control_sim = 1.0
+            - (features1.control_flow_count - features2.control_flow_count).abs()
+                / features1
+                    .control_flow_count
+                    .max(features2.control_flow_count)
+                    .max(1.0);
         similarity += control_sim * 0.1;
         weight_total += 0.1;
 
@@ -179,12 +230,18 @@ impl MultiLanguageAstAnalyzer {
         weight_total += 0.1;
 
         // Nesting depth similarity (weighted 0.1)
-        let nesting_sim = 1.0 - (features1.max_nesting_depth - features2.max_nesting_depth).abs() / features1.max_nesting_depth.max(features2.max_nesting_depth).max(1.0);
+        let nesting_sim = 1.0
+            - (features1.max_nesting_depth - features2.max_nesting_depth).abs()
+                / features1
+                    .max_nesting_depth
+                    .max(features2.max_nesting_depth)
+                    .max(1.0);
         similarity += nesting_sim * 0.1;
         weight_total += 0.1;
 
         // Token similarity (weighted 0.2)
-        let token_sim = self.calculate_token_similarity(&features1.token_frequencies, &features2.token_frequencies);
+        let token_sim = self
+            .calculate_token_similarity(&features1.token_frequencies, &features2.token_frequencies);
         similarity += token_sim * 0.2;
         weight_total += 0.2;
 
@@ -196,7 +253,11 @@ impl MultiLanguageAstAnalyzer {
     }
 
     /// Calculate token-based similarity
-    fn calculate_token_similarity(&self, tokens1: &HashMap<String, f32>, tokens2: &HashMap<String, f32>) -> f64 {
+    fn calculate_token_similarity(
+        &self,
+        tokens1: &HashMap<String, f32>,
+        tokens2: &HashMap<String, f32>,
+    ) -> f64 {
         if tokens1.is_empty() && tokens2.is_empty() {
             return 1.0;
         }
@@ -256,7 +317,8 @@ impl LanguageAstAnalyzer for RustAstAnalyzer {
         let mut token_frequencies = HashMap::new();
         // Basic tokenization for Rust
         for token in content.split_whitespace() {
-            if token.len() > 2 { // Filter out short tokens
+            if token.len() > 2 {
+                // Filter out short tokens
                 *token_frequencies.entry(token.to_string()).or_insert(0.0) += 1.0;
             }
         }
@@ -276,7 +338,7 @@ impl LanguageAstAnalyzer for RustAstAnalyzer {
             type_definition_count: ast_features.struct_count + ast_features.enum_count,
             control_flow_count: ast_features.panic_call_count + ast_features.unwrap_call_count,
             variable_count: 0.0, // Not available in current AST features
-            import_count: 0.0, // Not available in current AST features
+            import_count: 0.0,   // Not available in current AST features
             comment_density: ast_features.comment_density,
             max_nesting_depth: ast_features.nesting_depth,
             token_frequencies,
@@ -311,38 +373,42 @@ impl LanguageAstAnalyzer for PythonAstAnalyzer {
         let total_lines = lines.len() as f32;
 
         // Count functions
-        features.function_count = lines.iter()
+        features.function_count = lines
+            .iter()
             .filter(|line| line.trim().starts_with("def "))
             .count() as f32;
 
         // Count classes
-        features.type_definition_count = lines.iter()
+        features.type_definition_count = lines
+            .iter()
             .filter(|line| line.trim().starts_with("class "))
             .count() as f32;
 
         // Count control flow
-        features.control_flow_count = lines.iter()
+        features.control_flow_count = lines
+            .iter()
             .filter(|line| {
                 let trimmed = line.trim();
-                trimmed.starts_with("if ") ||
-                trimmed.starts_with("for ") ||
-                trimmed.starts_with("while ") ||
-                trimmed.starts_with("try:") ||
-                trimmed.starts_with("with ")
+                trimmed.starts_with("if ")
+                    || trimmed.starts_with("for ")
+                    || trimmed.starts_with("while ")
+                    || trimmed.starts_with("try:")
+                    || trimmed.starts_with("with ")
             })
             .count() as f32;
 
         // Count imports
-        features.import_count = lines.iter()
+        features.import_count = lines
+            .iter()
             .filter(|line| {
                 let trimmed = line.trim();
-                trimmed.starts_with("import ") ||
-                trimmed.starts_with("from ")
+                trimmed.starts_with("import ") || trimmed.starts_with("from ")
             })
             .count() as f32;
 
         // Count comments
-        let comment_count = lines.iter()
+        let comment_count = lines
+            .iter()
             .filter(|line| line.trim().starts_with('#'))
             .count() as f32;
         features.comment_density = comment_count / total_lines.max(1.0);
@@ -380,11 +446,10 @@ impl LanguageAstAnalyzer for PythonAstAnalyzer {
         features.token_frequencies = token_frequencies;
 
         // Complexity score based on various factors
-        features.complexity_score = (
-            features.function_count * 2.0 +
-            features.control_flow_count +
-            features.max_nesting_depth
-        ).min(10.0);
+        features.complexity_score = (features.function_count * 2.0
+            + features.control_flow_count
+            + features.max_nesting_depth)
+            .min(10.0);
 
         features.semantic_patterns = vec![
             "def ".to_string(),
@@ -418,52 +483,55 @@ impl LanguageAstAnalyzer for JavaScriptAstAnalyzer {
         let total_lines = lines.len() as f32;
 
         // Count functions
-        features.function_count = lines.iter()
+        features.function_count = lines
+            .iter()
             .filter(|line| {
                 let trimmed = line.trim();
-                trimmed.contains("function ") ||
-                trimmed.contains("=>") ||
-                trimmed.contains("const ") && trimmed.contains("=") && trimmed.contains("=>")
+                trimmed.contains("function ")
+                    || trimmed.contains("=>")
+                    || trimmed.contains("const ") && trimmed.contains("=") && trimmed.contains("=>")
             })
             .count() as f32;
 
         // Count classes/types
-        features.type_definition_count = lines.iter()
+        features.type_definition_count = lines
+            .iter()
             .filter(|line| {
                 let trimmed = line.trim();
-                trimmed.starts_with("class ") ||
-                trimmed.starts_with("interface ") ||
-                trimmed.starts_with("type ")
+                trimmed.starts_with("class ")
+                    || trimmed.starts_with("interface ")
+                    || trimmed.starts_with("type ")
             })
             .count() as f32;
 
         // Count control flow
-        features.control_flow_count = lines.iter()
+        features.control_flow_count = lines
+            .iter()
             .filter(|line| {
                 let trimmed = line.trim();
-                trimmed.starts_with("if ") ||
-                trimmed.starts_with("for ") ||
-                trimmed.starts_with("while ") ||
-                trimmed.starts_with("try ") ||
-                trimmed.starts_with("catch ")
+                trimmed.starts_with("if ")
+                    || trimmed.starts_with("for ")
+                    || trimmed.starts_with("while ")
+                    || trimmed.starts_with("try ")
+                    || trimmed.starts_with("catch ")
             })
             .count() as f32;
 
         // Count imports
-        features.import_count = lines.iter()
+        features.import_count = lines
+            .iter()
             .filter(|line| {
                 let trimmed = line.trim();
-                trimmed.starts_with("import ") ||
-                trimmed.starts_with("require(")
+                trimmed.starts_with("import ") || trimmed.starts_with("require(")
             })
             .count() as f32;
 
         // Count comments
-        let comment_count = lines.iter()
+        let comment_count = lines
+            .iter()
             .filter(|line| {
                 let trimmed = line.trim();
-                trimmed.starts_with("//") ||
-                trimmed.starts_with("/*")
+                trimmed.starts_with("//") || trimmed.starts_with("/*")
             })
             .count() as f32;
         features.comment_density = comment_count / total_lines.max(1.0);
@@ -488,7 +556,11 @@ impl LanguageAstAnalyzer for JavaScriptAstAnalyzer {
         // Token frequencies
         let mut token_frequencies = HashMap::new();
         for token in content.split_whitespace() {
-            if token.len() > 2 && !token.contains('.') && !token.contains('(') && !token.contains('{') {
+            if token.len() > 2
+                && !token.contains('.')
+                && !token.contains('(')
+                && !token.contains('{')
+            {
                 *token_frequencies.entry(token.to_string()).or_insert(0.0) += 1.0;
             }
         }
@@ -502,11 +574,10 @@ impl LanguageAstAnalyzer for JavaScriptAstAnalyzer {
         features.token_frequencies = token_frequencies;
 
         // Complexity score
-        features.complexity_score = (
-            features.function_count * 1.5 +
-            features.control_flow_count * 0.8 +
-            features.max_nesting_depth * 0.5
-        ).min(10.0);
+        features.complexity_score = (features.function_count * 1.5
+            + features.control_flow_count * 0.8
+            + features.max_nesting_depth * 0.5)
+            .min(10.0);
 
         features.semantic_patterns = vec![
             "function ".to_string(),
@@ -548,13 +619,15 @@ impl LanguageAstAnalyzer for TypeScriptAstAnalyzer {
 
         // TypeScript typically has higher type definition count
         let lines: Vec<&str> = content.lines().collect();
-        features.type_definition_count += lines.iter()
+        features.type_definition_count += lines
+            .iter()
             .filter(|line| {
                 let trimmed = line.trim();
                 trimmed.contains(": ") || // Type annotations
                 trimmed.contains("<") && trimmed.contains(">") // Generics
             })
-            .count() as f32 * 0.5; // Weight type annotations less
+            .count() as f32
+            * 0.5; // Weight type annotations less
 
         Ok(features)
     }
@@ -580,49 +653,55 @@ impl LanguageAstAnalyzer for JavaAstAnalyzer {
         let total_lines = lines.len() as f32;
 
         // Count methods
-        features.function_count = lines.iter()
+        features.function_count = lines
+            .iter()
             .filter(|line| {
                 let trimmed = line.trim();
-                (trimmed.contains("public ") || trimmed.contains("private ") || trimmed.contains("protected ")) &&
-                trimmed.contains("(") && trimmed.contains(")")
+                (trimmed.contains("public ")
+                    || trimmed.contains("private ")
+                    || trimmed.contains("protected "))
+                    && trimmed.contains("(")
+                    && trimmed.contains(")")
             })
             .count() as f32;
 
         // Count classes/interfaces
-        features.type_definition_count = lines.iter()
+        features.type_definition_count = lines
+            .iter()
             .filter(|line| {
                 let trimmed = line.trim();
-                trimmed.starts_with("class ") ||
-                trimmed.starts_with("interface ") ||
-                trimmed.starts_with("enum ")
+                trimmed.starts_with("class ")
+                    || trimmed.starts_with("interface ")
+                    || trimmed.starts_with("enum ")
             })
             .count() as f32;
 
         // Count control flow
-        features.control_flow_count = lines.iter()
+        features.control_flow_count = lines
+            .iter()
             .filter(|line| {
                 let trimmed = line.trim();
-                trimmed.starts_with("if ") ||
-                trimmed.starts_with("for ") ||
-                trimmed.starts_with("while ") ||
-                trimmed.starts_with("try ") ||
-                trimmed.starts_with("catch ") ||
-                trimmed.starts_with("switch ")
+                trimmed.starts_with("if ")
+                    || trimmed.starts_with("for ")
+                    || trimmed.starts_with("while ")
+                    || trimmed.starts_with("try ")
+                    || trimmed.starts_with("catch ")
+                    || trimmed.starts_with("switch ")
             })
             .count() as f32;
 
         // Count imports
-        features.import_count = lines.iter()
+        features.import_count = lines
+            .iter()
             .filter(|line| line.trim().starts_with("import "))
             .count() as f32;
 
         // Count comments
-        let comment_count = lines.iter()
+        let comment_count = lines
+            .iter()
             .filter(|line| {
                 let trimmed = line.trim();
-                trimmed.starts_with("//") ||
-                trimmed.starts_with("/*") ||
-                trimmed.starts_with("*")
+                trimmed.starts_with("//") || trimmed.starts_with("/*") || trimmed.starts_with("*")
             })
             .count() as f32;
         features.comment_density = comment_count / total_lines.max(1.0);
@@ -659,11 +738,10 @@ impl LanguageAstAnalyzer for JavaAstAnalyzer {
         }
         features.token_frequencies = token_frequencies;
 
-        features.complexity_score = (
-            features.function_count * 2.0 +
-            features.control_flow_count +
-            features.max_nesting_depth
-        ).min(10.0);
+        features.complexity_score = (features.function_count * 2.0
+            + features.control_flow_count
+            + features.max_nesting_depth)
+            .min(10.0);
 
         features.semantic_patterns = vec![
             "public ".to_string(),
@@ -698,7 +776,8 @@ impl LanguageAstAnalyzer for CppAstAnalyzer {
         let total_lines = lines.len() as f32;
 
         // Count functions
-        features.function_count = lines.iter()
+        features.function_count = lines
+            .iter()
             .filter(|line| {
                 let trimmed = line.trim();
                 !trimmed.starts_with('#') && // Not preprocessor
@@ -711,39 +790,42 @@ impl LanguageAstAnalyzer for CppAstAnalyzer {
             .count() as f32;
 
         // Count classes/structs
-        features.type_definition_count = lines.iter()
+        features.type_definition_count = lines
+            .iter()
             .filter(|line| {
                 let trimmed = line.trim();
-                trimmed.starts_with("class ") ||
-                trimmed.starts_with("struct ") ||
-                trimmed.starts_with("enum ")
+                trimmed.starts_with("class ")
+                    || trimmed.starts_with("struct ")
+                    || trimmed.starts_with("enum ")
             })
             .count() as f32;
 
         // Count control flow
-        features.control_flow_count = lines.iter()
+        features.control_flow_count = lines
+            .iter()
             .filter(|line| {
                 let trimmed = line.trim();
-                trimmed.starts_with("if ") ||
-                trimmed.starts_with("for ") ||
-                trimmed.starts_with("while ") ||
-                trimmed.starts_with("try ") ||
-                trimmed.starts_with("catch ") ||
-                trimmed.starts_with("switch ")
+                trimmed.starts_with("if ")
+                    || trimmed.starts_with("for ")
+                    || trimmed.starts_with("while ")
+                    || trimmed.starts_with("try ")
+                    || trimmed.starts_with("catch ")
+                    || trimmed.starts_with("switch ")
             })
             .count() as f32;
 
         // Count includes
-        features.import_count = lines.iter()
+        features.import_count = lines
+            .iter()
             .filter(|line| line.trim().starts_with("#include"))
             .count() as f32;
 
         // Count comments
-        let comment_count = lines.iter()
+        let comment_count = lines
+            .iter()
             .filter(|line| {
                 let trimmed = line.trim();
-                trimmed.starts_with("//") ||
-                trimmed.starts_with("/*")
+                trimmed.starts_with("//") || trimmed.starts_with("/*")
             })
             .count() as f32;
         features.comment_density = comment_count / total_lines.max(1.0);
@@ -780,11 +862,10 @@ impl LanguageAstAnalyzer for CppAstAnalyzer {
         }
         features.token_frequencies = token_frequencies;
 
-        features.complexity_score = (
-            features.function_count * 2.0 +
-            features.control_flow_count +
-            features.max_nesting_depth
-        ).min(10.0);
+        features.complexity_score = (features.function_count * 2.0
+            + features.control_flow_count
+            + features.max_nesting_depth)
+            .min(10.0);
 
         features.semantic_patterns = vec![
             "int ".to_string(),
@@ -851,46 +932,49 @@ impl LanguageAstAnalyzer for GoAstAnalyzer {
         let total_lines = lines.len() as f32;
 
         // Count functions
-        features.function_count = lines.iter()
+        features.function_count = lines
+            .iter()
             .filter(|line| line.trim().starts_with("func "))
             .count() as f32;
 
         // Count types/structs
-        features.type_definition_count = lines.iter()
+        features.type_definition_count = lines
+            .iter()
             .filter(|line| {
                 let trimmed = line.trim();
-                trimmed.starts_with("type ") ||
-                trimmed.starts_with("struct ")
+                trimmed.starts_with("type ") || trimmed.starts_with("struct ")
             })
             .count() as f32;
 
         // Count control flow
-        features.control_flow_count = lines.iter()
+        features.control_flow_count = lines
+            .iter()
             .filter(|line| {
                 let trimmed = line.trim();
-                trimmed.starts_with("if ") ||
-                trimmed.starts_with("for ") ||
-                trimmed.starts_with("switch ") ||
-                trimmed.starts_with("select ")
+                trimmed.starts_with("if ")
+                    || trimmed.starts_with("for ")
+                    || trimmed.starts_with("switch ")
+                    || trimmed.starts_with("select ")
             })
             .count() as f32;
 
         // Count imports
-        features.import_count = lines.iter()
+        features.import_count = lines
+            .iter()
             .filter(|line| {
                 let trimmed = line.trim();
-                trimmed.starts_with("import ") ||
-                trimmed.starts_with("\t\"") ||
-                trimmed.starts_with(" \"")
+                trimmed.starts_with("import ")
+                    || trimmed.starts_with("\t\"")
+                    || trimmed.starts_with(" \"")
             })
             .count() as f32;
 
         // Count comments
-        let comment_count = lines.iter()
+        let comment_count = lines
+            .iter()
             .filter(|line| {
                 let trimmed = line.trim();
-                trimmed.starts_with("//") ||
-                trimmed.starts_with("/*")
+                trimmed.starts_with("//") || trimmed.starts_with("/*")
             })
             .count() as f32;
         features.comment_density = comment_count / total_lines.max(1.0);
@@ -927,11 +1011,10 @@ impl LanguageAstAnalyzer for GoAstAnalyzer {
         }
         features.token_frequencies = token_frequencies;
 
-        features.complexity_score = (
-            features.function_count * 1.8 +
-            features.control_flow_count +
-            features.max_nesting_depth
-        ).min(10.0);
+        features.complexity_score = (features.function_count * 1.8
+            + features.control_flow_count
+            + features.max_nesting_depth)
+            .min(10.0);
 
         features.semantic_patterns = vec![
             "func ".to_string(),
@@ -966,51 +1049,54 @@ impl LanguageAstAnalyzer for PHPAstAnalyzer {
         let total_lines = lines.len() as f32;
 
         // Count functions
-        features.function_count = lines.iter()
+        features.function_count = lines
+            .iter()
             .filter(|line| line.trim().starts_with("function "))
             .count() as f32;
 
         // Count classes
-        features.type_definition_count = lines.iter()
+        features.type_definition_count = lines
+            .iter()
             .filter(|line| {
                 let trimmed = line.trim();
-                trimmed.starts_with("class ") ||
-                trimmed.starts_with("interface ") ||
-                trimmed.starts_with("trait ")
+                trimmed.starts_with("class ")
+                    || trimmed.starts_with("interface ")
+                    || trimmed.starts_with("trait ")
             })
             .count() as f32;
 
         // Count control flow
-        features.control_flow_count = lines.iter()
+        features.control_flow_count = lines
+            .iter()
             .filter(|line| {
                 let trimmed = line.trim();
-                trimmed.starts_with("if ") ||
-                trimmed.starts_with("for ") ||
-                trimmed.starts_with("foreach ") ||
-                trimmed.starts_with("while ") ||
-                trimmed.starts_with("try ") ||
-                trimmed.starts_with("catch ")
+                trimmed.starts_with("if ")
+                    || trimmed.starts_with("for ")
+                    || trimmed.starts_with("foreach ")
+                    || trimmed.starts_with("while ")
+                    || trimmed.starts_with("try ")
+                    || trimmed.starts_with("catch ")
             })
             .count() as f32;
 
         // Count includes/requires
-        features.import_count = lines.iter()
+        features.import_count = lines
+            .iter()
             .filter(|line| {
                 let trimmed = line.trim();
-                trimmed.starts_with("include ") ||
-                trimmed.starts_with("require ") ||
-                trimmed.starts_with("include_once ") ||
-                trimmed.starts_with("require_once ")
+                trimmed.starts_with("include ")
+                    || trimmed.starts_with("require ")
+                    || trimmed.starts_with("include_once ")
+                    || trimmed.starts_with("require_once ")
             })
             .count() as f32;
 
         // Count comments
-        let comment_count = lines.iter()
+        let comment_count = lines
+            .iter()
             .filter(|line| {
                 let trimmed = line.trim();
-                trimmed.starts_with("//") ||
-                trimmed.starts_with("#") ||
-                trimmed.starts_with("/*")
+                trimmed.starts_with("//") || trimmed.starts_with("#") || trimmed.starts_with("/*")
             })
             .count() as f32;
         features.comment_density = comment_count / total_lines.max(1.0);
@@ -1047,11 +1133,10 @@ impl LanguageAstAnalyzer for PHPAstAnalyzer {
         }
         features.token_frequencies = token_frequencies;
 
-        features.complexity_score = (
-            features.function_count * 1.5 +
-            features.control_flow_count +
-            features.max_nesting_depth
-        ).min(10.0);
+        features.complexity_score = (features.function_count * 1.5
+            + features.control_flow_count
+            + features.max_nesting_depth)
+            .min(10.0);
 
         features.semantic_patterns = vec![
             "function ".to_string(),
@@ -1088,10 +1173,30 @@ mod tests {
     fn test_language_detection() {
         let analyzer = MultiLanguageAstAnalyzer::new();
 
-        assert_eq!(analyzer.detect_language(Path::new("test.rs")).expect("Failed to detect Rust"), "rust");
-        assert_eq!(analyzer.detect_language(Path::new("test.py")).expect("Failed to detect Python"), "python");
-        assert_eq!(analyzer.detect_language(Path::new("test.js")).expect("Failed to detect JavaScript"), "javascript");
-        assert_eq!(analyzer.detect_language(Path::new("test.java")).expect("Failed to detect Java"), "java");
+        assert_eq!(
+            analyzer
+                .detect_language(Path::new("test.rs"))
+                .expect("Failed to detect Rust"),
+            "rust"
+        );
+        assert_eq!(
+            analyzer
+                .detect_language(Path::new("test.py"))
+                .expect("Failed to detect Python"),
+            "python"
+        );
+        assert_eq!(
+            analyzer
+                .detect_language(Path::new("test.js"))
+                .expect("Failed to detect JavaScript"),
+            "javascript"
+        );
+        assert_eq!(
+            analyzer
+                .detect_language(Path::new("test.java"))
+                .expect("Failed to detect Java"),
+            "java"
+        );
         assert!(analyzer.detect_language(Path::new("test.unknown")).is_err());
     }
 
@@ -1113,7 +1218,9 @@ class UserManager:
         self.users.append(user)
 "#;
 
-        let features = analyzer.analyze_code(Path::new("test.py"), code).expect("Failed to analyze Python code");
+        let features = analyzer
+            .analyze_code(Path::new("test.py"), code)
+            .expect("Failed to analyze Python code");
         assert_eq!(features.language, "python");
         assert!(features.function_count >= 2.0); // authenticate_user and add_user
         assert!(features.type_definition_count >= 1.0); // UserManager class
@@ -1143,7 +1250,9 @@ class UserManager {
 }
 "#;
 
-        let features = analyzer.analyze_code(Path::new("test.js"), code).expect("Failed to analyze JavaScript code");
+        let features = analyzer
+            .analyze_code(Path::new("test.js"), code)
+            .expect("Failed to analyze JavaScript code");
         assert_eq!(features.language, "javascript");
         assert!(features.function_count >= 2.0); // authenticateUser and addUser
         assert!(features.type_definition_count >= 1.0); // UserManager class

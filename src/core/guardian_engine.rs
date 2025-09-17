@@ -3,11 +3,14 @@
 use crate::analyzers::AnalyzerRegistry;
 use crate::cache::FileCache;
 use crate::config::Config;
+use crate::core::AIProcessor;
+use crate::output::ai::EnhancedAnalysisResults;
 use crate::streaming::StreamingAnalyzer;
 use crate::types::{AnalysisResults, Finding};
 use crate::utils::progress::ProgressReporter;
 use crate::utils::security::{canonicalize_path_safe, should_follow_path};
 use anyhow::Result;
+
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
 use std::time::Instant;
@@ -20,13 +23,39 @@ pub struct GuardianEngine {
     progress: ProgressReporter,
     cache: Arc<Mutex<FileCache>>,
     streaming_analyzer: StreamingAnalyzer,
+    ai_processor: Option<AIProcessor>,
     stats: AnalysisStats,
 }
 
 impl GuardianEngine {
     pub async fn new(config: Config, progress: ProgressReporter) -> Result<Self> {
-        let cache = Arc::new(Mutex::new(FileCache::load().await?));
+        Self::new_with_ai_override(config, progress, false).await
+    }
+
+    pub async fn new_with_ai_override(
+        config: Config,
+        progress: ProgressReporter,
+        force_ai: bool,
+    ) -> Result<Self> {
+        let cache_path = PathBuf::from(&config.analysis.cache_dir).join("cache.json");
+        let cache = Arc::new(Mutex::new(FileCache::load(cache_path).await?));
         let analyzer_registry = AnalyzerRegistry::with_config(&config)?;
+
+        // Initialize AI processor if enabled or forced
+        let ai_processor = if config.ai.enabled || force_ai {
+            match AIProcessor::new(Arc::new(config.clone())) {
+                Ok(processor) => Some(processor),
+                Err(e) => {
+                    tracing::warn!(
+                        "Failed to initialize AI processor: {}. AI features will be disabled.",
+                        e
+                    );
+                    None
+                }
+            }
+        } else {
+            None
+        };
 
         Ok(Self {
             config,
@@ -34,6 +63,7 @@ impl GuardianEngine {
             progress,
             cache,
             streaming_analyzer: StreamingAnalyzer::new(),
+            ai_processor,
             stats: AnalysisStats::new(),
         })
     }
@@ -361,18 +391,27 @@ impl GuardianEngine {
         self.stats.total_duration = start_time.elapsed();
 
         // Save cache asynchronously without holding the lock
-        let serialized_cache = if let Ok(cache_guard) = self.cache.lock() {
-            serde_json::to_string_pretty(&*cache_guard).ok()
-        } else {
-            None
-        };
-
-        if let Some(content) = serialized_cache {
-            tokio::spawn(async move {
-                #[allow(clippy::let_underscore_future)]
-                let _ = tokio::fs::write(crate::cache::FileCache::CACHE_FILE, content);
-            });
-        }
+        let cache_clone = Arc::clone(&self.cache);
+        tokio::spawn(async move {
+            let (entries, cache_path, cache_version) = {
+                if let Ok(cache_guard) = cache_clone.lock() {
+                    (
+                        cache_guard.entries.clone(),
+                        cache_guard.cache_path.clone(),
+                        cache_guard.cache_version.clone(),
+                    )
+                } else {
+                    return;
+                }
+            };
+            let temp_cache = FileCache {
+                entries,
+                cache_version,
+                cache_path,
+            };
+            #[allow(clippy::let_underscore_future)]
+            let _ = temp_cache.save().await;
+        });
 
         // Finish progress reporting
         self.progress.finish(&format!(
@@ -382,6 +421,29 @@ impl GuardianEngine {
             self.stats.cache_misses,
             self.stats.total_duration.as_secs_f64()
         ));
+    }
+
+    /// Enhance analysis results with AI processing
+    pub async fn enhance_results_with_ai(
+        &self,
+        results: &AnalysisResults,
+    ) -> Result<Option<EnhancedAnalysisResults>> {
+        if let Some(ai_processor) = &self.ai_processor {
+            match ai_processor.process_results(results).await {
+                Ok(enhanced) => Ok(Some(enhanced)),
+                Err(e) => {
+                    tracing::warn!("AI enhancement failed: {}", e);
+                    Ok(None)
+                }
+            }
+        } else {
+            Ok(None)
+        }
+    }
+
+    /// Check if AI processing is available
+    pub fn is_ai_available(&self) -> bool {
+        self.ai_processor.is_some()
     }
 
     fn compute_config_hash(&self) -> String {

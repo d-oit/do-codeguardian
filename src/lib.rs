@@ -36,9 +36,11 @@ pub mod error;
 pub mod git;
 pub mod github;
 pub mod github_api;
+pub mod indexing;
 pub mod integrations;
 #[cfg(feature = "ml")]
 pub mod ml;
+pub mod output;
 pub mod performance;
 pub mod relationships;
 pub mod remediation;

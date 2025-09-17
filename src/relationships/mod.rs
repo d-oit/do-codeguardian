@@ -4,14 +4,14 @@
 //! to provide enhanced traceability and organization across the ecosystem.
 
 pub mod graph;
+pub mod impact_analysis;
 pub mod metadata;
 pub mod visualization;
-pub mod impact_analysis;
 
 use anyhow::Result;
+use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
-use chrono::{DateTime, Utc};
 use uuid::Uuid;
 
 /// Relationship manager for tracking artifact relationships
@@ -195,7 +195,7 @@ pub struct RelationshipSearchResult {
 pub struct RelationshipPath {
     pub source_artifact_id: String,
     pub target_artifact_id: String,
-    pub path: Vec<String>, // Artifact IDs in the path
+    pub path: Vec<String>,          // Artifact IDs in the path
     pub relationships: Vec<String>, // Relationship IDs in the path
     pub total_strength: f64,
     pub path_length: usize,
@@ -222,7 +222,8 @@ impl RelationshipManager {
 
         // Auto-discover relationships if enabled
         if self.config.auto_discovery_enabled {
-            self.discover_relationships_for_artifact(&artifact.id).await?;
+            self.discover_relationships_for_artifact(&artifact.id)
+                .await?;
         }
 
         tracing::info!("Added artifact to relationship system: {}", artifact.id);
@@ -236,9 +237,12 @@ impl RelationshipManager {
 
         // Store relationship
         self.graph.add_relationship(&relationship)?;
-        self.metadata_store.store_relationship(&relationship).await?;
+        self.metadata_store
+            .store_relationship(&relationship)
+            .await?;
 
-        tracing::info!("Added relationship: {} -> {} ({})",
+        tracing::info!(
+            "Added relationship: {} -> {} ({})",
             relationship.source_artifact_id,
             relationship.target_artifact_id,
             format!("{:?}", relationship.relationship_type)
@@ -248,10 +252,16 @@ impl RelationshipManager {
     }
 
     /// Discover relationships for a specific artifact
-    pub async fn discover_relationships_for_artifact(&mut self, artifact_id: &str) -> Result<RelationshipDiscoveryResult> {
+    pub async fn discover_relationships_for_artifact(
+        &mut self,
+        artifact_id: &str,
+    ) -> Result<RelationshipDiscoveryResult> {
         let start_time = std::time::Instant::now();
 
-        let artifact = self.metadata_store.get_artifact(artifact_id).await?
+        let artifact = self
+            .metadata_store
+            .get_artifact(artifact_id)
+            .await?
             .ok_or_else(|| anyhow::anyhow!("Artifact not found: {}", artifact_id))?;
 
         let mut discovered_relationships = Vec::new();
@@ -269,21 +279,30 @@ impl RelationshipManager {
             }
 
             // Discover relationships using different methods
-            if let Some(relationships) = self.discover_content_similarity(&artifact, other_artifact).await? {
+            if let Some(relationships) = self
+                .discover_content_similarity(&artifact, other_artifact)
+                .await?
+            {
                 for rel in relationships {
                     confidence_scores.insert(rel.id.clone(), rel.confidence);
                     discovered_relationships.push(rel);
                 }
             }
 
-            if let Some(relationships) = self.discover_structural_relationships(&artifact, other_artifact).await? {
+            if let Some(relationships) = self
+                .discover_structural_relationships(&artifact, other_artifact)
+                .await?
+            {
                 for rel in relationships {
                     confidence_scores.insert(rel.id.clone(), rel.confidence);
                     discovered_relationships.push(rel);
                 }
             }
 
-            if let Some(relationships) = self.discover_reference_relationships(&artifact, other_artifact).await? {
+            if let Some(relationships) = self
+                .discover_reference_relationships(&artifact, other_artifact)
+                .await?
+            {
                 for rel in relationships {
                     confidence_scores.insert(rel.id.clone(), rel.confidence);
                     discovered_relationships.push(rel);
@@ -308,14 +327,20 @@ impl RelationshipManager {
     }
 
     /// Discover relationships based on content similarity
-    async fn discover_content_similarity(&self, artifact1: &Artifact, artifact2: &Artifact) -> Result<Option<Vec<Relationship>>> {
+    async fn discover_content_similarity(
+        &self,
+        artifact1: &Artifact,
+        artifact2: &Artifact,
+    ) -> Result<Option<Vec<Relationship>>> {
         // Only compare artifacts of the same type for content similarity
         if artifact1.artifact_type != artifact2.artifact_type {
             return Ok(None);
         }
 
         // Calculate content similarity
-        let similarity = self.calculate_content_similarity(artifact1, artifact2).await?;
+        let similarity = self
+            .calculate_content_similarity(artifact1, artifact2)
+            .await?;
 
         if similarity < 0.7 {
             return Ok(None);
@@ -340,8 +365,14 @@ impl RelationshipManager {
             updated_at: Utc::now(),
             created_by: "auto_discovery".to_string(),
             metadata: HashMap::from([
-                ("discovery_method".to_string(), serde_json::Value::String("content_similarity".to_string())),
-                ("similarity_score".to_string(), serde_json::Value::Number(serde_json::Number::from_f64(similarity).unwrap())),
+                (
+                    "discovery_method".to_string(),
+                    serde_json::Value::String("content_similarity".to_string()),
+                ),
+                (
+                    "similarity_score".to_string(),
+                    serde_json::Value::Number(serde_json::Number::from_f64(similarity).unwrap()),
+                ),
             ]),
             bidirectional: true,
             auto_discovered: true,
@@ -351,11 +382,18 @@ impl RelationshipManager {
     }
 
     /// Discover structural relationships
-    async fn discover_structural_relationships(&self, artifact1: &Artifact, artifact2: &Artifact) -> Result<Option<Vec<Relationship>>> {
+    async fn discover_structural_relationships(
+        &self,
+        artifact1: &Artifact,
+        artifact2: &Artifact,
+    ) -> Result<Option<Vec<Relationship>>> {
         let mut relationships = Vec::new();
 
         // Check for dependency relationships
-        if self.has_dependency_relationship(artifact1, artifact2).await? {
+        if self
+            .has_dependency_relationship(artifact1, artifact2)
+            .await?
+        {
             let relationship = Relationship {
                 id: Uuid::new_v4().to_string(),
                 source_artifact_id: artifact1.id.clone(),
@@ -366,9 +404,10 @@ impl RelationshipManager {
                 created_at: Utc::now(),
                 updated_at: Utc::now(),
                 created_by: "auto_discovery".to_string(),
-                metadata: HashMap::from([
-                    ("discovery_method".to_string(), serde_json::Value::String("structural_analysis".to_string())),
-                ]),
+                metadata: HashMap::from([(
+                    "discovery_method".to_string(),
+                    serde_json::Value::String("structural_analysis".to_string()),
+                )]),
                 bidirectional: false,
                 auto_discovered: true,
             };
@@ -387,9 +426,10 @@ impl RelationshipManager {
                 created_at: Utc::now(),
                 updated_at: Utc::now(),
                 created_by: "auto_discovery".to_string(),
-                metadata: HashMap::from([
-                    ("discovery_method".to_string(), serde_json::Value::String("structural_analysis".to_string())),
-                ]),
+                metadata: HashMap::from([(
+                    "discovery_method".to_string(),
+                    serde_json::Value::String("structural_analysis".to_string()),
+                )]),
                 bidirectional: false,
                 auto_discovered: true,
             };
@@ -404,9 +444,16 @@ impl RelationshipManager {
     }
 
     /// Discover reference relationships
-    async fn discover_reference_relationships(&self, artifact1: &Artifact, artifact2: &Artifact) -> Result<Option<Vec<Relationship>>> {
+    async fn discover_reference_relationships(
+        &self,
+        artifact1: &Artifact,
+        artifact2: &Artifact,
+    ) -> Result<Option<Vec<Relationship>>> {
         // Check if artifact1 references artifact2
-        if self.has_reference_relationship(artifact1, artifact2).await? {
+        if self
+            .has_reference_relationship(artifact1, artifact2)
+            .await?
+        {
             let relationship = Relationship {
                 id: Uuid::new_v4().to_string(),
                 source_artifact_id: artifact1.id.clone(),
@@ -417,9 +464,10 @@ impl RelationshipManager {
                 created_at: Utc::now(),
                 updated_at: Utc::now(),
                 created_by: "auto_discovery".to_string(),
-                metadata: HashMap::from([
-                    ("discovery_method".to_string(), serde_json::Value::String("reference_analysis".to_string())),
-                ]),
+                metadata: HashMap::from([(
+                    "discovery_method".to_string(),
+                    serde_json::Value::String("reference_analysis".to_string()),
+                )]),
                 bidirectional: false,
                 auto_discovered: true,
             };
@@ -430,7 +478,11 @@ impl RelationshipManager {
     }
 
     /// Calculate content similarity between artifacts
-    async fn calculate_content_similarity(&self, artifact1: &Artifact, artifact2: &Artifact) -> Result<f64> {
+    async fn calculate_content_similarity(
+        &self,
+        artifact1: &Artifact,
+        artifact2: &Artifact,
+    ) -> Result<f64> {
         // Use content hashes if available
         if let (Some(hash1), Some(hash2)) = (&artifact1.content_hash, &artifact2.content_hash) {
             if hash1 == hash2 {
@@ -451,7 +503,11 @@ impl RelationshipManager {
     }
 
     #[cfg(feature = "ml")]
-    async fn calculate_ml_similarity(&self, artifact1: &Artifact, artifact2: &Artifact) -> Result<f64> {
+    async fn calculate_ml_similarity(
+        &self,
+        artifact1: &Artifact,
+        artifact2: &Artifact,
+    ) -> Result<f64> {
         // Use the pattern recognition engine for similarity calculation
         use crate::ml::pattern_recognition::PatternRecognitionEngine;
 
@@ -460,7 +516,11 @@ impl RelationshipManager {
         Ok(0.5)
     }
 
-    async fn calculate_text_similarity(&self, artifact1: &Artifact, artifact2: &Artifact) -> Result<f64> {
+    async fn calculate_text_similarity(
+        &self,
+        artifact1: &Artifact,
+        artifact2: &Artifact,
+    ) -> Result<f64> {
         // Simple text similarity based on artifact names and paths
         let name_similarity = self.calculate_string_similarity(&artifact1.name, &artifact2.name);
         let path_similarity = self.calculate_string_similarity(&artifact1.path, &artifact2.path);
@@ -483,7 +543,11 @@ impl RelationshipManager {
     }
 
     /// Check for dependency relationships
-    async fn has_dependency_relationship(&self, artifact1: &Artifact, artifact2: &Artifact) -> Result<bool> {
+    async fn has_dependency_relationship(
+        &self,
+        artifact1: &Artifact,
+        artifact2: &Artifact,
+    ) -> Result<bool> {
         // Check if artifact1 depends on artifact2 based on file paths, imports, etc.
         if artifact1.path.contains(&artifact2.name) || artifact2.path.contains(&artifact1.name) {
             return Ok(true);
@@ -495,25 +559,37 @@ impl RelationshipManager {
     }
 
     /// Check for test relationships
-    async fn has_test_relationship(&self, artifact1: &Artifact, artifact2: &Artifact) -> Result<bool> {
+    async fn has_test_relationship(
+        &self,
+        artifact1: &Artifact,
+        artifact2: &Artifact,
+    ) -> Result<bool> {
         // Check if artifact1 is a test for artifact2
         if artifact1.artifact_type == ArtifactType::TestFile
-            && (artifact1.path.contains(&artifact2.name) ||
-                artifact1.name.contains(&artifact2.name)) {
+            && (artifact1.path.contains(&artifact2.name)
+                || artifact1.name.contains(&artifact2.name))
+        {
             return Ok(true);
         }
         Ok(false)
     }
 
     /// Check for reference relationships
-    async fn has_reference_relationship(&self, _artifact1: &Artifact, _artifact2: &Artifact) -> Result<bool> {
+    async fn has_reference_relationship(
+        &self,
+        _artifact1: &Artifact,
+        _artifact2: &Artifact,
+    ) -> Result<bool> {
         // Check if artifact1 references artifact2
         // This would require content analysis to find references
         Ok(false)
     }
 
     /// Search for relationships
-    pub async fn search_relationships(&self, query: RelationshipQuery) -> Result<RelationshipSearchResult> {
+    pub async fn search_relationships(
+        &self,
+        query: RelationshipQuery,
+    ) -> Result<RelationshipSearchResult> {
         let start_time = std::time::Instant::now();
 
         let relationships = self.graph.search_relationships(&query)?;
@@ -521,10 +597,18 @@ impl RelationshipManager {
 
         // Collect all artifacts involved in the relationships
         for relationship in &relationships {
-            if let Some(artifact) = self.metadata_store.get_artifact(&relationship.source_artifact_id).await? {
+            if let Some(artifact) = self
+                .metadata_store
+                .get_artifact(&relationship.source_artifact_id)
+                .await?
+            {
                 artifacts.insert(artifact.id.clone(), artifact);
             }
-            if let Some(artifact) = self.metadata_store.get_artifact(&relationship.target_artifact_id).await? {
+            if let Some(artifact) = self
+                .metadata_store
+                .get_artifact(&relationship.target_artifact_id)
+                .await?
+            {
                 artifacts.insert(artifact.id.clone(), artifact);
             }
         }
@@ -548,13 +632,19 @@ impl RelationshipManager {
     }
 
     /// Find paths between artifacts through relationships
-    async fn find_relationship_paths(&self, query: &RelationshipQuery) -> Result<Vec<RelationshipPath>> {
+    async fn find_relationship_paths(
+        &self,
+        query: &RelationshipQuery,
+    ) -> Result<Vec<RelationshipPath>> {
         // Use graph algorithms to find paths
         self.graph.find_paths(query).await
     }
 
     /// Generate visualization of relationships
-    pub async fn generate_visualization(&self, query: RelationshipQuery) -> Result<visualization::GraphVisualization> {
+    pub async fn generate_visualization(
+        &self,
+        query: RelationshipQuery,
+    ) -> Result<visualization::GraphVisualization> {
         if !self.config.visualization_enabled {
             return Err(anyhow::anyhow!("Visualization is disabled"));
         }
@@ -564,12 +654,18 @@ impl RelationshipManager {
     }
 
     /// Perform impact analysis for changes
-    pub async fn analyze_impact(&self, artifact_id: &str, change_type: impact_analysis::ChangeType) -> Result<impact_analysis::ImpactAnalysisResult> {
+    pub async fn analyze_impact(
+        &self,
+        artifact_id: &str,
+        change_type: impact_analysis::ChangeType,
+    ) -> Result<impact_analysis::ImpactAnalysisResult> {
         if !self.config.impact_analysis_enabled {
             return Err(anyhow::anyhow!("Impact analysis is disabled"));
         }
 
-        self.impact_analyzer.analyze_impact(artifact_id, change_type, &self.graph).await
+        self.impact_analyzer
+            .analyze_impact(artifact_id, change_type, &self.graph)
+            .await
     }
 
     /// Validate a relationship before adding it
@@ -581,11 +677,15 @@ impl RelationshipManager {
 
         // Check strength and confidence bounds
         if relationship.strength < 0.0 || relationship.strength > 1.0 {
-            return Err(anyhow::anyhow!("Relationship strength must be between 0.0 and 1.0"));
+            return Err(anyhow::anyhow!(
+                "Relationship strength must be between 0.0 and 1.0"
+            ));
         }
 
         if relationship.confidence < 0.0 || relationship.confidence > 1.0 {
-            return Err(anyhow::anyhow!("Relationship confidence must be between 0.0 and 1.0"));
+            return Err(anyhow::anyhow!(
+                "Relationship confidence must be between 0.0 and 1.0"
+            ));
         }
 
         Ok(())
@@ -614,7 +714,8 @@ impl RelationshipManager {
 
     /// Clean up old relationships
     pub async fn cleanup_old_relationships(&mut self) -> Result<usize> {
-        let cutoff_date = Utc::now() - chrono::Duration::days(self.config.relationship_ttl_days as i64);
+        let cutoff_date =
+            Utc::now() - chrono::Duration::days(self.config.relationship_ttl_days as i64);
         let removed_count = self.graph.remove_relationships_older_than(cutoff_date)?;
 
         tracing::info!("Cleaned up {} old relationships", removed_count);

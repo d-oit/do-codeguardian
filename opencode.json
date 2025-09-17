@@ -11,9 +11,6 @@
      " junior-developer": {
       "model": "nvidia/deepseek-ai/deepseek-v3.1"
     },
-    "git": {
-      "model": "nvidia/deepseek-ai/deepseek-v3.1"
-    },
     "ml-pipeline-manager": {
       "model": "nvidia/deepseek-ai/deepseek-v3.1"
     },

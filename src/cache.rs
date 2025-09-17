@@ -22,45 +22,55 @@ pub struct CacheEntry {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct FileCache {
-    entries: HashMap<PathBuf, CacheEntry>,
-    cache_version: String,
+    pub entries: HashMap<PathBuf, CacheEntry>,
+    pub cache_version: String,
+    #[serde(skip)]
+    pub cache_path: PathBuf,
 }
 
 impl Default for FileCache {
     fn default() -> Self {
-        Self::new()
+        Self::new(PathBuf::from(".codeguardian/cache/cache.json"))
     }
 }
 
 impl FileCache {
     const CACHE_VERSION: &'static str = "1.0.0";
-    pub const CACHE_FILE: &'static str = ".codeguardian-cache.json";
 
-    pub fn new() -> Self {
+    pub fn new(cache_path: PathBuf) -> Self {
         Self {
             entries: HashMap::new(),
             cache_version: Self::CACHE_VERSION.to_string(),
+            cache_path,
         }
     }
 
-    pub async fn load() -> Result<Self> {
-        if let Ok(content) = fs::read_to_string(Self::CACHE_FILE).await {
+    pub async fn load(cache_path: PathBuf) -> Result<Self> {
+        // Ensure directory exists
+        if let Some(parent) = cache_path.parent() {
+            tokio::fs::create_dir_all(parent).await.ok();
+        }
+
+        if let Ok(content) = fs::read_to_string(&cache_path).await {
             match serde_json::from_str::<Self>(&content) {
-                Ok(cache) if cache.cache_version == Self::CACHE_VERSION => Ok(cache),
+                Ok(mut cache) if cache.cache_version == Self::CACHE_VERSION => {
+                    cache.cache_path = cache_path;
+                    Ok(cache)
+                }
                 _ => {
                     // Cache version mismatch or invalid format, start fresh
                     tracing::warn!("Cache version mismatch or invalid format, starting fresh");
-                    Ok(Self::new())
+                    Ok(Self::new(cache_path))
                 }
             }
         } else {
-            Ok(Self::new())
+            Ok(Self::new(cache_path))
         }
     }
 
     pub async fn save(&self) -> Result<()> {
         let content = serde_json::to_string_pretty(self)?;
-        fs::write(Self::CACHE_FILE, content).await?;
+        fs::write(&self.cache_path, content).await?;
         Ok(())
     }
 

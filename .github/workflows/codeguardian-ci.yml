@@ -61,13 +61,13 @@ jobs:
           results.json
           report.md
 
-  codeguardian-full:
-    if: github.event_name == 'push' || github.event_name == 'schedule'
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-    permissions:
-        contents: read
-        issues: write
+   codeguardian-full:
+     if: github.event_name == 'push' || github.event_name == 'schedule'
+     runs-on: ubuntu-latest
+     timeout-minutes: 20
+     permissions:
+         contents: write
+         issues: write
 
     steps:
     - uses: actions/checkout@v5
@@ -82,29 +82,53 @@ jobs:
       run: |
           cargo build --release --quiet
 
-    - name: Run CodeGuardian (Full scan)
-      run: |
-        # Full repository scan for scheduled jobs and main branch pushes
-        # Enable all detection modes for comprehensive analysis
-        ./target/release/do-codeguardian check . \
-          --format json \
-          --out results.json \
-          --emit-md report.md \
-          --emit-gh \
-          --repo ${{ github.repository }} \
-          --gh-mode checklist \
-          --labels "codeguardian,automated,full-scan" \
-          --detect-broken-files \
-          --detect-conflicts \
-          --detect-placeholders \
-          --detect-duplicates \
-          --fail-on-conflicts
+     - name: Run CodeGuardian (Full scan)
+       run: |
+         # Full repository scan for scheduled jobs and main branch pushes
+         # Enable all detection modes for comprehensive analysis
+         ./target/release/do-codeguardian check . \
+           --format json \
+           --out results.json \
+           --emit-md report.md \
+           --emit-gh \
+           --repo ${{ github.repository }} \
+           --gh-mode checklist \
+           --labels "codeguardian,automated,full-scan" \
+           --detect-broken-files \
+           --detect-conflicts \
+           --detect-placeholders \
+           --detect-duplicates \
+           --fail-on-conflicts
 
-        # Log whether issues were created or skipped
-        echo "CodeGuardian analysis completed. Check logs above for issue creation status."
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        GITHUB_REPOSITORY: ${{ github.repository }}
+         # Log whether issues were created or skipped
+         echo "CodeGuardian analysis completed. Check logs above for issue creation status."
+       env:
+         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+         GITHUB_REPOSITORY: ${{ github.repository }}
+
+     - name: Generate and commit validation reports
+       run: |
+         VERSION=$(grep '^version = ' Cargo.toml | sed 's/version = "\(.*\)"/\1/')
+         mkdir -p docs/validation-reports/v$VERSION
+         cp results.json docs/validation-reports/v$VERSION/ci-full-results.json
+         cp report.md docs/validation-reports/v$VERSION/ci-full-report.md
+
+         git config user.name "github-actions[bot]"
+         git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+         if git ls-files --error-unmatch docs/validation-reports/v$VERSION/ci-full-results.json >/dev/null 2>&1; then
+           if ! git diff --quiet docs/validation-reports/v$VERSION/ci-full-results.json docs/validation-reports/v$VERSION/ci-full-report.md; then
+             git add docs/validation-reports/v$VERSION/ci-full-results.json docs/validation-reports/v$VERSION/ci-full-report.md
+             git commit -m "chore: update CI validation reports for v$VERSION [skip ci]"
+             git push
+           else
+             echo "No changes to validation reports"
+           fi
+         else
+           git add docs/validation-reports/v$VERSION/ci-full-results.json docs/validation-reports/v$VERSION/ci-full-report.md
+           git commit -m "chore: add initial CI validation reports for v$VERSION [skip ci]"
+           git push
+         fi
 
     - name: Upload artifacts
       uses: actions/upload-artifact@v4

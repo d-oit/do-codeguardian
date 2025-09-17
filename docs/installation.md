@@ -19,13 +19,13 @@
 ### From Crates.io (Recommended)
 
 ```bash
-cargo install do-do-codeguardian
+cargo install do-codeguardian
 ```
 
 ### From Source
 
 ```bash
-git clone https://github.com/d-oit/do-do-codeguardian.git
+git clone https://github.com/d-oit/do-codeguardian.git
 cd do-codeguardian
 cargo build --release
 cargo install --path .
@@ -46,7 +46,7 @@ docker run --rm -v $(pwd):/workspace -v $(pwd)/do-codeguardian.toml:/etc/do-code
 
 ### Pre-built Binaries
 
-Download from [GitHub Releases](https://github.com/d-oit/do-do-codeguardian/releases) for:
+Download from [GitHub Releases](https://github.com/d-oit/do-codeguardian/releases) for:
 - Linux (x64, ARM64)
 - macOS (x64, ARM64/M1)
 - Windows (x64)

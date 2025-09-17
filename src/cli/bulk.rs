@@ -3,20 +3,20 @@
 //! Provides batch processing capabilities for multiple repositories,
 //! codebases, and artifact types in single workflows.
 
-use clap::{Parser, Subcommand, ValueEnum};
-use std::path::{Path, PathBuf};
 use anyhow::Result;
-use tokio::task::JoinSet;
-use indicatif::{ProgressBar, ProgressStyle, MultiProgress};
-use std::sync::Arc;
-use std::time::Instant;
 use chrono::{DateTime, Utc};
+use clap::{Parser, Subcommand, ValueEnum};
+use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
 use serde::{Deserialize, Serialize};
 use serde_json;
+use std::path::{Path, PathBuf};
+use std::sync::Arc;
+use std::time::Instant;
+use tokio::task::JoinSet;
 
 use crate::config::base::Config;
 use crate::core::parallel_file_processor::ParallelFileProcessor;
-use crate::integrations::traits::{IntegrationSystem, BulkOperationResult};
+use crate::integrations::traits::{BulkOperationResult, IntegrationSystem};
 use crate::types::{Finding, Report, ReportFormat};
 
 #[derive(Parser, Debug)]
@@ -51,11 +51,11 @@ pub enum BulkCommand {
 
         /// Include subdirectories in scan
         #[arg(long)]
-    _recursive: bool,
+        _recursive: bool,
 
         /// Types of duplicates to detect
         #[arg(long, value_enum, default_values = &["code", "config", "docs"])]
-    _duplicate_types: Vec<DuplicateType>,
+        _duplicate_types: Vec<DuplicateType>,
     },
 
     /// Process multiple codebases simultaneously
@@ -216,7 +216,7 @@ pub async fn run(args: BulkArgs, config: &Config) -> Result<()> {
             concurrency,
             skip_errors,
             _recursive,
-            _duplicate_types
+            _duplicate_types,
         } => {
             let options = BulkScanOptions {
                 repositories,
@@ -234,7 +234,7 @@ pub async fn run(args: BulkArgs, config: &Config) -> Result<()> {
             operation,
             output_dir,
             workers,
-            continue_on_error
+            continue_on_error,
         } => {
             execute_bulk_process(
                 codebases,
@@ -242,41 +242,27 @@ pub async fn run(args: BulkArgs, config: &Config) -> Result<()> {
                 output_dir,
                 workers,
                 continue_on_error,
-                config
-            ).await
+                config,
+            )
+            .await
         }
         BulkCommand::Integration {
             system,
             operation,
             input_file,
             batch_size,
-            dry_run
+            dry_run,
         } => {
-            execute_bulk_integration(
-                system,
-                operation,
-                input_file,
-                batch_size,
-                dry_run,
-                config
-            ).await
+            execute_bulk_integration(system, operation, input_file, batch_size, dry_run, config)
+                .await
         }
         BulkCommand::Report {
             sources,
             output,
             format,
             detailed,
-            merge_duplicates
-        } => {
-            execute_bulk_report(
-                sources,
-                output,
-                format,
-                detailed,
-                merge_duplicates,
-                config
-            ).await
-        }
+            merge_duplicates,
+        } => execute_bulk_report(sources, output, format, detailed, merge_duplicates, config).await,
     }
 }
 
@@ -293,7 +279,10 @@ struct BulkScanOptions {
 
 /// Execute bulk scanning across multiple repositories
 async fn execute_bulk_scan(options: BulkScanOptions, config: &Config) -> Result<()> {
-    println!("🔍 Starting bulk scan of {} repositories", options.repositories.len());
+    println!(
+        "🔍 Starting bulk scan of {} repositories",
+        options.repositories.len()
+    );
 
     let multi_progress = MultiProgress::new();
     let main_progress = multi_progress.add(ProgressBar::new(options.repositories.len() as u64));
@@ -301,7 +290,7 @@ async fn execute_bulk_scan(options: BulkScanOptions, config: &Config) -> Result<
         ProgressStyle::default_bar()
             .template("[{elapsed_precise}] {bar:40.cyan/blue} {pos}/{len} {msg}")
             .unwrap()
-            .progress_chars("█▉▊▋▌▍▎▏ ")
+            .progress_chars("█▉▊▋▌▍▎▏ "),
     );
     main_progress.set_message("Scanning repositories");
 
@@ -329,7 +318,8 @@ async fn execute_bulk_scan(options: BulkScanOptions, config: &Config) -> Result<
                 duplicate_types_clone,
                 &config_clone,
                 progress,
-            ).await;
+            )
+            .await;
             (index, result)
         });
     }
@@ -367,20 +357,24 @@ async fn execute_bulk_scan(options: BulkScanOptions, config: &Config) -> Result<
         successful: results.len(),
         failed: errors.len(),
         duration_seconds: start_time.elapsed().as_secs_f64(),
-        results: results.into_iter().map(|r| {
-            let data = serde_json::to_value(&r).ok();
-            BulkOperationResult {
-                success: true,
-                item_id: Some(r.summary.total_files_scanned.to_string()),
-                error: None,
-                operation_index: 0, // TODO: set proper index
-                message: Some(format!("Scanned {} files, found {} findings",
-                    r.summary.total_files_scanned,
-                    r.findings.len()
-                )),
-                data,
-            }
-        }).collect(),
+        results: results
+            .into_iter()
+            .map(|r| {
+                let data = serde_json::to_value(&r).ok();
+                BulkOperationResult {
+                    success: true,
+                    item_id: Some(r.summary.total_files_scanned.to_string()),
+                    error: None,
+                    operation_index: 0, // TODO: set proper index
+                    message: Some(format!(
+                        "Scanned {} files, found {} findings",
+                        r.summary.total_files_scanned,
+                        r.findings.len()
+                    )),
+                    data,
+                }
+            })
+            .collect(),
         errors,
         summary: calculate_bulk_summary(&[]),
     };
@@ -405,7 +399,10 @@ async fn execute_bulk_process(
     continue_on_error: bool,
     config: &Config,
 ) -> Result<()> {
-    println!("⚙️  Starting bulk processing of {} codebases", codebases.len());
+    println!(
+        "⚙️  Starting bulk processing of {} codebases",
+        codebases.len()
+    );
 
     let processor = ParallelFileProcessor::new(Some(workers));
     let start_time = Instant::now();
@@ -413,7 +410,8 @@ async fn execute_bulk_process(
     let mut errors = Vec::new();
 
     for (index, codebase) in codebases.iter().enumerate() {
-        println!("Processing codebase {}/{}: {}",
+        println!(
+            "Processing codebase {}/{}: {}",
             index + 1,
             codebases.len(),
             codebase.display()
@@ -467,7 +465,10 @@ async fn execute_bulk_integration(
     dry_run: bool,
     config: &Config,
 ) -> Result<()> {
-    println!("🔗 Starting bulk integration operation: {:?} on {:?}", operation, system);
+    println!(
+        "🔗 Starting bulk integration operation: {:?} on {:?}",
+        operation, system
+    );
 
     if dry_run {
         println!("🧪 DRY RUN MODE - No actual operations will be performed");
@@ -487,7 +488,8 @@ async fn execute_bulk_integration(
     let mut batch_errors = Vec::new();
 
     for (batch_index, batch) in operation_requests.chunks(batch_size).enumerate() {
-        println!("Processing batch {}/{}",
+        println!(
+            "Processing batch {}/{}",
             batch_index + 1,
             operation_requests.len().div_ceil(batch_size)
         );
@@ -497,11 +499,7 @@ async fn execute_bulk_integration(
             continue;
         }
 
-        match execute_bulk_integration_batch(
-            &*integration_system,
-            &operation,
-            batch,
-        ).await {
+        match execute_bulk_integration_batch(&*integration_system, &operation, batch).await {
             Ok(batch_results) => {
                 all_results.extend(batch_results);
             }
@@ -543,7 +541,10 @@ async fn execute_bulk_report(
     merge_duplicates: bool,
     _config: &Config,
 ) -> Result<()> {
-    println!("📊 Generating consolidated report from {} sources", sources.len());
+    println!(
+        "📊 Generating consolidated report from {} sources",
+        sources.len()
+    );
 
     let mut all_findings = Vec::new();
     let mut source_reports = Vec::new();
@@ -626,14 +627,15 @@ async fn create_integration_system(
     system: IntegrationType,
     _config: &Config,
 ) -> Result<Box<dyn IntegrationSystem + Send + Sync>> {
-        match system {
-            IntegrationType::Jira => {
-                Err(anyhow::anyhow!("Jira integration not implemented"))
-            }
-            IntegrationType::Confluence => {
-                Err(anyhow::anyhow!("Confluence integration not implemented"))
-            }
-        _ => Err(anyhow::anyhow!("Integration system {:?} not yet implemented", system))
+    match system {
+        IntegrationType::Jira => Err(anyhow::anyhow!("Jira integration not implemented")),
+        IntegrationType::Confluence => {
+            Err(anyhow::anyhow!("Confluence integration not implemented"))
+        }
+        _ => Err(anyhow::anyhow!(
+            "Integration system {:?} not yet implemented",
+            system
+        )),
     }
 }
 
@@ -643,14 +645,18 @@ async fn execute_bulk_integration_batch(
     batch: &[serde_json::Value],
 ) -> Result<Vec<BulkOperationResult>> {
     // Mock implementation for demo
-    Ok(batch.iter().enumerate().map(|(i, _)| BulkOperationResult {
-        success: true,
-        item_id: Some(i.to_string()),
-        error: None,
-        operation_index: i,
-        message: Some(format!("Executed {:?}", operation)),
-        data: None,
-    }).collect())
+    Ok(batch
+        .iter()
+        .enumerate()
+        .map(|(i, _)| BulkOperationResult {
+            success: true,
+            item_id: Some(i.to_string()),
+            error: None,
+            operation_index: i,
+            message: Some(format!("Executed {:?}", operation)),
+            data: None,
+        })
+        .collect())
 }
 
 async fn load_source_reports(_source: &Path) -> Result<Vec<Report>> {
@@ -721,7 +727,8 @@ fn print_bulk_summary(results: &BulkResults) {
     println!("Successful: {}", results.successful);
     println!("Failed: {}", results.failed);
     println!("Duration: {:.2}s", results.duration_seconds);
-    println!("Success Rate: {:.1}%",
+    println!(
+        "Success Rate: {:.1}%",
         (results.successful as f64 / results.total_processed as f64) * 100.0
     );
 

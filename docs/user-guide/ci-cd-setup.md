@@ -288,10 +288,10 @@ gh workflow run <workflow-name> --ref <branch>
 ```bash
 # Test turbo analysis locally
 cargo build --release
-./target/release/do-do-codeguardian turbo . --format json --output test.json
+./target/release/do-codeguardian turbo . --format json --output test.json
 
 # Validate configuration
-./target/release/do-do-codeguardian check --help
+./target/release/do-codeguardian check --help
 ```
 
 #### Log Analysis

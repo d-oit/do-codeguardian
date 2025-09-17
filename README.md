@@ -8,6 +8,8 @@
 
 > **Secure Your Codebase with AI-Powered Analysis**
 
+**Version: 0.2.0-alpha.5** | [📋 Changelog](CHANGELOG.md) | [📚 API Documentation](docs/api/index.md)
+
 CodeGuardian is a cutting-edge, security-first code analysis tool that combines machine learning, advanced static analysis, and seamless GitHub integration to help developers identify vulnerabilities, optimize performance, and maintain high code quality standards. Built with Rust for speed and reliability, it empowers teams to ship secure software faster.
 
 ## ✨ Key Features
@@ -17,13 +19,26 @@ CodeGuardian is a cutting-edge, security-first code analysis tool that combines 
 - 🚀 **Turbo Mode**: High-performance parallel analysis with adaptive resource management for large codebases
 - 🔗 **Comprehensive GitHub Integration**: Automated issue creation with duplicate prevention, PR analysis, and multiple workflow modes
 - 📊 **Intelligent Reporting**: JSON source-of-truth with human-readable, SARIF, and Markdown formats
+- 📋 **Organized Validation Reports**: Version-specific validation and UAT reports with historical data access
 - ⚡ **CI/CD Optimization**: Diff-only analysis, baseline comparisons, and seamless pipeline integration
 - 🛠️ **Broken Files Detection**: Git merge conflicts, AI-generated placeholders, and duplicate code detection
 - 🔄 **Duplicate Prevention System**: Multi-strategy duplicate detection with cross-workflow coordination
 - 🏗️ **Extensible Architecture**: Plugin-based analyzer system with custom integrations (Azure DevOps, GitLab, Jira)
 - 📈 **Performance Intelligence**: Memory pooling, streaming analysis, and intelligent caching
+- 🗂️ **Retention Policy Engine**: Automatic cleanup with data integrity verification and repair mechanisms
 - 🎛️ **Advanced Configuration**: Preset configurations with environment variable support and validation
 - 🌐 **Web Dashboard**: Optional real-time monitoring and analysis visualization (feature-gated)
+
+### 🆕 New in v0.2.0-alpha.5
+
+- 🔧 **External System Integrations**: Native support for Jira, Confluence, Jenkins, GitLab, Bitbucket, and Azure DevOps
+- 📱 **Interactive Web Dashboard**: Real-time monitoring with customizable views and stakeholder-specific dashboards
+- 🔄 **Automated Remediation Workflows**: AI-powered remediation suggestions with approval workflows and automated execution
+- 🕸️ **Advanced Relationship Management**: Graph-based artifact relationship tracking with impact analysis and visualization
+- 📊 **Enhanced Metrics & Monitoring**: Comprehensive metrics collection with alerting and trend analysis
+- 🔍 **Semantic Search & Discovery**: ML-enhanced duplicate detection across external systems
+- 🎯 **Risk-Based Approval System**: Intelligent risk assessment for remediation actions with configurable approval thresholds
+- 📈 **Enterprise-Grade Reporting**: Unified reporting across all integrated systems with compliance support
 
 ## 🏗️ Architecture & Components
 
@@ -45,9 +60,11 @@ CodeGuardian implements a modular, security-first architecture designed for high
 
 ### Integration Layer
 - **GitHub API Client**: Rate-limited, retry-enabled GitHub integration
-- **External Integrations**: Azure DevOps, GitLab, Jira, Confluence, Jenkins
+- **External Integrations**: Azure DevOps, GitLab, Jira, Confluence, Jenkins, Bitbucket
 - **CI/CD Pipeline Support**: Native integration with major CI/CD platforms
 - **Webhook System**: Real-time notifications and external system integration
+- **Integration Manager**: Unified interface for managing multiple external systems
+- **Bulk Operations**: Efficient batch processing for large-scale operations
 
 ### Performance & Optimization
 - **Parallel Processing**: Adaptive parallelism with resource management
@@ -60,6 +77,9 @@ CodeGuardian implements a modular, security-first architecture designed for high
 - **Environment Integration**: Comprehensive environment variable support
 - **Configuration Validation**: Real-time validation and best practice enforcement
 - **Web Dashboard**: Optional real-time monitoring and visualization
+- **Integration Configuration**: Centralized management of external system connections
+- **Remediation Policies**: Configurable approval workflows and risk thresholds
+- **Relationship Discovery**: Automated relationship discovery and management settings
 
 ## 🚀 Quick Start
 
@@ -108,6 +128,21 @@ codeguardian turbo . \
   --memory-limit 4096 \
   --output large-scale-results.json \
   --metrics
+```
+
+### Retention Policy Management
+```bash
+# Check data integrity and generate report
+codeguardian retention --check-integrity --report-integrity
+
+# Run automatic cleanup based on configured policies
+codeguardian retention --cleanup
+
+# Show retention status and statistics
+codeguardian retention
+
+# Dry run cleanup to see what would be cleaned
+codeguardian retention --cleanup --dry-run
 ```
 
 ### Advanced GitHub Integration
@@ -199,7 +234,7 @@ Explore CodeGuardian's comprehensive documentation:
 ### 🚀 Getting Started
 - **[Quick Start Guide](docs/user-guide/quick-start.md)** - Get up and running in minutes
 - **[Installation Guide](docs/user-guide/installation.md)** - Platform-specific installation instructions
-- **[Basic Usage](docs/user-guide/basic-usage.md)** - Essential commands and workflows
+- **[Basic Usage](docs/user-guide/check.md)** - Essential commands and workflows
 
 ### 🔧 Core Features
 - **[Security Analysis](docs/user-guide/security-analysis.md)** - Advanced vulnerability detection
@@ -214,12 +249,24 @@ Explore CodeGuardian's comprehensive documentation:
 - **[API Reference](docs/api/index.md)** - Programmatic integration and customization
 - **[Configuration Guide](docs/configuration.md)** - Advanced setup and presets
 - **[Performance Tuning](docs/architecture/performance.md)** - Optimization and benchmarking
+- **[Validation Reports](docs/validation-reports/index.md)** - Version-specific testing and validation data
 
 ### 🚀 Advanced Features
 - **[CI/CD Integration](docs/user-guide/ci-cd-integration.md)** - Pipeline integration guides
 - **[External Integrations](docs/integrations/index.md)** - Azure DevOps, GitLab, Jira integration
 - **[Dashboard Setup](docs/dashboard/setup.md)** - Web dashboard configuration
 - **[Remediation Workflows](docs/remediation/index.md)** - Automated remediation
+- **[Relationship Management](docs/relationships/index.md)** - Advanced artifact relationships
+
+### 📚 API Documentation (v0.2.0-alpha.5)
+- **[Core API](docs/api/core.md)** - Core functionality and library interfaces
+- **[CLI API](docs/api/cli.md)** - Command-line interface documentation
+- **[Configuration API](docs/api/config.md)** - Configuration management
+- **[Analysis API](docs/api/analysis.md)** - Security analysis interfaces
+- **[Integrations API](docs/api/integrations.md)** - External system integrations
+- **[Dashboard API](docs/api/dashboard.md)** - Web dashboard interfaces
+- **[Remediation API](docs/api/remediation.md)** - Automated remediation workflows
+- **[Relationships API](docs/api/relationships.md)** - Relationship management
 
 ### 🔍 Troubleshooting & Support
 - **[Troubleshooting Guide](docs/troubleshooting/index.md)** - Common issues and solutions
@@ -292,12 +339,16 @@ See our **[Contributing Guide](CONTRIBUTING.md)** for detailed guidelines.
 - **Compliance Automation**: Automated compliance checking and reporting for standards (SOC2, ISO27001)
 - **Risk Management**: Continuous security monitoring with trend analysis and risk scoring
 - **Incident Response**: Rapid vulnerability detection and prioritization
+- **Unified Security Operations**: Cross-system vulnerability correlation and remediation
+- **Automated Remediation**: AI-powered remediation workflows with approval management
 
 ### 🚀 DevSecOps Teams
 - **CI/CD Pipeline Integration**: Seamless integration with GitHub Actions, Jenkins, GitLab CI
 - **Shift-Left Security**: Early vulnerability detection in development workflows
 - **Automated Remediation**: Intelligent remediation suggestions and workflow automation
 - **Security Gates**: Configurable quality gates for deployment pipelines
+- **Multi-System Integration**: Unified workflows across GitHub, Jira, Jenkins, and other tools
+- **Real-time Monitoring**: Web dashboard for continuous security monitoring and alerting
 
 ### 👥 Development Teams
 - **Code Review Enhancement**: Automated analysis for pull requests with duplicate prevention

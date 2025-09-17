@@ -3,18 +3,18 @@
 //! Implementation of Task 26 - comprehensive security validation for all integrations,
 //! token handling, data protection, and penetration testing scenarios.
 
+use anyhow::Result;
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::Duration;
 use tokio::time::sleep;
-use serde::{Deserialize, Serialize};
-use anyhow::Result;
 
+use do_codeguardian::analyzers::security::SecretAnalyzer;
 use do_codeguardian::config::base::Config;
 use do_codeguardian::github_api::GitHubApi;
 use do_codeguardian::integrations::traits::IntegrationSystem;
 use do_codeguardian::security::SecurityConfig;
-use do_codeguardian::analyzers::security::SecretAnalyzer;
 
 /// Security testing configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -228,14 +228,17 @@ impl SecurityTestSuite {
                 recommendations.push("GitHub personal access token format is invalid".to_string());
             }
         } else {
-            recommendations.push("Consider setting up GitHub token for enhanced security".to_string());
+            recommendations
+                .push("Consider setting up GitHub token for enhanced security".to_string());
         }
 
         // Test 2: Authentication timeout
-        let timeout_configured = config.github.timeout_seconds > 0 && config.github.timeout_seconds <= 30;
+        let timeout_configured =
+            config.github.timeout_seconds > 0 && config.github.timeout_seconds <= 30;
         if !timeout_configured {
             passed = false;
-            recommendations.push("Configure appropriate authentication timeout (1-30 seconds)".to_string());
+            recommendations
+                .push("Configure appropriate authentication timeout (1-30 seconds)".to_string());
         }
 
         // Test 3: Multi-factor authentication readiness
@@ -262,14 +265,16 @@ impl SecurityTestSuite {
         // Test 1: Rate limiting configuration
         if config.github.rate_limit < 1000 || config.github.rate_limit > 5000 {
             passed = false;
-            recommendations.push("GitHub rate limit should be between 1000-5000 requests/hour".to_string());
+            recommendations
+                .push("GitHub rate limit should be between 1000-5000 requests/hour".to_string());
         }
 
         // Test 2: API permissions validation
         recommendations.push("Regularly audit API permissions and access levels".to_string());
 
         // Test 3: Role-based access controls
-        recommendations.push("Implement principle of least privilege for all integrations".to_string());
+        recommendations
+            .push("Implement principle of least privilege for all integrations".to_string());
 
         let score = if passed { 95.0 } else { 70.0 };
 
@@ -310,7 +315,8 @@ impl SecurityTestSuite {
             passed,
             score,
             duration: start.elapsed(),
-            details: "Validated HTTPS usage, TLS configuration, and encryption settings".to_string(),
+            details: "Validated HTTPS usage, TLS configuration, and encryption settings"
+                .to_string(),
             recommendations,
         }
     }
@@ -334,7 +340,10 @@ impl SecurityTestSuite {
                 // Good - path traversal was blocked
             } else {
                 passed = false;
-                recommendations.push(format!("Path traversal vulnerability detected with input: {}", test_path));
+                recommendations.push(format!(
+                    "Path traversal vulnerability detected with input: {}",
+                    test_path
+                ));
             }
         }
 
@@ -351,7 +360,10 @@ impl SecurityTestSuite {
                 // Good - SQL injection was blocked
             } else {
                 passed = false;
-                recommendations.push(format!("SQL injection vulnerability detected with payload: {}", payload));
+                recommendations.push(format!(
+                    "SQL injection vulnerability detected with payload: {}",
+                    payload
+                ));
             }
         }
 
@@ -368,7 +380,10 @@ impl SecurityTestSuite {
                 // Good - XSS was blocked
             } else {
                 passed = false;
-                recommendations.push(format!("XSS vulnerability detected with payload: {}", payload));
+                recommendations.push(format!(
+                    "XSS vulnerability detected with payload: {}",
+                    payload
+                ));
             }
         }
 
@@ -396,7 +411,8 @@ impl SecurityTestSuite {
         // Test 2: Network timeout configuration
         if config.github.timeout_seconds == 0 || config.github.timeout_seconds > 60 {
             passed = false;
-            recommendations.push("Configure appropriate network timeouts (1-60 seconds)".to_string());
+            recommendations
+                .push("Configure appropriate network timeouts (1-60 seconds)".to_string());
         }
 
         // Test 3: Secure transport protocols
@@ -409,7 +425,8 @@ impl SecurityTestSuite {
             passed,
             score,
             duration: start.elapsed(),
-            details: "Validated network timeouts, transport security, and certificate handling".to_string(),
+            details: "Validated network timeouts, transport security, and certificate handling"
+                .to_string(),
             recommendations,
         }
     }
@@ -422,7 +439,9 @@ impl SecurityTestSuite {
 
         // Test 1: Environment variable usage
         if config.github.token.is_some() {
-            recommendations.push("Ensure tokens are loaded from environment variables or secure vaults".to_string());
+            recommendations.push(
+                "Ensure tokens are loaded from environment variables or secure vaults".to_string(),
+            );
         }
 
         // Test 2: Token rotation capability
@@ -580,7 +599,8 @@ impl SecurityTestSuite {
             attack_vector: "TLS/SSL interception and certificate spoofing".to_string(),
             success: false, // Good - attack was blocked
             impact: SecuritySeverity::High,
-            description: "Attempted to intercept communications through TLS manipulation".to_string(),
+            description: "Attempted to intercept communications through TLS manipulation"
+                .to_string(),
             evidence: vec!["Certificate validation blocked MITM attack".to_string()],
             mitigation: "Strong TLS configuration and certificate pinning active".to_string(),
         }
@@ -597,13 +617,17 @@ impl SecurityTestSuite {
     async fn test_sql_injection_protection(&self, input: &str) -> bool {
         // Simulate SQL injection protection check
         let dangerous_patterns = ["DROP", "UNION", "SELECT", "--", "/*"];
-        !dangerous_patterns.iter().any(|&pattern| input.to_uppercase().contains(pattern))
+        !dangerous_patterns
+            .iter()
+            .any(|&pattern| input.to_uppercase().contains(pattern))
     }
 
     async fn test_xss_protection(&self, input: &str) -> bool {
         // Simulate XSS protection check
         let xss_patterns = ["<script", "javascript:", "onerror=", "onload="];
-        !xss_patterns.iter().any(|&pattern| input.to_lowercase().contains(pattern))
+        !xss_patterns
+            .iter()
+            .any(|&pattern| input.to_lowercase().contains(pattern))
     }
 
     /// Print security test summary
@@ -614,19 +638,34 @@ impl SecurityTestSuite {
         println!("Passed: {}", results.passed_tests);
         println!("Failed: {}", results.failed_tests);
         println!("Security Score: {:.1}%", results.security_score);
-        println!("Vulnerabilities Found: {}", results.vulnerabilities_found.len());
+        println!(
+            "Vulnerabilities Found: {}",
+            results.vulnerabilities_found.len()
+        );
 
         if !results.vulnerabilities_found.is_empty() {
             println!("\n🚨 Security Vulnerabilities:");
             for vuln in &results.vulnerabilities_found {
-                println!("  {} [{}] - {}", vuln.id, format!("{:?}", vuln.severity), vuln.description);
+                println!(
+                    "  {} [{}] - {}",
+                    vuln.id,
+                    format!("{:?}", vuln.severity),
+                    vuln.description
+                );
             }
         }
 
         println!("\n⚡ Penetration Test Results:");
         for pen_test in &results.penetration_test_results {
-            let status = if pen_test.success { "❌ VULNERABLE" } else { "✅ PROTECTED" };
-            println!("  {} - {}: {}", status, pen_test.scenario, pen_test.description);
+            let status = if pen_test.success {
+                "❌ VULNERABLE"
+            } else {
+                "✅ PROTECTED"
+            };
+            println!(
+                "  {} - {}: {}",
+                status, pen_test.scenario, pen_test.description
+            );
         }
 
         if results.security_score >= 90.0 {
@@ -653,7 +692,10 @@ mod tests {
         let suite = SecurityTestSuite::new(config);
         let app_config = Config::default();
 
-        let results = suite.run_security_tests(&app_config).await.expect("Failed to run security tests");
+        let results = suite
+            .run_security_tests(&app_config)
+            .await
+            .expect("Failed to run security tests");
 
         assert!(results.total_tests > 0);
         assert!(results.security_score >= 0.0);
@@ -679,16 +721,32 @@ mod tests {
         let suite = SecurityTestSuite::new(config);
 
         // Test path traversal protection
-        assert!(suite.test_path_traversal_protection("normal/path/file.txt").await);
-        assert!(!suite.test_path_traversal_protection("../../../etc/passwd").await);
+        assert!(
+            suite
+                .test_path_traversal_protection("normal/path/file.txt")
+                .await
+        );
+        assert!(
+            !suite
+                .test_path_traversal_protection("../../../etc/passwd")
+                .await
+        );
 
         // Test SQL injection protection
         assert!(suite.test_sql_injection_protection("normal input").await);
-        assert!(!suite.test_sql_injection_protection("'; DROP TABLE users; --").await);
+        assert!(
+            !suite
+                .test_sql_injection_protection("'; DROP TABLE users; --")
+                .await
+        );
 
         // Test XSS protection
         assert!(suite.test_xss_protection("normal text").await);
-        assert!(!suite.test_xss_protection("<script>alert('XSS')</script>").await);
+        assert!(
+            !suite
+                .test_xss_protection("<script>alert('XSS')</script>")
+                .await
+        );
     }
 
     #[tokio::test]
@@ -703,7 +761,11 @@ mod tests {
 
         // All tests should fail (meaning the system is secure)
         for result in &results {
-            assert!(!result.success, "Penetration test {} should fail (system should be secure)", result.scenario);
+            assert!(
+                !result.success,
+                "Penetration test {} should fail (system should be secure)",
+                result.scenario
+            );
         }
     }
 
@@ -719,9 +781,11 @@ mod tests {
             cve_references: vec!["CWE-89".to_string()],
         };
 
-        let json = serde_json::to_string(&vuln).expect("Failed to serialize security vulnerability");
+        let json =
+            serde_json::to_string(&vuln).expect("Failed to serialize security vulnerability");
         assert!(json.contains("TEST-001"));
 
-        let _deserialized: SecurityVulnerability = serde_json::from_str(&json).expect("Failed to deserialize security vulnerability");
+        let _deserialized: SecurityVulnerability =
+            serde_json::from_str(&json).expect("Failed to deserialize security vulnerability");
     }
 }

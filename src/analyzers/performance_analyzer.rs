@@ -25,11 +25,13 @@ impl PerformanceAnalyzer {
         Ok(Self {
             nested_loop_patterns: vec![
                 // Detect nested for loops (simple heuristic)
-                Regex::new(r"for\s+.*\{[\s\S]*?for\s+.*\{")
-                    .map_err(|e| anyhow::anyhow!("Failed to compile nested for loop pattern: {}", e))?,
+                Regex::new(r"for\s+.*\{[\s\S]*?for\s+.*\{").map_err(|e| {
+                    anyhow::anyhow!("Failed to compile nested for loop pattern: {}", e)
+                })?,
                 // Detect nested while loops
-                Regex::new(r"while\s+.*\{[\s\S]*?while\s+.*\{")
-                    .map_err(|e| anyhow::anyhow!("Failed to compile nested while loop pattern: {}", e))?,
+                Regex::new(r"while\s+.*\{[\s\S]*?while\s+.*\{").map_err(|e| {
+                    anyhow::anyhow!("Failed to compile nested while loop pattern: {}", e)
+                })?,
                 // Detect for inside while or vice versa
                 Regex::new(r"(for\s+.*\{[\s\S]*?while\s+.*\{|while\s+.*\{[\s\S]*?for\s+.*\{)")
                     .map_err(|e| anyhow::anyhow!("Failed to compile mixed loop pattern: {}", e))?,
@@ -39,29 +41,38 @@ impl PerformanceAnalyzer {
                 Regex::new(
                     r"(for\s+.*\{[\s\S]*?(\w+)\s*\+=\s*.*|while\s+.*\{[\s\S]*?(\w+)\s*\+=\s*.*)",
                 )
-                .map_err(|e| anyhow::anyhow!("Failed to compile string concatenation pattern: {}", e))?,
+                .map_err(|e| {
+                    anyhow::anyhow!("Failed to compile string concatenation pattern: {}", e)
+                })?,
                 // Direct string concatenation with +=
-                Regex::new(r"(\w+)\s*\+=\s*&?(format!|String::)")
-                    .map_err(|e| anyhow::anyhow!("Failed to compile direct string concat pattern: {}", e))?,
+                Regex::new(r"(\w+)\s*\+=\s*&?(format!|String::)").map_err(|e| {
+                    anyhow::anyhow!("Failed to compile direct string concat pattern: {}", e)
+                })?,
             ],
             blocking_io_patterns: vec![
                 // Synchronous file operations in async functions
                 Regex::new(r"async\s+fn.*\{.*std::fs::(read_to_string|write|read|create_dir)")
-                    .map_err(|e| anyhow::anyhow!("Failed to compile async file operations pattern: {}", e))?,
+                    .map_err(|e| {
+                        anyhow::anyhow!("Failed to compile async file operations pattern: {}", e)
+                    })?,
                 // Blocking I/O in tokio contexts
-                Regex::new(r"#\[tokio::main\].*std::fs::(read_to_string|write|read)")
-                    .map_err(|e| anyhow::anyhow!("Failed to compile tokio blocking IO pattern: {}", e))?,
+                Regex::new(r"#\[tokio::main\].*std::fs::(read_to_string|write|read)").map_err(
+                    |e| anyhow::anyhow!("Failed to compile tokio blocking IO pattern: {}", e),
+                )?,
                 // Synchronous network operations
-                Regex::new(r"std::net::TcpListener::bind")
-                    .map_err(|e| anyhow::anyhow!("Failed to compile sync network pattern: {}", e))?,
+                Regex::new(r"std::net::TcpListener::bind").map_err(|e| {
+                    anyhow::anyhow!("Failed to compile sync network pattern: {}", e)
+                })?,
             ],
             algorithmic_inefficiency_patterns: vec![
                 // Potential O(n^2) patterns with collect and iter
-                Regex::new(r"\.collect\(\)\s*\.\s*iter\(\)\s*\.\s*map")
-                    .map_err(|e| anyhow::anyhow!("Failed to compile collect-iter pattern: {}", e))?,
+                Regex::new(r"\.collect\(\)\s*\.\s*iter\(\)\s*\.\s*map").map_err(|e| {
+                    anyhow::anyhow!("Failed to compile collect-iter pattern: {}", e)
+                })?,
                 // Inefficient sorting in loops
-                Regex::new(r"(for\s+.*\{|while\s+.*\{).*?\.sort\(\)")
-                    .map_err(|e| anyhow::anyhow!("Failed to compile sort in loop pattern: {}", e))?,
+                Regex::new(r"(for\s+.*\{|while\s+.*\{).*?\.sort\(\)").map_err(|e| {
+                    anyhow::anyhow!("Failed to compile sort in loop pattern: {}", e)
+                })?,
             ],
         })
     }

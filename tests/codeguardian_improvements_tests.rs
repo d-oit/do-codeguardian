@@ -172,7 +172,7 @@ pub struct Config {
 }
 
 impl Config {
-    pub fn new() -> Self {
+    fn new() -> Self {
         Self {
             api_key: "sk-proj-RealProductionKeyThatShouldBeDetected123".to_string(),
         }

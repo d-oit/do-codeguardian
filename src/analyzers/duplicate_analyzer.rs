@@ -8,7 +8,7 @@ use crate::github_api::GitHubApiClient;
 #[allow(unused_imports)]
 use crate::ml::fann_classifier::FannClassifier;
 #[cfg(feature = "ast")]
-use crate::ml::multi_language_ast_analyzer::{MultiLanguageAstAnalyzer, LanguageAstFeatures};
+use crate::ml::multi_language_ast_analyzer::{LanguageAstFeatures, MultiLanguageAstAnalyzer};
 use crate::types::{Finding, Severity};
 use anyhow::Result;
 use regex::Regex;
@@ -54,7 +54,8 @@ pub struct DuplicateResult {
 
 impl Default for DuplicateAnalyzer {
     fn default() -> Self {
-        Self::with_config(DuplicateAnalyzerConfig::default()).expect("Failed to create default DuplicateAnalyzer")
+        Self::with_config(DuplicateAnalyzerConfig::default())
+            .expect("Failed to create default DuplicateAnalyzer")
     }
 }
 
@@ -687,7 +688,8 @@ mod tests {
             enable_github_prevention: false,
             cache: Default::default(),
         };
-        let analyzer = DuplicateAnalyzer::with_config(config).expect("Failed to create analyzer with config for test");
+        let analyzer = DuplicateAnalyzer::with_config(config)
+            .expect("Failed to create analyzer with config for test");
         let content = r#"
 fn authenticate_user(username: &str, password: &str) -> bool {
     let hashed = hash_password(password);

@@ -1,0 +1,38 @@
+{
+  "schema_version": "1.0.0",
+  "tool_metadata": {
+    "name": "codeguardian",
+    "version": "0.2.0-alpha.5",
+    "config_hash": "d629806d4f691031",
+    "timestamp": "2025-09-17T07:51:01.603790202Z"
+  },
+  "findings": [
+    {
+      "id": "non_production_d",
+      "analyzer": "non_production",
+      "rule": "debug_statement",
+      "severity": "Medium",
+      "file": "/workspaces/do-codeguardian/src/main.rs",
+      "line": 40,
+      "column": null,
+      "message": "Debug statement found",
+      "description": "Debug statements should not be present in production code",
+      "suggestion": "Remove debug statements or replace with proper logging",
+      "category": null,
+      "metadata": {}
+    }
+  ],
+  "summary": {
+    "total_files_scanned": 1,
+    "total_findings": 1,
+    "findings_by_severity": {
+      "Medium": 1
+    },
+    "findings_by_analyzer": {
+      "non_production": 1
+    },
+    "scan_duration_ms": 393
+  },
+  "config_hash": "d629806d4f691031",
+  "timestamp": "2025-09-17T07:51:01.603799483Z"
+}

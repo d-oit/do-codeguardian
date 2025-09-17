@@ -621,7 +621,7 @@ do-codeguardian config generate --template security
 
 After configuring CodeGuardian:
 
-- **[Basic Usage Guide](basic-usage.md)** - Learn fundamental commands
+- **[Basic Usage Guide](check.md)** - Learn fundamental commands
 - **[Advanced Features](advanced-features.md)** - Explore ML integration and turbo mode
 - **[CI/CD Integration](ci-cd-integration.md)** - Automate analysis in your pipeline
 
@@ -629,7 +629,7 @@ After configuring CodeGuardian:
 
 <div align="center">
 
-**[⬅️ Back to User Guide](../README.md)** | **[📦 Installation Guide](installation.md)** | **[🔧 Basic Usage Guide](basic-usage.md)**
+**[⬅️ Back to User Guide](../README.md)** | **[📦 Installation Guide](installation.md)** | **[🔧 Basic Usage Guide](check.md)**
 
 </div>
 

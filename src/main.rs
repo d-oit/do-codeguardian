@@ -21,6 +21,7 @@ use do_codeguardian::cli::init;
 #[cfg(feature = "ml")]
 use do_codeguardian::cli::metrics;
 use do_codeguardian::cli::report;
+use do_codeguardian::cli::retention;
 use do_codeguardian::cli::{Cli, Commands};
 use do_codeguardian::commands::git_commit;
 use do_codeguardian::commands::git_commit_push;
@@ -36,9 +37,9 @@ async fn main() -> Result<()> {
 
     // Determine log level based on verbosity
     let log_level = if cli.verbose > 0 {
-        Level::DEBUG
+        tracing::Level::DEBUG
     } else {
-        Level::INFO
+        tracing::Level::INFO
     };
 
     // Initialize logging
@@ -48,10 +49,12 @@ async fn main() -> Result<()> {
 
     info!("CodeGuardian CLI starting");
 
+    // Get project root directory
+    let project_root = std::env::current_dir().map_err(|e| CodeGuardianError::Io(e))?;
+
     // Load configuration
     let config_path = &cli.config;
     let config = Config::from_file(config_path).unwrap_or_else(|e| {
-        eprintln!("DEBUG: Config loading error: {}", e);
         if !cli.quiet {
             tracing::warn!(
                 "Configuration file error at {}: {}. Using defaults",
@@ -64,7 +67,11 @@ async fn main() -> Result<()> {
 
     // Execute command
     match cli.command {
-        Commands::Check(args) => {
+        Commands::Check(mut args) => {
+            // Override AI enhancement from global flag
+            if cli.ai_enhance {
+                args.ai_enhance = true;
+            }
             check::run(args, config).await?;
         }
         Commands::Report(args) => {
@@ -92,7 +99,7 @@ async fn main() -> Result<()> {
             turbo::execute_turbo(args, config).await?;
         }
         Commands::UpdateDocs(args) => {
-            update_docs::execute_update_docs(&config, &args).await?;
+            update_docs::execute_update_docs(&config, &args, &project_root).await?;
             if !cli.quiet {
                 tracing::info!("Documentation update successful");
             }
@@ -117,6 +124,12 @@ async fn main() -> Result<()> {
         }
         Commands::Bulk(args) => {
             do_codeguardian::cli::bulk::run(args, &config).await?;
+        }
+        Commands::Retention(args) => {
+            retention::run_retention(args, &config).await?;
+        }
+        Commands::TuneThresholds(args) => {
+            do_codeguardian::cli::threshold_tuning::execute_threshold_tuning(args, &config).await?;
         }
     }
 

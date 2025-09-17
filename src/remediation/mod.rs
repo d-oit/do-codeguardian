@@ -3,16 +3,16 @@
 //! Implements automated workflows to resolve detected duplicates across
 //! code, issues, documentation, and configurations.
 
-pub mod workflows;
 pub mod actions;
 pub mod approvals;
 pub mod integrations;
+pub mod workflows;
 
 use crate::types::Finding;
 use anyhow::Result;
+use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use chrono::{DateTime, Utc};
 
 /// Remediation configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -263,7 +263,10 @@ impl RemediationService {
 
         let workflow = RemediationWorkflow {
             id: workflow_id.clone(),
-            title: format!("Automated Remediation - {}", Utc::now().format("%Y-%m-%d %H:%M")),
+            title: format!(
+                "Automated Remediation - {}",
+                Utc::now().format("%Y-%m-%d %H:%M")
+            ),
             description: format!("Automated remediation for {} findings", findings.len()),
             status: WorkflowStatus::Pending,
             risk_level: risk_level.clone(),
@@ -291,7 +294,10 @@ impl RemediationService {
     }
 
     /// Generate remediation actions from findings
-    async fn generate_remediation_actions(&self, findings: &[Finding]) -> Result<Vec<RemediationAction>> {
+    async fn generate_remediation_actions(
+        &self,
+        findings: &[Finding],
+    ) -> Result<Vec<RemediationAction>> {
         let mut actions = Vec::new();
 
         // Group findings by type and generate appropriate actions
@@ -302,40 +308,54 @@ impl RemediationService {
         for finding in findings {
             if let Some(category) = &finding.category {
                 match category.as_str() {
-                "duplicate_code" => duplicate_code_findings.push(finding),
-                "duplicate_issue" => duplicate_issue_findings.push(finding),
-                "duplicate_documentation" => duplicate_doc_findings.push(finding),
-                _ => continue,
+                    "duplicate_code" => duplicate_code_findings.push(finding),
+                    "duplicate_issue" => duplicate_issue_findings.push(finding),
+                    "duplicate_documentation" => duplicate_doc_findings.push(finding),
+                    _ => continue,
                 }
             }
         }
 
         // Generate code remediation actions
         if !duplicate_code_findings.is_empty() {
-            actions.extend(self.generate_code_remediation_actions(&duplicate_code_findings).await?);
+            actions.extend(
+                self.generate_code_remediation_actions(&duplicate_code_findings)
+                    .await?,
+            );
         }
 
         // Generate issue remediation actions
         if !duplicate_issue_findings.is_empty() {
-            actions.extend(self.generate_issue_remediation_actions(&duplicate_issue_findings).await?);
+            actions.extend(
+                self.generate_issue_remediation_actions(&duplicate_issue_findings)
+                    .await?,
+            );
         }
 
         // Generate documentation remediation actions
         if !duplicate_doc_findings.is_empty() {
-            actions.extend(self.generate_doc_remediation_actions(&duplicate_doc_findings).await?);
+            actions.extend(
+                self.generate_doc_remediation_actions(&duplicate_doc_findings)
+                    .await?,
+            );
         }
 
         Ok(actions)
     }
 
     /// Generate code remediation actions
-    async fn generate_code_remediation_actions(&self, findings: &[&Finding]) -> Result<Vec<RemediationAction>> {
+    async fn generate_code_remediation_actions(
+        &self,
+        findings: &[&Finding],
+    ) -> Result<Vec<RemediationAction>> {
         let mut actions = Vec::new();
 
         // Group findings by similarity and generate merge/refactor actions
         for finding in findings {
             if let Some(details) = finding.metadata.get("details") {
-                if let Ok(duplicate_info) = serde_json::from_value::<DuplicateCodeInfo>(details.clone()) {
+                if let Ok(duplicate_info) =
+                    serde_json::from_value::<DuplicateCodeInfo>(details.clone())
+                {
                     if duplicate_info.similarity_score > 0.9 {
                         // High similarity - suggest merge
                         actions.push(RemediationAction::MergeDuplicateCode {
@@ -364,16 +384,24 @@ impl RemediationService {
     }
 
     /// Generate issue remediation actions
-    async fn generate_issue_remediation_actions(&self, findings: &[&Finding]) -> Result<Vec<RemediationAction>> {
+    async fn generate_issue_remediation_actions(
+        &self,
+        findings: &[&Finding],
+    ) -> Result<Vec<RemediationAction>> {
         let mut actions = Vec::new();
 
         for finding in findings {
             if let Some(details) = finding.metadata.get("details") {
-                if let Ok(issue_info) = serde_json::from_value::<DuplicateIssueInfo>(details.clone()) {
+                if let Ok(issue_info) =
+                    serde_json::from_value::<DuplicateIssueInfo>(details.clone())
+                {
                     actions.push(RemediationAction::CloseDuplicateIssue {
                         issue_id: issue_info.issue_id,
                         duplicate_of: issue_info.duplicate_of,
-                        comment: format!("Automatically closed as duplicate. Similarity score: {:.2}", issue_info.similarity_score),
+                        comment: format!(
+                            "Automatically closed as duplicate. Similarity score: {:.2}",
+                            issue_info.similarity_score
+                        ),
                     });
                 }
             }
@@ -383,7 +411,10 @@ impl RemediationService {
     }
 
     /// Generate documentation remediation actions
-    async fn generate_doc_remediation_actions(&self, findings: &[&Finding]) -> Result<Vec<RemediationAction>> {
+    async fn generate_doc_remediation_actions(
+        &self,
+        findings: &[&Finding],
+    ) -> Result<Vec<RemediationAction>> {
         let mut actions = Vec::new();
 
         // Group similar documentation and suggest consolidation
@@ -438,30 +469,32 @@ impl RemediationService {
                     files_affected += source_files.len() as u32 + 1;
                     lines_changed += 50; // Estimate
                     estimated_time += 10;
-                },
-                RemediationAction::RefactorDuplicateFunction { source_locations, .. } => {
+                }
+                RemediationAction::RefactorDuplicateFunction {
+                    source_locations, ..
+                } => {
                     files_affected += source_locations.len() as u32;
                     lines_changed += 100; // Estimate
                     breaking_changes = true;
                     estimated_time += 30;
-                },
+                }
                 RemediationAction::CloseDuplicateIssue { .. } => {
                     estimated_time += 2;
-                },
+                }
                 RemediationAction::ConsolidateDocumentation { source_docs, .. } => {
                     files_affected += source_docs.len() as u32 + 1;
                     lines_changed += 20;
                     estimated_time += 15;
-                },
+                }
                 RemediationAction::UpdateConfiguration { .. } => {
                     files_affected += 1;
                     lines_changed += 5;
                     estimated_time += 5;
-                },
+                }
                 RemediationAction::CreatePullRequest { files_changed, .. } => {
                     files_affected += files_changed.len() as u32;
                     estimated_time += 10;
-                },
+                }
             }
         }
 
@@ -490,7 +523,8 @@ impl RemediationService {
                 workflow_id: workflow_id.to_string(),
                 requested_by: workflow.created_by.clone(),
                 requested_at: Utc::now(),
-                justification: format!("Automated remediation requires approval due to {} risk level",
+                justification: format!(
+                    "Automated remediation requires approval due to {} risk level",
                     match workflow.risk_level {
                         RiskLevel::Low => "low",
                         RiskLevel::Medium => "medium",
@@ -513,7 +547,8 @@ impl RemediationService {
                 deadline: Some(Utc::now() + chrono::Duration::hours(24)),
             };
 
-            self.pending_approvals.insert(workflow_id.to_string(), approval_request);
+            self.pending_approvals
+                .insert(workflow_id.to_string(), approval_request);
 
             // Send notifications
             self.send_approval_notifications(workflow_id).await?;
@@ -560,7 +595,7 @@ impl RemediationService {
                         details: None,
                     };
                     log_entries.push(log_entry);
-                },
+                }
                 Err(e) => {
                     let log_entry = ExecutionLogEntry {
                         timestamp: Utc::now(),
@@ -603,24 +638,44 @@ impl RemediationService {
     /// Execute a single remediation action
     async fn execute_action(&self, action: &RemediationAction) -> Result<()> {
         match action {
-            RemediationAction::MergeDuplicateCode { source_files, target_file, merge_strategy } => {
-                actions::merge_duplicate_code(source_files, target_file, merge_strategy).await
-            },
-            RemediationAction::RefactorDuplicateFunction { function_name, source_locations, target_location } => {
-                actions::refactor_duplicate_function(function_name, source_locations, target_location).await
-            },
-            RemediationAction::CloseDuplicateIssue { issue_id, duplicate_of, comment } => {
-                actions::close_duplicate_issue(issue_id, duplicate_of, comment).await
-            },
-            RemediationAction::ConsolidateDocumentation { source_docs, target_doc, merge_sections } => {
-                actions::consolidate_documentation(source_docs, target_doc, merge_sections).await
-            },
-            RemediationAction::UpdateConfiguration { config_file, changes, backup_created } => {
-                actions::update_configuration(config_file, changes, *backup_created).await
-            },
-            RemediationAction::CreatePullRequest { title, description, branch_name, files_changed } => {
-                actions::create_pull_request(title, description, branch_name, files_changed).await
-            },
+            RemediationAction::MergeDuplicateCode {
+                source_files,
+                target_file,
+                merge_strategy,
+            } => actions::merge_duplicate_code(source_files, target_file, merge_strategy).await,
+            RemediationAction::RefactorDuplicateFunction {
+                function_name,
+                source_locations,
+                target_location,
+            } => {
+                actions::refactor_duplicate_function(
+                    function_name,
+                    source_locations,
+                    target_location,
+                )
+                .await
+            }
+            RemediationAction::CloseDuplicateIssue {
+                issue_id,
+                duplicate_of,
+                comment,
+            } => actions::close_duplicate_issue(issue_id, duplicate_of, comment).await,
+            RemediationAction::ConsolidateDocumentation {
+                source_docs,
+                target_doc,
+                merge_sections,
+            } => actions::consolidate_documentation(source_docs, target_doc, merge_sections).await,
+            RemediationAction::UpdateConfiguration {
+                config_file,
+                changes,
+                backup_created,
+            } => actions::update_configuration(config_file, changes, *backup_created).await,
+            RemediationAction::CreatePullRequest {
+                title,
+                description,
+                branch_name,
+                files_changed,
+            } => actions::create_pull_request(title, description, branch_name, files_changed).await,
         }
     }
 
@@ -663,7 +718,12 @@ impl RemediationService {
     }
 
     /// Reject workflow
-    pub async fn reject_workflow(&mut self, workflow_id: &str, rejected_by: String, reason: String) -> Result<()> {
+    pub async fn reject_workflow(
+        &mut self,
+        workflow_id: &str,
+        rejected_by: String,
+        reason: String,
+    ) -> Result<()> {
         if let Some(workflow) = self.active_workflows.get_mut(workflow_id) {
             workflow.status = WorkflowStatus::Rejected;
             workflow.updated_at = Utc::now();

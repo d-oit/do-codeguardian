@@ -1,0 +1,22 @@
+CODEGUARDIAN ANALYSIS REPORT
+============================
+
+Generated: 2025-09-17 06:49:13 UTC
+Tool: codeguardian v0.2.0-alpha.5
+Schema: 1.0.0
+Config Hash: 049e06d8
+
+SUMMARY
+-------
+Files Scanned: 2
+Total Findings: 1
+Scan Duration: 172ms
+
+FINDINGS
+--------
+
+1. [MEDIUM] Potential nested loop detected
+   File: /workspaces/do-codeguardian/uat_test_files/test_duplicate.rs
+   Line: 6
+   Analyzer: performance (nested_loops)
+   ID: performance_nest

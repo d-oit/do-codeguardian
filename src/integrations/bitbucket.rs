@@ -2,12 +2,12 @@
 
 use super::traits::*;
 use super::SystemConfig;
-use async_trait::async_trait;
 use anyhow::Result;
+use async_trait::async_trait;
+use base64::{engine::general_purpose::STANDARD as BASE64, Engine as _};
+use chrono::Utc;
 use reqwest::Client;
 use std::collections::HashMap;
-use chrono::Utc;
-use base64::{Engine as _, engine::general_purpose::STANDARD as BASE64};
 
 /// Bitbucket client implementation
 pub struct BitbucketClient {
@@ -31,13 +31,11 @@ impl BitbucketClient {
 
     fn _get_auth_header(&self) -> Result<String> {
         match &self._config.auth {
-            super::AuthConfig::OAuth { access_token, .. } => {
-                Ok(format!("Bearer {}", access_token))
-            },
+            super::AuthConfig::OAuth { access_token, .. } => Ok(format!("Bearer {}", access_token)),
             super::AuthConfig::BasicAuth { username, token } => {
                 let credentials = BASE64.encode(format!("{}:{}", username, token));
                 Ok(format!("Basic {}", credentials))
-            },
+            }
             _ => Err(anyhow::anyhow!("Unsupported auth type for Bitbucket")),
         }
     }
@@ -55,11 +53,17 @@ impl ExternalSystemClient for BitbucketClient {
             status: HealthStatus::Healthy,
             response_time_ms: Some(50),
             last_error: None,
-            features_available: vec!["issue_tracking".to_string(), "pipeline_triggers".to_string()],
+            features_available: vec![
+                "issue_tracking".to_string(),
+                "pipeline_triggers".to_string(),
+            ],
         })
     }
 
-    async fn search_duplicates(&self, _query: &DuplicateSearchQuery) -> Result<Vec<DuplicateSearchResult>> {
+    async fn search_duplicates(
+        &self,
+        _query: &DuplicateSearchQuery,
+    ) -> Result<Vec<DuplicateSearchResult>> {
         // Simplified implementation
         Ok(vec![])
     }
@@ -76,7 +80,10 @@ impl ExternalSystemClient for BitbucketClient {
         Err(anyhow::anyhow!("Not implemented"))
     }
 
-    async fn trigger_workflow(&self, _request: &WorkflowTriggerRequest) -> Result<TriggeredWorkflow> {
+    async fn trigger_workflow(
+        &self,
+        _request: &WorkflowTriggerRequest,
+    ) -> Result<TriggeredWorkflow> {
         Err(anyhow::anyhow!("Not implemented"))
     }
 

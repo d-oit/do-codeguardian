@@ -5,9 +5,9 @@
 
 use crate::types::Finding;
 use anyhow::Result;
+use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use chrono::{DateTime, Utc};
 
 /// Advanced pattern recognition engine
 pub struct PatternRecognitionEngine {
@@ -54,7 +54,11 @@ pub enum ModelType {
 
 /// Feature extraction trait for different pattern types
 pub trait FeatureExtractor: Send + Sync {
-    fn extract_features(&self, content: &str, metadata: &HashMap<String, String>) -> Result<Vec<f64>>;
+    fn extract_features(
+        &self,
+        content: &str,
+        metadata: &HashMap<String, String>,
+    ) -> Result<Vec<f64>>;
     fn get_feature_names(&self) -> Vec<String>;
     fn get_feature_dimension(&self) -> usize;
 }
@@ -177,20 +181,48 @@ impl PatternRecognitionEngine {
         };
 
         // Initialize default feature extractors
-        engine.register_feature_extractor(PatternType::CodeStructure, Box::new(CodeStructureExtractor::new()));
-        engine.register_feature_extractor(PatternType::DocumentationContent, Box::new(DocumentationExtractor::new()));
-        engine.register_feature_extractor(PatternType::ConfigurationValues, Box::new(ConfigurationExtractor::new()));
-        engine.register_feature_extractor(PatternType::SecurityVulnerabilities, Box::new(SecurityPatternExtractor::new()));
-        engine.register_feature_extractor(PatternType::PerformanceAntiPatterns, Box::new(PerformancePatternExtractor::new()));
-        engine.register_feature_extractor(PatternType::NamingConventions, Box::new(NamingPatternExtractor::new()));
-        engine.register_feature_extractor(PatternType::ApiUsagePatterns, Box::new(ApiUsageExtractor::new()));
-        engine.register_feature_extractor(PatternType::DataFlowPatterns, Box::new(DataFlowExtractor::new()));
+        engine.register_feature_extractor(
+            PatternType::CodeStructure,
+            Box::new(CodeStructureExtractor::new()),
+        );
+        engine.register_feature_extractor(
+            PatternType::DocumentationContent,
+            Box::new(DocumentationExtractor::new()),
+        );
+        engine.register_feature_extractor(
+            PatternType::ConfigurationValues,
+            Box::new(ConfigurationExtractor::new()),
+        );
+        engine.register_feature_extractor(
+            PatternType::SecurityVulnerabilities,
+            Box::new(SecurityPatternExtractor::new()),
+        );
+        engine.register_feature_extractor(
+            PatternType::PerformanceAntiPatterns,
+            Box::new(PerformancePatternExtractor::new()),
+        );
+        engine.register_feature_extractor(
+            PatternType::NamingConventions,
+            Box::new(NamingPatternExtractor::new()),
+        );
+        engine.register_feature_extractor(
+            PatternType::ApiUsagePatterns,
+            Box::new(ApiUsageExtractor::new()),
+        );
+        engine.register_feature_extractor(
+            PatternType::DataFlowPatterns,
+            Box::new(DataFlowExtractor::new()),
+        );
 
         engine
     }
 
     /// Register a feature extractor for a specific pattern type
-    pub fn register_feature_extractor(&mut self, pattern_type: PatternType, extractor: Box<dyn FeatureExtractor>) {
+    pub fn register_feature_extractor(
+        &mut self,
+        pattern_type: PatternType,
+        extractor: Box<dyn FeatureExtractor>,
+    ) {
         self.feature_extractors.insert(pattern_type, extractor);
     }
 
@@ -230,14 +262,20 @@ impl PatternRecognitionEngine {
         let metadata = self.extract_metadata(file_path);
 
         for pattern_type in pattern_types {
-            if let Some(result) = self.recognize_single_pattern(content, file_path, pattern_type, &metadata).await? {
+            if let Some(result) = self
+                .recognize_single_pattern(content, file_path, pattern_type, &metadata)
+                .await?
+            {
                 results.push(result);
             }
         }
 
         // Cache results if significant
         if !results.is_empty() {
-            let best_result = results.iter().max_by(|a, b| a.confidence.partial_cmp(&b.confidence).unwrap()).unwrap();
+            let best_result = results
+                .iter()
+                .max_by(|a, b| a.confidence.partial_cmp(&b.confidence).unwrap())
+                .unwrap();
             self.pattern_cache.insert(cache_key, best_result.clone());
         }
 
@@ -273,10 +311,13 @@ impl PatternRecognitionEngine {
         }
 
         // Find similar instances
-        let similar_instances = self.find_similar_instances(content, file_path, pattern_type, &features).await?;
+        let similar_instances = self
+            .find_similar_instances(content, file_path, pattern_type, &features)
+            .await?;
 
         // Generate recommendations
-        let recommendations = self.generate_recommendations(pattern_type, &prediction, &similar_instances);
+        let recommendations =
+            self.generate_recommendations(pattern_type, &prediction, &similar_instances);
 
         Ok(Some(PatternRecognitionResult {
             pattern_type: pattern_type.clone(),
@@ -289,7 +330,11 @@ impl PatternRecognitionEngine {
     }
 
     /// Predict using a trained model
-    async fn predict_with_model(&self, model: &PatternModel, features: &[f64]) -> Result<ModelPrediction> {
+    async fn predict_with_model(
+        &self,
+        model: &PatternModel,
+        features: &[f64],
+    ) -> Result<ModelPrediction> {
         match model.model_type {
             ModelType::NeuralNetwork => self.predict_neural_network(model, features).await,
             ModelType::RandomForest => self.predict_random_forest(model, features).await,
@@ -300,7 +345,11 @@ impl PatternRecognitionEngine {
     }
 
     /// Neural network prediction
-    async fn predict_neural_network(&self, model: &PatternModel, features: &[f64]) -> Result<ModelPrediction> {
+    async fn predict_neural_network(
+        &self,
+        model: &PatternModel,
+        features: &[f64],
+    ) -> Result<ModelPrediction> {
         // Use existing FANN integration
         #[cfg(feature = "ml")]
         {
@@ -324,7 +373,11 @@ impl PatternRecognitionEngine {
     }
 
     /// Random forest prediction
-    async fn predict_random_forest(&self, _model: &PatternModel, _features: &[f64]) -> Result<ModelPrediction> {
+    async fn predict_random_forest(
+        &self,
+        _model: &PatternModel,
+        _features: &[f64],
+    ) -> Result<ModelPrediction> {
         // Placeholder implementation
         Ok(ModelPrediction {
             confidence: 0.8,
@@ -335,7 +388,11 @@ impl PatternRecognitionEngine {
     }
 
     /// SVM prediction
-    async fn predict_svm(&self, _model: &PatternModel, _features: &[f64]) -> Result<ModelPrediction> {
+    async fn predict_svm(
+        &self,
+        _model: &PatternModel,
+        _features: &[f64],
+    ) -> Result<ModelPrediction> {
         // Placeholder implementation
         Ok(ModelPrediction {
             confidence: 0.75,
@@ -346,7 +403,11 @@ impl PatternRecognitionEngine {
     }
 
     /// Transformer-based prediction
-    async fn predict_transformer(&self, _model: &PatternModel, _features: &[f64]) -> Result<ModelPrediction> {
+    async fn predict_transformer(
+        &self,
+        _model: &PatternModel,
+        _features: &[f64],
+    ) -> Result<ModelPrediction> {
         // Placeholder for transformer models
         Ok(ModelPrediction {
             confidence: 0.9,
@@ -357,7 +418,11 @@ impl PatternRecognitionEngine {
     }
 
     /// Ensemble model prediction
-    async fn predict_ensemble(&self, _model: &PatternModel, _features: &[f64]) -> Result<ModelPrediction> {
+    async fn predict_ensemble(
+        &self,
+        _model: &PatternModel,
+        _features: &[f64],
+    ) -> Result<ModelPrediction> {
         // Placeholder for ensemble methods
         Ok(ModelPrediction {
             confidence: 0.85,
@@ -390,39 +455,52 @@ impl PatternRecognitionEngine {
 
         match pattern_type {
             PatternType::CodeStructure => {
-                recommendations.push("Consider refactoring duplicate code blocks into reusable functions".to_string());
+                recommendations.push(
+                    "Consider refactoring duplicate code blocks into reusable functions"
+                        .to_string(),
+                );
                 if similar_instances.len() > 2 {
                     recommendations.push("Multiple similar code patterns detected - consider creating a common utility module".to_string());
                 }
-            },
+            }
             PatternType::DocumentationContent => {
                 recommendations.push("Consolidate duplicate documentation sections".to_string());
-                recommendations.push("Create cross-references between related documentation".to_string());
-            },
+                recommendations
+                    .push("Create cross-references between related documentation".to_string());
+            }
             PatternType::ConfigurationValues => {
-                recommendations.push("Extract common configuration values to shared config files".to_string());
-                recommendations.push("Use environment-specific configuration inheritance".to_string());
-            },
+                recommendations
+                    .push("Extract common configuration values to shared config files".to_string());
+                recommendations
+                    .push("Use environment-specific configuration inheritance".to_string());
+            }
             PatternType::SecurityVulnerabilities => {
-                recommendations.push("Review and remediate identified security patterns".to_string());
-                recommendations.push("Implement security best practices to prevent similar issues".to_string());
-            },
+                recommendations
+                    .push("Review and remediate identified security patterns".to_string());
+                recommendations.push(
+                    "Implement security best practices to prevent similar issues".to_string(),
+                );
+            }
             PatternType::PerformanceAntiPatterns => {
                 recommendations.push("Optimize identified performance bottlenecks".to_string());
                 recommendations.push("Consider caching or algorithmic improvements".to_string());
-            },
+            }
             PatternType::NamingConventions => {
-                recommendations.push("Standardize naming conventions across the codebase".to_string());
-                recommendations.push("Use consistent naming patterns for similar entities".to_string());
-            },
+                recommendations
+                    .push("Standardize naming conventions across the codebase".to_string());
+                recommendations
+                    .push("Use consistent naming patterns for similar entities".to_string());
+            }
             PatternType::ApiUsagePatterns => {
                 recommendations.push("Standardize API usage patterns".to_string());
-                recommendations.push("Create wrapper functions for common API operations".to_string());
-            },
+                recommendations
+                    .push("Create wrapper functions for common API operations".to_string());
+            }
             PatternType::DataFlowPatterns => {
-                recommendations.push("Optimize data flow patterns for better performance".to_string());
+                recommendations
+                    .push("Optimize data flow patterns for better performance".to_string());
                 recommendations.push("Consider data transformation pipelines".to_string());
-            },
+            }
         }
 
         recommendations
@@ -464,7 +542,10 @@ impl PatternRecognitionEngine {
         let mut metadata = HashMap::new();
 
         if let Some(extension) = std::path::Path::new(file_path).extension() {
-            metadata.insert("file_extension".to_string(), extension.to_string_lossy().to_string());
+            metadata.insert(
+                "file_extension".to_string(),
+                extension.to_string_lossy().to_string(),
+            );
         }
 
         metadata.insert("file_path".to_string(), file_path.to_string());
@@ -482,7 +563,12 @@ impl PatternRecognitionEngine {
     }
 
     /// Generate cache key for pattern recognition
-    fn generate_cache_key(&self, content: &str, file_path: &str, pattern_types: &[PatternType]) -> String {
+    fn generate_cache_key(
+        &self,
+        content: &str,
+        file_path: &str,
+        pattern_types: &[PatternType],
+    ) -> String {
         use std::collections::hash_map::DefaultHasher;
         use std::hash::{Hash, Hasher};
 
@@ -539,8 +625,8 @@ impl ContinuousLearningSystem {
     }
 
     fn should_retrain(&self) -> bool {
-        self.feedback_buffer.len() >= self.retraining_threshold ||
-        (Utc::now() - self.last_retrain).num_days() > 7
+        self.feedback_buffer.len() >= self.retraining_threshold
+            || (Utc::now() - self.last_retrain).num_days() > 7
     }
 
     fn mark_retrained(&mut self) {
@@ -555,15 +641,32 @@ impl ContinuousLearningSystem {
             return Ok(());
         }
 
-        let true_positives = self.feedback_buffer.iter()
-            .filter(|f| f.is_true_positive && matches!(f.user_rating, FeedbackRating::Good | FeedbackRating::Excellent))
+        let true_positives = self
+            .feedback_buffer
+            .iter()
+            .filter(|f| {
+                f.is_true_positive
+                    && matches!(
+                        f.user_rating,
+                        FeedbackRating::Good | FeedbackRating::Excellent
+                    )
+            })
             .count() as f64;
 
-        let false_positives = self.feedback_buffer.iter()
-            .filter(|f| !f.is_true_positive && matches!(f.user_rating, FeedbackRating::Poor | FeedbackRating::Incorrect))
+        let false_positives = self
+            .feedback_buffer
+            .iter()
+            .filter(|f| {
+                !f.is_true_positive
+                    && matches!(
+                        f.user_rating,
+                        FeedbackRating::Poor | FeedbackRating::Incorrect
+                    )
+            })
             .count() as f64;
 
-        self.performance_metrics.precision = true_positives / (true_positives + false_positives).max(1.0);
+        self.performance_metrics.precision =
+            true_positives / (true_positives + false_positives).max(1.0);
         self.performance_metrics.accuracy = true_positives / total_feedback;
 
         Ok(())
@@ -597,17 +700,23 @@ impl PatternCache {
             self.evict_oldest();
         }
 
-        self.cache.insert(key, CachedPattern {
-            result,
-            timestamp: Utc::now(),
-            access_count: 1,
-        });
+        self.cache.insert(
+            key,
+            CachedPattern {
+                result,
+                timestamp: Utc::now(),
+                access_count: 1,
+            },
+        );
     }
 
     fn evict_oldest(&mut self) {
-        if let Some(oldest_key) = self.cache.iter()
+        if let Some(oldest_key) = self
+            .cache
+            .iter()
             .min_by_key(|(_, cached)| cached.timestamp)
-            .map(|(key, _)| key.clone()) {
+            .map(|(key, _)| key.clone())
+        {
             self.cache.remove(&oldest_key);
         }
     }

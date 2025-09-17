@@ -28,8 +28,12 @@ pub struct Config {
     pub integrations: IntegrationConfig,
     /// General analysis settings
     pub analysis: AnalysisConfig,
+    /// AI enhancement configuration
+    pub ai: AIConfig,
     /// Optimization settings
     pub optimization: OptimizationConfig,
+    /// Retention policy configuration
+    pub retention: super::retention::RetentionConfig,
 }
 
 impl Config {
@@ -403,6 +407,8 @@ pub struct AnalysisConfig {
     pub baseline_file: Option<PathBuf>,
     /// ML threshold for anomaly detection (0.0-1.0)
     pub ml_threshold: Option<f64>,
+    /// Enable AI enhancement
+    pub enable_ai_enhancement: bool,
 }
 
 impl Default for AnalysisConfig {
@@ -418,6 +424,46 @@ impl Default for AnalysisConfig {
             cache_expiration_days: 7,
             baseline_file: None,
             ml_threshold: None,
+            enable_ai_enhancement: false,
+        }
+    }
+}
+
+/// AI enhancement configuration
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AIConfig {
+    /// Enable AI enhancement
+    pub enabled: bool,
+    /// Enable semantic enrichment
+    pub enable_semantic_enrichment: bool,
+    /// Enable relationship detection
+    pub enable_relationship_detection: bool,
+    /// Enable insight generation
+    pub enable_insight_generation: bool,
+    /// Enable context analysis
+    pub enable_context_analysis: bool,
+    /// Minimum confidence threshold for insights
+    pub min_confidence_threshold: f64,
+    /// Maximum processing time in seconds
+    pub max_processing_time: u32,
+    /// Enable historical analysis
+    pub enable_historical_analysis: bool,
+    /// Model cache directory
+    pub model_cache_directory: Option<String>,
+}
+
+impl Default for AIConfig {
+    fn default() -> Self {
+        Self {
+            enabled: false,
+            enable_semantic_enrichment: true,
+            enable_relationship_detection: true,
+            enable_insight_generation: true,
+            enable_context_analysis: false,
+            min_confidence_threshold: 0.7,
+            max_processing_time: 300,
+            enable_historical_analysis: false,
+            model_cache_directory: Some(".codeguardian/models".to_string()),
         }
     }
 }

@@ -83,12 +83,12 @@ pub struct ReviewStatistics {
 }
 
 #[derive(Debug, Clone)]
- pub struct ManualReviewWorkflow {
+pub struct ManualReviewWorkflow {
     config: ReviewConfig,
     pending_reviews: HashMap<String, ReviewItem>, // review_id -> item
     completed_reviews: HashMap<String, ReviewItem>, // review_id -> item
     _reviewers: Vec<String>,
- }
+}
 
 impl ManualReviewWorkflow {
     pub fn new(config: ReviewConfig) -> Self {

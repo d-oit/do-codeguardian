@@ -1,6 +1,6 @@
 //! Metadata storage for artifacts and relationships
 
-use super::{Artifact, Relationship, ArtifactType};
+use super::{Artifact, ArtifactType, Relationship};
 use anyhow::Result;
 use std::collections::HashMap;
 
@@ -44,7 +44,8 @@ impl MetadataStore {
 
     /// Store a relationship
     pub async fn store_relationship(&mut self, relationship: &Relationship) -> Result<()> {
-        self.relationships.insert(relationship.id.clone(), relationship.clone());
+        self.relationships
+            .insert(relationship.id.clone(), relationship.clone());
         Ok(())
     }
 
@@ -70,7 +71,10 @@ impl MetadataStore {
     }
 
     /// Search artifacts by criteria
-    pub async fn search_artifacts(&self, criteria: &ArtifactSearchCriteria) -> Result<Vec<Artifact>> {
+    pub async fn search_artifacts(
+        &self,
+        criteria: &ArtifactSearchCriteria,
+    ) -> Result<Vec<Artifact>> {
         let mut results = Vec::new();
 
         for artifact in self.artifacts.values() {
