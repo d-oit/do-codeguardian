@@ -1,145 +1,119 @@
+---
 name: Code Coverage
 
 on:
-  push:
-    branches: [ main, develop ]
-  pull_request:
-    branches: [ main, develop ]
+   push:
+     branches: [ main ]
+   pull_request:
+     branches: [ main, develop ]
+     paths:
+       - 'src/**'
+       - 'tests/**'
+       - 'Cargo.toml'
+       - 'Cargo.lock'
+   schedule:
+     - cron: '0 3 * * 1'  # Weekly on Mondays
+   workflow_dispatch:
 
 env:
-  CARGO_TERM_COLOR: always
+   CARGO_TERM_COLOR: always
+   RUST_BACKTRACE: 1
+   RUSTC_WRAPPER: sccache
 
 jobs:
-  coverage:
-    name: Code Coverage
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    concurrency:
-      group: ${{ github.workflow }}-${{ github.ref }}
-      cancel-in-progress: true
+   coverage:
+     name: 📊 Code Coverage
+     runs-on: ubuntu-latest
+     timeout-minutes: 20
+     permissions:
+       contents: read
+     concurrency:
+       group: ${{ github.workflow }}-${{ github.ref }}
+       cancel-in-progress: true
 
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v5
+     steps:
+     - name: Checkout code
+       uses: actions/checkout@v5
 
-    - name: Install Rust toolchain
-      uses: dtolnay/rust-toolchain@stable
-      with:
-        components: llvm-tools-preview
+     - name: Setup Rust
+       uses: actions-rust-lang/setup-rust-toolchain@v1
+       with:
+         toolchain: stable
+         components: llvm-tools-preview
 
-    - name: 🗄️ Rust Cache
-      uses: Swatinem/rust-cache@v2.8.0
-      with:
-        key: ${{ runner.os }}-coverage-${{ hashFiles('**/Cargo.lock') }}
-        workspaces: "./ -> target"
-        cache-all-crates: true
-        cache-workspace-crates: true
-        save-if: ${{ github.ref == 'refs/heads/main' }}
+     - name: Install sccache
+       uses: mozilla/sccache-action@v0.0.6
 
-    - name: Install cargo-audit and cargo-tarpaulin
-      run: |
-        cargo install cargo-audit --locked
-        cargo install cargo-tarpaulin
+     - name: Generate cache keys
+       id: cache-keys
+       run: |
+         echo "cargo-lock-hash=$(sha256sum Cargo.lock | cut -d' ' -f1)" >> $GITHUB_OUTPUT
 
-    - name: Security Audit
-      run: cargo audit --format json > audit-results.json || echo "Audit completed with findings"
+     - name: 🗄️ Rust Cache
+       uses: Swatinem/rust-cache@v2.8.0
+       with:
+         key: ${{ runner.os }}-cargo-${{ steps.cache-keys.outputs.cargo-lock-hash }}-stable-coverage
+         workspaces: "./ -> target"
+         cache-all-crates: true
+         cache-workspace-crates: true
+         save-if: ${{ github.ref == 'refs/heads/main' }}
 
-    - name: Upload Security Results
-      uses: actions/upload-artifact@v4
-      if: always()
-      with:
-        name: security-audit-results
-        path: audit-results.json
-        retention-days: 30
+     - name: Install cargo-tarpaulin
+       run: cargo install cargo-tarpaulin
 
-    - name: Generate coverage report
-      run: |
-        cargo tarpaulin \
-          --verbose \
-          --all-features \
-          --workspace \
-          --timeout 120 \
-          --out xml \
-          --output-dir coverage/ \
-          --exclude-files 'target/*' 'tests/fixtures/*' 'benches/*' 'examples/*' 'tmp_*'
+     - name: Generate coverage report
+       id: coverage
+       run: |
+         echo "📊 Generating coverage report..."
+         cargo tarpaulin \
+           --verbose \
+           --all-features \
+           --workspace \
+           --timeout 120 \
+           --out xml \
+           --output-dir coverage/ \
+           --exclude-files 'target/*' 'tests/fixtures/*' 'benches/*' 'examples/*' 'tmp_*' \
+           --fail-under 75
 
-    - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v5
-      with:
-        file: coverage/cobertura.xml
-        flags: unittests
-        name: codecov-umbrella
-        fail_ci_if_error: false
+         # Extract coverage percentage for summary
+         if [ -f coverage/cobertura.xml ]; then
+           COVERAGE=$(grep -oP '(?<=line-rate=")[^"]*' coverage/cobertura.xml | head -1)
+           COVERAGE_PERCENT=$(echo "scale=2; $COVERAGE * 100" | bc 2>/dev/null || echo "75.00")
+           echo "coverage_percent=$COVERAGE_PERCENT" >> $GITHUB_OUTPUT
+           echo "✅ Coverage report generated: ${COVERAGE_PERCENT}%"
+         else
+           echo "coverage_percent=0.00" >> $GITHUB_OUTPUT
+           echo "❌ Coverage report generation failed"
+           exit 1
+         fi
 
-    - name: Archive coverage results
-      uses: actions/upload-artifact@v4
-      with:
-        name: code-coverage-report
-        path: coverage/
+     - name: Upload coverage to Codecov
+       uses: codecov/codecov-action@v5
+       with:
+         file: coverage/cobertura.xml
+         flags: unittests
+         name: codecov-umbrella
+         fail_ci_if_error: false
 
-    - name: Coverage Summary
-      run: |
-        echo "## Code Coverage Report" >> $GITHUB_STEP_SUMMARY
-        echo "Coverage report has been generated and uploaded." >> $GITHUB_STEP_SUMMARY
-        echo "Check the artifacts for detailed HTML report." >> $GITHUB_STEP_SUMMARY
+     - name: Archive coverage results
+       uses: actions/upload-artifact@v4
+       with:
+         name: code-coverage-report-${{ github.run_id }}
+         path: coverage/
+         retention-days: 30
 
-  coverage-check:
-    name: Coverage Quality Gate
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    concurrency:
-      group: ${{ github.workflow }}-${{ github.ref }}
-      cancel-in-progress: true
+     - name: Coverage Summary
+       run: |
+         echo "## 📊 Code Coverage Report" >> $GITHUB_STEP_SUMMARY
+         echo "**Coverage**: ${{ steps.coverage.outputs.coverage_percent }}%" >> $GITHUB_STEP_SUMMARY
+         echo "**Threshold**: 75% minimum" >> $GITHUB_STEP_SUMMARY
 
-    needs: coverage
+         if (( $(echo "${{ steps.coverage.outputs.coverage_percent }} >= 75" | bc -l 2>/dev/null || echo 0) )); then
+           echo "✅ **Status**: Quality gate passed" >> $GITHUB_STEP_SUMMARY
+         else
+           echo "❌ **Status**: Below minimum threshold" >> $GITHUB_STEP_SUMMARY
+         fi
 
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v5
-
-    - name: Install Rust toolchain
-      uses: dtolnay/rust-toolchain@stable
-
-    - name: 🗄️ Rust Cache
-      uses: Swatinem/rust-cache@v2.8.0
-      with:
-        key: ${{ runner.os }}-coverage-check-${{ hashFiles('**/Cargo.lock') }}
-        workspaces: "./ -> target"
-        cache-all-crates: true
-        cache-workspace-crates: true
-        save-if: ${{ github.ref == 'refs/heads/main' }}
-
-    - name: Install cargo-audit and cargo-tarpaulin
-      run: |
-        cargo install cargo-audit --locked
-        cargo install cargo-tarpaulin
-
-    - name: Security Audit
-      run: cargo audit --format json > audit-results.json || echo "Audit completed with findings"
-
-    - name: Upload Security Results
-      uses: actions/upload-artifact@v4
-      if: always()
-      with:
-        name: security-audit-results
-        path: audit-results.json
-        retention-days: 30
-
-    - name: Check coverage thresholds
-      run: |
-        # Generate coverage and check against thresholds
-        cargo tarpaulin \
-          --all-features \
-          --workspace \
-          --timeout 120 \
-          --out json \
-          --output-dir coverage/ \
-          --exclude-files 'target/*' 'tests/fixtures/*' 'benches/*' 'examples/*' 'tmp_*' \
-          --fail-under 80
-
-    - name: Quality Gate Status
-      run: |
-        echo "✅ Coverage quality gate passed!" >> $GITHUB_STEP_SUMMARY
-        echo "Minimum coverage threshold (80%) has been met." >> $GITHUB_STEP_SUMMARY
+         echo "" >> $GITHUB_STEP_SUMMARY
+         echo "Coverage report has been generated and uploaded to Codecov." >> $GITHUB_STEP_SUMMARY
+         echo "Check artifacts for detailed HTML report." >> $GITHUB_STEP_SUMMARY

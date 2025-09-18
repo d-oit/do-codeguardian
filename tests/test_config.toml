@@ -2,51 +2,42 @@
 # This ensures consistent behavior across test runs
 
 [analysis]
-enabled_analyzers = ["security", "performance", "non_production", "git_conflict", "ai_content"]
-severity_levels = ["critical", "high", "medium", "low", "info"]
-max_file_size_mb = 10
+enabled = true
+max_file_size_bytes = 10485760  # 10MB
 timeout_seconds = 30
 
 [analyzers.security]
 enabled = true
-patterns = ["sql_injection", "xss", "path_traversal", "secrets", "command_injection"]
+check_sql_injection = true
+check_xss = true
+check_command_injection = true
+check_hardcoded_secrets = true
 
 [analyzers.performance]
 enabled = true
 check_nested_loops = true
-check_large_functions = true
-max_function_lines = 100
+max_function_length = 100
 
 [analyzers.non_production]
 enabled = true
-check_debug_statements = true
-check_todo_comments = false # Don't flag all TODOs, let AI analyzer handle context
-patterns = ["println!", "eprintln!", "dbg!", "print!"]
+exclude_test_files = false  # Allow test files for testing
+patterns = [
+    { pattern = "println!", description = "Debug print statements", severity = "low" },
+    { pattern = "eprintln!", description = "Debug error print statements", severity = "low" },
+    { pattern = "dbg!", description = "Debug macro", severity = "low" },
+]
 
-[analyzers.git_conflict]
+[analyzers.broken_files]
 enabled = true
-fail_on_conflicts = false # Don't fail tests on conflicts in test content
-check_malformed = true
-
-[analyzers.ai_content]
-enabled = true
-check_incomplete_implementations = true
-check_placeholders = true
-ignore_documentation = true # Our improvement: ignore doc comments
-ignore_test_code = true # Our improvement: ignore test modules
+detect_merge_conflicts = true
+fail_on_conflicts = false  # Don't fail tests on conflicts in test content
 
 [output]
 format = "json"
-include_suggestions = true
-include_metadata = true
+generate_summary = true
 
 [integrations.github]
-enabled = false # Disable for tests to avoid token requirements
+enabled = false  # Disable for tests to avoid token requirements
 
-[cache]
-enabled = false # Disable cache for consistent test results
-
-[reporting]
-include_summary = true
-group_by_severity = true
-show_progress = false # Don't show progress bars in tests
+[analysis]
+enable_caching = false  # Disable cache for consistent test results

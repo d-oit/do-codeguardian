@@ -12,6 +12,7 @@ use std::path::Path;
 /// Context analyzer for enriching findings with environmental data
 pub struct ContextAnalyzer {
     /// Project-level context cache
+    #[allow(dead_code)]
     project_cache: Option<ProjectContext>,
 }
 
@@ -32,6 +33,7 @@ impl Default for ContextAnalyzer {
 
 impl ContextAnalyzer {
     /// Analyze context for analysis results
+    #[allow(dead_code)]
     fn analyze_context(&mut self, results: &AnalysisResults) -> Result<ContextData> {
         Ok(ContextData {
             project_context: self.analyze_project_context(results)?,

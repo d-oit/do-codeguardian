@@ -12,7 +12,7 @@
 
 use crate::config::Config;
 use crate::error::Result;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use tracing::{debug, info, warn};
 
 /// Execute the update-docs command
@@ -95,7 +95,7 @@ pub async fn execute_update_docs(
 }
 
 /// Update API documentation files
-async fn update_api_docs(_config: &Config, project_root: &PathBuf) -> Result<()> {
+async fn update_api_docs(_config: &Config, project_root: &Path) -> Result<()> {
     let api_docs_path = project_root.join("docs/api");
 
     if !api_docs_path.exists() {
@@ -135,7 +135,7 @@ When adding new API functionality, please update this documentation accordingly.
 }
 
 /// Update user guide documentation
-async fn update_user_guide(_config: &Config, project_root: &PathBuf) -> Result<()> {
+async fn update_user_guide(_config: &Config, project_root: &Path) -> Result<()> {
     let user_guide_path = project_root.join("docs/user-guide");
 
     if !user_guide_path.exists() {
@@ -833,7 +833,7 @@ codeguardian update-docs --config
 }
 
 /// Update configuration documentation
-async fn update_config_docs(_config: &Config, project_root: &PathBuf) -> Result<()> {
+async fn update_config_docs(_config: &Config, project_root: &Path) -> Result<()> {
     let config_docs_path = project_root.join("docs/config");
 
     if !config_docs_path.exists() {
@@ -918,7 +918,7 @@ async fn validate_docs_structure(_config: &Config, project_root: &PathBuf) -> Re
 }
 
 /// Validate markdown files for basic syntax
-fn validate_markdown_files(project_root: &PathBuf) -> Result<()> {
+fn validate_markdown_files(project_root: &Path) -> Result<()> {
     use std::fs;
 
     let docs_dir = project_root.join("docs");

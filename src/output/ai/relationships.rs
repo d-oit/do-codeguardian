@@ -49,6 +49,12 @@ pub struct AmplificationRule;
 /// Rule for detecting similar pattern relationships
 pub struct SimilarPatternRule;
 
+impl Default for RelationshipDetector {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl RelationshipDetector {
     /// Create a new relationship detector with default rules
     pub fn new() -> Self {
@@ -412,16 +418,16 @@ impl RelationshipRule for VulnerabilityChainRule {
         }
 
         // Both are security findings with high severity
-        if self.is_security_finding(finding_a) && self.is_security_finding(finding_b) {
-            if matches!(finding_a.severity, Severity::Critical | Severity::High)
-                && matches!(finding_b.severity, Severity::Critical | Severity::High)
-            {
-                // Same component makes it more likely to be a chain
-                if finding_a.file == finding_b.file {
-                    return Some(0.7);
-                } else {
-                    return Some(0.5);
-                }
+        if self.is_security_finding(finding_a)
+            && self.is_security_finding(finding_b)
+            && matches!(finding_a.severity, Severity::Critical | Severity::High)
+            && matches!(finding_b.severity, Severity::Critical | Severity::High)
+        {
+            // Same component makes it more likely to be a chain
+            if finding_a.file == finding_b.file {
+                return Some(0.7);
+            } else {
+                return Some(0.5);
             }
         }
 

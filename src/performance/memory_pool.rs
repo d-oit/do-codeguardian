@@ -315,7 +315,9 @@ impl GlobalMemoryPools {
     /// Get a formatted string using the pool
     pub fn format_string(&self, args: std::fmt::Arguments<'_>) -> String {
         let mut buffer = self.string_pool.get_buffer();
-        buffer.write_fmt(args).unwrap();
+        buffer
+            .write_fmt(args)
+            .expect("Writing to String buffer should not fail");
         buffer.into_string()
     }
 

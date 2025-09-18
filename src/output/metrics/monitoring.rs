@@ -43,6 +43,12 @@ pub trait MetricSubscriber: Send + Sync + std::fmt::Debug {
     async fn on_anomaly_detected(&self, anomaly: &MetricAnomaly) -> Result<()>;
 }
 
+impl Default for RealTimeMonitor {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl RealTimeMonitor {
     /// Create a new real-time monitor
     pub fn new() -> Self {

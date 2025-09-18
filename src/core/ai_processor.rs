@@ -43,6 +43,11 @@ impl AIProcessor {
         &self,
         results: &AnalysisResults,
     ) -> Result<EnhancedAnalysisResults> {
+        tracing::debug!(
+            "Starting AI processing for {} findings",
+            results.findings.len()
+        );
+
         let ai_config = AIEnhancementConfig {
             enable_semantic_enrichment: self.config.ai.enable_semantic_enrichment,
             enable_relationship_detection: self.config.ai.enable_relationship_detection,
@@ -60,7 +65,24 @@ impl AIProcessor {
             },
         };
 
-        self.engine.enhance_results(results, &ai_config)
+        tracing::debug!(
+            "AI config: semantic={}, relationships={}, insights={}, context={}",
+            ai_config.enable_semantic_enrichment,
+            ai_config.enable_relationship_detection,
+            ai_config.enable_insight_generation,
+            ai_config.enable_context_analysis
+        );
+
+        let enhanced = self.engine.enhance_results(results, &ai_config)?;
+
+        tracing::debug!(
+            "AI processing complete: {} classifications, {} relationships, {} insights",
+            enhanced.semantic_annotations.classifications.len(),
+            enhanced.relationships.len(),
+            enhanced.insights.len()
+        );
+
+        Ok(enhanced)
     }
 
     /// Process results with custom AI configuration
@@ -88,7 +110,7 @@ mod tests {
 
     fn create_test_results() -> AnalysisResults {
         let mut results = AnalysisResults::new("test".to_string());
-        let finding = Finding::new(
+        let finding1 = Finding::new(
             "test_analyzer",
             "test_rule",
             Severity::High,
@@ -96,7 +118,16 @@ mod tests {
             10,
             "Test security issue".to_string(),
         );
-        results.add_finding(finding);
+        let finding2 = Finding::new(
+            "test_analyzer",
+            "test_rule2",
+            Severity::Medium,
+            PathBuf::from("test.rs"),
+            20,
+            "Another issue".to_string(),
+        );
+        results.add_finding(finding1);
+        results.add_finding(finding2);
         results
     }
 
@@ -125,6 +156,28 @@ mod tests {
         assert!(enhanced.is_ok());
 
         let enhanced_results = enhanced.unwrap();
-        assert_eq!(enhanced_results.base_results.findings.len(), 1);
+        assert_eq!(enhanced_results.base_results.findings.len(), 2);
+
+        // Debug: Print the enhanced results to see what's populated
+        println!(
+            "Classifications: {}",
+            enhanced_results.semantic_annotations.classifications.len()
+        );
+        println!("Relationships: {}", enhanced_results.relationships.len());
+        println!("Insights: {}", enhanced_results.insights.len());
+
+        // Check that enrichment is working
+        assert!(
+            !enhanced_results
+                .semantic_annotations
+                .classifications
+                .is_empty(),
+            "Classifications should not be empty"
+        );
+        // With 2 findings from same analyzer, should have relationships
+        assert!(
+            !enhanced_results.relationships.is_empty(),
+            "Relationships should not be empty for multiple findings"
+        );
     }
 }

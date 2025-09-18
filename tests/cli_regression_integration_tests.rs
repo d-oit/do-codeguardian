@@ -44,6 +44,7 @@ more code
         let incomplete_code = "TODO: implement this function";
         assert!(incomplete_code.contains("TODO"));
     }
+}
 
 fn main() {
     println!("This is a test file");

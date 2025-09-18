@@ -21,6 +21,12 @@ pub struct ContinuousImprovementManager {
     improvement_tracker: ImprovementTracker,
 }
 
+impl Default for ContinuousImprovementManager {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl ContinuousImprovementManager {
     /// Create a new continuous improvement manager
     pub fn new() -> Self {
@@ -123,7 +129,7 @@ impl ContinuousImprovementManager {
         // Apply experimental formatting based on parameters
         if parameters
             .get("enhanced_styling")
-            .map_or(false, |v| v == "true")
+            .is_some_and(|v| v == "true")
         {
             enhanced_content = format!(
                 "<div class=\"codeguardian-enhanced\">{}</div>",
@@ -133,7 +139,7 @@ impl ContinuousImprovementManager {
 
         if parameters
             .get("compact_format")
-            .map_or(false, |v| v == "true")
+            .is_some_and(|v| v == "true")
         {
             enhanced_content = enhanced_content
                 .lines()
@@ -165,6 +171,12 @@ impl ContinuousImprovementManager {
 pub struct ABTestManager {
     active_tests: Arc<RwLock<HashMap<String, ABTest>>>,
     test_results: Arc<RwLock<HashMap<String, Vec<TestResult>>>>,
+}
+
+impl Default for ABTestManager {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl ABTestManager {
@@ -284,6 +296,12 @@ impl ABTestManager {
 pub struct FeedbackCollector {
     automated_feedback: Arc<RwLock<Vec<AutomatedFeedback>>>,
     user_feedback: Arc<RwLock<Vec<UserFeedback>>>,
+}
+
+impl Default for FeedbackCollector {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl FeedbackCollector {
@@ -421,6 +439,12 @@ pub struct OptimizationScheduler {
     last_optimization: Arc<RwLock<Option<DateTime<Utc>>>>,
 }
 
+impl Default for OptimizationScheduler {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl OptimizationScheduler {
     pub fn new() -> Self {
         Self {
@@ -461,6 +485,12 @@ impl OptimizationScheduler {
 #[derive(Debug)]
 pub struct ImprovementTracker {
     improvements: Arc<RwLock<Vec<ImprovementRecord>>>,
+}
+
+impl Default for ImprovementTracker {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl ImprovementTracker {

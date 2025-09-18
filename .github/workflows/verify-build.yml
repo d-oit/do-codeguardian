@@ -1,3 +1,4 @@
+---
 name: Verify Build for CodeQL (Updated)
 
 on:
@@ -117,3 +118,38 @@ jobs:
         fi
 
         echo "✅ Build artifacts verified"
+
+## Build Time Measurement Enhancement
+
+Add this step to measure build times in CI:
+
+```yaml
+- name: Measure Build Time
+  run: |
+    START_TIME=$(date +%s)
+    cargo build --release --features ${{ matrix.features }}
+    END_TIME=$(date +%s)
+    BUILD_TIME=$((END_TIME - START_TIME))
+    echo "Build time: ${BUILD_TIME}s" >> $GITHUB_STEP_SUMMARY
+    echo "build_time=${BUILD_TIME}" >> $GITHUB_OUTPUT
+```
+
+## sccache Integration
+
+Add sccache for faster builds:
+
+```yaml
+- name: Setup sccache
+  uses: mozilla-actions/sccache-action@v0.0.9
+
+- name: Setup Rust
+  uses: dtolnay/rust-toolchain@stable
+  with:
+    targets: ${{ matrix.target }}
+
+- name: Build with sccache
+  run: |
+    export RUSTC_WRAPPER=sccache
+    cargo build --release --features ${{ matrix.features }}
+```
+

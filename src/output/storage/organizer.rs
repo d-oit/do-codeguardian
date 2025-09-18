@@ -134,8 +134,6 @@ impl ResultsOrganizer {
         &self,
         id: &str,
     ) -> Result<Option<(AnalysisResults, Vec<(String, String)>)>> {
-        // Define a type alias for the complex return type
-        type RetrievalResult = (AnalysisResults, Vec<(String, String)>);
         if let Some(metadata) = self.index.by_id.get(id) {
             let storage_path = self.config.base_directory.join(&metadata.storage_path);
 
@@ -804,7 +802,7 @@ impl HierarchicalResultsOrganizer {
         timestamp: DateTime<Utc>,
     ) -> EnhancedResultMetadata {
         // Define a type alias for the complex return type
-        type MetadataResult = EnhancedResultMetadata;
+
         let highest_severity = analysis_results
             .findings
             .iter()

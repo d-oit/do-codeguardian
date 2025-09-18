@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
 use std::fs;
 use std::path::{Path, PathBuf};
-use std::process::Command;
+
 use walkdir::WalkDir;
 
 /// Build artifact duplicate analyzer for detecting and managing duplicate build outputs
@@ -184,7 +184,14 @@ impl BuildArtifactAnalyzer {
         if let Some(file_name) = path.file_name().and_then(|n| n.to_str()) {
             // Check patterns
             for pattern in &self.artifact_patterns {
-                if file_name.contains(&pattern[1..]) || pattern == file_name {
+                if let Some(ext) = pattern.strip_prefix("*.") {
+                    // Handle glob patterns like "*.so"
+                    // Remove "*."
+                    if file_name.ends_with(ext) {
+                        return true;
+                    }
+                } else if pattern == file_name {
+                    // Handle exact matches like "Cargo.toml"
                     return true;
                 }
             }
@@ -209,9 +216,22 @@ impl BuildArtifactAnalyzer {
             match ext.to_lowercase().as_str() {
                 "so" | "dylib" | "dll" => ArtifactType::SharedLibrary,
                 "a" | "lib" => ArtifactType::Archive,
-                "o" => ArtifactType::ObjectFile,
-                "exe" | "bin" => ArtifactType::Binary,
+                "o" | "obj" => ArtifactType::ObjectFile,
+                "exe" | "bin" | "out" => ArtifactType::Binary,
+                "jar" | "war" | "ear" => ArtifactType::Archive, // Java archives
+                "deb" | "rpm" => ArtifactType::Binary,          // Package files
                 _ => ArtifactType::Other,
+            }
+        } else if let Some(file_name) = path.file_name().and_then(|n| n.to_str()) {
+            // Handle files without extensions
+            if file_name.starts_with("lib") && file_name.contains(".so") {
+                ArtifactType::SharedLibrary
+            } else if file_name.starts_with("lib") && file_name.ends_with(".a") {
+                ArtifactType::Archive
+            } else if file_name.contains("binary") || file_name.contains("executable") {
+                ArtifactType::Binary
+            } else {
+                ArtifactType::Other
             }
         } else {
             ArtifactType::Other
@@ -312,7 +332,7 @@ impl BuildArtifactAnalyzer {
         // Try ldd on Unix-like systems
         #[cfg(unix)]
         {
-            if let Ok(output) = Command::new("ldd").arg(path).output() {
+            if let Ok(output) = std::process::Command::new("ldd").arg(path).output() {
                 if let Ok(stdout) = String::from_utf8(output.stdout) {
                     for line in stdout.lines() {
                         if line.contains("=>") {
@@ -330,7 +350,7 @@ impl BuildArtifactAnalyzer {
         // Try otool on macOS
         #[cfg(target_os = "macos")]
         {
-            if let Ok(output) = Command::new("otool")
+            if let Ok(output) = std::process::Command::new("otool")
                 .args(&["-L", &path.to_string_lossy()])
                 .output()
             {

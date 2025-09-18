@@ -59,6 +59,17 @@ impl BasicEnhancementEngine {
             "security".to_string(),
             "insecure".to_string(),
             "unsafe".to_string(),
+            "hardcoded".to_string(),
+            "secret".to_string(),
+            "token".to_string(),
+            "key".to_string(),
+            "credential".to_string(),
+            "exploit".to_string(),
+            "attack".to_string(),
+            "malware".to_string(),
+            "virus".to_string(),
+            "trojan".to_string(),
+            "ransomware".to_string(),
         ];
         self.classification_patterns
             .insert("Security".to_string(), security_patterns);
@@ -73,6 +84,13 @@ impl BasicEnhancementEngine {
             "bottleneck".to_string(),
             "timeout".to_string(),
             "latency".to_string(),
+            "cpu".to_string(),
+            "memory".to_string(),
+            "disk".to_string(),
+            "io".to_string(),
+            "throughput".to_string(),
+            "response time".to_string(),
+            "scalability".to_string(),
         ];
         self.classification_patterns
             .insert("Performance".to_string(), performance_patterns);
@@ -151,6 +169,20 @@ impl BasicEnhancementEngine {
                 }
             },
         });
+
+        // Same analyzer relationship
+        self.relationship_rules.push(RelationshipRule {
+            name: "Same Analyzer".to_string(),
+            relationship_type: RelationshipType::SameComponent,
+            min_confidence: 0.6,
+            matcher: |a, b| {
+                if a.id != b.id && a.analyzer == b.analyzer {
+                    Some(0.6)
+                } else {
+                    None
+                }
+            },
+        });
     }
 
     /// Classify a finding using pattern matching
@@ -178,20 +210,28 @@ impl BasicEnhancementEngine {
             }
 
             if matches > 0 {
-                // Normalize score
-                score = (score / patterns.len() as f64).min(1.0);
+                // Normalize score - give higher weight to multiple matches
+                score = (matches as f64 / patterns.len() as f64).min(1.0);
                 scores.insert(category.clone(), score);
             }
         }
 
         // Find primary category (highest score)
-        let primary_category = scores
-            .iter()
-            .max_by(|a, b| a.1.partial_cmp(b.1).unwrap_or(std::cmp::Ordering::Equal))
-            .map(|(k, _)| k.clone())
-            .unwrap_or_else(|| "General".to_string());
+        let primary_category = if scores.is_empty() {
+            "General".to_string()
+        } else {
+            scores
+                .iter()
+                .max_by(|a, b| a.1.partial_cmp(b.1).unwrap_or(std::cmp::Ordering::Equal))
+                .map(|(k, _)| k.clone())
+                .unwrap()
+        };
 
-        let confidence = scores.get(&primary_category).copied().unwrap_or(0.5);
+        let confidence = if scores.is_empty() {
+            0.5 // Default confidence for general category
+        } else {
+            scores.get(&primary_category).copied().unwrap_or(0.5)
+        };
 
         // Secondary categories (scores > 0.3)
         let secondary_categories: Vec<String> = scores
@@ -289,11 +329,23 @@ impl BasicEnhancementEngine {
     fn detect_relationships(&self, findings: &[Finding]) -> Vec<FindingRelationship> {
         let mut relationships = Vec::new();
 
+        tracing::debug!(
+            "Checking {} finding pairs for relationships",
+            findings.len() * (findings.len() - 1) / 2
+        );
+
         for (i, finding_a) in findings.iter().enumerate() {
             for finding_b in findings.iter().skip(i + 1) {
                 for rule in &self.relationship_rules {
                     if let Some(confidence) = (rule.matcher)(finding_a, finding_b) {
                         if confidence >= rule.min_confidence {
+                            tracing::debug!(
+                                "Found relationship between {} and {}: {} ({:.2})",
+                                finding_a.id,
+                                finding_b.id,
+                                rule.name,
+                                confidence
+                            );
                             relationships.push(FindingRelationship {
                                 source_id: finding_a.id.clone(),
                                 target_id: finding_b.id.clone(),
@@ -312,6 +364,7 @@ impl BasicEnhancementEngine {
             }
         }
 
+        tracing::debug!("Total relationships detected: {}", relationships.len());
         relationships
     }
 
@@ -428,9 +481,20 @@ impl AIEnhancementEngine for BasicEnhancementEngine {
 
         // Semantic enrichment
         if config.enable_semantic_enrichment {
+            tracing::debug!(
+                "Performing semantic enrichment for {} findings",
+                results.findings.len()
+            );
             for finding in &results.findings {
                 let classification = self.classify_finding(finding);
                 let impact = self.assess_impact(finding, &classification);
+
+                tracing::debug!(
+                    "Finding {} classified as {} with confidence {:.2}",
+                    finding.id,
+                    classification.primary_category,
+                    classification.confidence
+                );
 
                 semantic_annotations
                     .classifications
@@ -439,12 +503,26 @@ impl AIEnhancementEngine for BasicEnhancementEngine {
                     .impact_assessments
                     .insert(finding.id.clone(), impact);
             }
+            tracing::debug!(
+                "Semantic enrichment complete: {} classifications",
+                semantic_annotations.classifications.len()
+            );
         }
 
         // Relationship detection
         let relationships = if config.enable_relationship_detection {
-            self.detect_relationships(&results.findings)
+            tracing::debug!(
+                "Performing relationship detection for {} findings",
+                results.findings.len()
+            );
+            let rels = self.detect_relationships(&results.findings);
+            tracing::debug!(
+                "Relationship detection complete: {} relationships found",
+                rels.len()
+            );
+            rels
         } else {
+            tracing::debug!("Relationship detection disabled");
             Vec::new()
         };
 
@@ -590,10 +668,17 @@ mod tests {
         ];
 
         let relationships = engine.detect_relationships(&findings);
-        assert!(!relationships.is_empty());
-        assert_eq!(
-            relationships[0].relationship_type,
-            RelationshipType::SameComponent
+        assert!(
+            !relationships.is_empty(),
+            "Should find relationships between findings in same file"
+        );
+        // Check that we have at least SameComponent relationships
+        let has_same_component = relationships
+            .iter()
+            .any(|r| r.relationship_type == RelationshipType::SameComponent);
+        assert!(
+            has_same_component,
+            "Should find SameComponent relationships for same file"
         );
     }
 
@@ -628,6 +713,10 @@ mod tests {
 
         assert_eq!(enhanced.base_results.findings.len(), 4);
         assert!(!enhanced.semantic_annotations.classifications.is_empty());
+        assert!(
+            !enhanced.relationships.is_empty(),
+            "Relationships should not be empty"
+        );
         assert!(!enhanced.insights.is_empty());
         assert!(enhanced.enhancement_metadata.quality_score > 0.0);
     }

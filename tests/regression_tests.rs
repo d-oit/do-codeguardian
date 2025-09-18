@@ -1,4 +1,5 @@
 //! Regression tests to prevent re-introduction of fixed issues
+const BIN_NAME: &str = "do-codeguardian";
 //!
 //! This test suite validates that specific bugs and false positives
 //! that were previously fixed do not resurface in future changes.
@@ -15,14 +16,14 @@ fn test_git_conflict_analyzer_ignores_test_content() {
     let test_file = temp_dir.path().join("test_conflicts.rs");
 
     // Create a test file with conflict markers in test context
-    let test_content = r#"
+    let test_content = r##"
 #[cfg(test)]
 mod tests {
     use super::*;
 
     #[test]
     fn test_detect_complete_conflict() {
-        let content = r#"
+        let content = r###"
 some code
 <<<<<<< HEAD
 version 1
@@ -30,15 +31,16 @@ version 1
 version 2
 >>>>>>> branch
 more code
-"#;
-        let findings = analyzer.analyze(Path::new("test.rs"), content.as_bytes()).unwrap();
-        assert!(findings.iter().any(|f| f.rule == "merge_conflict_start"));
+"###;
+        // This is test code with conflict markers that should not be flagged
+        // let findings = analyzer.analyze(Path::new("test.rs"), content.as_bytes()).unwrap();
+        // assert!(findings.iter().any(|f| f.rule == "merge_conflict_start"));
     }
-"#;
+"##;
 
     fs::write(&test_file, test_content).unwrap();
 
-    let mut cmd = Command::cargo_bin("do-codeguardian").unwrap();
+    let mut cmd = Command::cargo_bin(BIN_NAME).unwrap();
     let output = cmd
         .arg("check")
         .arg(&test_file)
@@ -85,7 +87,7 @@ mod tests {
 
     fs::write(&test_file, test_content).unwrap();
 
-    let mut cmd = Command::cargo_bin("do-codeguardian").unwrap();
+    let mut cmd = Command::cargo_bin(BIN_NAME).unwrap();
     let output = cmd
         .arg("check")
         .arg(&test_file)
@@ -146,7 +148,7 @@ fn main() {
 
     fs::write(&test_file, test_content).unwrap();
 
-    let mut cmd = Command::cargo_bin("do-codeguardian").unwrap();
+    let mut cmd = Command::cargo_bin(BIN_NAME).unwrap();
     let output = cmd
         .arg("check")
         .arg(&test_file)
@@ -167,7 +169,7 @@ fn main() {
 /// Test that configuration loading handles missing files gracefully
 #[test]
 fn test_config_loading_graceful_degradation() {
-    let mut cmd = Command::cargo_bin("do-codeguardian").unwrap();
+    let mut cmd = Command::cargo_bin(BIN_NAME).unwrap();
     let output = cmd
         .arg("--config")
         .arg("nonexistent-config.toml")
@@ -228,7 +230,7 @@ mod tests {
 
     fs::write(&test_file, test_content).unwrap();
 
-    let mut cmd = Command::cargo_bin("do-codeguardian").unwrap();
+    let mut cmd = Command::cargo_bin(BIN_NAME).unwrap();
     let output = cmd
         .arg("check")
         .arg(&test_file)
@@ -249,7 +251,7 @@ fn test_json_output_schema_consistency() {
 
     fs::write(&test_file, "fn main() {}").unwrap();
 
-    let mut cmd = Command::cargo_bin("do-codeguardian").unwrap();
+    let mut cmd = Command::cargo_bin(BIN_NAME).unwrap();
     let output = cmd
         .arg("check")
         .arg(&test_file)
@@ -289,7 +291,7 @@ fn test_sarif_output_format() {
 
     fs::write(&test_file, "fn main() {}").unwrap();
 
-    let mut cmd = Command::cargo_bin("do-codeguardian").unwrap();
+    let mut cmd = Command::cargo_bin(BIN_NAME).unwrap();
     let output = cmd
         .arg("check")
         .arg(&test_file)
@@ -320,7 +322,7 @@ fn test_parallel_processing_stability() {
         fs::write(&test_file, format!("fn test_function_{}() {{}}", i)).unwrap();
     }
 
-    let mut cmd = Command::cargo_bin("do-codeguardian").unwrap();
+    let mut cmd = Command::cargo_bin(BIN_NAME).unwrap();
     let output = cmd
         .arg("check")
         .arg(temp_dir.path())

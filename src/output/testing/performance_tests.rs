@@ -327,7 +327,7 @@ impl PerformanceTestRunner {
 
                 // First, store some data
                 let mut stored_ids = Vec::new();
-                for i in 0..50 {
+                for _i in 0..50 {
                     let outputs = vec![(
                         "json".to_string(),
                         crate::output::formatter::OutputResult::new(
@@ -601,6 +601,12 @@ impl PerformanceTestRunner {
         }
 
         Ok(())
+    }
+}
+
+impl Default for MemoryTracker {
+    fn default() -> Self {
+        Self::new()
     }
 }
 

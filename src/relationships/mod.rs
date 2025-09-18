@@ -371,7 +371,10 @@ impl RelationshipManager {
                 ),
                 (
                     "similarity_score".to_string(),
-                    serde_json::Value::Number(serde_json::Number::from_f64(similarity).unwrap()),
+                    serde_json::Value::Number(
+                        serde_json::Number::from_f64(similarity)
+                            .unwrap_or_else(|| serde_json::Number::from(0)),
+                    ),
                 ),
             ]),
             bidirectional: true,

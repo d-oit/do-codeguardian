@@ -16,8 +16,10 @@ use std::path::PathBuf;
 use tracing::{debug, info};
 
 use crate::config::Config;
+use crate::core::GuardianEngine;
 use crate::error::{CodeGuardianError, Result};
-use crate::security;
+use crate::types::{AnalysisResults, Severity};
+use crate::utils::progress::ProgressReporter;
 
 /// Perform an enhanced git commit with security analysis
 ///
@@ -60,16 +62,18 @@ pub async fn commit(message: Option<&str>, config: &Config) -> Result<()> {
 
     debug!("Found {} staged files", staged_files.len());
 
-    // Perform security analysis
+    // Perform comprehensive analysis
     info!("Performing security analysis on staged changes");
-    let analysis_results = security::analyze_files(&staged_files, config).await?;
+    let progress = ProgressReporter::new(false);
+    let mut engine = GuardianEngine::new(config.clone(), progress).await?;
+    let analysis_results = engine.analyze_files(&staged_files, 1).await?;
 
-    // Check for security issues
-    if !analysis_results.issues.is_empty() {
+    // Check for issues
+    if analysis_results.has_issues() {
         let high_severity_count = analysis_results
-            .issues
+            .findings
             .iter()
-            .filter(|i| i.severity == "high" || i.severity == "critical")
+            .filter(|f| matches!(f.severity, Severity::High | Severity::Critical))
             .count();
 
         if high_severity_count > 0 && config.security.fail_on_issues {
@@ -139,7 +143,7 @@ fn get_staged_files(repo: &Repository) -> Result<Vec<PathBuf>> {
 /// Returns a generated commit message
 async fn generate_commit_message(
     files: &[PathBuf],
-    analysis: &security::AnalysisResults,
+    analysis: &AnalysisResults,
     config: &Config,
 ) -> Result<String> {
     if !config.git.conventional_commits {
@@ -169,13 +173,13 @@ async fn generate_commit_message(
 /// Determine the commit type based on file types and analysis results
 fn determine_commit_type(
     file_types: &std::collections::HashMap<String, i32>,
-    analysis: &security::AnalysisResults,
+    analysis: &AnalysisResults,
 ) -> String {
     // Check for security fixes
     if analysis
-        .issues
+        .findings
         .iter()
-        .any(|i| i.severity == "high" || i.severity == "critical")
+        .any(|f| matches!(f.severity, Severity::High | Severity::Critical))
     {
         return "fix".to_string();
     }
@@ -212,21 +216,24 @@ fn determine_scope(files: &[PathBuf]) -> String {
     }
 
     if directories.len() == 1 {
-        directories.into_iter().next().unwrap()
+        directories
+            .into_iter()
+            .next()
+            .unwrap_or("general".to_string())
     } else {
         "general".to_string()
     }
 }
 
 /// Create a description for the commit message
-fn create_description(files: &[PathBuf], analysis: &security::AnalysisResults) -> String {
+fn create_description(files: &[PathBuf], analysis: &AnalysisResults) -> String {
     if files.len() == 1 {
         if let Some(file_name) = files[0].file_name().and_then(|n| n.to_str()) {
             format!("update {}", file_name)
         } else {
             "update file".to_string()
         }
-    } else if analysis.issues.is_empty() {
+    } else if analysis.findings.is_empty() {
         format!("update {} files", files.len())
     } else {
         format!("update {} files with security improvements", files.len())
@@ -251,7 +258,10 @@ fn perform_commit(repo: &Repository, message: &str) -> Result<()> {
 
     // Get the current HEAD
     let head = repo.head()?;
-    let parent_commit = repo.find_commit(head.target().unwrap())?;
+    let target = head
+        .target()
+        .ok_or_else(|| CodeGuardianError::generic("HEAD has no target (unborn repository)"))?;
+    let parent_commit = repo.find_commit(target)?;
 
     // Create signature
     let signature = repo.signature()?;

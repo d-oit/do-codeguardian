@@ -59,6 +59,12 @@ pub enum SecurityTestResult {
     ShouldNotContain(String), // Content that should be removed/filtered
 }
 
+impl Default for SecurityTestRunner {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl SecurityTestRunner {
     /// Create a new security test runner
     pub fn new() -> Self {
@@ -412,16 +418,14 @@ impl SecurityTestRunner {
             SecurityTestInput::MaliciousHtml(html) => {
                 let sanitized = sanitize_html(html, None)?;
 
-                match &test_case.expected_result {
-                    SecurityTestResult::ShouldNotContain(forbidden) => {
-                        if sanitized.contains(forbidden) {
-                            return Err(anyhow::anyhow!(
-                                "Event handler removal failed: found '{}'",
-                                forbidden
-                            ));
-                        }
+                if let SecurityTestResult::ShouldNotContain(forbidden) = &test_case.expected_result
+                {
+                    if sanitized.contains(forbidden) {
+                        return Err(anyhow::anyhow!(
+                            "Event handler removal failed: found '{}'",
+                            forbidden
+                        ));
                     }
-                    _ => {}
                 }
             }
             _ => {
@@ -439,16 +443,14 @@ impl SecurityTestRunner {
             SecurityTestInput::MaliciousHtml(html) => {
                 let sanitized = sanitize_html(html, None)?;
 
-                match &test_case.expected_result {
-                    SecurityTestResult::ShouldNotContain(forbidden) => {
-                        if sanitized.contains(forbidden) {
-                            return Err(anyhow::anyhow!(
-                                "Script tag removal failed: found '{}'",
-                                forbidden
-                            ));
-                        }
+                if let SecurityTestResult::ShouldNotContain(forbidden) = &test_case.expected_result
+                {
+                    if sanitized.contains(forbidden) {
+                        return Err(anyhow::anyhow!(
+                            "Script tag removal failed: found '{}'",
+                            forbidden
+                        ));
                     }
-                    _ => {}
                 }
             }
             _ => {
@@ -466,16 +468,14 @@ impl SecurityTestRunner {
             SecurityTestInput::MaliciousHtml(html) => {
                 let sanitized = sanitize_html(html, None)?;
 
-                match &test_case.expected_result {
-                    SecurityTestResult::ShouldNotContain(forbidden) => {
-                        if sanitized.contains(forbidden) {
-                            return Err(anyhow::anyhow!(
-                                "Protocol sanitization failed: found '{}'",
-                                forbidden
-                            ));
-                        }
+                if let SecurityTestResult::ShouldNotContain(forbidden) = &test_case.expected_result
+                {
+                    if sanitized.contains(forbidden) {
+                        return Err(anyhow::anyhow!(
+                            "Protocol sanitization failed: found '{}'",
+                            forbidden
+                        ));
                     }
-                    _ => {}
                 }
             }
             _ => {

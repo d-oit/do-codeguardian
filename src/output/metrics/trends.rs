@@ -48,6 +48,12 @@ pub struct TrendAnalysis {
     pub anomalies: Vec<MetricAnomaly>,
 }
 
+impl Default for TrendAnalyzer {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl TrendAnalyzer {
     /// Create a new trend analyzer
     pub fn new() -> Self {
@@ -276,7 +282,7 @@ impl TrendAnalyzer {
 
         let slope = self.calculate_slope(&recent_success_rates);
         let last_rate = *recent_success_rates.last()?;
-        let next_rate = (last_rate + slope).max(0.0).min(1.0);
+        let next_rate = (last_rate + slope).clamp(0.0, 1.0);
 
         Some(MetricPrediction {
             metric_name: "success_rate".to_string(),
@@ -421,7 +427,7 @@ impl TrendAnalyzer {
         let data_points = self
             .trend_history
             .entry(metric_name.to_string())
-            .or_insert_with(Vec::new);
+            .or_default();
 
         data_points.push(TrendDataPoint {
             timestamp,

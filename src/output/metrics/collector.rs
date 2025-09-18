@@ -38,6 +38,12 @@ impl Default for CollectorConfig {
     }
 }
 
+impl Default for OutputMetricsCollector {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl OutputMetricsCollector {
     /// Create a new metrics collector
     pub fn new() -> Self {
@@ -356,8 +362,10 @@ impl OutputMetricsCollector {
         ];
 
         for pattern in &sensitive_patterns {
-            if regex::Regex::new(pattern).unwrap().is_match(content) {
-                risk_score += 0.2;
+            if let Ok(regex) = regex::Regex::new(pattern) {
+                if regex.is_match(content) {
+                    risk_score += 0.2;
+                }
             }
         }
 
@@ -406,7 +414,7 @@ impl OutputMetricsCollector {
         score -= high_severity_count as f64 * 0.3;
 
         // Ensure score is within bounds
-        score.max(1.0).min(5.0)
+        score.clamp(1.0, 5.0)
     }
 
     fn assess_usability(&self, output_result: &OutputResult) -> f64 {

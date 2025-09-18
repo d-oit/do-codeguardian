@@ -5,6 +5,32 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.1] - 2025-09-18
+
+### Added
+- New analyzers for AI content and build artifacts
+- Expanded test suite with property-based and security tests
+- Additional git commands and continuous improvement features
+
+### Changed
+- Optimized CI/CD workflows and performance metrics
+- Improved AI processing, insights, and memory pool
+- Updated CLI commands and output modules
+
+### Fixed
+- Enhanced git conflict detection and broken files handling
+- Regression fixes in core engine and analyzers
+
+### Technical Details
+- Enhanced analyzer capabilities and test coverage
+- Performance optimizations across CI/CD and AI processing
+- Improved error handling and conflict resolution
+
+### Contributors
+- Dominik Oswald (@d-oit)
+
+---
+
 ## [0.2.0] - 2025-09-17
 
 ### Added
@@ -39,6 +65,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Integration**: Complete enterprise integration framework with 6+ external systems
 
 **Note**: This is the stable release of CodeGuardian v0.2.0, incorporating all major project reorganization and feature enhancements from the alpha series.
+
+### Contributors
+- Dominik Oswald (@d-oit)
+
+---
+
+## [0.2.0-alpha.6] - 2025-09-17
+
+### Changed
+- **CI/CD Improvements**: Updated GitHub Actions to latest versions for better reliability
+- **Workflow Enhancements**: Enhanced CI/CD documentation and workflow configurations
+
+### Technical Details
+- Updated actions/checkout from v4 to v5
+- Updated actions/upload-artifact to v4 across workflows
+- Improved TURBO_CI_GUIDE.md with performance tuning and troubleshooting
+
+**Note**: This is an alpha release intended for testing and feedback. Please report any issues encountered.
 
 ### Contributors
 - Dominik Oswald (@d-oit)

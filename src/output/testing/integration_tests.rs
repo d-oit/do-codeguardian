@@ -785,7 +785,7 @@ impl IntegrationTestRunner {
             }
             "sarif" => {
                 let sarif: serde_json::Value = serde_json::from_str(&output.content)?;
-                if !sarif.get("version").is_some() {
+                if sarif.get("version").is_none() {
                     return Err(anyhow::anyhow!("SARIF output missing version"));
                 }
             }

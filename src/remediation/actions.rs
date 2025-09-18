@@ -3,11 +3,12 @@
 //! Contains the actual implementation of automated remediation actions
 
 use super::{CodeLocation, MergeStrategy};
+use crate::utils::command_security;
 use anyhow::{anyhow, Result};
 use std::collections::HashMap;
 use std::fs;
 use std::path::Path;
-use std::process::Command;
+use tokio::process::Command;
 
 /// Merge duplicate code files
 pub async fn merge_duplicate_code(
@@ -289,10 +290,16 @@ pub async fn create_pull_request(
 ) -> Result<()> {
     tracing::info!("Creating pull request: {} (branch: {})", title, branch_name);
 
+    // Validate inputs to prevent command injection
+    command_security::validate_git_branch_name(branch_name)?;
+    let sanitized_commit_message =
+        command_security::sanitize_commit_message(&format!("Automated remediation: {}", title))?;
+
     // Create a new branch
     let output = Command::new("git")
         .args(["checkout", "-b", branch_name])
-        .output()?;
+        .output()
+        .await?;
 
     if !output.status.success() {
         return Err(anyhow!(
@@ -303,7 +310,9 @@ pub async fn create_pull_request(
 
     // Add changed files
     for file in files_changed {
-        let output = Command::new("git").args(["add", file]).output()?;
+        // Validate file path to prevent command injection
+        command_security::validate_file_path(file)?;
+        let output = Command::new("git").args(["add", file]).output().await?;
 
         if !output.status.success() {
             tracing::warn!(
@@ -315,10 +324,10 @@ pub async fn create_pull_request(
     }
 
     // Commit changes
-    let commit_message = format!("Automated remediation: {}", title);
     let output = Command::new("git")
-        .args(["commit", "-m", &commit_message])
-        .output()?;
+        .args(["commit", "-m", &sanitized_commit_message])
+        .output()
+        .await?;
 
     if !output.status.success() {
         return Err(anyhow!(
@@ -330,7 +339,8 @@ pub async fn create_pull_request(
     // Push branch
     let output = Command::new("git")
         .args(["push", "origin", branch_name])
-        .output()?;
+        .output()
+        .await?;
 
     if !output.status.success() {
         return Err(anyhow!(
@@ -599,7 +609,9 @@ fn set_nested_yaml_value(
                         serde_yaml::Value::Mapping(serde_yaml::Mapping::new()),
                     );
                 }
-                current = map.get_mut(&key_value).unwrap();
+                current = map
+                    .get_mut(&key_value)
+                    .expect("Key should exist after insert");
             }
         }
     }

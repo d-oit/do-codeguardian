@@ -30,7 +30,7 @@ proptest! {
         content in ".*{0,1000}",
         extension in "(rs|js|py|go)"
     ) {
-        let analyzer = PerformanceAnalyzer::new();
+        let analyzer = PerformanceAnalyzer::new().unwrap();
         let file_path = PathBuf::from(format!("test.{}", extension));
 
         let result = std::panic::catch_unwind(|| {
@@ -45,7 +45,7 @@ proptest! {
         content in "[\\p{Any}]*{0,500}"
     ) {
         let security_analyzer = SecurityAnalyzer::new();
-        let performance_analyzer = PerformanceAnalyzer::new();
+        let performance_analyzer = PerformanceAnalyzer::new().unwrap();
         let file_path = PathBuf::from("test.rs");
 
         // Test both analyzers with unicode content

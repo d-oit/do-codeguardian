@@ -91,16 +91,6 @@ pattern = "(?i)\\bconsole\\.log\\b"
 description = "Debug logging statements"
 severity = "low"
 
-[[analyzers.non_production.patterns]]
-pattern = "(?i)\\b(todo|fixme|hack|xxx)\\b"
-description = "Non-production code markers"
-severity = "medium"
-
-[[analyzers.non_production.patterns]]
-pattern = "(?i)\\bconsole\\.log\\b"
-description = "Debug logging statements"
-severity = "low"
-
 [analyzers.dependency]
 enabled = true
 check_outdated = true

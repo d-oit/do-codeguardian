@@ -1,266 +1,461 @@
-name: CodeGuardian CI (Improved)
+---
+name: CodeGuardian CI (Optimized)
 
 on:
-  pull_request:
-    branches: [main, develop]
-  push:
-    branches: [main]
-  schedule:
-    - cron: '0 2 * * 1'  # Weekly full scan
+   pull_request:
+     branches: [main, develop]
+     paths-ignore:
+       - 'docs/**'
+       - 'README.md'
+       - '*.md'
+   push:
+     branches: [main]
+     paths-ignore:
+       - 'docs/**'
+       - 'README.md'
+       - '*.md'
+   schedule:
+     - cron: '0 2 * * 1'  # Weekly full scan
+   workflow_dispatch:
+     inputs:
+       skip_analysis:
+         description: 'Skip CodeGuardian analysis'
+         required: false
+         type: boolean
+         default: false
 
 # Prevent concurrent runs on the same branch
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+   group: ${{ github.workflow }}-${{ github.ref }}
+   cancel-in-progress: true
+
+# Default permissions for all jobs
+permissions:
+   contents: read
+   issues: read
+   pull-requests: read
+
+env:
+   CARGO_TERM_COLOR: always
+   RUST_BACKTRACE: 1
+   RUSTC_WRAPPER: sccache
 
 jobs:
-  codeguardian-pr:
-    if: github.event_name == 'pull_request'
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    permissions:
-        contents: read
-        issues: write
-        pull-requests: write
+   # Fast quality checks job
+   quality-check:
+     name: 🔍 Quality Checks
+     runs-on: ubuntu-latest
+     timeout-minutes: 10
+     outputs:
+       cache-hit: ${{ steps.cache.outputs.cache-hit }}
 
-    steps:
-    - uses: actions/checkout@v5
-      with:
-        fetch-depth: 0  # Need full history for diff
+     steps:
+     - uses: actions/checkout@v5
 
-    - name: Setup Rust
-      uses: actions-rust-lang/setup-rust-toolchain@v1
-      with:
-        toolchain: stable
-        cache: true
+     - name: Setup Rust
+       uses: actions-rust-lang/setup-rust-toolchain@v1
+       with:
+         toolchain: stable
+         components: clippy, rustfmt
 
-    - name: Clean stale locks
-      run: |
-          rm -f target/debug/.cargo-lock target/release/.cargo-lock
+     - name: Install sccache
+       uses: mozilla/sccache-action@v0.0.6
 
-    - name: Build CodeGuardian
-      run: |
-          cargo build --release --quiet
+     - name: Generate cache keys
+       id: cache-keys
+       run: |
+         echo "cargo-lock-hash=$(sha256sum Cargo.lock | cut -d' ' -f1)" >> $GITHUB_OUTPUT
+         echo "rust-toolchain=stable" >> $GITHUB_OUTPUT
+         echo "os=ubuntu-latest" >> $GITHUB_OUTPUT
 
-    - name: Run CodeGuardian (PR diff-only)
-      run: |
-        # Diff-only mode for PRs - fast and focused feedback
-        mkdir -p build/analysis-results
-        ./target/release/do-codeguardian check . \
-          --diff origin/main..HEAD \
-          --format json \
-          --out build/analysis-results/results.json \
-          --emit-md build/analysis-results/report.md
+     - name: Rust Cache
+       id: cache
+       uses: Swatinem/rust-cache@v2.8.0
+       with:
+         key: ${{ runner.os }}-cargo-${{ steps.cache-keys.outputs.cargo-lock-hash }}-${{ steps.cache-keys.outputs.rust-toolchain }}-quality
+         workspaces: "./ -> target"
+         cache-all-crates: true
+         cache-workspace-crates: true
+         save-if: ${{ github.ref == 'refs/heads/main' }}
 
-        echo "CodeGuardian analysis completed. Results saved to build/analysis-results/results.json"
+     - name: Clippy
+       run: |
+         echo "🔍 Running clippy..."
+         if cargo clippy --profile dev-fast --features dev -- -D warnings; then
+           echo "✅ Clippy check passed"
+         else
+           echo "❌ Clippy check failed"
+           exit 1
+         fi
 
-    - name: Prevent duplicate GitHub issues
-      if: github.event_name == 'pull_request'
-      run: |
-        # Load enhanced duplicate prevention utilities
-        source ./scripts/github-issue-utils.sh
+     - name: Format Check
+       run: |
+         echo "🔍 Running format check..."
+         if cargo fmt --check; then
+           echo "✅ Format check passed"
+         else
+           echo "❌ Format check failed - run 'cargo fmt' to fix"
+           exit 1
+         fi
 
-        # Generate unique issue title with PR context
-        ISSUE_TITLE="CodeGuardian PR Analysis - PR #${{ github.event.number }}"
+     - name: Build Check
+       run: |
+         echo "🔨 Running build check..."
+         if cargo check --profile dev-fast --features dev; then
+           echo "✅ Build check passed"
+         else
+           echo "❌ Build check failed"
+           exit 1
+         fi
 
-        # Check for existing issues before creating
-        COMMIT_HASH=$(git rev-parse --short HEAD)
+   # Test job with parallel execution
+   test:
+     name: 🧪 Tests
+     runs-on: ubuntu-latest
+     timeout-minutes: 15
+     needs: quality-check
 
-        # Use enhanced duplicate detection with ML and semantic matching
-        EXISTING_ISSUE=$(detect_duplicate_issue \
-          "${{ github.repository }}" \
-          "$ISSUE_TITLE" \
-          "$(cat results.json)" \
-          "$COMMIT_HASH")
+     steps:
+     - uses: actions/checkout@v5
 
-        if [ -n "$EXISTING_ISSUE" ]; then
-          echo "::notice::Duplicate prevented - issue already exists: #$EXISTING_ISSUE"
-          echo "DUPLICATE_PREVENTED=true" >> $GITHUB_ENV
-          echo "EXISTING_ISSUE=$EXISTING_ISSUE" >> $GITHUB_ENV
-        else
-          echo "::notice::No duplicates found - safe to create new issue"
-          echo "DUPLICATE_PREVENTED=false" >> $GITHUB_ENV
-        fi
+     - name: Setup Rust
+       uses: actions-rust-lang/setup-rust-toolchain@v1
+       with:
+         toolchain: stable
 
-    - name: Create GitHub issue for PR findings
-      if: github.event_name == 'pull_request' && env.DUPLICATE_PREVENTED == 'false'
-      run: |
-        # Use CodeGuardian's enhanced issue creation with duplicate prevention
-        ./target/release/do-codeguardian gh-issue \
-          --from results.json \
-          --repo "${{ github.repository }}" \
-          --title "CodeGuardian PR Analysis - PR #${{ github.event.number }}" \
-          --labels "codeguardian,automated,pr-${{ github.event.number }},duplicate-prevention-enabled" \
-          --mode checklist \
-          --summary-max-issues 15 \
-          --duplicate-check \
-          --ml-enhanced
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        GITHUB_REPOSITORY: ${{ github.repository }}
-        GITHUB_PR_NUMBER: "${{ github.event.number }}"
+     - name: Install sccache
+       uses: mozilla/sccache-action@v0.0.6
 
-    - name: Upload artifacts
-      uses: actions/upload-artifact@v4
-      if: always()
-      with:
-        name: codeguardian-pr-results
-        path: |
-          build/analysis-results/results.json
-          build/analysis-results/report.md
+     - name: Generate cache keys
+       id: cache-keys
+       run: |
+         echo "cargo-lock-hash=$(sha256sum Cargo.lock | cut -d' ' -f1)" >> $GITHUB_OUTPUT
 
-  codeguardian-full:
-    if: github.event_name == 'push' || github.event_name == 'schedule'
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-    permissions:
-        contents: read
-        issues: write
+     - name: Rust Cache
+       uses: Swatinem/rust-cache@v2.8.0
+       with:
+         key: ${{ runner.os }}-cargo-${{ steps.cache-keys.outputs.cargo-lock-hash }}-stable-test
+         workspaces: "./ -> target"
+         cache-all-crates: true
+         cache-workspace-crates: true
+         save-if: ${{ github.ref == 'refs/heads/main' }}
 
-    steps:
-    - uses: actions/checkout@v5
+     - name: Run Tests
+       id: run_tests
+       run: |
+         echo "🧪 Running test suite..."
+         if cargo test --profile dev-fast --features dev -- --format=json | tee test-results.json; then
+           echo "✅ All tests passed"
+           echo "test_status=passed" >> $GITHUB_OUTPUT
+         else
+           echo "❌ Some tests failed"
+           echo "test_status=failed" >> $GITHUB_OUTPUT
+           exit 1
+         fi
 
-    - name: Setup Rust
-      uses: actions-rust-lang/setup-rust-toolchain@v1
-      with:
-        toolchain: stable
-        cache: true
+     - name: Generate Test Summary
+       if: always()
+       run: |
+         echo "## Test Results Summary" >> $GITHUB_STEP_SUMMARY
+         if [ "${{ steps.run_tests.outcome }}" == "success" ]; then
+           echo "✅ **Tests**: Passed" >> $GITHUB_STEP_SUMMARY
+         else
+           echo "❌ **Tests**: Failed" >> $GITHUB_STEP_SUMMARY
+         fi
 
-    - name: Clean stale locks
-      run: |
-          rm -f target/debug/.cargo-lock target/release/.cargo-lock
+     - name: Upload Test Results
+       if: always()
+       uses: actions/upload-artifact@v4
+       with:
+         name: test-results-${{ github.run_id }}
+         path: test-results.json
+         retention-days: 30
 
-    - name: Build CodeGuardian
-      run: |
-          cargo build --release --quiet
+   # Security audit job
+   security:
+     name: 🔒 Security Audit
+     runs-on: ubuntu-latest
+     timeout-minutes: 10
+     needs: quality-check
 
-    - name: Run CodeGuardian (Full scan)
-      run: |
-        # Full scan for main branch pushes
-        mkdir -p build/analysis-results
-        ./target/release/do-codeguardian check . \
-          --format json \
-          --out build/analysis-results/results.json \
-          --emit-md build/analysis-results/report.md
+     steps:
+     - uses: actions/checkout@v5
 
-        echo "CodeGuardian analysis completed. Results saved to build/analysis-results/results.json"
+     - name: Setup Rust
+       uses: actions-rust-lang/setup-rust-toolchain@v1
+       with:
+         toolchain: stable
 
-    - name: Prevent duplicate GitHub issues for full scan
-      if: github.event_name == 'push' || github.event_name == 'schedule'
-      run: |
-        # Load enhanced duplicate prevention utilities
-        source ./scripts/github-issue-utils.sh
+     - name: Install sccache
+       uses: mozilla/sccache-action@v0.0.6
 
-        # Generate unique issue title with date and commit info
-        ISSUE_TITLE="CodeGuardian Full Analysis - $(date +%Y%m%d)"
-        COMMIT_HASH=$(git rev-parse --short HEAD)
+     - name: Generate cache keys
+       id: cache-keys
+       run: |
+         echo "cargo-lock-hash=$(sha256sum Cargo.lock | cut -d' ' -f1)" >> $GITHUB_OUTPUT
 
-        # Use enhanced duplicate detection
-        EXISTING_ISSUE=$(detect_duplicate_issue \
-          "${{ github.repository }}" \
-          "$ISSUE_TITLE" \
-          "$(cat results.json)" \
-          "$COMMIT_HASH")
+     - name: Rust Cache
+       uses: Swatinem/rust-cache@v2.8.0
+       with:
+         key: ${{ runner.os }}-cargo-${{ steps.cache-keys.outputs.cargo-lock-hash }}-stable-security
+         workspaces: "./ -> target"
+         cache-all-crates: true
+         cache-workspace-crates: true
+         save-if: ${{ github.ref == 'refs/heads/main' }}
 
-        if [ -n "$EXISTING_ISSUE" ]; then
-          echo "::notice::Duplicate prevented - issue already exists: #$EXISTING_ISSUE"
-          echo "DUPLICATE_PREVENTED=true" >> $GITHUB_ENV
-          echo "EXISTING_ISSUE=$EXISTING_ISSUE" >> $GITHUB_ENV
-        else
-          echo "::notice::No duplicates found - safe to create new issue"
-          echo "DUPLICATE_PREVENTED=false" >> $GITHUB_ENV
-        fi
+     - name: Security Audit
+       id: security_audit
+       run: |
+         echo "🔒 Running security audit..."
+         cargo install cargo-audit --locked
 
-    - name: Create GitHub issue for full scan findings
-      if: (github.event_name == 'push' || github.event_name == 'schedule') && env.DUPLICATE_PREVENTED == 'false'
-      run: |
-        # Use CodeGuardian's enhanced issue creation
-        ./target/release/do-codeguardian gh-issue \
-          --from results.json \
-          --repo "${{ github.repository }}" \
-          --title "CodeGuardian Full Analysis - $(date +%Y%m%d)" \
-          --labels "codeguardian,automated,full-scan,duplicate-prevention-enabled" \
-          --mode checklist \
-          --summary-max-issues 20 \
-          --duplicate-check \
-          --ml-enhanced
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        GITHUB_REPOSITORY: ${{ github.repository }}
+         if cargo audit --format json > audit-results.json; then
+           echo "✅ Security audit passed - no vulnerabilities found"
+           echo "audit_status=passed" >> $GITHUB_OUTPUT
+         else
+           echo "⚠️  Security audit found issues (review audit-results.json)"
+           echo "audit_status=issues_found" >> $GITHUB_OUTPUT
+         fi
+       continue-on-error: true
 
-    - name: Upload artifacts
-      uses: actions/upload-artifact@v4
-      if: always()
-      with:
-        name: codeguardian-full-results
-        path: |
-          build/analysis-results/results.json
-          build/analysis-results/report.md
+     - name: Audit Summary
+       if: always()
+       run: |
+         echo "## Security Audit Summary" >> $GITHUB_STEP_SUMMARY
+         if [ "${{ steps.security_audit.outcome }}" == "success" ]; then
+           echo "✅ **Security Audit**: No issues found" >> $GITHUB_STEP_SUMMARY
+         else
+           echo "⚠️  **Security Audit**: Issues detected (check artifacts)" >> $GITHUB_STEP_SUMMARY
+         fi
 
-  codeguardian-baseline:
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    permissions:
-        contents: write
+     - name: Upload Audit Results
+       if: always()
+       uses: actions/upload-artifact@v4
+       with:
+         name: audit-results-${{ github.run_id }}
+         path: audit-results.json
+         retention-days: 30
 
-    steps:
-    - uses: actions/checkout@v5
+   # CodeGuardian analysis job
+   codeguardian:
+     name: 🛡️ CodeGuardian Analysis
+     runs-on: ubuntu-latest
+     timeout-minutes: 15
+     needs: [test, security]
+     if: github.event.inputs.skip_analysis != 'true'
 
-    - name: Setup Rust
-      uses: actions-rust-lang/setup-rust-toolchain@v1
-      with:
-        toolchain: stable
-        cache: true
+     steps:
+     - uses: actions/checkout@v5
+       with:
+         fetch-depth: 0
 
-    - name: Clean stale locks
-      run: |
-          rm -f target/debug/.cargo-lock target/release/.cargo-lock
+     - name: Setup Rust
+       uses: actions-rust-lang/setup-rust-toolchain@v1
+       with:
+         toolchain: stable
 
-    - name: Build CodeGuardian
-      run: |
-          cargo build --release --quiet
+     - name: Install sccache
+       uses: mozilla/sccache-action@v0.0.6
 
-    - name: Update baseline
-      run: |
-        set -e  # Exit on any error
+     - name: Generate cache keys
+       id: cache-keys
+       run: |
+         echo "cargo-lock-hash=$(sha256sum Cargo.lock | cut -d' ' -f1)" >> $GITHUB_OUTPUT
 
-        # Run CodeGuardian to generate baseline
-        mkdir -p build/analysis-results
-        ./target/release/do-codeguardian check . \
-          --format json \
-          --out build/analysis-results/baseline.json
+     - name: Rust Cache
+       uses: Swatinem/rust-cache@v2.8.0
+       with:
+         key: ${{ runner.os }}-cargo-${{ steps.cache-keys.outputs.cargo-lock-hash }}-stable-analysis
+         workspaces: "./ -> target"
+         cache-all-crates: true
+         cache-workspace-crates: true
+         save-if: ${{ github.ref == 'refs/heads/main' }}
 
-        # Check if build/analysis-results/baseline.json exists and has changes
-        if git ls-files --error-unmatch build/analysis-results/baseline.json >/dev/null 2>&1; then
-          # File is tracked, check for changes
-          if ! git diff --quiet build/analysis-results/baseline.json; then
-           echo "Baseline has changes, committing..."
-           git config user.name "github-actions[bot]"
-           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-           git add build/analysis-results/baseline.json
-           git commit -m "chore: update CodeGuardian baseline [skip ci]"
-           # Retry push up to 3 times in case of conflicts
-           for i in {1..3}; do
-             if git push; then
-               echo "Baseline updated successfully"
-               break
-             else
-               echo "Push failed (attempt $i), retrying..."
-               git pull --rebase
-             fi
-           done
-          else
-           echo "No changes to baseline"
-          fi
-        else
-          # File not tracked, add it
-          echo "Adding new baseline file"
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add build/analysis-results/baseline.json
-          git commit -m "chore: add initial CodeGuardian baseline [skip ci]"
-          git push
-        fi
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+     - name: Build CodeGuardian
+       run: |
+           echo "🔨 Building CodeGuardian..."
+           cargo build --release --quiet
+
+     - name: Run CodeGuardian Analysis
+       run: |
+         mkdir -p build/analysis-results
+
+         if [ "${{ github.event_name }}" == "pull_request" ]; then
+           echo "🔍 Running PR diff analysis..."
+           ./target/release/do-codeguardian check . \
+             --diff origin/main..HEAD \
+             --format json \
+             --out build/analysis-results/results.json \
+             --emit-md build/analysis-results/report.md
+         else
+           echo "🔍 Running full analysis..."
+           ./target/release/do-codeguardian check . \
+             --format json \
+             --out build/analysis-results/results.json \
+             --emit-md build/analysis-results/report.md
+         fi
+
+         echo "✅ CodeGuardian analysis completed"
+
+     - name: Prevent duplicate GitHub issues
+       if: github.event_name == 'pull_request'
+       run: |
+         source ./scripts/github-issue-utils.sh
+
+         ISSUE_TITLE="CodeGuardian PR Analysis - PR #${{ github.event.number }}"
+         COMMIT_HASH=$(git rev-parse --short HEAD)
+
+         EXISTING_ISSUE=$(detect_duplicate_issue \
+           "${{ github.repository }}" \
+           "$ISSUE_TITLE" \
+           "$(cat build/analysis-results/results.json)" \
+           "$COMMIT_HASH")
+
+         if [ -n "$EXISTING_ISSUE" ]; then
+           echo "::notice::Duplicate prevented - issue already exists: #$EXISTING_ISSUE"
+           echo "DUPLICATE_PREVENTED=true" >> $GITHUB_ENV
+         else
+           echo "::notice::No duplicates found - safe to create new issue"
+           echo "DUPLICATE_PREVENTED=false" >> $GITHUB_ENV
+         fi
+
+     - name: Create GitHub issue for findings
+       if: github.event_name == 'pull_request' && env.DUPLICATE_PREVENTED == 'false'
+       run: |
+         ./target/release/do-codeguardian gh-issue \
+           --from build/analysis-results/results.json \
+           --repo "${{ github.repository }}" \
+           --title "CodeGuardian PR Analysis - PR #${{ github.event.number }}" \
+           --labels "codeguardian,automated,pr-${{ github.event.number }},duplicate-prevention-enabled" \
+           --mode checklist \
+           --summary-max-issues 15 \
+           --duplicate-check \
+           --ml-enhanced
+       env:
+         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+     - name: Upload Analysis Results
+       if: always()
+       uses: actions/upload-artifact@v4
+       with:
+         name: codeguardian-results-${{ github.run_id }}
+         path: |
+           build/analysis-results/results.json
+           build/analysis-results/report.md
+         retention-days: 30
+
+   # Build and release job
+   build:
+     name: 🔨 Build Release
+     runs-on: ubuntu-latest
+     timeout-minutes: 20
+     needs: [test, security]
+     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+     steps:
+     - uses: actions/checkout@v5
+
+     - name: Setup Rust
+       uses: actions-rust-lang/setup-rust-toolchain@v1
+       with:
+         toolchain: stable
+
+     - name: Install sccache
+       uses: mozilla/sccache-action@v0.0.6
+
+     - name: Generate cache keys
+       id: cache-keys
+       run: |
+         echo "cargo-lock-hash=$(sha256sum Cargo.lock | cut -d' ' -f1)" >> $GITHUB_OUTPUT
+
+     - name: Rust Cache
+       uses: Swatinem/rust-cache@v2.8.0
+       with:
+         key: ${{ runner.os }}-cargo-${{ steps.cache-keys.outputs.cargo-lock-hash }}-stable-build
+         workspaces: "./ -> target"
+         cache-all-crates: true
+         cache-workspace-crates: true
+         save-if: ${{ github.ref == 'refs/heads/main' }}
+
+     - name: Build Release
+       run: |
+         echo "🔨 Building release binary..."
+         if cargo build --release --features full; then
+           echo "✅ Release build successful"
+         else
+           echo "❌ Release build failed"
+           exit 1
+         fi
+
+     - name: Upload Binary
+       uses: actions/upload-artifact@v4
+       with:
+         name: codeguardian-binary-${{ github.run_id }}
+         path: target/release/do-codeguardian
+         retention-days: 30
+
+   # Performance monitoring job
+   performance:
+     name: 📊 Performance Analysis
+     runs-on: ubuntu-latest
+     timeout-minutes: 10
+     needs: [test, security]
+     if: github.event_name == 'schedule'
+
+     steps:
+     - uses: actions/checkout@v5
+
+     - name: Setup Rust
+       uses: actions-rust-lang/setup-rust-toolchain@v1
+       with:
+         toolchain: stable
+
+     - name: Install sccache
+       uses: mozilla/sccache-action@v0.0.6
+
+     - name: Generate cache keys
+       id: cache-keys
+       run: |
+         echo "cargo-lock-hash=$(sha256sum Cargo.lock | cut -d' ' -f1)" >> $GITHUB_OUTPUT
+
+     - name: Rust Cache
+       uses: Swatinem/rust-cache@v2.8.0
+       with:
+         key: ${{ runner.os }}-cargo-${{ steps.cache-keys.outputs.cargo-lock-hash }}-stable-performance
+         workspaces: "./ -> target"
+         cache-all-crates: true
+         cache-workspace-crates: true
+         save-if: ${{ github.ref == 'refs/heads/main' }}
+
+     - name: Run Performance Benchmarks
+       id: performance_benchmarks
+       run: |
+         echo "📊 Running performance analysis..."
+         if ./scripts/performance_analysis.sh; then
+           echo "✅ Performance analysis completed successfully"
+           echo "performance_status=passed" >> $GITHUB_OUTPUT
+         else
+           echo "⚠️  Performance analysis failed, but continuing (non-critical)"
+           echo "performance_status=failed" >> $GITHUB_OUTPUT
+         fi
+       continue-on-error: true
+
+     - name: Performance Summary
+       if: always()
+       run: |
+         echo "## Performance Analysis Summary" >> $GITHUB_STEP_SUMMARY
+         if [ "${{ steps.performance_benchmarks.outcome }}" == "success" ]; then
+           echo "✅ **Performance Analysis**: Completed successfully" >> $GITHUB_STEP_SUMMARY
+         else
+           echo "⚠️  **Performance Analysis**: Failed (non-critical)" >> $GITHUB_STEP_SUMMARY
+         fi
+
+     - name: Upload Performance Results
+       if: always()
+       uses: actions/upload-artifact@v4
+       with:
+         name: performance-results-${{ github.run_id }}
+         path: |
+           target/criterion/**/*
+           *.log
+         retention-days: 7

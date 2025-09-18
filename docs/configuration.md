@@ -1,68 +1,71 @@
 # Configuration Guide
 
-CodeGuardian works out of the box with sensible defaults, but can be customized via `do-codeguardian.toml`:
+CodeGuardian works out of the box with sensible defaults, but can be customized via `codeguardian.toml`:
 
 ## Basic Configuration
 
 ```toml
-[general]
-max_file_size = 10485760  # 10MB
-parallel_workers = 4       # Auto-detected CPU cores
-memory_limit_mb = 1024     # Memory limit
-streaming_threshold_mb = 5 # Enable streaming for large files
+[output]
+directory = "build/analysis-results"
+format = "json"
+verbose = false
+generate_summary = true
 
-[analyzers.security]
+[security]
 enabled = true
-check_secrets = true
-check_vulnerabilities = true
+fail_on_issues = false
+min_severity = "low"
+max_file_size_bytes = 10485760  # 10MB
+entropy_threshold = 4.5
 check_hardcoded_secrets = true
+check_unsafe_code = true
+check_dependencies = true
+
+[analysis]
+enabled = true
+parallel_processing = true
+max_workers = 4
+enable_caching = true
+timeout_seconds = 300
+
+[analyzers.security_analyzer]
+enabled = true
 check_sql_injection = true
 check_xss = true
 check_command_injection = true
-entropy_threshold = 4.5
+check_hardcoded_secrets = true
+check_vulnerabilities = true
+min_entropy_threshold = 3.5
 
-[analyzers.performance]
+[analyzers.performance_analyzer]
 enabled = true
-check_allocations = true
 check_nested_loops = true
 check_string_operations = true
 check_blocking_io = true
 max_complexity = 10
-max_function_length = 100
+max_function_length = 50
 
 [analyzers.code_quality]
 enabled = true
-check_naming = true
-check_complexity = true
-check_duplication = true
-max_nesting_depth = 4
+check_magic_numbers = true
+check_complex_conditions = true
+check_deep_nesting = true
+max_complexity = 10
+max_nesting_depth = 6
 max_line_length = 120
 
-[ml]
-enabled = true
-model_path = "enhanced-model.fann"
-online_learning = true
-feature_extraction = "enhanced"
+[optimization]
+enable_optimized_analyzers = true
+enable_file_caching = true
+max_parallel_workers = 4
 
-[performance]
-cache_enabled = true
-cache_max_age_days = 30
-parallel_processing = true
-
-[retention]
-enabled = true
-max_age_days = 30
-max_size_mb = 500
-enable_integrity_check = true
-enable_integrity_reporting = true
-memory_optimization = true
-compression_enabled = true
-
-[github]
-default_labels = ["security", "automated"]
-title_prefix = "Security Alert: "
-max_body_size = 60000
-rate_limit_buffer = 100
+[integrations.github]
+enabled = false
+repository = "owner/repo"
+token = "${CODEGUARDIAN_GITHUB_TOKEN}"
+create_issues = true
+issue_labels = ["security", "codeguardian"]
+min_severity = "medium"
 ```
 
 ## Preset Configurations
@@ -99,51 +102,75 @@ do-codeguardian init --interactive
 
 ## Configuration Sections
 
-### General Settings
+### Output Settings
 
 ```toml
-[general]
-max_file_size = 10485760        # Maximum file size to analyze (10MB)
-parallel_workers = 4            # Number of parallel analysis workers
-memory_limit_mb = 1024          # Memory limit in MB
-streaming_threshold_mb = 5      # Enable streaming for files larger than this
-timeout_seconds = 300           # Analysis timeout per file
-verbose = false                 # Enable verbose logging
-quiet = false                   # Suppress progress output
+[output]
+directory = "build/analysis-results"  # Output directory for results
+format = "json"                       # Output format: json, human, sarif
+verbose = false                       # Enable verbose output
+generate_summary = true               # Generate summary report
+compress_output = true                # Compress output files
+max_reports_kept = 10                 # Maximum number of reports to keep
+```
+
+### Security Settings
+
+```toml
+[security]
+enabled = true                        # Enable security analysis
+fail_on_issues = false                # Exit with error on security issues
+min_severity = "low"                  # Minimum severity to report
+max_file_size_bytes = 10485760        # Maximum file size to analyze (10MB)
+entropy_threshold = 4.5               # Entropy threshold for secret detection
+check_hardcoded_secrets = true        # Check for hardcoded secrets
+check_unsafe_code = true              # Check for unsafe code patterns
+check_dependencies = true             # Check dependency vulnerabilities
+```
+
+### Analysis Settings
+
+```toml
+[analysis]
+enabled = true                        # Enable analysis
+analyze_binaries = false              # Analyze binary files
+timeout_seconds = 300                 # Analysis timeout in seconds
+parallel_processing = true            # Enable parallel processing
+max_workers = 4                       # Maximum parallel workers
+enable_caching = true                 # Enable result caching
+cache_dir = ".codeguardian/cache"     # Cache directory
+enable_ai_enhancement = false         # Enable AI enhancements
 ```
 
 ### Security Analyzer
 
 ```toml
-[analyzers.security]
+[analyzers.security_analyzer]
 enabled = true
-check_secrets = true
-check_vulnerabilities = true
-check_hardcoded_secrets = true
 check_sql_injection = true
 check_xss = true
 check_command_injection = true
-check_path_traversal = true
-check_weak_crypto = true
-check_info_disclosure = true
-check_insecure_random = true
-entropy_threshold = 4.5
-max_secret_length = 100
+check_hardcoded_secrets = true
+check_vulnerabilities = true
+check_permissions = true
+check_secrets = true
+min_entropy_threshold = 3.5
 ```
 
 ### Performance Analyzer
 
 ```toml
-[analyzers.performance]
+[analyzers.performance_analyzer]
 enabled = true
-check_allocations = true
 check_nested_loops = true
 check_string_operations = true
 check_blocking_io = true
-check_memory_leaks = true
+check_algorithms = true
+check_memory_usage = true
+check_io_operations = true
 max_complexity = 10
-max_function_length = 100
-max_nesting_depth = 5
+max_function_length = 50
+max_loop_depth = 3
 ```
 
 ### Code Quality Analyzer
@@ -151,14 +178,17 @@ max_nesting_depth = 5
 ```toml
 [analyzers.code_quality]
 enabled = true
-check_naming = true
+check_magic_numbers = true
+check_complex_conditions = true
+check_deep_nesting = true
+check_commented_code = true
 check_complexity = true
 check_duplication = true
-check_style = true
-max_nesting_depth = 4
+check_naming = true
+max_complexity = 10
+max_nesting_depth = 6
+max_file_size = 500
 max_line_length = 120
-max_function_length = 50
-naming_convention = "snake_case"
 ```
 
 ### Dependency Analyzer
@@ -166,11 +196,13 @@ naming_convention = "snake_case"
 ```toml
 [analyzers.dependency]
 enabled = true
-check_vulnerabilities = true
-check_licenses = true
 check_outdated = true
+check_vulnerabilities = true
 check_unused = true
-allowed_licenses = ["MIT", "Apache-2.0", "BSD-3-Clause"]
+check_duplicates = true
+check_licenses = true
+max_age_days = 365
+vulnerability_databases = ["https://cve.mitre.org", "https://nvd.nist.gov"]
 ```
 
 ### Integrity Analyzer
@@ -178,25 +210,13 @@ allowed_licenses = ["MIT", "Apache-2.0", "BSD-3-Clause"]
 ```toml
 [analyzers.integrity]
 enabled = true
-check_file_integrity = true
-check_git_history = true
-check_commit_signatures = true
-check_author_verification = true
-```
-
-### Naming Analyzer
-
-```toml
-[analyzers.naming]
-enabled = true
-check_variables = true
-check_functions = true
-check_classes = true
-check_constants = true
-variable_pattern = "^[a-z_][a-z0-9_]*$"
-function_pattern = "^[a-z_][a-z0-9_]*$"
-class_pattern = "^[A-Z][a-zA-Z0-9]*$"
-constant_pattern = "^[A-Z_][A-Z0-9_]*$"
+hash_algorithm = "Blake3"
+baseline_file = ".codeguardian/integrity.baseline"
+auto_update_baseline = false
+check_permissions = true
+check_binary_files = false
+verify_checksums = true
+max_file_size = 5242880  # 5MB
 ```
 
 ### Non-Production Analyzer
@@ -204,53 +224,79 @@ constant_pattern = "^[A-Z_][A-Z0-9_]*$"
 ```toml
 [analyzers.non_production]
 enabled = true
-check_debug_code = true
-check_test_code = true
-check_todo_comments = true
-check_placeholder_values = true
-allowed_debug_functions = ["println!", "dbg!"]
+exclude_test_files = true
+exclude_example_files = true
+custom_test_directories = ["tests", "test", "spec", "specs"]
+custom_test_extensions = [".test.rs", ".spec.rs", ".integration.rs"]
+
+[[analyzers.non_production.patterns]]
+pattern = "(?i)\\b(todo|fixme|hack|xxx)\\b"
+description = "Non-production code markers"
+severity = "medium"
+
+[[analyzers.non_production.patterns]]
+pattern = "(?i)\\bconsole\\.log\\b"
+description = "Debug logging statements"
+severity = "low"
 ```
 
-### Optimized Analyzer
+### Broken Files Analyzer
 
 ```toml
-[analyzers.optimized]
+[analyzers.broken_files]
 enabled = true
-check_inefficient_algorithms = true
-check_memory_usage = true
-check_cpu_usage = true
-check_io_operations = true
-max_iterations = 1000000
-max_memory_mb = 1024
+detect_merge_conflicts = true
+detect_ai_placeholders = true
+detect_duplicates = false
+
+[analyzers.broken_files.conflicts]
+fail_on_conflicts = false
+validate_syntax = true
+check_git_status = true
+
+[analyzers.broken_files.placeholders]
+severity = "medium"
+patterns = ["add content here", "implement this", "your code here"]
 ```
 
-## ML Configuration
+## AI Configuration
 
 ```toml
-[ml]
+[ai]
 enabled = true
-model_path = "enhanced-model.fann"
-online_learning = true
-feature_extraction = "enhanced"
-confidence_threshold = 0.8
-training_epochs = 2000
-bootstrap_sampling = true
-cross_validation = true
+enable_semantic_enrichment = true
+enable_relationship_detection = true
+enable_insight_generation = true
+enable_context_analysis = false
+min_confidence_threshold = 0.7
+max_processing_time = 300
+enable_historical_analysis = false
+model_cache_directory = ".codeguardian/models"
 ```
 
-## Performance Configuration
+## Optimization Configuration
 
 ```toml
-[performance]
-cache_enabled = true
-cache_max_age_days = 30
-cache_max_size_mb = 512
-parallel_processing = true
-memory_optimization = true
-compression_enabled = true
-streaming_enabled = true
-adaptive_parallelism = true
-resource_monitoring = true
+[optimization]
+enable_optimized_analyzers = true
+enable_file_caching = true
+max_parallel_workers = 4
+max_memory_file_size = 10485760  # 10MB
+streaming_chunk_size = 65536     # 64KB
+max_findings_per_file = 50
+pattern_cache_size = 1000
+
+[optimization.cache_cleanup]
+enabled = true
+max_age_days = 7
+max_size_mb = 100
+cleanup_frequency = 10
+
+[optimization.early_termination]
+enabled = true
+max_analysis_time_seconds = 30
+max_lines_per_file = 10000
+skip_large_files_bytes = 52428800  # 50MB
 ```
 
 ## GitHub Integration

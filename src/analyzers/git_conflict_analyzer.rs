@@ -21,9 +21,9 @@ impl Default for GitConflictAnalyzer {
 impl GitConflictAnalyzer {
     pub fn new() -> Self {
         Self {
-            conflict_start_pattern: Regex::new(r"^<{7}(\s|$)").unwrap(),
-            conflict_separator_pattern: Regex::new(r"^={7}(\s|$)").unwrap(),
-            conflict_end_pattern: Regex::new(r"^>{7}(\s|$)").unwrap(),
+            conflict_start_pattern: Regex::new(r"^\s*<{6,}\s*$").unwrap(), // Allow whitespace around markers
+            conflict_separator_pattern: Regex::new(r"^\s*={6,}\s*$").unwrap(), // Allow whitespace around markers
+            conflict_end_pattern: Regex::new(r"^\s*>{6,}\s*$").unwrap(), // Allow whitespace around markers
             validate_syntax: true,
         }
     }
@@ -95,26 +95,45 @@ impl GitConflictAnalyzer {
     }
 
     /// Check if a conflict marker is within a string literal or test function
+    #[allow(dead_code)]
     fn is_in_string_literal_or_test(&self, lines: &[&str], line_index: usize) -> bool {
         // Look for surrounding context that indicates this is test data
-        let start = line_index.saturating_sub(15);
-        let end = (line_index + 5).min(lines.len());
+        let start = line_index.saturating_sub(20);
+        let end = (line_index + 10).min(lines.len());
 
         // Check if we're inside a raw string literal
         let mut in_raw_string = false;
+        let mut raw_string_depth = 0;
         for i in start..=line_index {
             if i < lines.len() {
                 let line = lines[i];
-                if line.contains("r#\"") || line.contains("= r#") {
+                // Count opening and closing raw string markers
+                let open_count = line.matches("r#\"").count()
+                    + line.matches("r##\"").count()
+                    + line.matches("r###\"").count();
+                let close_count = line.matches("\"#").count()
+                    + line.matches("\"##").count()
+                    + line.matches("\"###").count();
+                raw_string_depth += open_count as i32 - close_count as i32;
+                if raw_string_depth > 0 {
                     in_raw_string = true;
-                }
-                if in_raw_string && line.contains("\"#") && i > start {
-                    in_raw_string = false;
                 }
             }
         }
 
         if in_raw_string {
+            return true;
+        }
+
+        // Check for regular string literals containing conflict markers
+        let current_line = lines[line_index];
+        if (current_line.contains("\"<<<<<<<")
+            || current_line.contains("\"=======")
+            || current_line.contains("\">>>>>>>"))
+            && (current_line.contains("let ")
+                || current_line.contains("const ")
+                || current_line.contains("static "))
+        {
             return true;
         }
 
@@ -124,8 +143,12 @@ impl GitConflictAnalyzer {
                 let line = lines[i];
                 if line.trim_start().starts_with("let content = r#")
                     || line.trim_start().starts_with("let content = \"")
+                    || line.trim_start().starts_with("let example = ")
                     || (line.contains("#[test]") && i <= line_index)
                     || (line.contains("fn test_") && i <= line_index)
+                    || (line.contains("#[cfg(test)]") && i <= line_index)
+                    || line.contains("mod tests")
+                    || line.contains("mod test")
                 {
                     return true;
                 }

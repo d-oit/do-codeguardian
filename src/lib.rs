@@ -2,6 +2,10 @@
 //!
 //! This is the core library for the CodeGuardian CLI tool, providing
 //! security analysis capabilities, git operations, and configuration management.
+
+#![allow(dead_code)] // Temporarily allow dead code during development
+#![allow(clippy::too_many_arguments)] // Allow complex function signatures
+#![allow(clippy::type_complexity)] // Allow complex types during development
 //!
 //! ## Features
 //!
@@ -92,7 +96,36 @@ pub async fn analyze_files(
     files: &[std::path::PathBuf],
     config: &Config,
 ) -> Result<security::AnalysisResults> {
-    security::analyze_files(files, config).await
+    use crate::core::GuardianEngine;
+    use crate::utils::progress::ProgressReporter;
+    use std::time::Instant;
+
+    let start_time = Instant::now();
+    let progress = ProgressReporter::new(false);
+    let mut engine = GuardianEngine::new(config.clone(), progress).await?;
+    let analysis_results = engine.analyze_files(files, 1).await?;
+
+    // Convert from types::AnalysisResults to security::AnalysisResults
+    let issues: Vec<security::SecurityIssue> = analysis_results
+        .findings
+        .into_iter()
+        .map(|finding| security::SecurityIssue {
+            file: finding.file,
+            line: finding.line as usize,
+            severity: format!("{:?}", finding.severity).to_lowercase(),
+            category: finding.category.unwrap_or_else(|| "general".to_string()),
+            message: finding.message,
+            suggestion: finding.suggestion.unwrap_or_default(),
+        })
+        .collect();
+
+    let duration = start_time.elapsed().as_millis();
+
+    Ok(security::AnalysisResults {
+        files_analyzed: analysis_results.summary.total_files_scanned,
+        issues,
+        duration_ms: duration,
+    })
 }
 
 /// Perform a git commit with security analysis

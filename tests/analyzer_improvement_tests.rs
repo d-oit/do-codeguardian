@@ -1,4 +1,5 @@
 //! Unit tests for analyzer improvements and false positive fixes
+const TEST_FILE: &str = "strings.rs";
 //!
 //! These tests specifically validate the improvements made to reduce
 //! false positives in the git conflict and AI content analyzers.
@@ -180,7 +181,7 @@ fn main() {
 }
 "#;
 
-    let findings = analyzer.analyze(Path::new("strings.rs"), string_content.as_bytes()).unwrap();
+    let findings = analyzer.analyze(Path::new(TEST_FILE), string_content.as_bytes()).unwrap();
 
     let incomplete_findings: Vec<_> = findings.iter()
         .filter(|f| f.rule == "incomplete_implementation")
@@ -189,8 +190,10 @@ fn main() {
     for finding in incomplete_findings {
         let line_content = string_content.lines().nth((finding.line - 1) as usize).unwrap_or("");
         // Should not flag content inside string literals
-        assert!(!line_content.contains("\"TODO: remember to update this text\""),
-               "Should not flag TODO inside string literals");
+        assert!(
+            !line_content.contains("\"TODO: remember to update this text\""),
+            "Should not flag TODO inside string literals"
+        );
         assert!(!line_content.contains("\"NotImplementedException occurred\""),
                "Should not flag exceptions inside string literals");
     }

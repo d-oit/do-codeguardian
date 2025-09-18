@@ -25,27 +25,24 @@ permissions:
   contents: read
 
 jobs:
-  release-validation:
-    name: 🎯 Release Validation
-    runs-on: ${{ matrix.os }}
-    concurrency:
-      group: ${{ github.workflow }}-${{ github.ref }}
-      cancel-in-progress: true
-
-    timeout-minutes: 30
-
-    strategy:
+   release-validation:
+      name: 🎯 Release Validation
+     runs-on: ${{ matrix.os }}
+     timeout-minutes: 30
+     concurrency:
+        group: ${{ github.workflow }}-${{ github.ref }}
+        cancel-in-progress: true
+     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
         include:
-          - os: ubuntu-latest
-            target: x86_64-unknown-linux-gnu
-          - os: windows-latest
-            target: x86_64-pc-windows-msvc
-          - os: macos-latest
-            target: x86_64-apple-darwin
-
-    steps:
+           - os: ubuntu-latest
+             target: x86_64-unknown-linux-gnu
+           - os: windows-latest
+             target: x86_64-pc-windows-msvc
+           - os: macos-latest
+             target: x86_64-apple-darwin
+      steps:
       - name: 📥 Checkout repository
         uses: actions/checkout@v5
 
@@ -124,29 +121,29 @@ jobs:
             echo "⚠️ Performance slower than expected: ${DURATION}s"
           fi
 
-      - name: 📤 Upload Release Artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: release-validation-${{ matrix.target }}
-          path: |
-            release-test.json
-          retention-days: 90
+       - name: 📤 Upload Release Artifacts
+         uses: actions/upload-artifact@v4
+         with:
+           name: release-validation-${{ matrix.target }}
+           path: |
+             release-test.json
+           retention-days: 90
 
-  release-performance-report:
-    name: 📈 Release Performance Report
-    runs-on: ubuntu-latest
-    concurrency:
-      group: ${{ github.workflow }}-${{ github.ref }}
-      cancel-in-progress: true
+   release-performance-report:
+     name: 📈 Release Performance Report
+     runs-on: ubuntu-latest
+     concurrency:
+       group: ${{ github.workflow }}-${{ github.ref }}
+       cancel-in-progress: true
 
-    needs: release-validation
+     needs: release-validation
 
-    steps:
-      - name: 📥 Download validation results
-        uses: actions/download-artifact@v5
-        with:
-          pattern: release-validation-*
-          merge-multiple: true
+     steps:
+       - name: 📥 Download validation results
+         uses: actions/download-artifact@v5
+         with:
+           pattern: release-validation-*
+           merge-multiple: true
 
        - name: 📊 Generate Performance Report
          run: |

@@ -1,8 +1,10 @@
-use crate::cli::CheckArgs;
+use crate::cli::{CheckArgs, OutputFormat};
 use crate::config::Config;
 use crate::core::GuardianEngine;
+use crate::output::formatter::OutputFormatter;
 use crate::output::storage::organizer::ResultsOrganizer;
 use crate::output::storage::{OrganizationStrategy, StorageConfig};
+use crate::output::{JsonFormatter, SarifFormatter};
 use crate::utils::config_utils::{
     enable_broken_files_feature, set_baseline_file, set_fail_on_conflicts, set_ml_threshold,
     set_parallel_workers, BrokenFilesFeature,
@@ -327,9 +329,31 @@ async fn handle_hierarchical_output(
         }
     }
 
-    // Print summary to stdout if not quiet
-    if !args.quiet {
-        println!("{}", generate_cli_summary(results));
+    Ok(())
+}
+
+async fn handle_stdout_output(
+    args: &CheckArgs,
+    results: &crate::types::AnalysisResults,
+) -> Result<()> {
+    if args.quiet {
+        return Ok(());
+    }
+
+    match args.format {
+        OutputFormat::Json => {
+            let formatter: Box<dyn OutputFormatter> = Box::new(JsonFormatter::new());
+            let output = formatter.format(results)?;
+            println!("{}", output.content);
+        }
+        OutputFormat::Human => {
+            println!("{}", generate_cli_summary(results));
+        }
+        OutputFormat::Sarif => {
+            let formatter: Box<dyn OutputFormatter> = Box::new(SarifFormatter::new());
+            let output = formatter.format(results)?;
+            println!("{}", output.content);
+        }
     }
 
     Ok(())
@@ -387,11 +411,6 @@ async fn handle_flat_file_output(
         } else {
             tracing::warn!("--emit-gh specified but no --repo provided");
         }
-    }
-
-    // Print summary to stdout if not quiet
-    if !args.quiet {
-        println!("{}", generate_cli_summary(results));
     }
 
     Ok(())
@@ -477,6 +496,9 @@ pub async fn run(mut args: CheckArgs, mut config: Config) -> Result<()> {
     };
 
     handle_output_and_reporting(&args, &results, &config, enhanced_results.as_ref()).await?;
+
+    // Handle stdout output based on format
+    handle_stdout_output(&args, &results).await?;
 
     // Check for conflicts if fail_on_conflicts is enabled
     if args.fail_on_conflicts || fail_on_conflicts_config {

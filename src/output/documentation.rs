@@ -631,6 +631,12 @@ pub struct DocumentationSuite {
     pub changelog: String,
 }
 
+impl Default for DocumentationSuite {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl DocumentationSuite {
     pub fn new() -> Self {
         Self {

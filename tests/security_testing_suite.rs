@@ -4,7 +4,9 @@
 //! token handling, data protection, and penetration testing scenarios.
 
 use anyhow::Result;
+use rand;
 use serde::{Deserialize, Serialize};
+use serde_json;
 use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::Duration;
@@ -12,9 +14,9 @@ use tokio::time::sleep;
 
 use do_codeguardian::analyzers::security::SecretAnalyzer;
 use do_codeguardian::config::base::Config;
-use do_codeguardian::github_api::GitHubApi;
+use do_codeguardian::github_api::GitHubApiClient;
 use do_codeguardian::integrations::traits::IntegrationSystem;
-use do_codeguardian::security::SecurityConfig;
+use do_codeguardian::config::SecurityConfig;
 
 /// Security testing configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -218,7 +220,7 @@ impl SecurityTestSuite {
         let start = std::time::Instant::now();
 
         // Test 1: Token validation
-        if let Some(token) = &config.github.token {
+        if let Some(token) = &config.integrations.github.token {
             if token.len() < 40 {
                 passed = false;
                 recommendations.push("GitHub token appears to be too short".to_string());
@@ -234,7 +236,7 @@ impl SecurityTestSuite {
 
         // Test 2: Authentication timeout
         let timeout_configured =
-            config.github.timeout_seconds > 0 && config.github.timeout_seconds <= 30;
+            config.integrations.github.timeout_seconds > 0 && config.integrations.github.timeout_seconds <= 30;
         if !timeout_configured {
             passed = false;
             recommendations
@@ -263,7 +265,7 @@ impl SecurityTestSuite {
         let start = std::time::Instant::now();
 
         // Test 1: Rate limiting configuration
-        if config.github.rate_limit < 1000 || config.github.rate_limit > 5000 {
+        if config.integrations.github.rate_limit < 1000 || config.integrations.github.rate_limit > 5000 {
             passed = false;
             recommendations
                 .push("GitHub rate limit should be between 1000-5000 requests/hour".to_string());
@@ -295,7 +297,7 @@ impl SecurityTestSuite {
         let start = std::time::Instant::now();
 
         // Test 1: HTTPS enforcement
-        if let Some(base_url) = &config.github.base_url {
+        if let Some(base_url) = &config.integrations.github.base_url {
             if !base_url.starts_with("https://") {
                 passed = false;
                 recommendations.push("GitHub base URL must use HTTPS".to_string());
@@ -409,7 +411,7 @@ impl SecurityTestSuite {
         recommendations.push("Ensure certificate pinning is implemented".to_string());
 
         // Test 2: Network timeout configuration
-        if config.github.timeout_seconds == 0 || config.github.timeout_seconds > 60 {
+        if config.integrations.github.timeout_seconds == 0 || config.integrations.github.timeout_seconds > 60 {
             passed = false;
             recommendations
                 .push("Configure appropriate network timeouts (1-60 seconds)".to_string());
@@ -438,7 +440,7 @@ impl SecurityTestSuite {
         let start = std::time::Instant::now();
 
         // Test 1: Environment variable usage
-        if config.github.token.is_some() {
+        if config.integrations.github.token.is_some() {
             recommendations.push(
                 "Ensure tokens are loaded from environment variables or secure vaults".to_string(),
             );
@@ -485,7 +487,7 @@ impl SecurityTestSuite {
     }
 
     /// Scan for injection vulnerabilities
-    async fn scan_injection_vulnerabilities(&self, config: &Config) -> Vec<SecurityVulnerability> {
+    async fn scan_injection_vulnerabilities(&self, _config: &Config) -> Vec<SecurityVulnerability> {
         let mut vulnerabilities = Vec::new();
 
         // Simulate vulnerability scanning (in real implementation, would use actual code analysis)
@@ -505,11 +507,11 @@ impl SecurityTestSuite {
     }
 
     /// Scan for secret vulnerabilities
-    async fn scan_secret_vulnerabilities(&self, config: &Config) -> Vec<SecurityVulnerability> {
+    async fn scan_secret_vulnerabilities(&self, _config: &Config) -> Vec<SecurityVulnerability> {
         let mut vulnerabilities = Vec::new();
 
         // Check for hardcoded secrets patterns
-        let secret_patterns = vec![
+        let _secret_patterns = vec![
             r#"(?i)(password|passwd|pwd)\s*=\s*['"][^'"]{8,}['"]"#,
             r#"(?i)(api[_-]?key|apikey)\s*=\s*['"][^'"]{20,}['"]"#,
             r#"(?i)(secret|token)\s*=\s*['"][^'"]{16,}['"]"#,

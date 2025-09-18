@@ -2,31 +2,19 @@
   "$schema": "https://opencode.ai/config.json",
   "model": "opencode/grok-code",
   "agent": {
-    "security-auditor": {
-      "model": "nvidia/deepseek-ai/deepseek-v3.1"
-    },
-    "false-positive-validator": {
-      "model": "chutes/zai-org/GLM-4.5-FP8"
-    },
-     " junior-developer": {
+    " beginner-developer-agent": {
       "model": "nvidia/deepseek-ai/deepseek-v3.1"
     },
     "ml-pipeline-manager": {
       "model": "nvidia/deepseek-ai/deepseek-v3.1"
-    },
-    "github-pr-manager": {
-      "model": "nvidia/deepseek-ai/deepseek-v3.1"
-    },
-    "github-workflow-manager": {
-      "model": "nvidia/deepseek-ai/deepseek-v3.1"
-    },
+    },   
     "ml-training-specialist": {
       "model": "nvidia/deepseek-ai/deepseek-v3.1"
     },
     "github-push-monitor": {
       "model": "nvidia/deepseek-ai/deepseek-v3.1"
     },
-    "debug-findings-analyst":{
+    "debug-findings-analyst": {
       "model": "chutes/zai-org/GLM-4.5-FP8"
     }
   },

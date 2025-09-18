@@ -1,6 +1,6 @@
 [package]
 name = "do-codeguardian"
-version = "0.2.0"
+version = "0.2.1"
 edition = "2021"
 authors = ["Dominik Oswald <6849456+d-oit@users.noreply.github.com>"]
 description = "CodeGuardian is a cutting-edge, security-first code analysis tool that combines machine learning, advanced static analysis, and seamless GitHub integration to help developers identify vulnerabilities, optimize performance, and maintain high code quality standards. Built with Rust for speed and reliability, it empowers teams to ship secure software faster."
@@ -36,7 +36,7 @@ full = ["git", "security", "logging", "hashing", "cargo-audit", "ml", "ast"]
 [dependencies]
 # CLI and async runtime - use minimal features for faster builds
 clap = { version = "4.5", features = ["derive"] }
-tokio = { version = "1.40.0", features = ["rt-multi-thread", "macros", "fs"] }
+tokio = { version = "1.40.0", features = ["rt-multi-thread", "macros", "fs", "process"] }
 
 # Serialization and configuration
 serde = { version = "1.0", features = ["derive"] }
@@ -88,7 +88,7 @@ async-trait = "0.1"
 urlencoding = "2.1"
 html-escape = "0.2"
 flate2 = "1.0"
-tempfile = "3.8"
+tempfile = "3.10"
 uuid = { version = "1.6", features = ["v4", "serde"] }
 
 # Machine Learning
@@ -128,6 +128,10 @@ futures = "0.3"
 
 # Random number generation for load testing
 rand = "0.8"
+
+# Additional testing utilities for comprehensive coverage
+tokio-test = "0.4"
+serial_test = "3.1"
 
 # Benchmarking
 divan = "0.1"

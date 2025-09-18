@@ -1,6 +1,7 @@
+use crate::utils::command_security;
 use anyhow::{anyhow, Result};
-use std::process::Command;
 use std::time::{Duration, Instant};
+use tokio::process::Command;
 use tokio::time::sleep;
 
 // Constants for GitHub API
@@ -94,7 +95,10 @@ impl GitHubApiClient {
     }
 
     async fn try_gh_command(&self, args: &[&str]) -> Result<String> {
-        let output = Command::new("gh").args(args).output()?;
+        // Validate GitHub CLI arguments to prevent command injection
+        command_security::validate_gh_args(args)?;
+
+        let output = Command::new("gh").args(args).output().await?;
 
         if output.status.success() {
             Ok(String::from_utf8_lossy(&output.stdout).to_string())
@@ -209,11 +213,21 @@ impl GitHubApiClient {
         // Extract issue number from GitHub CLI output (usually a URL)
         if let Some(issue_url) = output.lines().next_back() {
             if let Some(number_str) = issue_url.split('/').next_back() {
-                return Ok(number_str.parse().unwrap_or(0));
+                match number_str.parse::<u64>() {
+                    Ok(number) => return Ok(number),
+                    Err(_) => {
+                        return Err(anyhow!(
+                            "Failed to parse issue number from URL: {}",
+                            issue_url
+                        ))
+                    }
+                }
             }
         }
 
-        Ok(0)
+        Err(anyhow!(
+            "Failed to extract issue number from GitHub CLI output"
+        ))
     }
 
     pub async fn update_issue(

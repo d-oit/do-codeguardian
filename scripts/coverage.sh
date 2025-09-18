@@ -31,7 +31,7 @@ cargo tarpaulin \
     --all-features \
     --workspace \
     --timeout 120 \
-    --out Html,Xml,Json \
+    --out Html --out Xml --out Json \
     --output-dir coverage/ \
     --exclude-files 'target/*' 'tests/fixtures/*' 'benches/*' 'examples/*' 'tmp_*' \
     --line \

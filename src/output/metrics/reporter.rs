@@ -91,6 +91,12 @@ pub struct ReportSummary {
     pub anomalies_count: usize,
 }
 
+impl Default for AutomatedReporter {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl AutomatedReporter {
     /// Create a new automated reporter
     pub fn new() -> Self {

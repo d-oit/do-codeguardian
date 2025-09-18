@@ -1,3 +1,4 @@
+---
 name: CodeGuardian Duplicate Prevention
 
 on:
@@ -39,7 +40,7 @@ jobs:
         components: clippy, rustfmt
 
     - name: Cache dependencies
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: |
           ~/.cargo/registry
@@ -211,7 +212,7 @@ jobs:
 
     - name: Comment on PR with Duplicate Analysis
       if: github.event_name == 'pull_request' && steps.analysis.outputs.analysis_completed == 'true'
-      uses: actions/github-script@v6
+      uses: actions/github-script@v8
       with:
         script: |
           const fs = require('fs');

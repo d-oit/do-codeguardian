@@ -16,8 +16,10 @@ use git2::{Repository, Status};
 use tracing::{debug, info, warn};
 
 use crate::config::Config;
+use crate::core::GuardianEngine;
 use crate::error::{CodeGuardianError, Result};
-use crate::security;
+use crate::types::{AnalysisResults, Severity};
+use crate::utils::progress::ProgressReporter;
 
 /// Execute the git-commit command
 ///
@@ -73,19 +75,21 @@ pub async fn execute_git_commit(message: Option<&str>, config: &Config) -> Resul
 
     debug!("Found {} staged files", staged_files.len());
 
-    // Perform security analysis on staged files
+    // Perform comprehensive analysis on staged files
     info!("Performing security analysis on staged changes");
-    let analysis_results = security::analyze_files(&staged_files, config).await?;
+    let progress = ProgressReporter::new(false);
+    let mut engine = GuardianEngine::new(config.clone(), progress).await?;
+    let analysis_results = engine.analyze_files(&staged_files, 1).await?;
 
-    if !analysis_results.issues.is_empty() {
-        warn!("Security issues found in staged changes:");
-        for issue in &analysis_results.issues {
-            warn!("  - {}: {}", issue.severity, issue.message);
+    if analysis_results.has_issues() {
+        warn!("Issues found in staged changes:");
+        for finding in &analysis_results.findings {
+            warn!("  - {}: {}", finding.severity, finding.message);
         }
 
-        if config.security.fail_on_issues {
+        if config.security.fail_on_issues && analysis_results.has_high_severity_issues() {
             return Err(CodeGuardianError::SecurityIssuesFound(
-                analysis_results.issues.len(),
+                analysis_results.findings.len(),
             ));
         }
     }
@@ -122,7 +126,7 @@ pub async fn execute_git_commit(message: Option<&str>, config: &Config) -> Resul
 /// Returns a generated commit message
 async fn generate_commit_message(
     files: &[PathBuf],
-    analysis: &security::AnalysisResults,
+    analysis: &AnalysisResults,
     _config: &Config,
 ) -> Result<String> {
     // Analyze file types and changes
@@ -134,7 +138,11 @@ async fn generate_commit_message(
     }
 
     // Determine commit type based on file types and analysis
-    let commit_type = if analysis.issues.iter().any(|i| i.severity == "high") {
+    let commit_type = if analysis
+        .findings
+        .iter()
+        .any(|f| matches!(f.severity, Severity::High | Severity::Critical))
+    {
         "fix"
     } else if file_types.contains_key("rs") {
         "feat"
@@ -185,7 +193,10 @@ fn perform_git_commit(repo: &Repository, message: &str) -> Result<()> {
 
     // Get the current HEAD commit
     let head = repo.head()?;
-    let parent_commit = repo.find_commit(head.target().unwrap())?;
+    let target = head
+        .target()
+        .ok_or_else(|| CodeGuardianError::generic("HEAD has no target (unborn repository)"))?;
+    let parent_commit = repo.find_commit(target)?;
 
     // Create the commit
     let signature = repo.signature()?;

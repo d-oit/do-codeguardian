@@ -84,11 +84,11 @@ impl GuardianEngine {
     }
 
     pub async fn get_diff_files(&self, diff_spec: &str) -> Result<Vec<PathBuf>> {
-        crate::utils::git::get_diff_files(diff_spec)
+        crate::utils::git::get_diff_files(diff_spec).await
     }
 
     pub async fn get_staged_files(&self) -> Result<Vec<PathBuf>> {
-        crate::utils::git::get_staged_files()
+        crate::utils::git::get_staged_files().await
     }
 
     async fn scan_directory(&self, dir_path: &Path) -> Result<Vec<PathBuf>> {

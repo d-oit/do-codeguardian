@@ -10,18 +10,16 @@
    - repo: local
      require_serial: true
      hooks:
-        - id: rustfmt
-          name: Check Rust code formatting
-          files: '\.rs$'
-          entry: rustfmt
-          language: system
-          env:
-            PATH: "$HOME/.cargo/bin:$PATH"
-          args: [--check]
-        - id: clippy
-          name: Check Rust code with clippy and verify compilation
-          files: '\.rs$'
-          entry: bash -c "cargo clippy -- -D warnings && cargo check"
-          language: system
-          env:
-            PATH: "$HOME/.cargo/bin:$PATH"
+         - id: rustfmt
+           name: Check Rust code formatting
+           files: '\.rs$'
+           entry: rustfmt
+           language: system
+           env:
+             PATH: "$HOME/.cargo/bin:$PATH"
+           args: [--check]
+         - id: clippy
+           name: Check Rust code with clippy and verify compilation
+           files: '\.rs$'
+           entry: bash -c "cargo clippy -- -D warnings && cargo check"
+           language: system

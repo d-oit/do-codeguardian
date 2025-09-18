@@ -76,6 +76,7 @@ pub struct SearchResult {
 }
 
 /// Storage indexer for managing search capabilities
+#[derive(Default)]
 pub struct StorageIndexer {
     search_index: SearchIndex,
 }
@@ -137,14 +138,6 @@ impl Default for SearchQuery {
 impl StorageIndexer {
     /// Create a new storage indexer
     pub fn new() -> Self {
-        Self {
-            search_index: SearchIndex::new(),
-        }
-    }
-}
-
-impl Default for StorageIndexer {
-    fn default() -> Self {
         Self {
             search_index: SearchIndex::new(),
         }

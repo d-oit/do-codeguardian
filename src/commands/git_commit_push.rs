@@ -20,8 +20,10 @@ use tracing::{debug, info, warn};
 
 use crate::cli::GitCommitPushArgs;
 use crate::config::Config;
+use crate::core::GuardianEngine;
 use crate::error::{CodeGuardianError, Result};
-use crate::security;
+use crate::types::{AnalysisResults, Severity};
+use crate::utils::progress::ProgressReporter;
 
 /// Execute the git-commit-push command
 ///
@@ -80,19 +82,21 @@ pub async fn execute_git_commit_push(args: GitCommitPushArgs, config: &Config) -
 
         debug!("Found {} staged files", staged_files.len());
 
-        // Perform security analysis on staged files
+        // Perform comprehensive analysis on staged files
         info!("Performing security analysis on staged changes");
-        let analysis_results = security::analyze_files(&staged_files, config).await?;
+        let progress = ProgressReporter::new(false);
+        let mut engine = GuardianEngine::new(config.clone(), progress).await?;
+        let analysis_results = engine.analyze_files(&staged_files, 1).await?;
 
-        if !analysis_results.issues.is_empty() {
-            warn!("Security issues found in staged changes:");
-            for issue in &analysis_results.issues {
-                warn!("  - {}: {}", issue.severity, issue.message);
+        if analysis_results.has_issues() {
+            warn!("Issues found in staged changes:");
+            for finding in &analysis_results.findings {
+                warn!("  - {}: {}", finding.severity, finding.message);
             }
 
-            if config.security.fail_on_issues {
+            if config.security.fail_on_issues && analysis_results.has_high_severity_issues() {
                 return Err(CodeGuardianError::SecurityIssuesFound(
-                    analysis_results.issues.len(),
+                    analysis_results.findings.len(),
                 ));
             }
         }
@@ -112,10 +116,16 @@ pub async fn execute_git_commit_push(args: GitCommitPushArgs, config: &Config) -
         // For amend, use existing message or provided one
         let commit_message = args.message.unwrap_or_else(|| {
             // Get the last commit message
-            repo.head()
-                .and_then(|head| repo.find_commit(head.target().unwrap()))
-                .map(|commit| commit.message().unwrap_or("amend").to_string())
-                .unwrap_or_else(|_| "amend".to_string())
+            if let Ok(head) = repo.head() {
+                if let Some(target) = head.target() {
+                    if let Ok(commit) = repo.find_commit(target) {
+                        if let Some(msg) = commit.message() {
+                            return msg.to_string();
+                        }
+                    }
+                }
+            }
+            "amend".to_string()
         });
 
         debug!("Amending with commit message: {}", commit_message);
@@ -150,7 +160,7 @@ pub async fn execute_git_commit_push(args: GitCommitPushArgs, config: &Config) -
 /// Returns a generated commit message
 async fn generate_commit_message(
     files: &[PathBuf],
-    analysis: &security::AnalysisResults,
+    analysis: &AnalysisResults,
     _config: &Config,
 ) -> Result<String> {
     // Analyze file types and changes
@@ -162,7 +172,11 @@ async fn generate_commit_message(
     }
 
     // Determine commit type based on file types and analysis
-    let commit_type = if analysis.issues.iter().any(|i| i.severity == "high") {
+    let commit_type = if analysis
+        .findings
+        .iter()
+        .any(|f| matches!(f.severity, Severity::High | Severity::Critical))
+    {
         "fix"
     } else if file_types.contains_key("rs") {
         "feat"
@@ -220,13 +234,16 @@ fn perform_git_commit(
 
     // Get the current HEAD commit (for amend or new commit)
     let head = repo.head()?;
-    let parent_commit = repo.find_commit(head.target().unwrap())?;
+    let target = head
+        .target()
+        .ok_or_else(|| CodeGuardianError::generic("HEAD has no target (unborn repository)"))?;
+    let parent_commit = repo.find_commit(target)?;
 
     // Create the commit
     let signature = repo.signature()?;
     if amend {
         // For amend, include all parents of the current HEAD
-        let commit = repo.find_commit(head.target().unwrap())?;
+        let commit = repo.find_commit(target)?;
         let parent_commits: Vec<git2::Commit> = commit.parents().collect();
         let parent_refs: Vec<&git2::Commit> = parent_commits.iter().collect();
         repo.commit(

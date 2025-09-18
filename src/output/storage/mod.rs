@@ -308,7 +308,7 @@ pub struct StorageStatistics {
 }
 
 /// Query criteria for finding results
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct QueryCriteria {
     pub project: Option<String>,
     pub repository: Option<String>,
@@ -319,22 +319,6 @@ pub struct QueryCriteria {
     pub max_findings: Option<usize>,
     pub limit: Option<usize>,
     pub offset: Option<usize>,
-}
-
-impl Default for QueryCriteria {
-    fn default() -> Self {
-        Self {
-            project: None,
-            repository: None,
-            date_range: None,
-            tags: Vec::new(),
-            config_hash: None,
-            min_findings: None,
-            max_findings: None,
-            limit: None,
-            offset: None,
-        }
-    }
 }
 
 // Re-export enhanced hierarchical types for easy access

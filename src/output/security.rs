@@ -135,17 +135,24 @@ fn filter_tags(html: &str, config: &SanitizationConfig) -> Result<String> {
     let tag_regex = Regex::new(r"<(/?)([a-zA-Z][a-zA-Z0-9]*)[^>]*>")?;
 
     let result = tag_regex.replace_all(html, |caps: &regex::Captures| {
-        let tag_name = caps.get(2).unwrap().as_str().to_lowercase();
+        let tag_name = caps
+            .get(2)
+            .map(|m| m.as_str().to_lowercase())
+            .unwrap_or_default();
 
         if config.allowed_tags.contains(&tag_name) {
             // Keep allowed tags but filter attributes
-            filter_attributes(caps.get(0).unwrap().as_str(), config)
+            caps.get(0)
+                .map(|m| filter_attributes(m.as_str(), config))
+                .unwrap_or_default()
         } else if config.strip_disallowed {
             // Remove disallowed tags
             String::new()
         } else {
             // Escape disallowed tags
-            html_escape::encode_text(caps.get(0).unwrap().as_str()).to_string()
+            caps.get(0)
+                .map(|m| html_escape::encode_text(m.as_str()).to_string())
+                .unwrap_or_default()
         }
     });
 

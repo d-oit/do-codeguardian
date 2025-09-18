@@ -38,6 +38,12 @@ pub struct RiskAccumulationRule;
 /// Performance insight rule
 pub struct PerformanceInsightRule;
 
+impl Default for InsightGenerator {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl InsightGenerator {
     /// Create a new insight generator
     pub fn new() -> Self {
@@ -305,7 +311,7 @@ impl InsightRule for RiskAccumulationRule {
     fn generate_insights(
         &self,
         findings: &[Finding],
-        relationships: &[FindingRelationship],
+        _relationships: &[FindingRelationship],
     ) -> Vec<Insight> {
         let mut insights = Vec::new();
 

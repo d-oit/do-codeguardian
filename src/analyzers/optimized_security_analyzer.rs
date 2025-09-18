@@ -434,7 +434,7 @@ mod tests {
 
         let analyzer = OptimizedSecurityAnalyzer::new();
         let test_content = r#"
-            let api_key = "sk-1234567890abcdef";
+            let api_key = "sk-test-key-example-not-real";
             unsafe { transmute(ptr) }
             ' OR 1=1
         "#;

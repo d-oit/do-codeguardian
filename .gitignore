@@ -57,3 +57,8 @@ coverage/
 # Temporary validation reports
 /uat_report.md
 /validation_report_*.md
+dist/
+
+# Generated analysis results
+build/analysis-results/validation-results.json
+build/analysis-results/validation-results.sarif

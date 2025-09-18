@@ -11,7 +11,7 @@
 //! ```
 
 use clap::Parser;
-use tracing::{info, Level};
+use tracing::info;
 use tracing_subscriber::FmtSubscriber;
 
 use anyhow::Result;
@@ -50,7 +50,7 @@ async fn main() -> Result<()> {
     info!("CodeGuardian CLI starting");
 
     // Get project root directory
-    let project_root = std::env::current_dir().map_err(|e| CodeGuardianError::Io(e))?;
+    let project_root = std::env::current_dir().map_err(CodeGuardianError::Io)?;
 
     // Load configuration
     let config_path = &cli.config;

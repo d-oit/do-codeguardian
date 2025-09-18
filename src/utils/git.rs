@@ -1,11 +1,16 @@
+use crate::utils::command_security;
 use anyhow::Result;
 use std::path::PathBuf;
-use std::process::Command;
+use tokio::process::Command;
 
-pub fn get_diff_files(diff_spec: &str) -> Result<Vec<PathBuf>> {
+pub async fn get_diff_files(diff_spec: &str) -> Result<Vec<PathBuf>> {
+    // Validate diff_spec to prevent command injection
+    command_security::validate_git_diff_spec(diff_spec)?;
+
     let output = Command::new("git")
         .args(["diff", "--name-only", diff_spec])
-        .output()?;
+        .output()
+        .await?;
 
     if !output.status.success() {
         return Err(anyhow::anyhow!("Git diff command failed"));
@@ -20,10 +25,11 @@ pub fn get_diff_files(diff_spec: &str) -> Result<Vec<PathBuf>> {
     Ok(files)
 }
 
-pub fn get_staged_files() -> Result<Vec<PathBuf>> {
+pub async fn get_staged_files() -> Result<Vec<PathBuf>> {
     let output = Command::new("git")
         .args(["diff", "--cached", "--name-only"])
-        .output()?;
+        .output()
+        .await?;
 
     if !output.status.success() {
         return Err(anyhow::anyhow!("Git staged files command failed"));
@@ -38,10 +44,11 @@ pub fn get_staged_files() -> Result<Vec<PathBuf>> {
     Ok(files)
 }
 
-pub fn get_current_commit_hash() -> Result<String> {
+pub async fn get_current_commit_hash() -> Result<String> {
     let output = Command::new("git")
         .args(["rev-parse", "--short", "HEAD"])
-        .output()?;
+        .output()
+        .await?;
 
     if !output.status.success() {
         return Err(anyhow::anyhow!("Failed to get current commit hash"));

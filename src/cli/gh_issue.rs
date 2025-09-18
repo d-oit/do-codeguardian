@@ -5,8 +5,8 @@ use crate::types::AnalysisResults;
 use crate::utils::path_utils::resolve_input_path;
 use crate::utils::report_utils::{generate_checklist_item, truncate_findings};
 use anyhow::Result;
-use std::process::Command;
 use tokio::fs;
+use tokio::process::Command;
 
 // Constants for GitHub issues
 const GITHUB_ISSUE_MAX_BODY_SIZE: usize = 60000; // GitHub's approximate limit
@@ -30,7 +30,7 @@ pub async fn create_or_update_issue(results: &AnalysisResults, args: &GhIssueArg
     }
 
     // Generate issue title
-    let title = generate_issue_title(&args.title, &args.repo)?;
+    let title = generate_issue_title(&args.title, &args.repo).await?;
 
     // Generate issue body
     let body = generate_issue_body(results, &args.mode, args).await?;
@@ -53,7 +53,7 @@ pub async fn create_or_update_issue(results: &AnalysisResults, args: &GhIssueArg
         .await?;
 
     // Additional check: search for issues containing the commit hash in title or body
-    let commit_hash = get_current_commit_hash()?;
+    let commit_hash = get_current_commit_hash().await?;
     let existing_by_commit = if let Some(hash) = &commit_hash {
         github_client
             .find_issue_by_commit_hash(hash, &args.repo)
@@ -98,11 +98,12 @@ pub async fn create_or_update_issue(results: &AnalysisResults, args: &GhIssueArg
     Ok(())
 }
 
-fn generate_issue_title(prefix: &str, _repo: &str) -> Result<String> {
+async fn generate_issue_title(prefix: &str, _repo: &str) -> Result<String> {
     // Try to get current commit hash for unique identification
     let output = Command::new("git")
         .args(["rev-parse", "--short", "HEAD"])
-        .output();
+        .output()
+        .await;
 
     if let Ok(output) = output {
         if output.status.success() {
@@ -134,10 +135,11 @@ fn generate_issue_title(prefix: &str, _repo: &str) -> Result<String> {
     ))
 }
 
-fn get_current_commit_hash() -> Result<Option<String>> {
+async fn get_current_commit_hash() -> Result<Option<String>> {
     let output = Command::new("git")
         .args(["rev-parse", "--short", "HEAD"])
-        .output();
+        .output()
+        .await;
 
     if let Ok(output) = output {
         if output.status.success() {

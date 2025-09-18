@@ -1,3 +1,4 @@
+pub mod command_security;
 pub mod config_utils;
 pub mod formatting;
 pub mod git;

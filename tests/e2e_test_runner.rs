@@ -432,7 +432,7 @@ impl E2ETestRunner {
 
                 // TODO: Implement timeout handling for test steps
                 // if let Some(timeout) = step.timeout {
-                //     cmd.timeout(timeout);
+                //     // cmd.timeout(timeout);
                 // }
 
                 let output = cmd.output()?;
@@ -467,7 +467,7 @@ impl E2ETestRunner {
 
                 // TODO: Implement timeout handling for test steps
                 // if let Some(timeout) = step.timeout {
-                //     cmd.timeout(timeout);
+                //     // cmd.timeout(timeout);
                 // }
 
                 let output = cmd.output()?;
@@ -495,7 +495,7 @@ impl E2ETestRunner {
                 }
 
                 if let Some(timeout) = step.timeout {
-                    cmd.timeout(timeout);
+                    // cmd.timeout(timeout);
                 }
 
                 let output = cmd.output()?;
@@ -683,7 +683,7 @@ impl E2ETestRunner {
 
         let current_results = self.results.lock().await;
 
-        let regressions = current_results
+        let regressions: Vec<_> = current_results
             .iter()
             .filter_map(|current| {
                 let baseline_result = baseline_report
