@@ -487,4 +487,3 @@ jobs:
 - Release build: < 60 seconds
 - Cache hit rate: > 80%
 - Binary size: < 10MB (release)
-

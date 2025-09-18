@@ -37,10 +37,10 @@ fn test_github_cli_args_validation() {
     // Test GitHub CLI args validation prevents injection
     let safe_args = ["issue", "list", "--limit", "10"];
     assert!(command_security::validate_gh_args(&safe_args).is_ok());
-    
+
     let dangerous_args = ["issue", "list;rm -rf /"];
     assert!(command_security::validate_gh_args(&dangerous_args).is_err());
-    
+
     let injection_args = ["issue", "list`ls`"];
     assert!(command_security::validate_gh_args(&injection_args).is_err());
 }
@@ -56,7 +56,7 @@ fn test_commit_message_sanitization() {
         command_security::sanitize_commit_message("  Fix bug  ").unwrap(),
         "Fix bug"
     );
-    
+
     assert!(command_security::sanitize_commit_message("Fix`ls`").is_err());
     assert!(command_security::sanitize_commit_message("Fix;rm -rf /").is_err());
     assert!(command_security::sanitize_commit_message("").is_err());
@@ -68,17 +68,17 @@ fn test_security_edge_cases() {
     // Test very long inputs
     let long_branch = "a".repeat(300);
     assert!(command_security::validate_git_branch_name(&long_branch).is_err());
-    
+
     let long_file = "a".repeat(5000);
     assert!(command_security::validate_file_path(&long_file).is_err());
-    
+
     let long_commit = "a".repeat(600);
     assert!(command_security::sanitize_commit_message(&long_commit).is_err());
-    
+
     // Test unicode and special characters
     assert!(command_security::validate_git_branch_name("branch-with-émojis").is_err());
     assert!(command_security::validate_git_branch_name("branch\n\r\t").is_err());
-    
+
     // Test null bytes and control characters
     assert!(command_security::validate_git_branch_name("branch\0").is_err());
     assert!(command_security::validate_file_path("file\0").is_err());

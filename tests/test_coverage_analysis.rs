@@ -25,9 +25,9 @@ impl TestCoverageAnalyzer {
     pub fn analyze_coverage(&mut self) -> CoverageReport {
         // In a real implementation, this would integrate with cargo tarpaulin
         // or other coverage tools. For now, we'll simulate coverage analysis.
-        
+
         self.simulate_coverage_analysis();
-        
+
         CoverageReport {
             overall_coverage: self.calculate_overall_coverage(),
             module_breakdown: self.module_coverage.clone(),
@@ -131,7 +131,7 @@ impl CoverageReport {
         println!("📊 TEST COVERAGE ANALYSIS REPORT");
         println!("================================");
         println!("Overall Coverage: {:.1}%", self.overall_coverage);
-        
+
         if self.overall_coverage >= 95.0 {
             println!("✅ Coverage target achieved!");
         } else {
@@ -141,7 +141,7 @@ impl CoverageReport {
         println!("\n📋 Module Breakdown:");
         let mut modules: Vec<_> = self.module_breakdown.iter().collect();
         modules.sort_by(|a, b| b.1.partial_cmp(a.1).unwrap());
-        
+
         for (module, coverage) in modules {
             let status = if *coverage >= 95.0 { "✅" } else if *coverage >= 90.0 { "⚠️" } else { "❌" };
             println!("  {} {}: {:.1}%", status, module, coverage);
@@ -200,25 +200,25 @@ impl TestQualityMetrics {
         println!("📈 TEST QUALITY METRICS");
         println!("=======================");
         println!("Total Tests: {}", self.total_tests);
-        println!("├─ Unit Tests: {} ({:.1}%)", 
-                self.unit_tests, 
+        println!("├─ Unit Tests: {} ({:.1}%)",
+                self.unit_tests,
                 (self.unit_tests as f64 / self.total_tests as f64) * 100.0);
-        println!("├─ Integration Tests: {} ({:.1}%)", 
+        println!("├─ Integration Tests: {} ({:.1}%)",
                 self.integration_tests,
                 (self.integration_tests as f64 / self.total_tests as f64) * 100.0);
-        println!("├─ E2E Tests: {} ({:.1}%)", 
+        println!("├─ E2E Tests: {} ({:.1}%)",
                 self.e2e_tests,
                 (self.e2e_tests as f64 / self.total_tests as f64) * 100.0);
-        println!("├─ Performance Tests: {} ({:.1}%)", 
+        println!("├─ Performance Tests: {} ({:.1}%)",
                 self.performance_tests,
                 (self.performance_tests as f64 / self.total_tests as f64) * 100.0);
-        println!("└─ Property Tests: {} ({:.1}%)", 
+        println!("└─ Property Tests: {} ({:.1}%)",
                 self.property_tests,
                 (self.property_tests as f64 / self.total_tests as f64) * 100.0);
 
         println!("\n⏱️  Performance Metrics:");
         println!("Average Test Execution: {:.1}ms", self.avg_test_execution_time_ms);
-        
+
         if self.slow_tests.is_empty() {
             println!("✅ No slow tests detected");
         } else {
@@ -277,10 +277,10 @@ mod coverage_analysis_tests {
     fn test_coverage_analysis() {
         let mut analyzer = TestCoverageAnalyzer::new();
         let report = analyzer.analyze_coverage();
-        
+
         assert!(report.overall_coverage > 0.0);
         assert!(!report.module_breakdown.is_empty());
-        
+
         // Print report for manual review
         report.print_report();
     }
@@ -290,10 +290,10 @@ mod coverage_analysis_tests {
         let metrics = TestQualityMetrics::analyze();
         assert!(metrics.total_tests > 0);
         assert!(metrics.unit_tests > 0);
-        
+
         // Print metrics for manual review
         metrics.print_metrics();
-        
+
         let issues = metrics.check_quality_goals();
         if !issues.is_empty() {
             println!("Quality issues found:");
@@ -306,14 +306,14 @@ mod coverage_analysis_tests {
     #[test]
     fn test_coverage_recommendations() {
         let mut analyzer = TestCoverageAnalyzer::new();
-        
+
         // Add a low coverage module
         analyzer.module_coverage.insert("test_module".to_string(), 75.0);
         analyzer.function_coverage.insert("uncovered_function".to_string(), false);
-        
+
         let report = analyzer.analyze_coverage();
         assert!(!report.recommendations.is_empty());
-        
+
         let has_module_recommendation = report.recommendations.iter()
             .any(|r| r.contains("test_module"));
         assert!(has_module_recommendation, "Should recommend improving low coverage modules");
@@ -322,12 +322,12 @@ mod coverage_analysis_tests {
     #[test]
     fn test_coverage_thresholds() {
         let mut analyzer = TestCoverageAnalyzer::new();
-        
+
         // Test high coverage scenario
         analyzer.module_coverage.insert("high_coverage".to_string(), 98.0);
         let report = analyzer.analyze_coverage();
         assert!(report.overall_coverage > 95.0);
-        
+
         // Test low coverage scenario
         analyzer.module_coverage.clear();
         analyzer.module_coverage.insert("low_coverage".to_string(), 70.0);

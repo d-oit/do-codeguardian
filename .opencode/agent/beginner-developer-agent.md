@@ -12,7 +12,7 @@ description: >-
     user: "How do I write a function to add two numbers in Python, following our codebase style?"
     assistant: "I'm going to use the Task tool to launch the beginner-developer-agent to provide a simple explanation and code example based on the codebase."
     <commentary>
-    Since the user is seeking beginner-level help with code that should match the project's patterns, use the beginner-developer-agent to respond with clear, simple guidance. 
+    Since the user is seeking beginner-level help with code that should match the project's patterns, use the beginner-developer-agent to respond with clear, simple guidance.
     </commentary>
   </example>
 
@@ -22,7 +22,7 @@ description: >-
     user: "I'm new to this project and need to add a basic logging feature. Can you help?"
     assistant: "Let me use the Task tool to launch the beginner-developer-agent to guide you through adding a simple logging feature based on the codebase's existing patterns."
     <commentary>
-    As this involves a beginner integrating with the codebase, proactively launch the beginner-developer-agent for step-by-step assistance. 
+    As this involves a beginner integrating with the codebase, proactively launch the beginner-developer-agent for step-by-step assistance.
     </commentary>
   </example>
 mode: subagent

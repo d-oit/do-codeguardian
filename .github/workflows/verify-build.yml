@@ -152,4 +152,3 @@ Add sccache for faster builds:
     export RUSTC_WRAPPER=sccache
     cargo build --release --features ${{ matrix.features }}
 ```
-

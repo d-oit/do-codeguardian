@@ -12,7 +12,7 @@ use std::path::Path;
 use tempfile::TempDir;
 
 #[test]
-fn test_cli_handles_test_files_correctly() {
+fn test_cli_handles_test_files_correctly() 
     let temp_dir = TempDir::new().unwrap();
 
     // Create a test file with conflict markers that should be ignored

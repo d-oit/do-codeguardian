@@ -28,13 +28,13 @@ fn main() {
     // This should trigger security warnings
     let user_input = "test";
     Command::new("echo").arg(user_input).output().unwrap();
-    
+
     // This should trigger performance warnings
     let mut result = String::new();
     for i in 0..1000 {
         result = result + &format!("item {}", i); // Inefficient string concatenation
     }
-    
+
     println!("{}", result);
 }
 "#;
