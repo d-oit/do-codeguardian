@@ -1,7 +1,6 @@
 # Rust
 /target/
 **/*.rs.bk
-Cargo.lock
 
 # RovoDev
 tmp_rovodev_*
@@ -62,3 +61,20 @@ dist/
 # Generated analysis results
 build/analysis-results/validation-results.json
 build/analysis-results/validation-results.sarif
+
+# Generated analysis and build results
+analysis-results/
+build/
+benchmark_results/
+
+# Cargo local config
+.cargo/
+
+# Additional environment files
+.env.local
+.env.*.local
+
+# Security files (if used)
+*.pem
+*.key
+*.p12
