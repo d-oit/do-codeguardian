@@ -1,11 +1,13 @@
-use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion};
+use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
 use do_codeguardian::{
     config::Config,
     core::GuardianEngine,
     performance::{
         OptimizationRecommendation, PerformanceAnalyzer as PerfAnalyzer, PerformanceMetrics,
     },
+    utils::progress::ProgressReporter,
 };
+use std::hint::black_box;
 use std::path::PathBuf;
 use std::sync::Arc;
 use std::time::Duration;
@@ -87,7 +89,7 @@ fn bench_optimization_recommendations(c: &mut Criterion) {
 
                 b.iter(|| {
                     let recommendations = analyzer.analyze_performance();
-                    black_box(recommendations);
+                    std::hint::black_box(recommendations);
                 });
             },
         );
@@ -104,34 +106,40 @@ fn bench_optimization_impact_analysis(c: &mut Criterion) {
 
     group.bench_function("before_after_optimization_comparison", |b| {
         let test_dir = generate_test_repository();
-        let config = Config::minimal();
 
         b.iter(|| {
+            let config = Config::default();
             rt.block_on(async {
+                let progress_before = ProgressReporter::new(false);
                 // Simulate before optimization
-                let mut engine_before =
-                    GuardianEngine::new_with_ml(config.clone(), Default::default(), None)
-                        .await
-                        .unwrap();
+                let mut engine_before = GuardianEngine::new(config.clone(), progress_before)
+                    .await
+                    .unwrap();
 
+                let files = engine_before
+                    .get_all_files(&[test_dir.path().to_path_buf()])
+                    .await
+                    .unwrap();
                 let start_before = std::time::Instant::now();
-                let result_before = engine_before.analyze_path(test_dir.path(), 1).await;
+                let result_before = engine_before.analyze_files(&files, 1).await;
                 let duration_before = start_before.elapsed();
 
                 // Simulate after optimization (with more threads)
-                let mut engine_after =
-                    GuardianEngine::new_with_ml(config, Default::default(), None)
-                        .await
-                        .unwrap();
+                let progress_after = ProgressReporter::new(false);
+                let mut engine_after = GuardianEngine::new(config, progress_after).await.unwrap();
 
+                let files = engine_after
+                    .get_all_files(&[test_dir.path().to_path_buf()])
+                    .await
+                    .unwrap();
                 let start_after = std::time::Instant::now();
-                let result_after = engine_after.analyze_path(test_dir.path(), 4).await;
+                let result_after = engine_after.analyze_files(&files, 4).await;
                 let duration_after = start_after.elapsed();
 
                 // Calculate optimization impact
                 let speedup = duration_before.as_secs_f64() / duration_after.as_secs_f64();
 
-                black_box((result_before.unwrap(), result_after.unwrap(), speedup));
+                std::hint::black_box((result_before.unwrap(), result_after.unwrap(), speedup));
             });
         });
     });
@@ -153,7 +161,7 @@ fn bench_specific_optimization_strategies(c: &mut Criterion) {
             for _ in 0..1000 {
                 allocations.push(vec![0u8; 1024]); // 1KB allocations
             }
-            black_box(allocations.len());
+            std::hint::black_box(allocations.len());
         });
     });
 
@@ -162,15 +170,18 @@ fn bench_specific_optimization_strategies(c: &mut Criterion) {
         let test_dir = generate_test_repository();
 
         b.iter(|| {
+            let config = Config::default();
             rt.block_on(async {
-                let config = Config::minimal();
-                let mut engine = GuardianEngine::new_with_ml(config, Default::default(), None)
+                let progress = ProgressReporter::new(false);
+                let mut engine = GuardianEngine::new(config, progress).await.unwrap();
+
+                let files = engine
+                    .get_all_files(&[test_dir.path().to_path_buf()])
                     .await
                     .unwrap();
-
                 // Test different parallelism levels
-                let result = engine.analyze_path(test_dir.path(), 8).await;
-                black_box(result.unwrap());
+                let result = engine.analyze_files(&files, 8).await;
+                std::hint::black_box(result.unwrap());
             });
         });
     });
@@ -189,7 +200,7 @@ fn bench_specific_optimization_strategies(c: &mut Criterion) {
             }
 
             let hit_rate = metrics.get_cache_hit_rate();
-            black_box(hit_rate);
+            std::hint::black_box(hit_rate);
         });
     });
 
@@ -231,7 +242,7 @@ fn bench_recommendation_prioritization(c: &mut Criterion) {
                 }
             }
 
-            black_box((critical.len(), high.len(), medium.len(), low.len()));
+            std::hint::black_box((critical.len(), high.len(), medium.len(), low.len()));
         });
     });
 
@@ -272,7 +283,7 @@ fn bench_implementation_effort_analysis(c: &mut Criterion) {
                 }
             }
 
-            black_box((low_effort.len(), medium_effort.len(), high_effort.len()));
+            std::hint::black_box((low_effort.len(), medium_effort.len(), high_effort.len()));
         });
     });
 
@@ -312,7 +323,7 @@ fn bench_cost_benefit_analysis(c: &mut Criterion) {
                 total_estimated_benefit += estimated_benefit;
             }
 
-            black_box(total_estimated_benefit);
+            std::hint::black_box(total_estimated_benefit);
         });
     });
 

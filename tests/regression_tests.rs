@@ -52,7 +52,7 @@ more code
     // Should not detect git conflicts in test code
     let output_str = String::from_utf8(output.stdout).unwrap();
     assert!(!output_str.contains("git_conflict"),
-            r#"Git conflict analyzer should not flag test content with conflict markers"#);
+            "Git conflict analyzer should not flag test content with conflict markers");
 }
 
 /// Test that AI content analyzer doesn't flag legitimate documentation

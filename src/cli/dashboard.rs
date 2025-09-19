@@ -59,7 +59,7 @@ pub async fn run(args: DashboardArgs, config: &Config) -> Result<()> {
         service.start().await?;
     } else if args.generate_report {
         let dashboard_config = DashboardConfig::default();
-        let service = DashboardService::new(dashboard_config);
+        let service = DashboardService::new(dashboard_config.clone());
 
         // Find the requested view
         let view = dashboard_config

@@ -239,7 +239,7 @@ impl PatternRecognitionEngine {
             }
         }
 
-        self.models.insert(pattern_type, model);
+        self.models.insert(pattern_type.clone(), model);
         tracing::info!("Loaded model for pattern type: {:?}", pattern_type);
         Ok(())
     }
@@ -355,7 +355,9 @@ impl PatternRecognitionEngine {
         {
             use crate::ml::fann_classifier::FannClassifier;
 
-            let classifier = FannClassifier::from_bytes(&model.model_data)?;
+            let temp_file = tempfile::NamedTempFile::new()?;
+            std::fs::write(temp_file.path(), &model.model_data)?;
+            let classifier = FannClassifier::load(temp_file.path())?;
             let prediction = classifier.predict(features)?;
 
             Ok(ModelPrediction {
@@ -522,8 +524,9 @@ impl PatternRecognitionEngine {
     async fn retrain_models(&mut self) -> Result<()> {
         tracing::info!("Starting model retraining based on user feedback");
 
-        for (pattern_type, _model) in &mut self.models {
-            self.retrain_single_model(pattern_type).await?;
+        let pattern_types: Vec<_> = self.models.keys().cloned().collect();
+        for pattern_type in pattern_types {
+            self.retrain_single_model(&pattern_type).await?;
         }
 
         self.continuous_learning.mark_retrained();

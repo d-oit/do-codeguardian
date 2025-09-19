@@ -248,7 +248,7 @@ impl std::fmt::Display for CacheStats {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::types::Finding;
+    use crate::types::{Finding, Severity};
     use std::path::PathBuf;
 
     #[test]

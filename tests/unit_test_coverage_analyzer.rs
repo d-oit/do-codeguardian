@@ -16,13 +16,13 @@ mod git_conflict_analyzer_tests {
     #[test]
     fn test_analyzer_creation() {
         let analyzer = GitConflictAnalyzer::new();
-        assert_eq!(analyzer.name(), "git-conflict");
+        assert_eq!(analyzer.name(), "git_conflict");
     }
 
     #[test]
     fn test_analyzer_with_syntax_validation() {
         let analyzer = GitConflictAnalyzer::new().with_syntax_validation(false);
-        assert_eq!(analyzer.name(), "git-conflict");
+        assert_eq!(analyzer.name(), "git_conflict");
     }
 
     #[test]

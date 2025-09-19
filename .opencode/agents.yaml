@@ -1,419 +1,452 @@
+# CodeGuardian Agent Configuration
+# Organized by functional categories for better management
+
 agents:
+  # Core Analysis Agents
   - name: ai-code-analysis-swarm
-    description: Use this agent when you need to perform comprehensive, multi-faceted analysis of code segments, such as reviewing for bugs, performance issues, security vulnerabilities, and best practices in a collaborative swarm-like manner, typically after a logical chunk of code has been written or modified. This agent is ideal for orchestrating analysis across multiple domains simultaneously.
+    description: Orchestrates comprehensive code analysis using swarm intelligence for CodeGuardian's src/analyzers/ modules, focusing on security-first analysis with path canonicalization and 10MB file size limits
     key_capabilities:
-      - Static code analysis and error detection
-      - Logic and bug identification
-      - Security vulnerability scanning
-      - Performance optimization analysis
-      - Code maintainability assessment
-      - Compliance and best practices validation
-  - name: ai-persona-creation-specialist
-    description: Creates specialized AI personas for CodeGuardian and development workflows with manual activation
-    key_capabilities:
-      - Domain Expertise Analysis
-      - Persona Specification
-      - Integration Planning
-      - Quality Assurance
-      - Documentation Generation
+      - Static code analysis and error detection in src/analyzers/
+      - Logic and bug identification with Rust ownership patterns
+      - Security vulnerability scanning with input validation
+      - Performance optimization using Tokio async patterns
+      - Code maintainability assessment against Rust 2021 standards
+      - Compliance validation with codeguardian.toml configuration
   - name: analysis-swarm-agent
-    description: Advanced code analysis agent implementing swarm intelligence with RYAN (methodical analyst), FLASH (rapid innovator), and SOCRATES (questioning facilitator) for comprehensive, balanced code review
+    description: Implements swarm intelligence with RYAN, FLASH, and SOCRATES personas for balanced code review in CodeGuardian, integrating with src/ml/ RUV-FANN neural networks
     key_capabilities:
-      - Comprehensive Coverage
-      - Balanced Decision Making
-      - Risk Assessment
-      - Actionable Recommendations
-      - Continuous Learning
+      - Comprehensive coverage across src/core/ and src/analyzers/
+      - Balanced decision making with security-first priorities
+      - Risk assessment for memory safety and resource exhaustion
+      - Actionable recommendations aligned with Rust best practices
+      - Continuous learning from performance_thresholds.json benchmarks
   - name: analyzer-orchestrator
-    description: Coordinates and orchestrates multiple CodeGuardian analyzers for comprehensive code analysis, managing execution order, result integration, and performance optimization
+    description: Coordinates CodeGuardian analyzers in src/analyzers/ for comprehensive analysis, managing execution order and result integration with security features
     key_capabilities:
-      - Analyzer Coordination Guidance
-      - Result Integration Planning
-      - Priority Management Strategy
-      - Performance Optimization Guidance
-      - Configuration Management Analysis
-      - Cross-Analyzer Correlation Design
-  - name: beginner-developer-agent
-    description: Use this agent when a user needs assistance with basic coding tasks, explanations of simple concepts, or writing straightforward code snippets that align with the project's existing codebase patterns and standards, especially for those new to development or the specific project. This agent is ideal for proactive guidance on beginner-friendly tasks without overwhelming complexity.
-    key_capabilities:
-      - Clear explanations
-      - Code examples
-      - Proactive guidance
-      - Pattern alignment
-      - Learning support
-  - name: benchmark-agent
-    description: Manages performance benchmarks in the CodeGuardian project, including creating, running, analyzing, and optimizing performance tests
-    key_capabilities:
-      - Benchmark creation and design
-      - Benchmark execution and data collection
-      - Performance analysis and insights
-      - Optimization recommendations
-      - Benchmark maintenance and updates
-      - CI/CD integration for performance monitoring
-  - name: build-ci-optimizer
-    description: Optimizes build processes, CI/CD pipelines, and deployment for CodeGuardian
-    key_capabilities:
-      - Build process optimization
-      - CI/CD pipeline enhancement
-      - Performance monitoring and improvement
-      - Resource utilization analysis
-      - Automated testing integration
-      - Deployment strategy optimization
-  - name: cache-intelligence-agent
-    description: Manages src/cache.rs for intelligent caching, optimizing performance and memory usage
-    key_capabilities:
-      - Cache Optimization
-      - Invalidation Management
-      - Memory Management
-      - Data Persistence
-      - Performance Monitoring
-      - Cache Warming
-  - name: clean-code-developer
-    description: Ensures code quality and maintainability through clean code practices and refactoring
-    key_capabilities:
-      - Code quality assessment
-      - Refactoring recommendations
-      - Best practices implementation
-      - Code readability improvement
-      - Technical debt reduction
-      - Clean architecture guidance
+      - Analyzer coordination in src/core/engine.rs
+      - Result integration with output processing in src/output/
+      - Priority management with resource limits (10MB files)
+      - Performance optimization using Blake3 hashing
+      - Configuration management via codeguardian.toml
+      - Cross-analyzer correlation for duplicate detection
   - name: code-analysis-agent
-    description: Performs comprehensive code analysis for quality, security, and performance issues
+    description: Performs comprehensive analysis for CodeGuardian using src/analyzers/security_analyzer.rs and performance_analyzer.rs with FANN neural network integration
     key_capabilities:
-      - Static code analysis
-      - Security vulnerability detection
-      - Performance bottleneck identification
-      - Code quality metrics
-      - Automated code review
-      - Issue prioritization
-  - name: code-consolidator
-    description: Consolidates and organizes code files, modules, and components for better structure and maintainability
+      - Static code analysis with Rust clippy integration
+      - Security vulnerability detection with path canonicalization
+      - Performance bottleneck identification in benches/
+      - Code quality metrics against .rustfmt.toml standards
+      - Automated code review with CI/CD integration
+      - Issue prioritization based on security impact
+  - name: streaming-analyzer
+    description: Handles real-time streaming analysis in CodeGuardian's src/core/ for continuous code monitoring with memory safety and timeout handling
     key_capabilities:
-      - Code organization and restructuring
-      - Module consolidation
-      - Dependency management
-      - Code duplication elimination
-      - Architecture improvement
-      - Documentation updates
-  - name: code-quality-reviewer
-    description: Reviews code for quality standards, best practices, and maintainability
+      - Real-time code stream processing with Tokio
+      - Memory management with ownership patterns
+      - Concurrency handling for parallel analysis
+      - Error recovery with anyhow::Result patterns
+      - Performance monitoring against thresholds
+      - Security validation with input sanitization
+
+  # GitHub Integration Agents
+  - name: github-issue-manager
+    description: Manages GitHub issues for CodeGuardian development, integrating with .github/workflows/ and issue templates
     key_capabilities:
-      - Code quality assessment
-      - Best practices validation
-      - Maintainability analysis
-      - Code review automation
-      - Quality metrics generation
-      - Improvement recommendations
-  - name: code-research
-    description: Conducts research on code patterns, technologies, and best practices for CodeGuardian development
-    key_capabilities:
-      - Technology research and evaluation
-      - Code pattern analysis
-      - Best practices identification
-      - Innovation exploration
-      - Knowledge base development
-      - Research documentation
-  - name: codebase-doc-updater
-    description: Updates and maintains codebase documentation, ensuring accuracy and completeness
-    key_capabilities:
-      - Documentation generation
-      - API documentation updates
-      - Code comment maintenance
-      - README and guide updates
-      - Documentation quality assurance
-      - Knowledge sharing
-  - name: codeguardian-main
-    description: Main orchestrator for CodeGuardian operations, managing overall system coordination and workflow
-    key_capabilities:
-      - System orchestration
-      - Workflow management
-      - Resource allocation
-      - Process coordination
-      - System monitoring
-      - Error handling
-  - name: configuration-agent
-    description: Manages and optimizes CodeGuardian configuration settings for optimal performance and functionality
-    key_capabilities:
-      - Configuration management
-      - Settings optimization
-      - Configuration validation
-      - Performance tuning
-      - Environment setup
-      - Configuration documentation
-  - name: configuration-validator
-    description: Validates CodeGuardian configuration files and settings for correctness and compatibility
-    key_capabilities:
-      - Configuration validation
-      - Syntax checking
-      - Compatibility verification
-      - Error detection
-      - Configuration testing
-      - Validation reporting
-  - name: debug-findings-analyst
-    description: Analyzes debug findings and error reports to identify root causes and provide solutions
-    key_capabilities:
-      - Error analysis
-      - Root cause identification
-      - Debug report generation
-      - Solution recommendations
-      - Issue tracking
-      - Debugging guidance
-  - name: dependency-agent
-    description: Manages project dependencies, ensuring security, compatibility, and optimal versions
-    key_capabilities:
-      - Dependency analysis
-      - Security vulnerability scanning
-      - Version management
-      - Compatibility checking
-      - Update recommendations
-      - Dependency optimization
-  - name: documentation-specialist
-    description: Specializes in creating and maintaining comprehensive documentation for CodeGuardian
-    key_capabilities:
-      - Technical writing
-      - Documentation architecture
-      - User guide creation
-      - API documentation
-      - Knowledge base management
-      - Documentation standards
-  - name: false-positive-validator
-    description: Validates and filters false positive findings from security and code analysis tools
-    key_capabilities:
-      - False positive identification
-      - Finding validation
-      - Risk assessment
-      - Alert filtering
-      - Accuracy improvement
-      - Validation reporting
-  - name: git
-    description: Manages Git operations and version control for CodeGuardian development
-    key_capabilities:
-      - Git repository management
-      - Version control operations
-      - Branch management
-      - Commit handling
-      - Merge conflict resolution
-      - Git workflow optimization
+      - Issue tracking with automated labeling
+      - Bug report management with security classification
+      - Feature request handling aligned with roadmap
+      - Issue prioritization based on impact analysis
+      - Resolution tracking with changelog integration
+      - Issue analytics for development insights
   - name: github-discussions-manager
-    description: Manages GitHub discussions, facilitating community engagement and knowledge sharing
+    description: Manages GitHub discussions for CodeGuardian community engagement, facilitating knowledge sharing about Rust best practices and security
     key_capabilities:
-      - Discussion moderation
-      - Community engagement
-      - Knowledge sharing
-      - Discussion organization
-      - Response management
-      - Engagement analytics
+      - Discussion moderation for technical accuracy
+      - Community engagement on security topics
+      - Knowledge sharing about FANN neural networks
+      - Discussion organization by category
+      - Response management with expert guidance
+      - Engagement analytics for community growth
+  - name: github-pr-manager
+    description: Manages pull requests for CodeGuardian, ensuring code quality, security compliance, and proper CI/CD integration
+    key_capabilities:
+      - Pull request management with security reviews
+      - Code review coordination against Rust standards
+      - Merge conflict resolution with git2 integration
+      - Approval workflows with required checks
+      - Branch management following GitFlow
+      - PR analytics for development metrics
+  - name: github-workflow-manager
+    description: Manages GitHub Actions workflows in .github/workflows/ for CodeGuardian's CI/CD pipeline with security scanning and performance testing
+    key_capabilities:
+      - Workflow creation for Rust compilation and testing
+      - CI/CD pipeline setup with cargo build/test
+      - Automation implementation for release processes
+      - Workflow optimization for parallel execution
+      - Performance monitoring with benchmark integration
+      - Error handling with detailed logging
+
+  # ML and AI Agents
+  - name: ml-pipeline-manager
+    description: Manages ML pipelines in src/ml/ for CodeGuardian's RUV-FANN neural network training, feature extraction, and duplicate detection optimization
+    key_capabilities:
+      - Pipeline orchestration with data/training/ directories
+      - Model management for duplicate detection models
+      - Data pipeline processing with security validation
+      - Performance monitoring against benchmarks
+      - Feature engineering for code analysis
+      - A/B testing for model improvements
+  - name: ml-training-specialist
+    description: Specializes in ML training for CodeGuardian's src/ml/ module, managing RUV-FANN neural networks and model optimization
+    key_capabilities:
+      - ML model management with FANN integration
+      - Data pipeline management with validation
+      - Model optimization for performance thresholds
+  - name: swarm-persona-architect
+    description: Designs AI personas for CodeGuardian's swarm analysis, ensuring alignment with Rust security standards and FANN neural network capabilities
+    key_capabilities:
+      - Persona prompt generation for code analysis
+      - Swarm integration with src/analyzers/
+      - Agent specialization for security/performance
+      - Prompt optimization for accuracy
+      - Collaborative enhancement with ML models
+      - Standards alignment with project guidelines
+
+  # Performance and Optimization Agents
+  - name: benchmark-agent
+    description: Manages performance benchmarks in benches/ for CodeGuardian, including comprehensive testing and optimization recommendations
+    key_capabilities:
+      - Benchmark creation with cargo bench
+      - Benchmark execution with performance metrics
+      - Performance analysis against thresholds
+      - Optimization recommendations for bottlenecks
+      - Benchmark maintenance with CI/CD integration
+      - Performance monitoring with alerting
+  - name: performance-optimizer
+    description: Optimizes CodeGuardian performance using src/performance/ modules, focusing on memory usage and resource efficiency with Rust ownership
+    key_capabilities:
+      - Performance analysis with profiling tools
+      - Bottleneck identification in async code
+      - Optimization implementation with zero-cost abstractions
+      - Resource management with memory limits
+      - Monitoring setup with metrics collection
+      - Performance reporting with benchmarks
+  - name: threshold-tuning-agent
+    description: Manages performance thresholds in performance_thresholds.json for CodeGuardian, tuning analysis parameters for optimal balance
+    key_capabilities:
+      - Threshold configuration management
+      - Performance tuning for analysis speed
+      - Resource limit optimization
+      - Benchmark threshold validation
+      - Configuration documentation
+      - Performance monitoring integration
+
+  # Configuration and Management Agents
+  - name: configuration-agent
+    description: Manages CodeGuardian configuration in config/codeguardian.toml, optimizing settings for security and performance
+    key_capabilities:
+      - Configuration management with TOML parsing
+      - Settings optimization for analysis depth
+      - Configuration validation with schema checking
+      - Performance tuning with resource limits
+      - Environment setup for different deployments
+      - Configuration documentation generation
+  - name: configuration-validator
+    description: Validates CodeGuardian configuration files against schemas, ensuring security settings and compatibility
+    key_capabilities:
+      - Configuration validation with error detection
+      - Syntax checking for TOML files
+      - Compatibility verification across versions
+      - Error detection with detailed reporting
+      - Configuration testing with mock scenarios
+      - Validation reporting for CI/CD integration
+  - name: retention-policy-manager
+    description: Manages data retention policies for CodeGuardian's analysis results in analysis-results/, ensuring compliance and storage optimization
+    key_capabilities:
+      - Data retention policy configuration
+      - Storage optimization with cleanup scripts
+      - Compliance checking for data handling
+      - Archive management for historical data
+      - Policy documentation and enforcement
+      - Storage monitoring and alerting
+
+  # Development and Code Quality Agents
+  - name: beginner-developer-agent
+    description: Assists with Rust development in CodeGuardian, providing guidance on ownership patterns, security practices, and project structure
+    key_capabilities:
+      - Clear explanations of Rust concepts
+      - Code examples following project patterns
+      - Proactive guidance on security-first coding
+      - Pattern alignment with src/ structure
+      - Learning support for CodeGuardian specifics
+  - name: clean-code-developer
+    description: Ensures code quality in CodeGuardian using .rustfmt.toml standards, focusing on maintainability and Rust best practices
+    key_capabilities:
+      - Code quality assessment with clippy
+      - Refactoring recommendations for ownership
+      - Best practices implementation with security
+      - Code readability improvement with formatting
+      - Technical debt reduction in src/
+      - Clean architecture guidance for analyzers
+  - name: code-quality-reviewer
+    description: Reviews code quality for CodeGuardian, ensuring adherence to Rust 2021 standards and security guidelines
+    key_capabilities:
+      - Code quality assessment with metrics
+      - Best practices validation with clippy
+      - Maintainability analysis for long-term support
+      - Code review automation in CI/CD
+      - Quality metrics generation with reports
+      - Improvement recommendations with examples
+  - name: junior-developer
+    description: Assists with Rust coding tasks in CodeGuardian, ensuring adherence to security standards, clean code, and project conventions
+    key_capabilities:
+      - Code implementation with ownership safety
+      - Bug fixes with proper error handling
+      - Learning improvement through code reviews
+      - Quality assurance with testing
+      - Collaboration with senior developers
+  - name: code-consolidator
+    description: Consolidates CodeGuardian code files in src/, eliminating duplication and improving architecture with security considerations
+    key_capabilities:
+      - Code organization in modular structure
+      - Module consolidation with dependency management
+      - Code duplication elimination with ML detection
+      - Architecture improvement for analyzers
+      - Documentation updates for changes
+
+  # Documentation and Communication Agents
+  - name: codebase-doc-updater
+    description: Updates CodeGuardian documentation in docs/, ensuring accuracy with implementation details and security features
+    key_capabilities:
+      - Documentation generation from code comments
+      - API documentation for src/ modules
+      - Code comment maintenance with examples
+      - README and guide updates with latest features
+      - Documentation quality assurance
+      - Knowledge sharing through docs/
+  - name: documentation-specialist
+    description: Specializes in comprehensive documentation for CodeGuardian, covering architecture, security, and usage patterns
+    key_capabilities:
+      - Technical writing for complex features
+      - Documentation architecture design
+      - User guide creation with examples
+      - API documentation with Serde schemas
+      - Knowledge base management
+      - Documentation standards enforcement
   - name: github-docs-specialist
-    description: Specializes in GitHub documentation, including READMEs, wikis, and project documentation
+    description: Manages GitHub documentation for CodeGuardian, including README.md, wikis, and contribution guidelines
     key_capabilities:
       - GitHub documentation management
-      - README optimization
-      - Wiki maintenance
-      - Project documentation
-      - Contribution guidelines
-      - Documentation best practices
-  - name: github-grep-searcher
-    description: Performs advanced searches across GitHub repositories using grep-like functionality
-    key_capabilities:
-      - Code Pattern Discovery
-      - Language-Specific Searches
-      - Repository and Path Filtering
-      - Regex vs Literal Guidance
-      - Multi-Criteria Queries
-      - Best Practices Education
-  - name: github-issue-manager
-    description: Manages GitHub issues, including creation, tracking, and resolution
-    key_capabilities:
-      - Issue tracking
-      - Bug report management
-      - Feature request handling
-      - Issue prioritization
-      - Resolution tracking
-      - Issue analytics
-  - name: github-label-manager
-    description: Manages GitHub labels for issues and pull requests, ensuring consistent categorization
-    key_capabilities:
-      - Label creation and management
-      - Categorization standards
-      - Label consistency
-      - Issue organization
-      - Workflow optimization
-      - Label analytics
-  - name: github-pr-manager
-    description: Manages GitHub pull requests, including review, approval, and merging processes
-    key_capabilities:
-      - Pull request management
-      - Code review coordination
-      - Merge conflict resolution
-      - Approval workflows
-      - Branch management
-      - PR analytics
-  - name: github-projects-manager
-    description: Manages GitHub Projects for task tracking and project management
-    key_capabilities:
-      - Project board management
-      - Task tracking
-      - Workflow automation
-      - Progress monitoring
-      - Team coordination
-      - Project analytics
-  - name: github-push-monitor
-    description: Monitors GitHub repository activities and performs automated actions after git push operations
-    key_capabilities:
-      - Repository monitoring
-      - Workflow status checking
-      - Deployment verification
-      - Event tracking
-      - Automated actions
-      - Status reporting
-  - name: github-wiki-editor
-    description: Creates, reviews, and updates GitHub Wiki documentation following best practices
-    key_capabilities:
-      - Wiki page creation
-      - Documentation review
-      - Content organization
-      - Formatting standards
-      - Accessibility compliance
-      - Cross-referencing
-  - name: github-workflow-manager
-    description: Manages GitHub Actions workflows and CI/CD processes
-    key_capabilities:
-      - Workflow creation and management
-      - CI/CD pipeline setup
-      - Automation implementation
-      - Workflow optimization
-      - Performance monitoring
-      - Error handling
-  - name: github-workflow-optimizer
-    description: Optimizes GitHub Actions workflows for performance, security, and cost efficiency
-    key_capabilities:
-      - Workflow performance optimization
-      - Resource utilization improvement
-      - Reliability enhancement
-      - Cost optimization
-      - Monitoring and alerting
-      - Best practices implementation
-  - name: junior-developer
-    description: Assists with coding tasks in Rust for CodeGuardian, ensuring adherence to best practices, clean code, and security standards
-    key_capabilities:
-      - Code Implementation
-      - Bug Fixes and Debugging
-      - Learning and Improvement
-      - Quality Assurance
-      - Collaboration
-  - name: ml-pipeline-manager
-    description: Manages ML pipelines in CodeGuardian's src/ml/ module, including RUV-FANN neural network training, feature extraction, and model optimization
-    key_capabilities:
-      - Pipeline Orchestration
-      - Model Management
-      - Data Pipeline
-      - Performance Monitoring
-      - Feature Engineering
-      - A/B Testing
-  - name: ml-training-specialist
-    description: Manages ML training, data preparation, and model optimization for CodeGuardian
-    key_capabilities:
-      - ML Model Management
-      - Data Pipeline Management
-      - Model Optimization
-  - name: opencode-command-documenter
-    description: Specialized agent for documenting OpenCode commands and generating comprehensive command documentation
-    key_capabilities:
-      - Analyze command-line interfaces and generate structured documentation
-      - Create usage examples, parameter descriptions, and option explanations
-      - Maintain consistency across command documentation
-      - Generate help text and man page content
-      - Validate command syntax and provide usage guidance
-      - Update documentation when commands are modified
-      - Detect the tool associated with a given command (e.g., Git, GitHub CLI, CodeGuardian, OpenCode)
-      - Verify command syntax and options against official documentation for the detected tool
-      - Support multi-tool command documentation and cross-referencing
-      - Handle tool-specific documentation formats and standards
-  - name: orchestrator
-    description: Enhanced Orchestrator that provides guidance for workflow orchestration and task coordination in CodeGuardian. Analyzes complex multi-step tasks and provides recommendations for agent coordination. For parallel execution, recommends using the swarm-orchestrator agent for actual parallel processing, load balancing, and result aggregation.
-    key_capabilities:
-      - Task Complexity Assessment
-      - Agent Selection Guidance
-      - Workflow Design
-      - Dependency Mapping
-      - Resource Planning
-      - Parallel Processing Strategy
-  - name: performance-optimizer
-    description: Optimizes CodeGuardian performance, memory usage, and resource efficiency
-    key_capabilities:
-      - Performance analysis
-      - Bottleneck identification
-      - Optimization implementation
-      - Resource management
-      - Monitoring setup
-      - Performance reporting
-  - name: release-agent
-    description: Manages CodeGuardian release processes, including versioning, changelog generation, release notes, and deployment automation
-    key_capabilities:
-      - Release planning
-      - Version management
-      - Deployment coordination
-      - Release automation
-      - Quality assurance
-      - Release documentation
+      - README optimization with feature highlights
+      - Wiki maintenance for detailed guides
+      - Project documentation with security focus
+      - Contribution guidelines for Rust development
+      - Documentation best practices implementation
+
+  # Security Agents
   - name: security-auditor
-    description: Conducts security audits and identifies vulnerabilities in CodeGuardian
+    description: Conducts security audits for CodeGuardian, identifying vulnerabilities in src/analyzers/security_analyzer.rs and ensuring compliance
     key_capabilities:
-      - Security vulnerability detection
-      - Code review for security issues
-      - Risk assessment
-      - Security recommendations
-      - Compliance checking
-      - Security monitoring
-  - name: streaming-processor
-    description: Optimizes CodeGuardian's streaming analysis capabilities for real-time data processing and performance tuning
+      - Security vulnerability detection with scanning
+      - Code review for unsafe patterns and input validation
+      - Risk assessment for resource exhaustion
+      - Security recommendations with remediation
+      - Compliance checking against security standards
+      - Security monitoring with alerting
+  - name: false-positive-validator
+    description: Validates false positives from CodeGuardian's security analysis, improving accuracy of vulnerability detection
     key_capabilities:
-      - Stream Optimization
-      - Performance Tuning
-      - Memory Management
-      - Concurrency Handling
-      - Error Recovery
-      - Real-time Processing
-      - Performance Monitoring
-  - name: swarm-orchestrator
-    description: Dynamic coordinator that provides strategic analysis and recommendations for managing agent swarms and parallel processing in the CodeGuardian ecosystem
-    key_capabilities:
-      - Dynamic Swarm Analysis
-      - Intelligent Agent Recommendations
-      - Parallel Execution Strategy
-      - Result Synthesis Planning
-      - Performance Optimization Guidance
-      - Conflict Resolution Strategies
-  - name: swarm-persona-architect
-    description: Designs, refines, or generates specialized persona prompts for AI agents within a code analysis swarm, ensuring they align with project-specific standards and enhance collaborative code review processes
-    key_capabilities:
-      - Persona prompt generation
-      - Swarm integration design
-      - Agent specialization
-      - Prompt optimization
-      - Collaborative enhancement
-      - Standards alignment
-  - name: task-coordinator
-    description: Manages and orchestrates complex multi-step tasks across the CodeGuardian project
-    key_capabilities:
-      - Workflow Orchestration
-      - Task Sequencing
-      - Progress Tracking
-      - Resource Allocation
-      - Quality Assurance
-      - Integration Management
-      - Error Recovery
+      - False positive identification in reports
+      - Finding validation with manual review
+      - Risk assessment for flagged issues
+      - Alert filtering for noise reduction
+      - Accuracy improvement through feedback
+      - Validation reporting for metrics
+
+  # Testing and Validation Agents
   - name: testing-engineer
-    description: Manages testing, generates tests, and ensures code quality for CodeGuardian
+    description: Manages testing infrastructure for CodeGuardian, ensuring comprehensive coverage and quality assurance
     key_capabilities:
-      - Test Generation & Management
-      - Test Coverage Analysis
-      - Testing Infrastructure
+      - Test generation with cargo test patterns
+      - Test coverage analysis with tarpaulin
+      - Testing infrastructure maintenance
+  - name: debug-findings-analyst
+    description: Analyzes debug findings from CodeGuardian's analysis results, identifying root causes and providing solutions
+    key_capabilities:
+      - Error analysis from analysis-results/
+      - Root cause identification with stack traces
+      - Debug report generation with context
+      - Solution recommendations with code fixes
+      - Issue tracking integration
+      - Debugging guidance for developers
+
+  # Workflow and Orchestration Agents
+  - name: codeguardian-main
+    description: Main orchestrator for CodeGuardian operations in src/cli.rs, managing system coordination and workflow execution
+    key_capabilities:
+      - System orchestration with command parsing
+      - Workflow management through CLI commands
+      - Resource allocation with memory limits
+      - Process coordination with async patterns
+      - System monitoring with performance metrics
+      - Error handling with anyhow::Result
+  - name: orchestrator
+    description: Provides workflow orchestration guidance for CodeGuardian, analyzing tasks and recommending agent coordination strategies
+    key_capabilities:
+      - Task complexity assessment for analysis jobs
+      - Agent selection guidance based on requirements
+      - Workflow design for multi-step processes
+      - Dependency mapping between modules
+      - Resource planning with performance considerations
+      - Parallel processing strategy recommendations
+  - name: swarm-orchestrator
+    description: Manages agent swarms for CodeGuardian's parallel processing, coordinating analysis across multiple cores with load balancing
+    key_capabilities:
+      - Dynamic swarm analysis for large codebases
+      - Intelligent agent recommendations
+      - Parallel execution strategy with Tokio
+      - Result synthesis from multiple analyzers
+      - Performance optimization guidance
+      - Conflict resolution for overlapping findings
+  - name: task-coordinator
+    description: Coordinates complex multi-step tasks in CodeGuardian, managing dependencies and ensuring successful completion
+    key_capabilities:
+      - Workflow orchestration for CI/CD
+      - Task sequencing with dependency management
+      - Progress tracking with status updates
+      - Resource allocation for analysis jobs
+      - Quality assurance with validation checks
+      - Integration management between modules
+      - Error recovery with retry mechanisms
+
+  # Additional Core Agents
+  - name: dashboard-manager
+    description: Manages CodeGuardian's dashboard in src/dashboard/, providing real-time analysis metrics and visualization
+    key_capabilities:
+      - Dashboard configuration and layout
+      - Real-time metrics display
+      - Analysis result visualization
+      - User interface optimization
+      - Performance monitoring integration
+      - Custom dashboard creation
+  - name: bulk-operations-manager
+    description: Handles bulk operations in CodeGuardian, processing multiple files efficiently with resource management and progress tracking
+    key_capabilities:
+      - Bulk file processing with parallel execution
+      - Resource management for large operations
+      - Progress tracking and status reporting
+      - Error handling for batch operations
+      - Performance optimization for throughput
+      - Result aggregation and summarization
+  - name: remediation-agent
+    description: Provides automated remediation suggestions for CodeGuardian analysis findings, focusing on security and performance fixes
+    key_capabilities:
+      - Automated fix generation for vulnerabilities
+      - Code remediation with security patches
+      - Performance optimization recommendations
+      - Remediation validation and testing
+      - Integration with CI/CD for automated fixes
+      - Documentation of remediation steps
+  - name: turbo-mode-manager
+    description: Manages CodeGuardian's turbo mode for high-performance analysis, optimizing resource usage and analysis speed
+    key_capabilities:
+      - Turbo mode configuration and activation
+      - Resource optimization for speed
+      - Performance tuning for large codebases
+      - Memory management in high-throughput scenarios
+      - Analysis prioritization for critical paths
+      - Monitoring and adjustment of turbo settings
+
+  # Utility and Research Agents
+  - name: ai-persona-creation-specialist
+    description: Creates specialized AI personas for CodeGuardian workflows, ensuring alignment with security and performance requirements
+    key_capabilities:
+      - Domain expertise analysis for code analysis
+      - Persona specification with Rust focus
+      - Integration planning with existing agents
+      - Quality assurance for persona accuracy
+      - Documentation generation for new personas
+  - name: code-research
+    description: Conducts research on code patterns and technologies for CodeGuardian development, focusing on Rust advancements and security
+    key_capabilities:
+      - Technology research for Rust ecosystem
+      - Code pattern analysis with best practices
+      - Best practices identification for security
+      - Innovation exploration for ML integration
+      - Knowledge base development
+      - Research documentation in docs/
+  - name: dependency-agent
+    description: Manages CodeGuardian dependencies in Cargo.toml, ensuring security, compatibility, and optimal versions with audit trails
+    key_capabilities:
+      - Dependency analysis with cargo tree
+      - Security vulnerability scanning with cargo audit
+      - Version management with compatibility checks
+      - Update recommendations with testing
+      - Dependency optimization for build speed
+  - name: release-agent
+    description: Manages CodeGuardian release processes, including versioning, changelog generation, and deployment with security validation
+    key_capabilities:
+      - Release planning with version bumping
+      - Version management with semantic versioning
+      - Deployment coordination with CI/CD
+      - Release automation with GitHub releases
+      - Quality assurance with comprehensive testing
+      - Release documentation with changelogs
+  - name: build-ci-optimizer
+    description: Optimizes CodeGuardian's build processes and CI/CD pipelines in .github/workflows/, focusing on Rust compilation and testing efficiency
+    key_capabilities:
+      - Build process optimization with cargo build
+      - CI/CD pipeline enhancement with parallel jobs
+      - Performance monitoring with build times
+      - Resource utilization analysis
+      - Automated testing integration with coverage
+      - Deployment strategy optimization
+  - name: cache-intelligence-agent
+    description: Manages intelligent caching in src/cache.rs for CodeGuardian, optimizing performance and memory usage with Blake3 hashing
+    key_capabilities:
+      - Cache optimization with LRU strategies
+      - Invalidation management for analysis results
+      - Memory management with size limits
+      - Data persistence with serialization
+      - Performance monitoring with hit rates
+      - Cache warming for frequently accessed data
+  - name: streaming-processor
+    description: Optimizes CodeGuardian's streaming analysis in src/core/ for real-time processing with concurrency and error recovery
+    key_capabilities:
+      - Stream optimization with async channels
+      - Performance tuning for throughput
+      - Memory management with ownership
+      - Concurrency handling with Tokio tasks
+      - Error recovery with retry logic
+      - Real-time processing with low latency
+      - Performance monitoring with metrics
+  - name: opencode-command-documenter
+    description: Documents OpenCode commands for CodeGuardian, generating comprehensive documentation with usage examples and validation
+    key_capabilities:
+      - Command-line interface analysis
+      - Structured documentation generation
+      - Usage examples with CodeGuardian context
+      - Parameter descriptions with validation
+      - Consistency maintenance across commands
+      - Help text generation with man pages
+      - Command syntax validation
+      - Tool detection for Git/GitHub integration
+      - Multi-tool documentation support
+      - Format standardization
   - name: websearch
-    description: Performs web searches to retrieve information from the internet for research and verification
+    description: Performs web searches for CodeGuardian development research, retrieving information on Rust, security, and ML technologies
     key_capabilities:
-      - Information retrieval
-      - Query optimization
-      - Data synthesis
-      - Source verification
-      - Result summarization
+      - Information retrieval for technical research
+      - Query optimization for relevant results
+      - Data synthesis for development insights
+      - Source verification for accuracy
+      - Result summarization for quick reference
+  - name: git
+    description: Manages Git operations for CodeGuardian development, ensuring proper version control and workflow optimization
+    key_capabilities:
+      - Git repository management with git2
+      - Version control operations with branching
+      - Branch management following conventions
+      - Commit handling with conventional commits
+      - Merge conflict resolution
+      - Git workflow optimization for teams

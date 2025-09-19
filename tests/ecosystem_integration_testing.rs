@@ -13,7 +13,7 @@ use tokio::time::sleep;
 
 use do_codeguardian::config::base::Config;
 use do_codeguardian::core::parallel_file_processor::ParallelFileProcessor;
-use do_codeguardian::integrations::traits::{IntegrationCapabilities, IntegrationSystem};
+use do_codeguardian::integrations::traits::{IntegrationSystem, SystemCapabilities};
 use do_codeguardian::types::{Finding, Report, ReportSummary};
 
 /// Ecosystem integration test configuration

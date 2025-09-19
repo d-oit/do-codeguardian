@@ -224,12 +224,12 @@ async fn stream_metrics(
     State(state): State<Arc<DashboardState>>,
 ) -> Result<
     axum::response::Sse<
-        impl futures::Stream<Item = Result<axum::response::sse::Event, std::convert::Infallible>>,
+        impl futures_util::Stream<Item = Result<axum::response::sse::Event, std::convert::Infallible>>,
     >,
     StatusCode,
 > {
     use axum::response::sse::{Event, Sse};
-    use futures::stream::{self, Stream};
+    use futures_util::stream::{self, Stream};
     use std::time::Duration;
 
     if !state.config.enable_real_time {
@@ -239,13 +239,15 @@ async fn stream_metrics(
     let stream = stream::unfold(state.clone(), |state| async move {
         tokio::time::sleep(Duration::from_secs(state.config.refresh_interval_seconds)).await;
 
-        let service = state.service.read().await;
-        if let Some(metrics) = service.get_current_metrics() {
-            let event = Event::default().data(serde_json::to_string(metrics).unwrap_or_default());
-            Some((Ok(event), state))
-        } else {
-            Some((Ok(Event::default().data("{}")), state))
-        }
+        let event = {
+            let service = state.service.read().await;
+            if let Some(metrics) = service.get_current_metrics() {
+                Event::default().data(serde_json::to_string(metrics).unwrap_or_default())
+            } else {
+                Event::default().data("{}")
+            }
+        };
+        Some((Ok(event), state))
     });
 
     Ok(Sse::new(stream))

@@ -1,6 +1,6 @@
-use codeguardian::cache::memory_pool::{FindingPool, MemoryPoolManager, StringPool};
-use codeguardian::cache::regex_cache::{RegexCache, SharedRegexCache};
-use codeguardian::types::{Finding, Severity};
+use do_codeguardian::cache::memory_pool::{FindingPool, MemoryPoolManager, StringPool};
+use do_codeguardian::cache::regex_cache::{RegexCache, SharedRegexCache};
+use do_codeguardian::types::{Finding, Severity};
 use std::path::PathBuf;
 use std::time::Instant;
 

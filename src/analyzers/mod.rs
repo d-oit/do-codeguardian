@@ -1,5 +1,6 @@
 pub mod ai_content_analyzer;
 pub mod build_artifact_analyzer;
+pub mod cross_file_duplicate_analyzer;
 pub mod dependency_analyzer;
 pub mod duplicate_analyzer;
 pub mod git_conflict_analyzer;

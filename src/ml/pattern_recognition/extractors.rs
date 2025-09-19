@@ -39,7 +39,7 @@ impl CodeStructureExtractor {
         let mut function_count = 0.0;
         let mut class_count = 0.0;
         let mut nesting_depth = 0.0;
-        let mut max_nesting = 0.0;
+        let mut max_nesting = 0.0f64;
         let mut comment_lines = 0.0;
         let mut import_count = 0.0;
         let mut loop_count = 0.0;

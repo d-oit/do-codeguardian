@@ -17,6 +17,8 @@ pub mod threshold_tuning;
 #[cfg(feature = "ml")]
 pub mod train;
 
+#[cfg(feature = "dashboard")]
+use dashboard::DashboardArgs;
 use integrations::IntegrationsArgs;
 use remediation::RemediationArgs;
 

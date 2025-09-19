@@ -111,7 +111,7 @@ const PASSWORD = "secret_password_123";"#;
 
 #[test]
 fn test_performance_analyzer_baseline() {
-    let analyzer = PerformanceAnalyzer::new();
+    let analyzer = PerformanceAnalyzer::new().unwrap();
     let temp_dir = tempdir().unwrap();
 
     // Create a standardized test file with performance patterns

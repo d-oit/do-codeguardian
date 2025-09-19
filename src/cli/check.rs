@@ -153,7 +153,7 @@ async fn run_analysis_and_filter(
     ml_threshold: Option<f64>,
 ) -> Result<crate::types::AnalysisResults> {
     // Run analysis
-    let results = engine.analyze_files(files_to_scan, args.parallel).await?;
+    let mut results = engine.analyze_files(files_to_scan, args.parallel).await?;
 
     // Apply ML-based false positive filtering if threshold is configured
     #[allow(unused_variables)]

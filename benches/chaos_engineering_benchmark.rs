@@ -1,7 +1,5 @@
-use criterion::{black_box, criterion_group, criterion_main, Criterion};
-use do_codeguardian::{
-    analyze_files, utils::adaptive_parallelism::AdaptiveParallelismController, Config,
-};
+use criterion::{criterion_group, criterion_main, Criterion};
+use do_codeguardian::Config;
 use std::io::Write;
 use std::path::PathBuf;
 use std::time::Duration;
@@ -78,7 +76,7 @@ fn bench_network_chaos(c: &mut Criterion) {
             rt.block_on(async {
                 let config = Config::default();
                 let result = analyze_files(&file_paths, &config).await;
-                black_box(result.unwrap());
+                std::hint::black_box(result.unwrap());
             });
         });
     });
@@ -89,7 +87,7 @@ fn bench_network_chaos(c: &mut Criterion) {
                 simulate_network_delay(50).await;
                 let config = Config::default();
                 let result = analyze_files(&file_paths, &config).await;
-                black_box(result.unwrap());
+                std::hint::black_box(result.unwrap());
             });
         });
     });
@@ -100,7 +98,7 @@ fn bench_network_chaos(c: &mut Criterion) {
                 simulate_network_delay(200).await;
                 let config = Config::default();
                 let result = analyze_files(&file_paths, &config).await;
-                black_box(result.unwrap());
+                std::hint::black_box(result.unwrap());
             });
         });
     });
@@ -125,7 +123,7 @@ fn bench_cpu_chaos(c: &mut Criterion) {
             rt.block_on(async {
                 let config = Config::default();
                 let result = analyze_files(&file_paths, &config).await;
-                black_box(result.unwrap());
+                std::hint::black_box(result.unwrap());
             });
         });
     });
@@ -133,11 +131,11 @@ fn bench_cpu_chaos(c: &mut Criterion) {
     group.bench_function("with_cpu_load_light", |b| {
         b.iter(|| {
             // Simulate light CPU load
-            black_box(simulate_cpu_intensive_work(100000));
+            std::hint::black_box(simulate_cpu_intensive_work(100000));
             rt.block_on(async {
                 let config = Config::default();
                 let result = analyze_files(&file_paths, &config).await;
-                black_box(result.unwrap());
+                std::hint::black_box(result.unwrap());
             });
         });
     });
@@ -145,11 +143,11 @@ fn bench_cpu_chaos(c: &mut Criterion) {
     group.bench_function("with_cpu_load_heavy", |b| {
         b.iter(|| {
             // Simulate heavy CPU load
-            black_box(simulate_cpu_intensive_work(1000000));
+            std::hint::black_box(simulate_cpu_intensive_work(1000000));
             rt.block_on(async {
                 let config = Config::default();
                 let result = analyze_files(&file_paths, &config).await;
-                black_box(result.unwrap());
+                std::hint::black_box(result.unwrap());
             });
         });
     });
@@ -174,7 +172,7 @@ fn bench_memory_chaos(c: &mut Criterion) {
             rt.block_on(async {
                 let config = Config::default();
                 let result = analyze_files(&file_paths, &config).await;
-                black_box(result.unwrap());
+                std::hint::black_box(result.unwrap());
             });
         });
     });
@@ -186,7 +184,7 @@ fn bench_memory_chaos(c: &mut Criterion) {
             rt.block_on(async {
                 let config = Config::default();
                 let result = analyze_files(&file_paths, &config).await;
-                black_box(result.unwrap());
+                std::hint::black_box(result.unwrap());
             });
             drop(_memory_hog);
         });
@@ -199,7 +197,7 @@ fn bench_memory_chaos(c: &mut Criterion) {
             rt.block_on(async {
                 let config = Config::default();
                 let result = analyze_files(&file_paths, &config).await;
-                black_box(result.unwrap());
+                std::hint::black_box(result.unwrap());
             });
             drop(_memory_hog);
         });
@@ -225,7 +223,7 @@ fn bench_combined_chaos(c: &mut Criterion) {
             rt.block_on(async {
                 let config = Config::default();
                 let result = analyze_files(&file_paths, &config).await;
-                black_box(result.unwrap());
+                std::hint::black_box(result.unwrap());
             });
         });
     });
@@ -235,10 +233,10 @@ fn bench_combined_chaos(c: &mut Criterion) {
             rt.block_on(async {
                 // Network delay + CPU load
                 simulate_network_delay(100).await;
-                black_box(simulate_cpu_intensive_work(500000));
+                std::hint::black_box(simulate_cpu_intensive_work(500000));
                 let config = Config::default();
                 let result = analyze_files(&file_paths, &config).await;
-                black_box(result.unwrap());
+                std::hint::black_box(result.unwrap());
             });
         });
     });
@@ -251,7 +249,7 @@ fn bench_combined_chaos(c: &mut Criterion) {
                 simulate_network_delay(150).await;
                 let config = Config::default();
                 let result = analyze_files(&file_paths, &config).await;
-                black_box(result.unwrap());
+                std::hint::black_box(result.unwrap());
                 drop(_memory_hog);
             });
         });
@@ -263,10 +261,10 @@ fn bench_combined_chaos(c: &mut Criterion) {
                 // All chaos factors combined
                 let _memory_hog = simulate_memory_pressure(50);
                 simulate_network_delay(75).await;
-                black_box(simulate_cpu_intensive_work(250000));
+                std::hint::black_box(simulate_cpu_intensive_work(250000));
                 let config = Config::default();
                 let result = analyze_files(&file_paths, &config).await;
-                black_box(result.unwrap());
+                std::hint::black_box(result.unwrap());
                 drop(_memory_hog);
             });
         });
@@ -293,9 +291,9 @@ fn bench_adaptive_parallelism_chaos(c: &mut Criterion) {
             rt.block_on(async {
                 let config = Config::default();
                 let result = analyze_files(&file_paths, &config).await;
-                black_box(result.unwrap());
+                std::hint::black_box(result.unwrap());
                 // Simulate adaptive adjustment
-                black_box(controller.adjust_parallelism().await.unwrap());
+                std::hint::black_box(controller.adjust_parallelism().await.unwrap());
             });
         });
     });
@@ -305,12 +303,12 @@ fn bench_adaptive_parallelism_chaos(c: &mut Criterion) {
         b.iter(|| {
             rt.block_on(async {
                 // Simulate system under load
-                black_box(simulate_cpu_intensive_work(200000));
+                std::hint::black_box(simulate_cpu_intensive_work(200000));
                 let config = Config::default();
                 let result = analyze_files(&file_paths, &config).await;
-                black_box(result.unwrap());
+                std::hint::black_box(result.unwrap());
                 // Adaptive adjustment under load
-                black_box(controller.adjust_parallelism().await.unwrap());
+                std::hint::black_box(controller.adjust_parallelism().await.unwrap());
             });
         });
     });

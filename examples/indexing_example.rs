@@ -18,9 +18,9 @@ async fn main() -> anyhow::Result<()> {
             Severity::High,
             PathBuf::from("src/main.rs"),
             42,
-            "Hardcoded password detected in configuration",
+            "Hardcoded password detected in configuration".to_string(),
         )
-        .with_description("Found hardcoded password in config file")
+        .with_description("Found hardcoded password in config file".to_string())
         .with_category("Security".to_string()),
         Finding::new(
             "performance_analyzer",
@@ -28,9 +28,9 @@ async fn main() -> anyhow::Result<()> {
             Severity::Medium,
             PathBuf::from("src/db.rs"),
             15,
-            "Database query may be slow due to missing index",
+            "Database query may be slow due to missing index".to_string(),
         )
-        .with_description("Consider adding database index for better performance")
+        .with_description("Consider adding database index for better performance".to_string())
         .with_category("Performance".to_string()),
         Finding::new(
             "security_analyzer",
@@ -38,9 +38,9 @@ async fn main() -> anyhow::Result<()> {
             Severity::Critical,
             PathBuf::from("src/api.rs"),
             78,
-            "Potential SQL injection vulnerability",
+            "Potential SQL injection vulnerability".to_string(),
         )
-        .with_description("User input is directly concatenated into SQL query")
+        .with_description("User input is directly concatenated into SQL query".to_string())
         .with_category("Security".to_string()),
     ];
 

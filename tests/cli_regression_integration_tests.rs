@@ -24,7 +24,7 @@ mod tests {
 
     #[test]
     fn test_merge_conflict_detection() {
-        let sample_conflict = r#"
+        let sample_conflict = "
 some code here
 <<<<<<< HEAD
 original version
@@ -32,7 +32,7 @@ original version
 modified version
 >>>>>>> feature-branch
 more code
-"#;
+";
 
         let analyzer = GitConflictAnalyzer::new();
         let findings = analyzer.analyze(Path::new("sample.rs"), sample_conflict.as_bytes()).unwrap();
@@ -44,10 +44,6 @@ more code
         let incomplete_code = "TODO: implement this function";
         assert!(incomplete_code.contains("TODO"));
     }
-}
-
-fn main() {
-    println!("This is a test file");
 }
 "#;
 

@@ -192,10 +192,10 @@ fn main() {
         // Should not flag content inside string literals
         assert!(
             !line_content.contains(r#""TODO: remember to update this text""#),
-            r#"Should not flag TODO inside string literals"#
+            "Should not flag TODO inside string literals."
         );
         assert!(!line_content.contains(r#""NotImplementedException occurred""#),
-               r#"Should not flag exceptions inside string literals"#);
+               "Should not flag exceptions inside string literals.");
     }
 }
 
@@ -214,19 +214,19 @@ fn validate_input() {
 }
 "#;
 
-    let findings = analyzer.analyze(Path::new("incomplete.rs"), incomplete_content.as_bytes()).unwrap();
+    let findings = analyzer.analyze(Path::new("incomplete.rs "), incomplete_content.as_bytes()).unwrap();
 
     let incomplete_findings: Vec<_> = findings.iter()
         .filter(|f| f.rule == "incomplete_implementation")
         .collect();
 
     // Should detect real incomplete implementations
-    assert!(incomplete_findings.len() > 0, "Should detect incomplete implementations");
+    assert!(incomplete_findings.len() > 0, "Should detect incomplete implementations.");
 
     let has_unimplemented = incomplete_findings.iter()
         .any(|f| incomplete_content.lines().nth((f.line - 1) as usize)
              .map_or(false, |line| line.contains("unimplemented!()")));
-    assert!(has_unimplemented, "Should detect unimplemented!() macro");
+    assert!(has_unimplemented, "Should detect unimplemented!() macro.");
 }
 
 #[test]
@@ -244,10 +244,10 @@ fn main() {
 }
 "#;
 
-    let findings = analyzer.analyze(Path::new("malformed.rs"), malformed_content.as_bytes()).unwrap();
+    let findings = analyzer.analyze(Path::new("malformed.rs "), malformed_content.as_bytes()).unwrap();
 
     // Should detect malformed conflict
-    assert!(findings.len() > 0, "Should detect malformed conflicts");
+    assert!(findings.len() > 0, "Should detect malformed conflicts.");
     assert!(findings.iter().any(|f| f.rule == "malformed_conflict" || f.rule == "merge_conflict_start"));
 }
 
@@ -259,15 +259,23 @@ fn test_performance_regression_file_processing() {
 
     // Create a larger test content to ensure performance doesn't regress
     let mut large_content = String::new();
-    large_content.push_str("#[cfg(test)]\nmod tests {\n");
+    large_content.push_str(r#"#[cfg(test)]
+mod tests {
+"#);
 
     for i in 0..100 {
         large_content.push_str(&format!(
-            "    #[test]\n    fn test_{}() {{\n        let content = r#\"\n<<<<<<< HEAD\nversion {}\n=======\nother version\n>>>>>>> branch\n\"#;\n    }}\n\n",
+            r#"    #[test]
+    fn test_{}() {{
+        let content = "\n<<<<<<< HEAD\nversion {}\n=======\nother version\n>>>>>>> branch\n ";
+    }}
+
+"#,
             i, i
         ));
     }
-    large_content.push_str("}\n");
+    large_content.push_str(r#"}
+"#);
 
     let start = Instant::now();
     let findings = analyzer.analyze(Path::new("large_test.rs"), large_content.as_bytes()).unwrap();
@@ -290,13 +298,13 @@ fn test_analyzer_memory_usage_stability() {
 mod tests {{
     #[test]
     fn test_{}() {{
-        let content = r#"
+        let content = r##"
 <<<<<<< HEAD
 test content {}
 =======
 other content
 >>>>>>> branch
-"#;
+"##;
         // TODO: add more test cases
         assert!(true);
     }}

@@ -1,3 +1,4 @@
+use do_codeguardian::analyzers::Analyzer;
 use std::path::Path;
 use std::time::Instant;
 use tempfile::tempdir;
@@ -24,7 +25,7 @@ async fn test_optimized_parallel_processor() {
 
     // Test the optimized processor
     let processor =
-        codeguardian::core::parallel_file_processor::ParallelFileProcessor::new(Some(2));
+        do_codeguardian::core::parallel_file_processor::ParallelFileProcessor::new(Some(2));
 
     let start = Instant::now();
     let results = processor.batch_read_files(&files).await.unwrap();
@@ -39,7 +40,7 @@ async fn test_optimized_parallel_processor() {
 // Test duplicate analyzer optimization
 #[test]
 fn test_duplicate_analyzer_optimization() {
-    use codeguardian::analyzers::duplicate_analyzer::DuplicateAnalyzer;
+    use do_codeguardian::analyzers::duplicate_analyzer::DuplicateAnalyzer;
 
     let analyzer = DuplicateAnalyzer::new().unwrap();
 
@@ -69,7 +70,7 @@ fn func2() {
 
 #[test]
 fn test_cross_file_duplicate_optimization() {
-    use codeguardian::analyzers::cross_file_duplicate_analyzer::CrossFileDuplicateAnalyzer;
+    use do_codeguardian::analyzers::cross_file_duplicate_analyzer::CrossFileDuplicateAnalyzer;
 
     let mut analyzer = CrossFileDuplicateAnalyzer::new();
 

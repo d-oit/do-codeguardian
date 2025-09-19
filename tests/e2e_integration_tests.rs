@@ -73,7 +73,8 @@ mod tests {
     )
     .unwrap();
 
-    let mut cmd = Command::cargo_bin("do-codeguardian").expect("Failed to find do-codeguardian binary");
+    let mut cmd =
+        Command::cargo_bin("do-codeguardian").expect("Failed to find do-codeguardian binary");
     cmd.arg("check")
         .arg(temp_dir.path().join("src/main.rs"))
         .arg(temp_dir.path().join("src/lib.rs"))
@@ -128,7 +129,8 @@ app.listen(3000);
     )
     .expect("Failed to write file");
 
-    let mut cmd = Command::cargo_bin("do-codeguardian").expect("Failed to find do-codeguardian binary");
+    let mut cmd =
+        Command::cargo_bin("do-codeguardian").expect("Failed to find do-codeguardian binary");
     cmd.arg("check")
         .arg(temp_dir.path().join("app.js"))
         .arg("--format")
@@ -144,10 +146,10 @@ fn test_comprehensive_end_to_end_validation() {
     let temp_dir = TempDir::new().expect("Failed to create temporary directory");
 
     // Create a comprehensive test project with multiple components
-    fs::create_dir_all(temp_dir.path().join("src")    ).expect("Failed to write file");
-    fs::create_dir_all(temp_dir.path().join("tests")    ).expect("Failed to write file");
-    fs::create_dir_all(temp_dir.path().join("config")    ).expect("Failed to write file");
-    fs::create_dir_all(temp_dir.path().join("scripts")    ).expect("Failed to write file");
+    fs::create_dir_all(temp_dir.path().join("src")).expect("Failed to write file");
+    fs::create_dir_all(temp_dir.path().join("tests")).expect("Failed to write file");
+    fs::create_dir_all(temp_dir.path().join("config")).expect("Failed to write file");
+    fs::create_dir_all(temp_dir.path().join("scripts")).expect("Failed to write file");
 
     // Create Cargo.toml
     fs::write(
@@ -334,9 +336,12 @@ echo "Deployment complete"
 
     // Make script executable
     use std::os::unix::fs::PermissionsExt;
-    let mut perms = fs::metadata(temp_dir.path().join("scripts/deploy.sh")).expect("Failed to get file metadata").permissions();
+    let mut perms = fs::metadata(temp_dir.path().join("scripts/deploy.sh"))
+        .expect("Failed to get file metadata")
+        .permissions();
     perms.set_mode(0o755);
-    fs::set_permissions(temp_dir.path().join("scripts/deploy.sh"), perms).expect("Failed to set file permissions");
+    fs::set_permissions(temp_dir.path().join("scripts/deploy.sh"), perms)
+        .expect("Failed to set file permissions");
 
     // Create test file
     fs::write(
@@ -353,7 +358,8 @@ fn test_comprehensive_functionality() {
     .unwrap();
 
     // Run comprehensive analysis
-    let mut cmd = Command::cargo_bin("do-codeguardian").expect("Failed to find do-codeguardian binary");
+    let mut cmd =
+        Command::cargo_bin("do-codeguardian").expect("Failed to find do-codeguardian binary");
     cmd.arg("check")
         .arg(temp_dir.path())
         .arg("--format")
@@ -363,20 +369,36 @@ fn test_comprehensive_functionality() {
     let output = cmd.output().expect("Failed to execute command");
 
     // Validate the analysis completed successfully
-    assert!(output.status.success(), "Analysis failed: {:?}", String::from_utf8_lossy(&output.stderr));
+    assert!(
+        output.status.success(),
+        "Analysis failed: {:?}",
+        String::from_utf8_lossy(&output.stderr)
+    );
 
     let stdout = String::from_utf8_lossy(&output.stdout);
     println!("Analysis output: {}", stdout);
 
     // Validate comprehensive findings
-    assert!(stdout.contains("Files scanned") || stdout.contains("files_analyzed"), "Should report files analyzed");
-    assert!(stdout.contains("findings") || stdout.contains("issues"), "Should report findings/issues");
+    assert!(
+        stdout.contains("Files scanned") || stdout.contains("files_analyzed"),
+        "Should report files analyzed"
+    );
+    assert!(
+        stdout.contains("findings") || stdout.contains("issues"),
+        "Should report findings/issues"
+    );
 
     // Parse JSON output to validate detailed results
     if stdout.contains("{") {
         // Basic JSON structure validation
-        assert!(stdout.contains("files_analyzed"), "Should have files_analyzed in JSON");
-        assert!(stdout.contains("issues"), "Should have issues array in JSON");
+        assert!(
+            stdout.contains("files_analyzed"),
+            "Should have files_analyzed in JSON"
+        );
+        assert!(
+            stdout.contains("issues"),
+            "Should have issues array in JSON"
+        );
     }
 
     println!("✅ Comprehensive end-to-end validation passed");
@@ -387,9 +409,9 @@ fn test_cross_component_workflow_integration() {
     let temp_dir = TempDir::new().expect("Failed to create temporary directory");
 
     // Create a multi-component project
-    fs::create_dir_all(temp_dir.path().join("backend")    ).expect("Failed to write file");
-    fs::create_dir_all(temp_dir.path().join("frontend")    ).expect("Failed to write file");
-    fs::create_dir_all(temp_dir.path().join("infrastructure")    ).expect("Failed to write file");
+    fs::create_dir_all(temp_dir.path().join("backend")).expect("Failed to write file");
+    fs::create_dir_all(temp_dir.path().join("frontend")).expect("Failed to write file");
+    fs::create_dir_all(temp_dir.path().join("infrastructure")).expect("Failed to write file");
 
     // Backend component (Rust)
     fs::write(
@@ -418,7 +440,7 @@ async fn main() {
         .route("/", get(|| async { "Hello from backend!" }))
         .route("/api/users", get(|| async {
             // Security issue: exposing sensitive data
-            r##"[{"id": 1, "password": "user123", "ssn": "123-45-6789"}]"##
+            "[{\"id\": 1, \"password\": \"user123\", \"ssn\": \"123-45-6789\"}]"
         }));
 
     let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
@@ -526,7 +548,8 @@ resource "aws_iam_user" "app_user" {
     .unwrap();
 
     // Run cross-component analysis
-    let mut cmd = Command::cargo_bin("do-codeguardian").expect("Failed to find do-codeguardian binary");
+    let mut cmd =
+        Command::cargo_bin("do-codeguardian").expect("Failed to find do-codeguardian binary");
     cmd.arg("check")
         .arg(temp_dir.path())
         .arg("--format")

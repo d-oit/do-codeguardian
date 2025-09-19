@@ -185,8 +185,8 @@ impl MultiLanguageAstAnalyzer {
         }
 
         // Same language - use comprehensive similarity
-        let mut similarity = 0.0;
-        let mut weight_total = 0.0;
+        let mut similarity = 0.0f64;
+        let mut weight_total = 0.0f64;
 
         // Complexity similarity (weighted 0.2)
         let complexity_sim =
