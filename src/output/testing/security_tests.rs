@@ -43,11 +43,12 @@ pub enum SecurityTestType {
 
 /// Security test input data
 #[derive(Debug, Clone)]
+#[allow(clippy::large_enum_variant)]
 pub enum SecurityTestInput {
     MaliciousHtml(String),
     DangerousContent(String),
     FilePath(String),
-    AnalysisResults(AnalysisResults),
+    AnalysisResults(Box<AnalysisResults>),
 }
 
 /// Expected security test result
@@ -182,16 +183,18 @@ impl SecurityTestRunner {
                 name: "html_formatter_xss_in_finding_message".to_string(),
                 description: "HTML formatter sanitizes XSS in finding messages".to_string(),
                 test_type: SecurityTestType::XSSPrevention,
-                input_data: SecurityTestInput::AnalysisResults(create_malicious_results()),
+                input_data: SecurityTestInput::AnalysisResults(
+                    Box::new(create_malicious_results()),
+                ),
                 expected_result: SecurityTestResult::ShouldNotContain("<script".to_string()),
             },
             SecurityTestCase {
                 name: "html_formatter_xss_in_finding_description".to_string(),
                 description: "HTML formatter sanitizes XSS in finding descriptions".to_string(),
                 test_type: SecurityTestType::XSSPrevention,
-                input_data: SecurityTestInput::AnalysisResults(
+                input_data: SecurityTestInput::AnalysisResults(Box::new(
                     create_malicious_description_results(),
-                ),
+                )),
                 expected_result: SecurityTestResult::ShouldNotContain("javascript:".to_string()),
             },
         ]

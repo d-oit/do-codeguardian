@@ -182,6 +182,7 @@ impl OutputFormatter for CustomFormatter {
     }
 
     /// Generate troubleshooting guides
+    #[allow(clippy::vec_init_then_push)]
     pub async fn generate_troubleshooting_guides(&self) -> Result<Vec<TroubleshootingGuide>> {
         let mut guides = Vec::new();
 
@@ -570,7 +571,7 @@ std::fs::write("report.html", output.content)?;
         Ok(r#"
 # Changelog
 
-## Version 0.2.0-alpha.5
+## Version 0.2.1
 
 ### Added
 - Comprehensive output system with multiple formats

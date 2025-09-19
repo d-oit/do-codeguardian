@@ -9,7 +9,7 @@ Validation reports are organized hierarchically by version for easy navigation a
 ```
 docs/validation-reports/
 ├── index.md                           # This overview file
-├── v0.2.0-alpha.5/                   # Version-specific directory
+├── v0.2.1/                          # Version-specific directory
 │   ├── uat-report.md                 # User Acceptance Testing results
 │   └── validation-report.md          # Technical validation results
 ├── template-uat-report.md            # Template for UAT reports
@@ -18,14 +18,14 @@ docs/validation-reports/
 
 ## Available Reports
 
-### Current Version: v0.2.0-alpha.5
-- **[UAT Report](./v0.2.0-alpha.5/uat-report.md)** - User acceptance testing results and feedback
-- **[Validation Report](./v0.2.0-alpha.5/validation-report.md)** - Technical validation, performance metrics, and compliance checks
+### Current Version: v0.2.0
+- **[UAT Report](./v0.2.0/uat-report.md)** - User acceptance testing results and feedback
+- **[Validation Report](./v0.2.0/validation-report.md)** - Technical validation, performance metrics, and compliance checks
 
 ## How to Find Reports for Specific Versions
 
 ### Finding Reports by Version
-1. **Navigate by Version Directory**: Each version has its own subdirectory (e.g., `v0.2.0-alpha.5/`)
+1. **Navigate by Version Directory**: Each version has its own subdirectory (e.g., `v0.2.0/`)
 2. **Check the Index**: This file lists all available versions and their reports
 3. **Version Naming Convention**: Reports follow semantic versioning (e.g., `v{major}.{minor}.{patch}-{prerelease}`)
 

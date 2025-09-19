@@ -48,7 +48,7 @@ async fn apply_config_overrides(
     set_parallel_workers(config, args.parallel);
 
     // Resolve output path using consolidated utility
-    args.out = resolve_output_path(&args.out, "results.json", config);
+    args.out = resolve_output_path(&args.out, "results.json", config, Some("check"), None);
     ensure_output_directory(&args.out).await?;
 
     // Override broken files detection settings using consolidated utilities
@@ -302,7 +302,7 @@ async fn handle_hierarchical_output(
 
     // Emit markdown report if requested
     if let Some(md_path) = &args.emit_md {
-        let final_md_path = resolve_output_path(md_path, "report.md", config);
+        let final_md_path = resolve_output_path(md_path, "report.md", config, Some("check"), None);
         ensure_output_directory(&final_md_path).await?;
 
         let markdown = crate::cli::report::generate_markdown(results, enhanced_results)?;
@@ -386,7 +386,7 @@ async fn handle_flat_file_output(
 
     // Emit markdown report if requested
     if let Some(md_path) = &args.emit_md {
-        let final_md_path = resolve_output_path(md_path, "report.md", config);
+        let final_md_path = resolve_output_path(md_path, "report.md", config, Some("check"), None);
         ensure_output_directory(&final_md_path).await?;
 
         let markdown = crate::cli::report::generate_markdown(results, enhanced_results)?;

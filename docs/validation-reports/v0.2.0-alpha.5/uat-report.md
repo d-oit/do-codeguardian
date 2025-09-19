@@ -6,7 +6,7 @@ This UAT report covers comprehensive testing of CodeGuardian's enhanced output s
 
 ## Test Environment
 
-- **Tool Version**: CodeGuardian v0.2.0-alpha.5
+- **Tool Version**: CodeGuardian v0.2.0
 - **Platform**: Linux
 - **Test Date**: September 17, 2025
 - **Test Files**: Custom test files with security vulnerabilities and performance issues
@@ -36,7 +36,7 @@ This UAT report covers comprehensive testing of CodeGuardian's enhanced output s
 #### Markdown Output Format
 **Status**: ✅ PASSED
 **Test Case**: Convert JSON results to Markdown report
-**Command**: `codeguardian report --from uat_results.json --format markdown --md docs/validation-reports/v0.2.0-alpha.5/uat-report.md`
+**Command**: `codeguardian report --from uat_results.json --format markdown --md docs/validation-reports/v0.2.0/uat-report.md`
 **Results**:
 - Professional formatting with headers and sections
 - Severity-based organization with emojis

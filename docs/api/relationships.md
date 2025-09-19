@@ -1,6 +1,6 @@
 # Relationships API Documentation
 
-This document provides comprehensive API documentation for CodeGuardian's advanced relationship management system, introduced in v0.2.0-alpha.5.
+This document provides comprehensive API documentation for CodeGuardian's advanced relationship management system, introduced in v0.2.0.
 
 ## Table of Contents
 
@@ -939,7 +939,7 @@ match manager.add_artifact(artifact).await {
 
 ## Migration Guide
 
-### From v0.1.0 to v0.2.0-alpha.5
+### From v0.1.0 to v0.2.0
 
 **New Features:**
 - Advanced relationship discovery and management
@@ -954,7 +954,7 @@ match manager.add_artifact(artifact).await {
 [analysis]
 enable_relationships = false
 
-# New configuration (v0.2.0-alpha.5)
+# New configuration (v0.2.0)
 [relationships]
 enabled = true
 auto_discovery_enabled = true

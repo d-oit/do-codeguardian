@@ -195,6 +195,14 @@ pub struct PerformanceConfig {
     pub max_memory_usage_mb: u32,
     /// CPU usage limits (percentage)
     pub max_cpu_usage_percent: u32,
+    /// Regex cache settings
+    pub regex_cache: RegexCacheConfig,
+    /// Memory pool settings
+    pub memory_pools: MemoryPoolConfig,
+    /// Enhanced cache settings
+    pub enhanced_cache: EnhancedCacheConfig,
+    /// Performance monitoring settings
+    pub monitoring: PerformanceMonitoringConfig,
 }
 
 impl Default for PerformanceConfig {
@@ -208,6 +216,106 @@ impl Default for PerformanceConfig {
             enable_profiling: false,
             max_memory_usage_mb: 512,
             max_cpu_usage_percent: 80,
+            regex_cache: RegexCacheConfig::default(),
+            memory_pools: MemoryPoolConfig::default(),
+            enhanced_cache: EnhancedCacheConfig::default(),
+            monitoring: PerformanceMonitoringConfig::default(),
+        }
+    }
+}
+
+/// Regex cache configuration
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct RegexCacheConfig {
+    /// Enable regex caching
+    pub enabled: bool,
+    /// Maximum capacity of the regex cache
+    pub capacity: usize,
+    /// Cache expiration time in seconds
+    pub expiration_seconds: u64,
+    /// Cache eviction policy
+    pub eviction_policy: String,
+}
+
+impl Default for RegexCacheConfig {
+    fn default() -> Self {
+        Self {
+            enabled: true,
+            capacity: 1000,
+            expiration_seconds: 3600,
+            eviction_policy: "lru".to_string(),
+        }
+    }
+}
+
+/// Memory pool configuration
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct MemoryPoolConfig {
+    /// Enable memory pools
+    pub enabled: bool,
+    /// Pool size for findings
+    pub findings_pool_size: usize,
+    /// Pool size for strings
+    pub strings_pool_size: usize,
+    /// Pool size for PathBuf objects
+    pub pathbuf_pool_size: usize,
+    /// Pool size for HashMap objects
+    pub hashmap_pool_size: usize,
+}
+
+impl Default for MemoryPoolConfig {
+    fn default() -> Self {
+        Self {
+            enabled: true,
+            findings_pool_size: 1000,
+            strings_pool_size: 5000,
+            pathbuf_pool_size: 2000,
+            hashmap_pool_size: 500,
+        }
+    }
+}
+
+/// Enhanced cache configuration
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct EnhancedCacheConfig {
+    /// Enable enhanced caching
+    pub enabled: bool,
+    /// Memory limit for cache in MB
+    pub memory_limit_mb: usize,
+    /// Enable pool integration
+    pub pool_integration: bool,
+    /// Enable compression for cached data
+    pub compression_enabled: bool,
+}
+
+impl Default for EnhancedCacheConfig {
+    fn default() -> Self {
+        Self {
+            enabled: true,
+            memory_limit_mb: 256,
+            pool_integration: true,
+            compression_enabled: false,
+        }
+    }
+}
+
+/// Performance monitoring configuration
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PerformanceMonitoringConfig {
+    /// Enable performance monitoring
+    pub enabled: bool,
+    /// Enable metrics collection
+    pub metrics_collection: bool,
+    /// Reporting interval in seconds
+    pub reporting_interval_seconds: u64,
+}
+
+impl Default for PerformanceMonitoringConfig {
+    fn default() -> Self {
+        Self {
+            enabled: true,
+            metrics_collection: true,
+            reporting_interval_seconds: 60,
         }
     }
 }

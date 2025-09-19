@@ -1,0 +1,19 @@
+{
+  "schema_version": "1.0.0",
+  "tool_metadata": {
+    "name": "codeguardian",
+    "version": "0.2.1",
+    "config_hash": "f12778f3694a6e7d",
+    "timestamp": "2025-09-18T12:13:40.729664896Z"
+  },
+  "findings": [],
+  "summary": {
+    "total_files_scanned": 1,
+    "total_findings": 0,
+    "findings_by_severity": {},
+    "findings_by_analyzer": {},
+    "scan_duration_ms": 18
+  },
+  "config_hash": "f12778f3694a6e7d",
+  "timestamp": "2025-09-18T12:13:40.729665314Z"
+}

@@ -350,6 +350,7 @@ mod tests {
             enabled: true,
             results_dir: temp_dir.path().to_string_lossy().to_string(),
             max_age_days: 1,
+            min_results_to_keep: 0, // Allow all files to be removed
             ..Default::default()
         };
 
@@ -361,6 +362,8 @@ mod tests {
         fs::write(&old_file, content).unwrap();
 
         let files = manager.collect_result_files().unwrap();
+        assert_eq!(files.len(), 1);
+
         let removed = manager.cleanup_by_age(&files).await.unwrap();
 
         assert_eq!(removed.len(), 1);

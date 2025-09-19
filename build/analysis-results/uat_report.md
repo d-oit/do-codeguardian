@@ -1,7 +1,7 @@
 # CodeGuardian Analysis Report
 
 **Generated:** 2025-09-17 06:49:13 UTC
-**Tool Version:** codeguardian v0.2.0-alpha.5
+**Tool Version:** codeguardian v0.2.1
 **Schema Version:** 1.0.0
 **Config Hash:** `049e06d8`
 

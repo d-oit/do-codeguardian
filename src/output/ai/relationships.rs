@@ -658,8 +658,9 @@ mod tests {
         let finding_a = create_test_finding("1", "First issue", "test.rs", 10);
         let finding_b = create_test_finding("2", "Second issue", "test.rs", 15);
 
-        let confidence = rule.detect(&finding_a, &finding_b).unwrap();
-        assert!(confidence > 0.9); // Same file, close lines
+        let confidence = rule.detect(&finding_a, &finding_b);
+        assert!(confidence.is_some());
+        assert!(confidence.unwrap() > 0.9); // Same file, close lines
 
         let evidence = rule.evidence(&finding_a, &finding_b);
         assert!(!evidence.is_empty());
@@ -668,11 +669,15 @@ mod tests {
     #[test]
     fn test_relationship_detector() {
         let mut detector = RelationshipDetector::new();
-        let findings = vec![
-            create_test_finding("1", "Authentication bypass", "auth.rs", 10),
-            create_test_finding("2", "Authorization failure", "auth.rs", 50),
-            create_test_finding("3", "SQL injection vulnerability", "db.rs", 100),
-        ];
+        let mut finding1 = create_test_finding("1", "authentication bypass", "auth.rs", 10);
+        finding1.analyzer = "security".to_string();
+        finding1.rule = "auth_bypass".to_string();
+
+        let mut finding2 = create_test_finding("2", "authorization failure", "auth.rs", 50);
+        finding2.analyzer = "security".to_string();
+        finding2.rule = "authz_failure".to_string();
+
+        let findings = vec![finding1, finding2];
 
         let relationships = detector.detect_relationships(&findings).unwrap();
         assert!(!relationships.is_empty());
@@ -684,8 +689,13 @@ mod tests {
     #[test]
     fn test_duplicate_detection() {
         let rule = DuplicateRule;
-        let finding_a = create_test_finding("1", "Same message", "test.rs", 10);
-        let finding_b = create_test_finding("2", "Same message", "test.rs", 12);
+        let mut finding_a = create_test_finding("1", "Same message", "test.rs", 10);
+        finding_a.analyzer = "test_analyzer".to_string();
+        finding_a.rule = "test_rule".to_string();
+
+        let mut finding_b = create_test_finding("2", "Same message", "test.rs", 12);
+        finding_b.analyzer = "test_analyzer".to_string();
+        finding_b.rule = "test_rule".to_string();
 
         let confidence = rule.detect(&finding_a, &finding_b).unwrap();
         assert!(confidence > 0.9);

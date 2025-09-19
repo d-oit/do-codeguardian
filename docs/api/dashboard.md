@@ -1,6 +1,6 @@
 # Dashboard API Documentation
 
-This document provides comprehensive API documentation for CodeGuardian's web-based dashboard, introduced in v0.2.0-alpha.5.
+This document provides comprehensive API documentation for CodeGuardian's web-based dashboard, introduced in v0.2.0.
 
 ## Table of Contents
 
@@ -592,7 +592,7 @@ Get dashboard health status.
 ```json
 {
   "status": "healthy",
-  "version": "0.2.0-alpha.5",
+  "version": "0.2.1",
   "uptime_seconds": 3600,
   "active_connections": 5
 }
@@ -795,7 +795,7 @@ websocat ws://localhost:8080/ws/metrics
 enabled = true
 port = 8080
 
-# New configuration (v0.2.0-alpha.5)
+# New configuration (v0.2.0)
 [dashboard]
 enabled = true
 host = "127.0.0.1"

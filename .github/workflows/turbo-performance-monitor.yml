@@ -200,6 +200,11 @@ jobs:
         with:
           name: benchmark-${{ matrix.test-scenario.size }}-${{ github.run_number }}
           path: "*-bench.json"
+      - name: 📊 Run Production Performance Monitoring
+        run: |
+          echo "📊 Running production performance monitoring..."
+          ./scripts/performance_monitoring.sh
+          echo "✅ Performance monitoring completed"
           retention-days: 30
 
   performance-regression-check:

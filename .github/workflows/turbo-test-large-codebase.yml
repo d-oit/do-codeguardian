@@ -1,0 +1,90 @@
+---
+name: 🚀 Turbo Test Large Codebase Validation
+
+on:
+  workflow_dispatch:
+  schedule:
+    # Run daily at 2 AM UTC for validation
+    - cron: '0 2 * * *'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+# Minimal permissions for security
+permissions:
+  contents: read
+
+jobs:
+  validate-turbo-output:
+    name: 🔍 Validate Turbo Analysis Output Location
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+    - name: 📥 Checkout repository
+      uses: actions/checkout@v5
+      with:
+        fetch-depth: 0
+
+    - name: 🦀 Setup Rust
+      uses: actions-rust-lang/setup-rust-toolchain@v1
+      with:
+        toolchain: stable
+        cache: true
+
+    - name: 🔨 Build CodeGuardian (Release)
+      run: cargo build --release --quiet
+
+    - name: 🚀 Run Turbo Analysis on test_large_codebase/
+      run: |
+        echo "🚀 Running turbo analysis on test_large_codebase/..."
+        ./target/release/do-codeguardian turbo test_large_codebase/ \
+          --max-parallel 8 \
+          --memory-limit 1024 \
+          --format json \
+          --metrics
+
+    - name: 📅 Compute Expected Output Path
+      id: compute-path
+      run: |
+        TODAY=$(date +%Y-%m-%d)
+        EXPECTED_PATH="build/analysis-results/turbo/${TODAY}/turbo-results.json"
+        echo "expected_path=${EXPECTED_PATH}" >> $GITHUB_OUTPUT
+        echo "📍 Expected output path: ${EXPECTED_PATH}"
+
+    - name: ✅ Verify Output File Location
+      run: |
+        EXPECTED_PATH="${{ steps.compute-path.outputs.expected_path }}"
+        if [ -f "${EXPECTED_PATH}" ]; then
+          echo "✅ Turbo results file found at expected location: ${EXPECTED_PATH}"
+          # Verify it's valid JSON
+          if jq empty "${EXPECTED_PATH}" 2>/dev/null; then
+            echo "✅ Output file contains valid JSON"
+            # Show basic stats
+            FILES=$(jq '.summary.total_files_scanned' "${EXPECTED_PATH}")
+            FINDINGS=$(jq '.summary.total_findings' "${EXPECTED_PATH}")
+            DURATION=$(jq '.summary.scan_duration_ms' "${EXPECTED_PATH}")
+            echo "📊 Analysis Summary:"
+            echo "   - Files analyzed: ${FILES}"
+            echo "   - Total findings: ${FINDINGS}"
+            echo "   - Scan duration: ${DURATION}ms"
+          else
+            echo "❌ Output file exists but is not valid JSON"
+            exit 1
+          fi
+        else
+          echo "❌ Turbo results file NOT found at expected location: ${EXPECTED_PATH}"
+          echo "📂 Checking what files exist in build/analysis-results/:"
+          find build/analysis-results/ -name "*.json" -type f 2>/dev/null || echo "No JSON files found"
+          exit 1
+        fi
+
+    - name: 📤 Upload Validation Results (on failure)
+      if: failure()
+      uses: actions/upload-artifact@v4
+      with:
+        name: turbo-validation-failure-${{ github.run_number }}
+        path: |
+          build/analysis-results/
+        retention-days: 7

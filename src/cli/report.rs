@@ -47,7 +47,8 @@ pub async fn run(args: ReportArgs, config: &Config) -> Result<()> {
 
     // Output to file or stdout
     if let Some(output_path) = &args.md {
-        let final_output_path = resolve_output_path(output_path, "report.md", config);
+        let final_output_path =
+            resolve_output_path(output_path, "report.md", config, Some("report"), None);
         ensure_output_directory(&final_output_path).await?;
         fs::write(&final_output_path, report_content).await?;
         tracing::info!("Report saved to: {}", final_output_path.display());

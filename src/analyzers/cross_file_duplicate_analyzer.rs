@@ -182,6 +182,21 @@ impl CrossFileDuplicateAnalyzer {
         let mut duplicates = Vec::new();
 
         for block1 in &file1.code_blocks {
+            // Early filtering optimization: skip obviously different blocks
+            if block1.lines.is_empty() || block2.lines.is_empty() {
+                continue;
+            }
+
+            // Length-based filtering to reduce O(n²) complexity
+            let len_ratio = block1.lines.len() as f64 / block2.lines.len() as f64;
+            if len_ratio < 0.5 || len_ratio > 2.0 {
+                continue;
+            }
+
+            // Skip very short blocks that are unlikely to be meaningful duplicates
+            if block1.lines.len() < 3 && block2.lines.len() < 3 {
+                continue;
+            }
             for block2 in &file2.code_blocks {
                 let similarity = self.calculate_block_similarity(block1, block2);
 

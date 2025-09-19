@@ -74,17 +74,31 @@ jobs:
       uses: mozilla/sccache-action@v0.0.6
 
     - name: Generate cache keys
-      id: cache-keys
+    - name: Run Performance Benchmarks
+      id: performance_benchmarks
       run: |
-        echo "cargo-lock-hash=$(sha256sum Cargo.lock | cut -d' ' -f1)" >> $GITHUB_OUTPUT
-        echo "rust-toolchain=${{ github.event.inputs.rust_version || 'stable' }}" >> $GITHUB_OUTPUT
-        echo "os=ubuntu-latest" >> $GITHUB_OUTPUT
+        echo "📊 Running performance analysis..."
+        if ./scripts/performance_analysis.sh; then
+          echo "✅ Performance analysis completed successfully"
+          echo "performance_status=passed" >> $GITHUB_OUTPUT
+        else
+          echo "⚠️  Performance analysis failed, but continuing (non-critical)"
+          echo "performance_status=failed" >> $GITHUB_OUTPUT
+        fi
+      continue-on-error: true
 
-    - name: Rust Cache
-      id: cache
-      uses: Swatinem/rust-cache@v2.8.0
-      with:
-        key: ${{ runner.os }}-cargo-${{ steps.cache-keys.outputs.cargo-lock-hash }}-${{ steps.cache-keys.outputs.rust-toolchain }}-quality
+    - name: Run Production Performance Monitoring
+      id: performance_monitoring
+      run: |
+        echo "📊 Running production performance monitoring..."
+        if ./scripts/performance_monitoring.sh; then
+          echo "✅ Performance monitoring completed successfully"
+          echo "monitoring_status=passed" >> $GITHUB_OUTPUT
+        else
+          echo "⚠️  Performance monitoring failed, but continuing (non-critical)"
+          echo "monitoring_status=failed" >> $GITHUB_OUTPUT
+        fi
+      continue-on-error: true
         workspaces: "./ -> target"
         cache-all-crates: true
         cache-workspace-crates: true
@@ -267,14 +281,14 @@ jobs:
         echo "🔍 Running Trivy container security scan..."
         # Build a temporary container for scanning
         docker build -t codeguardian-scan -f Dockerfile.ci .
-        
+
         # Run Trivy scan
         docker run --rm -v /tmp/trivy-cache:/root/.cache/trivy \
           aquasecurity/trivy:latest image \
           --format json \
           --output /tmp/trivy-results.json \
           codeguardian-scan || true
-        
+
         if [ -f /tmp/trivy-results.json ]; then
           cp /tmp/trivy-results.json trivy-results.json
           echo "trivy_status=completed" >> $GITHUB_OUTPUT
@@ -288,7 +302,7 @@ jobs:
       run: |
         echo "📦 Generating SBOM with CycloneDX..."
         cargo install cargo-cyclonedx --locked
-        
+
         if cargo cyclonedx --format json > sbom.json; then
           echo "✅ SBOM generated successfully"
           echo "sbom_status=passed" >> $GITHUB_OUTPUT
@@ -302,25 +316,25 @@ jobs:
       if: always()
       run: |
         echo "## Security & Compliance Summary" >> $GITHUB_STEP_SUMMARY
-        
+
         if [ "${{ steps.security_audit.outcome }}" == "success" ]; then
           echo "✅ **Cargo Audit**: No issues found" >> $GITHUB_STEP_SUMMARY
         else
           echo "⚠️  **Cargo Audit**: Issues detected" >> $GITHUB_STEP_SUMMARY
         fi
-        
+
         if [ "${{ steps.gitleaks.outcome }}" == "success" ]; then
           echo "✅ **GitLeaks**: No secrets found" >> $GITHUB_STEP_SUMMARY
         else
           echo "⚠️  **GitLeaks**: Potential secrets detected" >> $GITHUB_STEP_SUMMARY
         fi
-        
+
         if [ "${{ steps.trivy.outcome }}" == "success" ]; then
           echo "✅ **Trivy Scan**: Completed" >> $GITHUB_STEP_SUMMARY
         else
           echo "⚠️  **Trivy Scan**: Issues found or failed" >> $GITHUB_STEP_SUMMARY
         fi
-        
+
         if [ "${{ steps.sbom.outcome }}" == "success" ]; then
           echo "✅ **SBOM**: Generated" >> $GITHUB_STEP_SUMMARY
         else
@@ -509,7 +523,7 @@ jobs:
         else
           cargo build --release --target ${{ matrix.target }} --features full
         fi
-        
+
         if [ $? -eq 0 ]; then
           echo "✅ Release build successful for ${{ matrix.target }}"
         else
@@ -594,11 +608,14 @@ jobs:
         if [ "${{ steps.performance_benchmarks.outcome }}" == "success" ]; then
           echo "✅ **Performance Analysis**: Completed successfully" >> $GITHUB_STEP_SUMMARY
         else
-          echo "⚠️  **Performance Analysis**: Failed (non-critical)" >> $GITHUB_STEP_SUMMARY
+          echo "⚠️  **Performance Analysis**: Failed or incomplete" >> $GITHUB_STEP_SUMMARY
         fi
 
-    - name: Upload Performance Results
-      if: always()
+        if [ "${{ steps.performance_monitoring.outcome }}" == "success" ]; then
+          echo "✅ **Performance Monitoring**: Completed successfully" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "⚠️  **Performance Monitoring**: Failed or incomplete" >> $GITHUB_STEP_SUMMARY
+        fi
       uses: actions/upload-artifact@v4
       with:
         name: performance-results-${{ github.run_id }}

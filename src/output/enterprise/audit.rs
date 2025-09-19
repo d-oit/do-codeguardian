@@ -186,6 +186,7 @@ pub struct AuditQuery {
 }
 
 /// Audit storage trait
+#[allow(async_fn_in_trait)]
 pub trait AuditStorage: Send + Sync {
     /// Store an audit log entry
     async fn store_entry(&mut self, entry: AuditLogEntry) -> Result<()>;

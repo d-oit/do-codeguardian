@@ -21,9 +21,9 @@ impl Default for GitConflictAnalyzer {
 impl GitConflictAnalyzer {
     pub fn new() -> Self {
         Self {
-            conflict_start_pattern: Regex::new(r"^\s*<{6,}\s*$").unwrap(), // Allow whitespace around markers
-            conflict_separator_pattern: Regex::new(r"^\s*={6,}\s*$").unwrap(), // Allow whitespace around markers
-            conflict_end_pattern: Regex::new(r"^\s*>{6,}\s*$").unwrap(), // Allow whitespace around markers
+            conflict_start_pattern: Regex::new(r"^<{7}").unwrap(), // 7 < chars
+            conflict_separator_pattern: Regex::new(r"^={7}$").unwrap(), // exactly 7 = chars
+            conflict_end_pattern: Regex::new(r"^>{7}").unwrap(),   // 7 > chars
             validate_syntax: true,
         }
     }

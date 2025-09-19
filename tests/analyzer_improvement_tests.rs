@@ -191,11 +191,11 @@ fn main() {
         let line_content = string_content.lines().nth((finding.line - 1) as usize).unwrap_or("");
         // Should not flag content inside string literals
         assert!(
-            !line_content.contains("\"TODO: remember to update this text\""),
-            "Should not flag TODO inside string literals"
+            !line_content.contains(r#""TODO: remember to update this text""#),
+            r#"Should not flag TODO inside string literals"#
         );
-        assert!(!line_content.contains("\"NotImplementedException occurred\""),
-               "Should not flag exceptions inside string literals");
+        assert!(!line_content.contains(r#""NotImplementedException occurred""#),
+               r#"Should not flag exceptions inside string literals"#);
     }
 }
 

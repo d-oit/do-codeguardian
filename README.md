@@ -8,7 +8,7 @@
 
 > **Secure Your Codebase with AI-Powered Analysis**
 
-**Version: 0.2.0-alpha.5** | [📋 Changelog](CHANGELOG.md) | [📚 API Documentation](docs/api/index.md)
+**Version: 0.2.1** | [📋 Changelog](CHANGELOG.md) | [📚 API Documentation](docs/api/index.md)
 
 CodeGuardian is a cutting-edge, security-first code analysis tool that combines machine learning, advanced static analysis, and seamless GitHub integration to help developers identify vulnerabilities, optimize performance, and maintain high code quality standards. Built with Rust for speed and reliability, it empowers teams to ship secure software faster.
 
@@ -29,7 +29,7 @@ CodeGuardian is a cutting-edge, security-first code analysis tool that combines 
 - 🎛️ **Advanced Configuration**: Preset configurations with environment variable support and validation
 - 🌐 **Web Dashboard**: Optional real-time monitoring and analysis visualization (feature-gated)
 
-### 🆕 New in v0.2.0-alpha.5
+### 🆕 New in v0.2.1
 
 - 🔧 **External System Integrations**: Native support for Jira, Confluence, Jenkins, GitLab, Bitbucket, and Azure DevOps
 - 📱 **Interactive Web Dashboard**: Real-time monitoring with customizable views and stakeholder-specific dashboards
@@ -113,7 +113,7 @@ docker run -v $(pwd):/workspace d-oit/codeguardian:latest analyze .
 # Full security analysis with ML-powered false positive reduction
 codeguardian check . --format json --out security-audit.json --ml-model enhanced-model.fann
 
-# Analyze with all detection systems enabled
+# Analyze with all detection systems enabled (results auto-placed in build/analysis-results/check/{date}/comprehensive-analysis.json)
 codeguardian check . \
   --detect-broken-files \
   --detect-conflicts \
@@ -122,7 +122,7 @@ codeguardian check . \
   --format json \
   --out comprehensive-analysis.json
 
-# High-performance analysis for large codebases
+# High-performance analysis for large codebases (results auto-placed in build/analysis-results/turbo/{date}/large-scale-results.json)
 codeguardian turbo . \
   --max-parallel 16 \
   --memory-limit 4096 \
@@ -180,7 +180,7 @@ codeguardian train \
   --bootstrap \
   --enhanced
 
-# Analyze with trained model and feature importance analysis
+# Analyze with trained model and feature importance analysis (results auto-placed in build/analysis-results/check/{date}/ml-optimized-results.json)
 codeguardian check . \
   --ml-model enhanced-model.fann \
   --ml-threshold 0.8 \
@@ -199,14 +199,14 @@ codeguardian check large-file.bin \
   --parallel 8 \
   --memory-limit 2048
 
-# Baseline comparison for drift detection
+# Baseline comparison for drift detection (results auto-placed in build/analysis-results/check/{date}/drift-analysis.json)
 codeguardian check . \
   --baseline baseline.json \
   --only-new \
   --format json \
   --out drift-analysis.json
 
-# Performance benchmarking and optimization
+# Performance benchmarking and optimization (results auto-placed in build/analysis-results/turbo/{date}/performance-report.json)
 codeguardian turbo . \
   --aggressive \
   --metrics \
@@ -258,7 +258,7 @@ Explore CodeGuardian's comprehensive documentation:
 - **[Remediation Workflows](docs/remediation/index.md)** - Automated remediation
 - **[Relationship Management](docs/relationships/index.md)** - Advanced artifact relationships
 
-### 📚 API Documentation (v0.2.0-alpha.5)
+### 📚 API Documentation (v0.2.1)
 - **[Core API](docs/api/core.md)** - Core functionality and library interfaces
 - **[CLI API](docs/api/cli.md)** - Command-line interface documentation
 - **[Configuration API](docs/api/config.md)** - Configuration management

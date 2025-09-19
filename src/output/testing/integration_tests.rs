@@ -382,10 +382,12 @@ impl IntegrationTestRunner {
     /// Test enterprise features integration
     async fn test_enterprise_features(&self, _scenario: &IntegrationScenario) -> Result<()> {
         let _temp_dir = TempDir::new()?;
-        let mut enterprise_config = EnterpriseConfig::default();
-        enterprise_config.enable_audit_trail = true;
-        enterprise_config.enable_compliance_reporting = true;
-        enterprise_config.enable_multi_tenant = true;
+        let enterprise_config = EnterpriseConfig {
+            enable_audit_trail: true,
+            enable_compliance_reporting: true,
+            enable_multi_tenant: true,
+            ..Default::default()
+        };
 
         let mut enterprise_manager = EnterpriseManager::new(enterprise_config)?;
         let test_data = self.create_integration_test_data(25).await?;

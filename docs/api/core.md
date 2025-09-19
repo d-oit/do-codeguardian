@@ -139,10 +139,10 @@ pub struct Config {
 - `security`: Security analysis configuration
 - `git`: Git operations configuration
 - `output`: Output formatting configuration
-- `integrations`: External system integrations (new in v0.2.0-alpha.5)
-- `dashboard`: Dashboard configuration (new in v0.2.0-alpha.5)
-- `remediation`: Remediation workflows (new in v0.2.0-alpha.5)
-- `relationships`: Relationship management (new in v0.2.0-alpha.5)
+- `integrations`: External system integrations (new in v0.2.0)
+- `dashboard`: Dashboard configuration (new in v0.2.0)
+- `remediation`: Remediation workflows (new in v0.2.0)
+- `relationships`: Relationship management (new in v0.2.0)
 
 ### Default Configuration
 

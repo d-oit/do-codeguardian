@@ -117,7 +117,7 @@ pub enum Severity {
 
 ## ML-Enhanced Detection
 
-### MlDetector (New in v0.2.0-alpha.5)
+### MlDetector (New in v0.2.0)
 
 ```rust
 pub struct MlDetector {

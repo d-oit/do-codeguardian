@@ -18,13 +18,31 @@ codeguardian turbo [OPTIONS] [PATHS]...
 | `--max-parallel <NUM>` | Maximum number of parallel workers | `usize` | `0` | No |
 | `--memory-limit <MB>` | Memory limit in MB (0 = no limit) | `usize` | `0` | No |
 | `--format <FORMAT>` | Output format (json, human, sarif) | `OutputFormat` | `json` | No |
-| `--output <FILE>` | Output file for results | `PATH` | `turbo-results.json` | No |
+| `--output <FILE>` | Output file for results (when not specified, automatically placed in `build/analysis-results/turbo/{date}/turbo-results.json`) | `PATH` | `turbo-results.json` | No |
 | `--metrics` | Enable metrics output | `FLAG` | `false` | No |
 | `--aggressive` | Aggressive analysis mode (more thorough but slower) | `FLAG` | `false` | No |
 | `--diff <SPEC>` | Only analyze changed files (git diff) | `STRING` | - | No |
 | `--only-staged` | Only analyze staged files | `FLAG` | `false` | No |
 | `--fail-on-issues` | Exit with non-zero code if issues are found | `FLAG` | `false` | No |
 | `--baseline <FILE>` | Baseline file for drift analysis | `PATH` | - | No |
+
+## Automatic File Placement
+
+When no `--output` option is specified, CodeGuardian automatically organizes result files in dated subfolders for better organization and historical tracking:
+
+```
+build/analysis-results/turbo/{YYYY-MM-DD}/turbo-results.json
+```
+
+**Benefits:**
+- **Prevents Overwrites**: Each run creates a unique dated folder
+- **Historical Tracking**: Easy access to previous analysis results
+- **Organized Storage**: Command-specific subfolders keep results separated
+- **CI/CD Friendly**: Predictable paths for automation scripts
+
+**Example Paths:**
+- `build/analysis-results/turbo/2025-09-19/turbo-results.json`
+- `build/analysis-results/turbo/2025-09-18/turbo-results.json`
 
 ## Examples
 ```bash

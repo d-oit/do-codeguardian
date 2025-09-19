@@ -92,7 +92,7 @@ After installation, initialize with a security template:
 # Initialize configuration with security template
 do-codeguardian init --template security
 
-# Run analysis with ML filtering
+# Run analysis with ML filtering (results auto-placed in build/analysis-results/check/{date}/results.json)
 do-codeguardian check . --format json --out results.json --ml-model enhanced-model.fann
 
 # Generate comprehensive report

@@ -50,6 +50,30 @@ enable_profiling = false
 max_memory_usage_mb = 512
 max_cpu_usage_percent = 80
 
+[performance.regex_cache]
+enabled = true
+capacity = 1000
+expiration_seconds = 3600
+eviction_policy = "lru"
+
+[performance.memory_pools]
+enabled = true
+findings_pool_size = 1000
+strings_pool_size = 5000
+pathbuf_pool_size = 2000
+hashmap_pool_size = 500
+
+[performance.enhanced_cache]
+enabled = true
+memory_limit_mb = 256
+pool_integration = true
+compression_enabled = false
+
+[performance.monitoring]
+enabled = true
+metrics_collection = true
+reporting_interval_seconds = 60
+
 [analyzers]
 [analyzers.integrity]
 enabled = true

@@ -418,7 +418,7 @@ async fn main() {
         .route("/", get(|| async { "Hello from backend!" }))
         .route("/api/users", get(|| async {
             // Security issue: exposing sensitive data
-            r#"[{"id": 1, "password": "user123", "ssn": "123-45-6789"}]"#
+            r##"[{"id": 1, "password": "user123", "ssn": "123-45-6789"}]"##
         }));
 
     let addr = SocketAddr::from(([127, 0, 0, 1], 3000));

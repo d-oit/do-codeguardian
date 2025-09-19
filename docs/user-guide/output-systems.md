@@ -205,7 +205,7 @@ chunk_size = 1000
 [output]
 # Storage configuration
 [output.storage]
-base_directory = "./analysis-results"
+base_directory = "./build/analysis-results"
 organization_strategy = "hierarchical_time_based"
 enable_compression = true
 max_results_per_directory = 1000
@@ -234,7 +234,7 @@ enable_compression = true
 
 ```bash
 # Output configuration
-export CODEGUARDIAN_OUTPUT_DIR="./custom-results"
+export CODEGUARDIAN_OUTPUT_DIR="./build/analysis-results"
 export CODEGUARDIAN_OUTPUT_FORMAT="json"
 export CODEGUARDIAN_OUTPUT_COMPRESS="true"
 
@@ -255,15 +255,20 @@ CodeGuardian supports multiple strategies for organizing analysis results:
 
 #### Hierarchical Time-Based (Default)
 ```
-analysis-results/
-├── 2024/
-│   ├── 09/
-│   │   ├── 17/
-│   │   │   ├── 10/
-│   │   │   │   ├── abc123-project/
-│   │   │   │   │   ├── results.json
-│   │   │   │   │   ├── report.html
-│   │   │   │   │   └── metadata.json
+build/analysis-results/{command}/{YYYY-MM-DD}/
+├── check/
+│   ├── 2025-09-19/
+│   │   ├── results.json
+│   │   ├── report.html
+│   │   └── metadata.json
+│   └── 2025-09-18/
+│       ├── results.json
+│       └── report.html
+├── turbo/
+│   ├── 2025-09-19/
+│   │   └── turbo-results.json
+│   └── 2025-09-18/
+│       └── turbo-results.json
 ```
 
 #### By Project

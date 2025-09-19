@@ -24,7 +24,7 @@ codeguardian check [OPTIONS] [PATHS]...
 |--------|-------------|------|---------|----------|
 | `--paths <PATHS>` | Paths to analyze (files or directories) | `PATH` | `.` | No |
 | `--format <FORMAT>` | Output format (json/human/sarif) | `OutputFormat` | `json` | No |
-| `--out <FILE>` | Output file for results | `PATH` | `results.json` | No |
+| `--out <FILE>` | Output file for results (when not specified, automatically placed in `build/analysis-results/check/{date}/results.json`) | `PATH` | `results.json` | No |
 | `--emit-md <FILE>` | Emit markdown report | `PATH` | - | No |
 | `--emit-gh` | Emit GitHub issue | `FLAG` | `false` | No |
 | `--repo <REPO>` | GitHub repository (owner/repo) | `STRING` | - | No |
@@ -54,6 +54,24 @@ codeguardian check [OPTIONS] [PATHS]...
 - `checklist`: Checklist format with checkboxes
 - `simple`: Simple issue format
 - `children`: Children mode for large reports
+
+## Automatic File Placement
+
+When no `--out` option is specified, CodeGuardian automatically organizes result files in dated subfolders for better organization and historical tracking:
+
+```
+build/analysis-results/check/{YYYY-MM-DD}/results.json
+```
+
+**Benefits:**
+- **Prevents Overwrites**: Each run creates a unique dated folder
+- **Historical Tracking**: Easy access to previous analysis results
+- **Organized Storage**: Command-specific subfolders keep results separated
+- **CI/CD Friendly**: Predictable paths for automation scripts
+
+**Example Paths:**
+- `build/analysis-results/check/2025-09-19/results.json`
+- `build/analysis-results/check/2025-09-18/results.json`
 
 ## Examples
 

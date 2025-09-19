@@ -1,6 +1,6 @@
 # Remediation API Documentation
 
-This document provides comprehensive API documentation for CodeGuardian's automated remediation workflows, introduced in v0.2.0-alpha.5.
+This document provides comprehensive API documentation for CodeGuardian's automated remediation workflows, introduced in v0.2.0.
 
 ## Table of Contents
 

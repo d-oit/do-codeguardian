@@ -3,6 +3,7 @@ use crate::analyzers::security::{
     XssAnalyzer,
 };
 use crate::analyzers::Analyzer;
+use crate::config::PerformanceConfig;
 use crate::types::Finding;
 use anyhow::Result;
 use std::path::Path;
@@ -30,6 +31,26 @@ impl SecurityAnalyzer {
             command_analyzer: CommandInjectionAnalyzer::new(),
             secret_analyzer: SecretAnalyzer::new(),
             vulnerability_analyzer: VulnerabilityAnalyzer::new(),
+        }
+    }
+
+    pub fn with_config(config: &PerformanceConfig) -> Self {
+        use crate::cache::memory_pool::MemoryPoolManager;
+        use std::sync::Arc;
+
+        let memory_pools = Arc::new(MemoryPoolManager::with_config(
+            config.memory_pools.findings_pool_size,
+            config.memory_pools.strings_pool_size,
+            config.memory_pools.pathbuf_pool_size,
+            config.memory_pools.hashmap_pool_size,
+        ));
+
+        Self {
+            sql_analyzer: SqlInjectionAnalyzer::with_pools(Arc::clone(&memory_pools)),
+            xss_analyzer: XssAnalyzer::with_pools(Arc::clone(&memory_pools)),
+            command_analyzer: CommandInjectionAnalyzer::with_pools(Arc::clone(&memory_pools)),
+            secret_analyzer: SecretAnalyzer::with_pools(Arc::clone(&memory_pools)),
+            vulnerability_analyzer: VulnerabilityAnalyzer::with_pools(Arc::clone(&memory_pools)),
         }
     }
 

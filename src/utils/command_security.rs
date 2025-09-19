@@ -101,7 +101,7 @@ pub fn validate_git_diff_spec(diff_spec: &str) -> Result<()> {
     }
 
     // Allow only safe git diff specs: commit hashes, branch names, HEAD~N, etc.
-    let valid_patterns = vec![
+    let valid_patterns = [
         Regex::new(r"^[a-fA-F0-9]{7,40}$").unwrap(), // Commit hash
         Regex::new(r"^HEAD~\d+$").unwrap(),          // HEAD~N
         Regex::new(r"^HEAD\^\d*$").unwrap(),         // HEAD^N

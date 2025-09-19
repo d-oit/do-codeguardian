@@ -806,9 +806,11 @@ mod tests {
         let temp_dir = TempDir::new()?;
         let mut analyzer = BuildArtifactAnalyzer::new();
 
-        // Create test files with same content
-        let file1 = temp_dir.path().join("file1.txt");
-        let file2 = temp_dir.path().join("file2.txt");
+        // Create test files with same content in target directory (so they're recognized as artifacts)
+        let target_dir = temp_dir.path().join("target");
+        fs::create_dir_all(&target_dir)?;
+        let file1 = target_dir.join("file1.so");
+        let file2 = target_dir.join("file2.so");
         fs::write(&file1, "test content")?;
         fs::write(&file2, "test content")?;
 

@@ -2,7 +2,7 @@
   "schema_version": "1.0.0",
   "tool_metadata": {
     "name": "codeguardian",
-    "version": "0.2.0-alpha.5",
+    "version": "0.2.1",
     "config_hash": "d629806d4f691031",
     "timestamp": "2025-09-17T07:51:01.603790202Z"
   },

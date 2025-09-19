@@ -278,8 +278,8 @@ default_format = "human"  # json, human, sarif, markdown
 color_output = true
 pretty_print = true
 
-# File output
-output_dir = "./do-codeguardian-results"
+# File output (when not specified, automatically placed in build/analysis-results/{command}/{date}/)
+output_dir = "./build/analysis-results"
 overwrite_existing = false
 compress_output = false
 

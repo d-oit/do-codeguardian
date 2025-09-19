@@ -25,10 +25,10 @@ codeguardian [OPTIONS] <COMMAND>
 - `analyze` - Analyze files for security issues
 - `scan` - Scan directories or repositories
 - `check` - Check current state and configuration
-- `dashboard` - Start the web dashboard (new in v0.2.0-alpha.5)
-- `remediate` - Run automated remediation workflows (new in v0.2.0-alpha.5)
-- `integrate` - Manage external system integrations (new in v0.2.0-alpha.5)
-- `relationships` - Manage artifact relationships (new in v0.2.0-alpha.5)
+- `dashboard` - Start the web dashboard (new in v0.2.0)
+- `remediate` - Run automated remediation workflows (new in v0.2.0)
+- `integrate` - Manage external system integrations (new in v0.2.0)
+- `relationships` - Manage artifact relationships (new in v0.2.0)
 - `config` - Configuration management
 - `output` - Output formatting and management
 
@@ -99,7 +99,7 @@ Check current state, configuration, and system health.
 codeguardian check --validate-config --system-health
 ```
 
-### Dashboard Command (New in v0.2.0-alpha.5)
+### Dashboard Command (New in v0.2.0)
 
 ```bash
 codeguardian dashboard [OPTIONS]
@@ -119,7 +119,7 @@ Start the web-based dashboard for monitoring duplicates.
 codeguardian dashboard --host 0.0.0.0 --port 3000 --open
 ```
 
-### Remediate Command (New in v0.2.0-alpha.5)
+### Remediate Command (New in v0.2.0)
 
 ```bash
 codeguardian remediate [OPTIONS] <COMMAND>
@@ -151,7 +151,7 @@ codeguardian remediate list
 codeguardian remediate approve wf-12345
 ```
 
-### Integrate Command (New in v0.2.0-alpha.5)
+### Integrate Command (New in v0.2.0)
 
 ```bash
 codeguardian integrate [OPTIONS] <COMMAND>
@@ -185,7 +185,7 @@ codeguardian integrate test gitlab
 codeguardian integrate sync
 ```
 
-### Relationships Command (New in v0.2.0-alpha.5)
+### Relationships Command (New in v0.2.0)
 
 ```bash
 codeguardian relationships [OPTIONS] <COMMAND>

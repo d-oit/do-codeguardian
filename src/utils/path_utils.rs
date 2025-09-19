@@ -42,13 +42,51 @@ pub fn validate_file_extension(file_path: &Path, expected_ext: &str, context: &s
 }
 
 /// Resolve output path using configured output directory if needed
+///
+/// # Arguments
+/// * `provided_path` - The user-provided output path
+/// * `default_filename` - The default filename to use if no path is provided
+/// * `config` - The configuration containing output directory settings
+/// * `command` - Optional command name for subfolder organization (e.g., "turbo")
+/// * `date` - Optional date string in YYYY-MM-DD format for subfolder organization
+///
+/// # Returns
+/// A PathBuf representing the resolved output path
+///
+/// # Behavior
+/// If `command` and `date` are provided, the path will be structured as:
+/// `{output_dir}/{command}/{date}/{filename}`
+/// Otherwise, uses the original logic for backward compatibility.
 pub fn resolve_output_path(
     provided_path: &Path,
     default_filename: &str,
     config: &Config,
+    command: Option<&str>,
+    date: Option<&str>,
 ) -> PathBuf {
     let output_dir = &config.output.directory;
 
+    // Determine the filename to use
+    let filename = if provided_path == Path::new(default_filename) {
+        default_filename
+    } else if provided_path.is_relative()
+        && !provided_path.starts_with("./")
+        && !provided_path.starts_with("../")
+    {
+        provided_path.to_str().unwrap_or(default_filename)
+    } else {
+        provided_path
+            .file_name()
+            .and_then(|n| n.to_str())
+            .unwrap_or(default_filename)
+    };
+
+    // If command and date are provided, use subfolder structure
+    if let (Some(cmd), Some(dt)) = (command, date) {
+        return PathBuf::from(output_dir).join(cmd).join(dt).join(filename);
+    }
+
+    // Original logic for backward compatibility
     // If using default path, use configured output directory
     if provided_path == Path::new(default_filename) {
         return PathBuf::from(output_dir).join(default_filename);

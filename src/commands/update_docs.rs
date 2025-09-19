@@ -42,7 +42,7 @@ use tracing::{debug, info, warn};
 pub async fn execute_update_docs(
     config: &Config,
     args: &crate::cli::UpdateDocsArgs,
-    project_root: &PathBuf,
+    project_root: &Path,
 ) -> Result<()> {
     info!("Starting documentation update process");
 
@@ -891,7 +891,7 @@ verbose = false
 }
 
 /// Validate documentation structure
-async fn validate_docs_structure(_config: &Config, project_root: &PathBuf) -> Result<()> {
+async fn validate_docs_structure(_config: &Config, project_root: &Path) -> Result<()> {
     info!("Validating documentation structure");
 
     // Check for required documentation files

@@ -13,7 +13,7 @@ cargo install do-codeguardian
 # 2. Initialize configuration with security template
 do-codeguardian init --template security
 
-# 3. Run analysis with ML filtering
+# 3. Run analysis with ML filtering (results auto-placed in build/analysis-results/check/{date}/results.json)
 ./target/release/do-codeguardian check . --format json --out results.json --ml-model enhanced-model.fann
 
 # 4. Generate comprehensive report
@@ -32,10 +32,10 @@ do-codeguardian init --template security
 # Fast PR analysis with ML filtering (from turbo-pr-analysis.yml)
 ./target/release/do-codeguardian check . --diff origin/main..HEAD --ml-model enhanced-model.fann --emit-gh --repo ${{ github.repository }}
 
-# High-performance analysis (from turbo-security-analysis.yml)
+# High-performance analysis (from turbo-security-analysis.yml) (results auto-placed in build/analysis-results/turbo/{date}/results.json)
 ./target/release/do-codeguardian turbo . --max-parallel 16 --metrics --format json --output results.json
 
-# Security audit with comprehensive reporting (from do-codeguardian-ci.yml)
+# Security audit with comprehensive reporting (from do-codeguardian-ci.yml) (results auto-placed in build/analysis-results/check/{date}/audit.json)
 ./target/release/do-codeguardian check . --config security-config.toml --format json --out audit.json --emit-md audit-report.md --emit-gh --repo ${{ github.repository }} --fail-on-issues
 ```
 

@@ -59,6 +59,8 @@ For more detailed output with JSON results:
 do-codeguardian check . --format json --out results.json
 ```
 
+**Note**: When no `--out` is specified, results are automatically placed in `build/analysis-results/check/{date}/results.json`.
+
 ### 3. Generate a Report
 
 Create a human-readable Markdown report:
@@ -104,6 +106,8 @@ Focus analysis on changed files in a PR:
 ```bash
 do-codeguardian check . --diff origin/main..HEAD --format json --out pr-results.json
 ```
+
+**Note**: Results will be auto-placed in `build/analysis-results/check/{date}/pr-results.json` when using custom output names.
 
 ## Understanding Results
 

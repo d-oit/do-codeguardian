@@ -4,7 +4,7 @@
 [Provide a high-level overview of the User Acceptance Testing (UAT) process, including the purpose, scope, and key findings from end-users. Summarize the overall status (e.g., accepted, rejected, or conditional acceptance) and any critical feedback.]
 
 ## Test Environment
-- **Version**: [VERSION] (e.g., v0.2.0-alpha.5)
+- **Version**: [VERSION] (e.g., v0.2.1)
 - **Date**: [DATE] (e.g., YYYY-MM-DD)
 - **Environment**: [DEVELOPMENT/STAGING/PRODUCTION]
 - **Hardware/Software Specifications**:

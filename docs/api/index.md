@@ -1,6 +1,6 @@
 # API Documentation
 
-This directory contains comprehensive API documentation for CodeGuardian v0.2.0-alpha.5.
+This directory contains comprehensive API documentation for CodeGuardian v0.2.0.
 
 ## Available Documentation
 
@@ -10,7 +10,7 @@ This directory contains comprehensive API documentation for CodeGuardian v0.2.0-
 - [Configuration API](config.md) - Configuration management
 - [Analysis API](analysis.md) - Code analysis interfaces
 
-### New Features in v0.2.0-alpha.5
+### New Features in v0.2.0
 - [Integrations API](integrations.md) - External system integrations (Jira, GitLab, Jenkins, etc.)
 - [Dashboard API](dashboard.md) - Web-based dashboard for monitoring duplicates
 - [Remediation API](remediation.md) - Automated remediation workflows
@@ -25,7 +25,7 @@ For information on how to use the CodeGuardian API, see the [main documentation]
 
 ## Recent Updates
 
-### v0.2.0-alpha.5
+### v0.2.0
 - **External Integrations**: Added support for Jira, Confluence, Jenkins, GitLab, Bitbucket, and Azure DevOps
 - **Dashboard Module**: Web-based dashboard for real-time monitoring and visualization
 - **Remediation Workflows**: Automated workflows to resolve detected duplicates

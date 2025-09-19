@@ -137,7 +137,7 @@ max_output_size_mb = 100
 enable_streaming = false
 ```
 
-## Integration Configuration (New in v0.2.0-alpha.5)
+## Integration Configuration (New in v0.2.0)
 
 ### IntegrationsConfig
 
@@ -211,7 +211,7 @@ pub enum AuthConfig {
 }
 ```
 
-## Dashboard Configuration (New in v0.2.0-alpha.5)
+## Dashboard Configuration (New in v0.2.0)
 
 ### DashboardConfig
 
@@ -245,7 +245,7 @@ description = "Security-related duplicate detection"
 filters = { category_filter = ["security"], severity_filter = ["high", "critical"] }
 ```
 
-## Remediation Configuration (New in v0.2.0-alpha.5)
+## Remediation Configuration (New in v0.2.0)
 
 ### RemediationConfig
 
@@ -284,7 +284,7 @@ notify_on_failure = true
 notification_channels = ["email", "slack"]
 ```
 
-## Relationship Configuration (New in v0.2.0-alpha.5)
+## Relationship Configuration (New in v0.2.0)
 
 ### RelationshipConfig
 
@@ -494,7 +494,7 @@ let config = Config::default()
 
 ## Migration Guide
 
-### From v0.1.0 to v0.2.0-alpha.5
+### From v0.1.0 to v0.2.0
 
 **New Configuration Sections:**
 - `[integrations]`: External system integrations
@@ -516,7 +516,7 @@ max_file_size = 10
 [output]
 format = "json"
 
-# New v0.2.0-alpha.5 configuration
+# New v0.2.0 configuration
 [security]
 max_file_size_mb = 10
 enable_advanced_analysis = true

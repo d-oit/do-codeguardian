@@ -6,7 +6,10 @@ use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::time::SystemTime;
 
+pub mod enhanced_optimized_cache;
+pub mod memory_pool;
 pub mod optimized_cache;
+pub mod regex_cache;
 use tokio::fs;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
