@@ -415,12 +415,12 @@ mod performance_analyzer_tests {
     #[test]
     fn test_performance_analyzer_supports_files() {
         let analyzer = PerformanceAnalyzer::new().unwrap();
-        
+
         // Should support Rust files
         assert!(analyzer.supports_file(Path::new("test.rs")));
         assert!(analyzer.supports_file(Path::new("src/main.rs")));
         assert!(analyzer.supports_file(Path::new("lib.rs")));
-        
+
         // Should not support other files
         assert!(!analyzer.supports_file(Path::new("test.js")));
         assert!(!analyzer.supports_file(Path::new("test.py")));
@@ -431,7 +431,7 @@ mod performance_analyzer_tests {
     #[test]
     fn test_detect_nested_loops_comprehensive() {
         let analyzer = PerformanceAnalyzer::new().unwrap();
-        
+
         // Test various nested loop patterns
         let test_cases = vec![
             (r#"
@@ -443,7 +443,7 @@ mod performance_analyzer_tests {
                 }
             }
             "#, true, "Simple nested for loops"),
-            
+
             (r#"
             fn nested_while() {
                 let mut i = 0;
@@ -457,7 +457,7 @@ mod performance_analyzer_tests {
                 }
             }
             "#, true, "Nested while loops"),
-            
+
             (r#"
             fn single_loop() {
                 for i in 0..10 {
@@ -465,7 +465,7 @@ mod performance_analyzer_tests {
                 }
             }
             "#, false, "Single loop should not trigger"),
-            
+
             (r#"
             fn mixed_loops() {
                 for i in 0..10 {
@@ -493,7 +493,7 @@ mod performance_analyzer_tests {
     #[test]
     fn test_detect_inefficient_strings_comprehensive() {
         let analyzer = PerformanceAnalyzer::new().unwrap();
-        
+
         let test_cases = vec![
             (r#"
             fn bad_string_concat() {
@@ -503,7 +503,7 @@ mod performance_analyzer_tests {
                 }
             }
             "#, true, "String concatenation in loop"),
-            
+
             (r#"
             fn good_string_concat() {
                 let s: String = (0..100)
@@ -512,7 +512,7 @@ mod performance_analyzer_tests {
                     .join(" ");
             }
             "#, false, "Efficient string building"),
-            
+
             (r#"
             fn string_push() {
                 let mut s = String::new();
@@ -537,7 +537,7 @@ mod performance_analyzer_tests {
     #[test]
     fn test_detect_blocking_io() {
         let analyzer = PerformanceAnalyzer::new().unwrap();
-        
+
         let test_cases = vec![
             (r#"
             #[tokio::main]
@@ -545,13 +545,13 @@ mod performance_analyzer_tests {
                 std::fs::read_to_string("file.txt").unwrap();
             }
             "#, true, "Blocking I/O in async function"),
-            
+
             (r#"
             async fn good_async() {
                 tokio::fs::read_to_string("file.txt").await.unwrap();
             }
             "#, false, "Proper async I/O"),
-            
+
             (r#"
             fn sync_function() {
                 std::fs::read_to_string("file.txt").unwrap();
@@ -571,7 +571,7 @@ mod performance_analyzer_tests {
     #[test]
     fn test_detect_algorithmic_inefficiencies() {
         let analyzer = PerformanceAnalyzer::new().unwrap();
-        
+
         let test_cases = vec![
             (r#"
             fn inefficient_sort() {
@@ -581,7 +581,7 @@ mod performance_analyzer_tests {
                 }
             }
             "#, true, "Sorting in loop"),
-            
+
             (r#"
             fn collect_iter_pattern() {
                 let data: Vec<i32> = vec![1, 2, 3];
@@ -666,7 +666,7 @@ mod duplicate_analyzer_tests {
             enable_github_prevention: false,
             cache: Default::default(),
         };
-        
+
         let analyzer = DuplicateAnalyzer::with_config(config);
         assert!(analyzer.is_ok());
     }
@@ -674,7 +674,7 @@ mod duplicate_analyzer_tests {
     #[test]
     fn test_duplicate_analyzer_supports_files() {
         let analyzer = DuplicateAnalyzer::new().unwrap();
-        
+
         // Should support programming language files
         assert!(analyzer.supports_file(Path::new("test.rs")));
         assert!(analyzer.supports_file(Path::new("test.js")));
@@ -682,7 +682,7 @@ mod duplicate_analyzer_tests {
         assert!(analyzer.supports_file(Path::new("test.java")));
         assert!(analyzer.supports_file(Path::new("test.cpp")));
         assert!(analyzer.supports_file(Path::new("test.go")));
-        
+
         // Should not support non-code files
         assert!(!analyzer.supports_file(Path::new("test.txt")));
         assert!(!analyzer.supports_file(Path::new("test.png")));
@@ -692,7 +692,7 @@ mod duplicate_analyzer_tests {
     #[test]
     fn test_normalize_line_functionality() {
         let analyzer = DuplicateAnalyzer::new().unwrap();
-        
+
         let test_cases = vec![
             ("  let x = 5;  // comment", "let x = 5;"),
             ("    if condition {", "if condition {"),
@@ -710,7 +710,7 @@ mod duplicate_analyzer_tests {
     #[test]
     fn test_is_in_string_detection() {
         let analyzer = DuplicateAnalyzer::new().unwrap();
-        
+
         assert!(analyzer.is_in_string(r#"let x = "hello # world"; "#, 12));
         assert!(!analyzer.is_in_string(r#"let x = 5; # comment"#, 12));
         assert!(analyzer.is_in_string(r#"let x = '; # not in string"#, 10));
@@ -719,20 +719,20 @@ mod duplicate_analyzer_tests {
     #[test]
     fn test_extract_code_blocks() {
         let analyzer = DuplicateAnalyzer::new().unwrap();
-        
+
         let content = r#"
         // Comment
         fn function1() {
             let x = 1;
             let y = 2;
         }
-        
+
         fn function2() {
             let a = 1;
             let b = 2;
         }
         "#;
-        
+
         let blocks = analyzer.extract_code_blocks(content);
         assert!(!blocks.is_empty());
         // Should extract at least the function blocks
@@ -742,25 +742,25 @@ mod duplicate_analyzer_tests {
     #[test]
     fn test_calculate_similarity_comprehensive() {
         let analyzer = DuplicateAnalyzer::new().unwrap();
-        
+
         let block1 = CodeBlock {
             lines: vec!["line1".to_string(), "line2".to_string(), "line3".to_string()],
             start_line: 1,
             end_line: 3,
         };
-        
+
         let block2 = CodeBlock {
             lines: vec!["line1".to_string(), "line2".to_string(), "line3".to_string()],
             start_line: 5,
             end_line: 7,
         };
-        
+
         let block3 = CodeBlock {
             lines: vec!["line1".to_string(), "different".to_string(), "line3".to_string()],
             start_line: 9,
             end_line: 11,
         };
-        
+
         let block4 = CodeBlock {
             lines: vec!["completely".to_string(), "different".to_string(), "content".to_string()],
             start_line: 13,
@@ -775,7 +775,7 @@ mod duplicate_analyzer_tests {
     #[test]
     fn test_security_relevance_detection() {
         let analyzer = DuplicateAnalyzer::new().unwrap();
-        
+
         let security_block = CodeBlock {
             lines: vec![
                 "fn authenticate_user(username: &str, password: &str)".to_string(),
@@ -785,7 +785,7 @@ mod duplicate_analyzer_tests {
             start_line: 1,
             end_line: 3,
         };
-        
+
         let normal_block = CodeBlock {
             lines: vec![
                 "fn calculate_sum(a: i32, b: i32)".to_string(),
@@ -802,7 +802,7 @@ mod duplicate_analyzer_tests {
     #[test]
     fn test_ignore_test_files() {
         let analyzer = DuplicateAnalyzer::new().unwrap();
-        
+
         assert!(analyzer.should_ignore_file(Path::new("tests/test_auth.rs")));
         assert!(analyzer.should_ignore_file(Path::new("src/auth_test.rs")));
         assert!(analyzer.should_ignore_file(Path::new("src/test_auth.rs")));
@@ -813,7 +813,7 @@ mod duplicate_analyzer_tests {
     #[test]
     fn test_is_test_file() {
         let analyzer = DuplicateAnalyzer::new().unwrap();
-        
+
         assert!(analyzer.is_test_file(Path::new("tests/integration_test.rs")));
         assert!(analyzer.is_test_file(Path::new("src/main_test.rs")));
         assert!(analyzer.is_test_file(Path::new("test.py")));
@@ -824,13 +824,13 @@ mod duplicate_analyzer_tests {
     #[test]
     fn test_detect_security_patterns_in_duplicate() {
         let analyzer = DuplicateAnalyzer::new().unwrap();
-        
+
         let block1 = CodeBlock {
             lines: vec!["authenticate_user".to_string(), "hash_password".to_string()],
             start_line: 1,
             end_line: 2,
         };
-        
+
         let block2 = CodeBlock {
             lines: vec!["validate_input".to_string(), "sanitize_data".to_string()],
             start_line: 5,
@@ -845,13 +845,13 @@ mod duplicate_analyzer_tests {
     #[test]
     fn test_calculate_severity() {
         let analyzer = DuplicateAnalyzer::new().unwrap();
-        
+
         let block1 = CodeBlock {
             lines: vec!["authenticate".to_string()],
             start_line: 1,
             end_line: 1,
         };
-        
+
         let block2 = CodeBlock {
             lines: vec!["authenticate".to_string()],
             start_line: 5,
@@ -869,12 +869,12 @@ mod duplicate_analyzer_tests {
     #[test]
     fn test_empty_and_edge_cases() {
         let analyzer = DuplicateAnalyzer::new().unwrap();
-        
+
         // Empty file
         let result = analyzer.analyze(Path::new("empty.rs"), b"");
         assert!(result.is_ok());
         assert_eq!(result.unwrap().len(), 0);
-        
+
         // File with only comments
         let content = "// This is just a comment
 // Another comment
@@ -905,12 +905,12 @@ mod build_artifact_analyzer_tests {
     fn test_build_artifact_analyzer_creation() {
         let analyzer = BuildArtifactAnalyzer::new();
         assert_eq!(analyzer.name(), "build_artifact_duplicate");
-        
+
         // Check default build directories
         assert!(analyzer.build_dirs.contains(&PathBuf::from("target")));
         assert!(analyzer.build_dirs.contains(&PathBuf::from("build")));
         assert!(analyzer.build_dirs.contains(&PathBuf::from("dist")));
-        
+
         // Check default patterns
         assert!(analyzer.artifact_patterns.contains(&"*.so".to_string()));
         assert!(analyzer.artifact_patterns.contains(&"*.exe".to_string()));
@@ -923,7 +923,7 @@ mod build_artifact_analyzer_tests {
         let analyzer = BuildArtifactAnalyzer::new()
             .with_build_dirs(custom_dirs.clone())
             .with_max_file_size(50 * 1024 * 1024); // 50MB
-        
+
         assert_eq!(analyzer.build_dirs, custom_dirs);
         assert_eq!(analyzer.max_file_size, 50 * 1024 * 1024);
     }
@@ -931,14 +931,14 @@ mod build_artifact_analyzer_tests {
     #[test]
     fn test_supports_file_comprehensive() {
         let analyzer = BuildArtifactAnalyzer::new();
-        
+
         // Should support build-related files
         assert!(analyzer.supports_file(Path::new("Cargo.toml")));
         assert!(analyzer.supports_file(Path::new("package.json")));
         assert!(analyzer.supports_file(Path::new("requirements.txt")));
         assert!(analyzer.supports_file(Path::new("pom.xml")));
         assert!(analyzer.supports_file(Path::new("build.gradle")));
-        
+
         // Should not support other files
         assert!(!analyzer.supports_file(Path::new("README.md")));
         assert!(!analyzer.supports_file(Path::new("main.rs")));
@@ -949,7 +949,7 @@ mod build_artifact_analyzer_tests {
     #[test]
     fn test_is_build_artifact_comprehensive() {
         let analyzer = BuildArtifactAnalyzer::new();
-        
+
         // Test file extensions
         assert!(analyzer.is_build_artifact(Path::new("libtest.so")));
         assert!(analyzer.is_build_artifact(Path::new("library.dll")));
@@ -957,18 +957,18 @@ mod build_artifact_analyzer_tests {
         assert!(analyzer.is_build_artifact(Path::new("object.o")));
         assert!(analyzer.is_build_artifact(Path::new("binary.exe")));
         assert!(analyzer.is_build_artifact(Path::new("program.bin")));
-        
+
         // Test exact matches
         assert!(analyzer.is_build_artifact(Path::new("Cargo.toml")));
         assert!(analyzer.is_build_artifact(Path::new("package.json")));
         assert!(analyzer.is_build_artifact(Path::new("requirements.txt")));
-        
+
         // Test build directory detection
         assert!(analyzer.is_build_artifact(Path::new("target/debug/binary")));
         assert!(analyzer.is_build_artifact(Path::new("build/release/library.so")));
         assert!(analyzer.is_build_artifact(Path::new("dist/app.exe")));
         assert!(analyzer.is_build_artifact(Path::new("out/artifact.bin")));
-        
+
         // Should not detect non-build artifacts
         assert!(!analyzer.is_build_artifact(Path::new("src/main.rs")));
         assert!(!analyzer.is_build_artifact(Path::new("README.md")));
@@ -978,34 +978,34 @@ mod build_artifact_analyzer_tests {
     #[test]
     fn test_determine_artifact_type_comprehensive() {
         let analyzer = BuildArtifactAnalyzer::new();
-        
+
         // Test shared libraries
         assert_eq!(analyzer.determine_artifact_type(Path::new("lib.so")), ArtifactType::SharedLibrary);
         assert_eq!(analyzer.determine_artifact_type(Path::new("lib.dylib")), ArtifactType::SharedLibrary);
         assert_eq!(analyzer.determine_artifact_type(Path::new("lib.dll")), ArtifactType::SharedLibrary);
-        
+
         // Test archives
         assert_eq!(analyzer.determine_artifact_type(Path::new("lib.a")), ArtifactType::Archive);
         assert_eq!(analyzer.determine_artifact_type(Path::new("lib.lib")), ArtifactType::Archive);
-        
+
         // Test object files
         assert_eq!(analyzer.determine_artifact_type(Path::new("main.o")), ArtifactType::ObjectFile);
         assert_eq!(analyzer.determine_artifact_type(Path::new("module.obj")), ArtifactType::ObjectFile);
-        
+
         // Test binaries
         assert_eq!(analyzer.determine_artifact_type(Path::new("app.exe")), ArtifactType::Binary);
         assert_eq!(analyzer.determine_artifact_type(Path::new("program.bin")), ArtifactType::Binary);
         assert_eq!(analyzer.determine_artifact_type(Path::new("script.out")), ArtifactType::Binary);
-        
+
         // Test Java archives
         assert_eq!(analyzer.determine_artifact_type(Path::new("app.jar")), ArtifactType::Archive);
         assert_eq!(analyzer.determine_artifact_type(Path::new("web.war")), ArtifactType::Archive);
         assert_eq!(analyzer.determine_artifact_type(Path::new("enterprise.ear")), ArtifactType::Archive);
-        
+
         // Test package files
         assert_eq!(analyzer.determine_artifact_type(Path::new("package.deb")), ArtifactType::Binary);
         assert_eq!(analyzer.determine_artifact_type(Path::new("software.rpm")), ArtifactType::Binary);
-        
+
         // Test unknown types
         assert_eq!(analyzer.determine_artifact_type(Path::new("unknown.xyz")), ArtifactType::Other);
         assert_eq!(analyzer.determine_artifact_type(Path::new("data.txt")), ArtifactType::Other);
@@ -1015,25 +1015,25 @@ mod build_artifact_analyzer_tests {
     fn test_calculate_file_hash() -> Result<(), Box<dyn std::error::Error>> {
         let analyzer = BuildArtifactAnalyzer::new();
         let temp_dir = TempDir::new()?;
-        
+
         // Create test files
         let file1 = temp_dir.path().join("file1.txt");
         let file2 = temp_dir.path().join("file2.txt");
         let file3 = temp_dir.path().join("file3.txt");
-        
+
         fs::write(&file1, "test content")?;
         fs::write(&file2, "test content")?; // Same content as file1
         fs::write(&file3, "different content")?; // Different content
-        
+
         let hash1 = analyzer.calculate_file_hash(&file1)?;
         let hash2 = analyzer.calculate_file_hash(&file2)?;
         let hash3 = analyzer.calculate_file_hash(&file3)?;
-        
+
         // Same content should have same hash
         assert_eq!(hash1, hash2);
         // Different content should have different hash
         assert_ne!(hash1, hash3);
-        
+
         Ok(())
     }
 
@@ -1041,7 +1041,7 @@ mod build_artifact_analyzer_tests {
     fn test_extract_dependencies_cargo() -> Result<(), Box<dyn std::error::Error>> {
         let analyzer = BuildArtifactAnalyzer::new();
         let temp_dir = TempDir::new()?;
-        
+
         let cargo_toml = temp_dir.path().join("Cargo.toml");
         let content = r#"
 [package]
@@ -1057,10 +1057,10 @@ regex = "1.5"
 tempfile = "3.0"
 "#;
         fs::write(&cargo_toml, content)?;
-        
+
         let deps = analyzer.extract_dependencies(&cargo_toml)?;
         assert!(deps.contains(&"cargo-dependencies".to_string()));
-        
+
         Ok(())
     }
 
@@ -1068,7 +1068,7 @@ tempfile = "3.0"
     fn test_extract_dependencies_npm() -> Result<(), Box<dyn std::error::Error>> {
         let analyzer = BuildArtifactAnalyzer::new();
         let temp_dir = TempDir::new()?;
-        
+
         let package_json = temp_dir.path().join("package.json");
         let content = r#"
 {
@@ -1085,13 +1085,13 @@ tempfile = "3.0"
 }
 "#;
         fs::write(&package_json, content)?;
-        
+
         let deps = analyzer.extract_dependencies(&package_json)?;
         assert!(deps.contains(&"express".to_string()));
         assert!(deps.contains(&"axios".to_string()));
         assert!(deps.contains(&"lodash".to_string()));
         assert!(!deps.contains(&"jest".to_string())); // devDependencies should not be included
-        
+
         Ok(())
     }
 
@@ -1099,7 +1099,7 @@ tempfile = "3.0"
     fn test_extract_dependencies_pip() -> Result<(), Box<dyn std::error::Error>> {
         let analyzer = BuildArtifactAnalyzer::new();
         let temp_dir = TempDir::new()?;
-        
+
         let requirements_txt = temp_dir.path().join("requirements.txt");
         let content = r#"
 requests==2.28.1
@@ -1110,21 +1110,21 @@ sqlalchemy!=1.4.0
 numpy
 "#;
         fs::write(&requirements_txt, content)?;
-        
+
         let deps = analyzer.extract_dependencies(&requirements_txt)?;
         assert!(deps.contains(&"requests".to_string()));
         assert!(deps.contains(&"flask".to_string()));
         assert!(deps.contains(&"django".to_string()));
         assert!(deps.contains(&"sqlalchemy".to_string()));
         assert!(deps.contains(&"numpy".to_string()));
-        
+
         Ok(())
     }
 
     #[test]
     fn test_group_artifacts_by_hash() -> Result<(), Box<dyn std::error::Error>> {
         let mut analyzer = BuildArtifactAnalyzer::new();
-        
+
         let artifacts = vec![
             BuildArtifact {
                 path: PathBuf::from("target1/lib.so"),
@@ -1148,22 +1148,22 @@ numpy
                 dependencies: vec!["dep2".to_string()],
             },
         ];
-        
+
         let duplicates = analyzer.group_artifacts_by_hash(artifacts)?;
-        
+
         // Should have one duplicate group
         assert_eq!(duplicates.len(), 1);
         assert_eq!(duplicates[0].artifacts.len(), 2);
         assert_eq!(duplicates[0].hash, "hash1");
         assert_eq!(duplicates[0].total_wasted_space, 1000); // One duplicate
-        
+
         Ok(())
     }
 
     #[test]
     fn test_assess_conflict_level_comprehensive() {
         let analyzer = BuildArtifactAnalyzer::new();
-        
+
         // Test low conflict (same type, same dependencies)
         let low_conflict = vec![
             BuildArtifact {
@@ -1182,7 +1182,7 @@ numpy
             },
         ];
         assert_eq!(analyzer.assess_conflict_level(&low_conflict), ConflictLevel::Low);
-        
+
         // Test medium conflict (many duplicates)
         let medium_conflict = vec![
             BuildArtifact {
@@ -1215,7 +1215,7 @@ numpy
             },
         ];
         assert_eq!(analyzer.assess_conflict_level(&medium_conflict), ConflictLevel::Medium);
-        
+
         // Test high conflict (different types)
         let high_conflict = vec![
             BuildArtifact {
@@ -1234,7 +1234,7 @@ numpy
             },
         ];
         assert_eq!(analyzer.assess_conflict_level(&high_conflict), ConflictLevel::High);
-        
+
         // Test critical conflict (different types and dependencies)
         let critical_conflict = vec![
             BuildArtifact {
@@ -1258,7 +1258,7 @@ numpy
     #[test]
     fn test_generate_cleanup_recommendation() {
         let analyzer = BuildArtifactAnalyzer::new();
-        
+
         let artifacts = vec![
             BuildArtifact {
                 path: PathBuf::from("target1/lib.so"),
@@ -1275,7 +1275,7 @@ numpy
                 dependencies: vec!["dep1".to_string()],
             },
         ];
-        
+
         let recommendation = analyzer.generate_cleanup_recommendation(&artifacts, ConflictLevel::Low);
         assert!(recommendation.contains("LOW"));
         assert!(recommendation.contains("duplicate artifacts"));
@@ -1285,7 +1285,7 @@ numpy
     #[test]
     fn test_conflict_resolver() {
         let resolver = ConflictResolver::new();
-        
+
         let duplicate = DuplicateArtifact {
             hash: "hash1".to_string(),
             artifacts: vec![
@@ -1308,9 +1308,9 @@ numpy
             conflict_level: ConflictLevel::Low,
             cleanup_recommendation: "Test recommendation".to_string(),
         };
-        
+
         let actions = resolver.resolve(&duplicate).unwrap();
-        
+
         // Should have one Keep and one Remove action
         assert_eq!(actions.len(), 2);
         let keep_count = actions.iter().filter(|a| matches!(a, CleanupAction::Keep { .. })).count();
@@ -1331,23 +1331,23 @@ numpy
     fn test_max_file_size_limit() -> Result<(), Box<dyn std::error::Error>> {
         let analyzer = BuildArtifactAnalyzer::new().with_max_file_size(100); // 100 bytes limit
         let temp_dir = TempDir::new()?;
-        
+
         let small_file = temp_dir.path().join("small.txt");
         let large_file = temp_dir.path().join("large.txt");
-        
+
         fs::write(&small_file, "small content")?; // 13 bytes
         fs::write(&large_file, "x".repeat(200))?; // 200 bytes
-        
+
         // Small file should be analyzed
         let small_result = analyzer.analyze_file(&small_file);
         assert!(small_result.is_ok());
         assert!(small_result.unwrap().is_some());
-        
+
         // Large file should be skipped
         let large_result = analyzer.analyze_file(&large_file);
         assert!(large_result.is_ok());
         assert!(large_result.unwrap().is_none());
-        
+
         Ok(())
     }
 
@@ -1380,11 +1380,11 @@ mod dependency_analyzer_tests {
     fn test_supports_file() {
         let temp_dir = TempDir::new().unwrap();
         let analyzer = DependencyAnalyzer::new(temp_dir.path().to_path_buf());
-        
+
         // Should support Cargo.toml
         assert!(analyzer.supports_file(Path::new("Cargo.toml")));
         assert!(analyzer.supports_file(Path::new("src/Cargo.toml")));
-        
+
         // Should not support other files
         assert!(!analyzer.supports_file(Path::new("main.rs")));
         assert!(!analyzer.supports_file(Path::new("package.json")));
@@ -1396,7 +1396,7 @@ mod dependency_analyzer_tests {
     fn test_analyze_dependencies_no_cargo_toml() {
         let temp_dir = TempDir::new().unwrap();
         let analyzer = DependencyAnalyzer::new(temp_dir.path().to_path_buf());
-        
+
         let findings = analyzer.analyze_dependencies().unwrap();
         assert!(findings.is_empty());
     }
@@ -1405,7 +1405,7 @@ mod dependency_analyzer_tests {
     fn test_analyze_dependencies_with_cargo_toml() -> Result<(), Box<dyn std::error::Error>> {
         let temp_dir = TempDir::new()?;
         let cargo_toml_path = temp_dir.path().join("Cargo.toml");
-        
+
         let cargo_content = r#"
 [package]
 name = "test-project"
@@ -1417,15 +1417,15 @@ serde = "1.0"
 tokio = { version = "1.0", features = ["full"] }
 regex = "1.5"
 "#;
-        
+
         fs::write(&cargo_toml_path, cargo_content)?;
-        
+
         let analyzer = DependencyAnalyzer::new(temp_dir.path().to_path_buf());
         let findings = analyzer.analyze_dependencies()?;
-        
+
         // Should not crash, may or may not find vulnerabilities depending on cargo-audit availability
         assert!(findings.is_ok());
-        
+
         Ok(())
     }
 
@@ -1433,35 +1433,35 @@ regex = "1.5"
     fn test_is_problematic_license_comprehensive() {
         let temp_dir = TempDir::new().unwrap();
         let analyzer = DependencyAnalyzer::new(temp_dir.path().to_path_buf());
-        
+
         // GPL licenses should be problematic
         assert!(analyzer.is_problematic_license("GPL-2.0"));
         assert!(analyzer.is_problematic_license("GPL-2.0+"));
         assert!(analyzer.is_problematic_license("GPL-3.0"));
         assert!(analyzer.is_problematic_license("GPL-3.0+"));
-        
+
         // LGPL licenses should be problematic
         assert!(analyzer.is_problematic_license("LGPL-2.1"));
         assert!(analyzer.is_problematic_license("LGPL-2.1+"));
         assert!(analyzer.is_problematic_license("LGPL-3.0"));
         assert!(analyzer.is_problematic_license("LGPL-3.0+"));
-        
+
         // AGPL should be problematic
         assert!(analyzer.is_problematic_license("AGPL-3.0"));
         assert!(analyzer.is_problematic_license("AGPL-3.0+"));
-        
+
         // Other copyleft licenses should be problematic
         assert!(analyzer.is_problematic_license("OSL-3.0"));
         assert!(analyzer.is_problematic_license("EPL-1.0"));
         assert!(analyzer.is_problematic_license("EPL-2.0"));
-        
+
         // Permissive licenses should not be problematic
         assert!(!analyzer.is_problematic_license("MIT"));
         assert!(!analyzer.is_problematic_license("Apache-2.0"));
         assert!(!analyzer.is_problematic_license("BSD-2-Clause"));
         assert!(!analyzer.is_problematic_license("BSD-3-Clause"));
         assert!(!analyzer.is_problematic_license("ISC"));
-        
+
         // Unknown licenses should be considered problematic (conservative approach)
         assert!(analyzer.is_problematic_license("Unknown-License-123"));
         assert!(analyzer.is_problematic_license("Custom-License"));
@@ -1472,7 +1472,7 @@ regex = "1.5"
     fn test_analyze_non_cargo_toml_file() {
         let temp_dir = TempDir::new().unwrap();
         let analyzer = DependencyAnalyzer::new(temp_dir.path().to_path_buf());
-        
+
         let result = analyzer.analyze(Path::new("main.rs"), b"fn main() {}");
         assert!(result.is_ok());
         assert_eq!(result.unwrap().len(), 0); // Should return empty for non-Cargo.toml files
@@ -1482,7 +1482,7 @@ regex = "1.5"
     fn test_analyze_cargo_toml_file() -> Result<(), Box<dyn std::error::Error>> {
         let temp_dir = TempDir::new()?;
         let cargo_toml_path = temp_dir.path().join("Cargo.toml");
-        
+
         let cargo_content = r#"
 [package]
 name = "test-project"
@@ -1492,15 +1492,15 @@ edition = "2021"
 [dependencies]
 serde = "1.0"
 "#;
-        
+
         fs::write(&cargo_toml_path, cargo_content)?;
-        
+
         let analyzer = DependencyAnalyzer::new(temp_dir.path().to_path_buf());
         let result = analyzer.analyze(&cargo_toml_path, cargo_content.as_bytes());
-        
+
         // Should not crash
         assert!(result.is_ok());
-        
+
         Ok(())
     }
 
@@ -1508,21 +1508,21 @@ serde = "1.0"
     fn test_run_cargo_audit_subprocess_error_handling() -> Result<(), Box<dyn std::error::Error>> {
         let temp_dir = TempDir::new()?;
         let cargo_toml_path = temp_dir.path().join("Cargo.toml");
-        
+
         let cargo_content = r#"
 [package]
 name = "test-project"
 version = "0.1.0"
 edition = "2021"
 "#;
-        
+
         fs::write(&cargo_toml_path, cargo_content)?;
-        
+
         let analyzer = DependencyAnalyzer::new(temp_dir.path().to_path_buf());
-        
+
         // This should handle the case where cargo-audit is not available gracefully
         let result = analyzer.run_cargo_audit_subprocess(&cargo_toml_path);
-        
+
         // Should not panic, should return empty or handle error gracefully
         match result {
             Ok(findings) => {
@@ -1533,7 +1533,7 @@ edition = "2021"
                 // Error is acceptable if cargo-audit is not installed
             }
         }
-        
+
         Ok(())
     }
 
@@ -1575,7 +1575,7 @@ mod validation_analyzer_tests {
     #[test]
     fn test_supports_file() {
         let analyzer = ValidationAnalyzer::new();
-        
+
         // Validation analyzer supports no files directly
         assert!(!analyzer.supports_file(Path::new("main.rs")));
         assert!(!analyzer.supports_file(Path::new("Cargo.toml")));
@@ -1585,7 +1585,7 @@ mod validation_analyzer_tests {
     #[test]
     fn test_analyze_method() {
         let analyzer = ValidationAnalyzer::new();
-        
+
         let result = analyzer.analyze(Path::new("test.rs"), b"fn main() {}");
         assert!(result.is_ok());
         assert_eq!(result.unwrap().len(), 0); // Should return empty
@@ -1594,7 +1594,7 @@ mod validation_analyzer_tests {
     #[tokio::test]
     async fn test_validate_findings_empty() {
         let analyzer = ValidationAnalyzer::new();
-        
+
         let result = analyzer.validate_findings(vec![]).await;
         assert!(result.is_ok());
         assert_eq!(result.unwrap().len(), 0);
@@ -1604,7 +1604,7 @@ mod validation_analyzer_tests {
     async fn test_validate_findings_disabled() {
         let mut analyzer = ValidationAnalyzer::new();
         analyzer.set_enabled(false);
-        
+
         let findings = vec![Finding::new(
             "security",
             "test_rule",
@@ -1613,7 +1613,7 @@ mod validation_analyzer_tests {
             10,
             "Test finding".to_string(),
         )];
-        
+
         let result = analyzer.validate_findings(findings.clone()).await;
         assert!(result.is_ok());
         let validated = result.unwrap();
@@ -1625,7 +1625,7 @@ mod validation_analyzer_tests {
     #[tokio::test]
     async fn test_validate_findings_with_content() {
         let analyzer = ValidationAnalyzer::new();
-        
+
         let findings = vec![
             Finding::new(
                 "security",
@@ -1636,7 +1636,7 @@ mod validation_analyzer_tests {
                 "Hardcoded password detected".to_string(),
             ),
             Finding::new(
-                "security", 
+                "security",
                 "sql_injection",
                 Severity::Critical,
                 PathBuf::from("test.py"),
@@ -1644,14 +1644,14 @@ mod validation_analyzer_tests {
                 "SQL injection vulnerability".to_string(),
             ),
         ];
-        
+
         let result = analyzer.validate_findings(findings).await;
         assert!(result.is_ok());
         let validated = result.unwrap();
-        
+
         // Should have some findings (either validated, enhanced, or passed through)
         assert!(!validated.is_empty());
-        
+
         // Check that findings have been processed (may have confidence scores added)
         for finding in &validated {
             assert!(!finding.message.is_empty());
@@ -1661,7 +1661,7 @@ mod validation_analyzer_tests {
     #[test]
     fn test_enhance_finding_with_validation() {
         let analyzer = ValidationAnalyzer::new();
-        
+
         let validation_result = crate::core::ValidationResult {
             finding: Finding::new(
                 "security",
@@ -1680,12 +1680,12 @@ mod validation_analyzer_tests {
             ],
             requires_manual_review: false,
         };
-        
+
         let enhanced = analyzer.enhance_finding_with_validation(validation_result);
-        
+
         // Should contain confidence information
         assert!(enhanced.description.as_ref().unwrap().contains("Confidence: 75"));
-        
+
         // Should contain recommendations
         assert!(enhanced.suggestion.is_some());
         assert!(enhanced.suggestion.as_ref().unwrap().contains("parameterized queries"));
@@ -1695,7 +1695,7 @@ mod validation_analyzer_tests {
     #[test]
     fn test_enhance_finding_low_confidence() {
         let analyzer = ValidationAnalyzer::new();
-        
+
         let validation_result = crate::core::ValidationResult {
             finding: Finding::new(
                 "security",
@@ -1711,9 +1711,9 @@ mod validation_analyzer_tests {
             recommendations: Vec::new(),
             requires_manual_review: false,
         };
-        
+
         let enhanced = analyzer.enhance_finding_with_validation(validation_result);
-        
+
         // Should downgrade severity due to low confidence
         assert_eq!(enhanced.severity, Severity::High); // Critical -> High
     }
@@ -1721,7 +1721,7 @@ mod validation_analyzer_tests {
     #[test]
     fn test_enhance_finding_high_confidence() {
         let analyzer = ValidationAnalyzer::new();
-        
+
         let validation_result = crate::core::ValidationResult {
             finding: Finding::new(
                 "security",
@@ -1737,9 +1737,9 @@ mod validation_analyzer_tests {
             recommendations: Vec::new(),
             requires_manual_review: false,
         };
-        
+
         let enhanced = analyzer.enhance_finding_with_validation(validation_result);
-        
+
         // Should maintain severity for high confidence
         assert_eq!(enhanced.severity, Severity::Low);
     }
@@ -1747,9 +1747,9 @@ mod validation_analyzer_tests {
     #[tokio::test]
     async fn test_validation_metrics() {
         let analyzer = ValidationAnalyzer::new();
-        
+
         let metrics = analyzer.get_validation_metrics().await;
-        
+
         // Should have default metrics
         assert!(metrics.total_validations >= 0);
         assert!(metrics.validation_success_rate >= 0.0 && metrics.validation_success_rate <= 1.0);
@@ -1758,9 +1758,9 @@ mod validation_analyzer_tests {
     #[tokio::test]
     async fn test_review_statistics() {
         let analyzer = ValidationAnalyzer::new();
-        
+
         let stats = analyzer.get_review_statistics().await;
-        
+
         // Should have default statistics
         assert!(stats.total_submitted >= 0);
         assert!(stats.pending_reviews >= 0);
@@ -1770,12 +1770,12 @@ mod validation_analyzer_tests {
     #[tokio::test]
     async fn test_reset_metrics() {
         let analyzer = ValidationAnalyzer::new();
-        
+
         // Reset metrics
         analyzer.reset_metrics().await;
-        
+
         let metrics = analyzer.get_validation_metrics().await;
-        
+
         // Should be reset to zero or defaults
         assert_eq!(metrics.total_validations, 0);
     }
@@ -1783,17 +1783,17 @@ mod validation_analyzer_tests {
     #[test]
     fn test_update_confidence_baseline() {
         let mut analyzer = ValidationAnalyzer::new();
-        
+
         // Update baseline
         analyzer.update_confidence_baseline("security", 0.85);
-        
+
         // Should not panic
     }
 
     #[test]
     fn test_get_threshold_recommendations() {
         let analyzer = ValidationAnalyzer::new();
-        
+
         let findings = vec![
             Finding::new(
                 "security",
@@ -1804,9 +1804,9 @@ mod validation_analyzer_tests {
                 "Test finding".to_string(),
             ),
         ];
-        
+
         let recommendations = analyzer.get_threshold_recommendations(&findings);
-        
+
         // Should return recommendations
         assert!(recommendations.recommended_thresholds.len() >= 0);
     }
@@ -1815,9 +1815,9 @@ mod validation_analyzer_tests {
     async fn test_validated_analyzer_registry() {
         let base_registry = crate::analyzers::AnalyzerRegistry::new();
         let registry = ValidatedAnalyzerRegistry::new(base_registry);
-        
+
         assert!(registry.validation_enabled);
-        
+
         // Test disabling validation
         let mut registry = registry;
         registry.set_validation_enabled(false);
@@ -1828,12 +1828,12 @@ mod validation_analyzer_tests {
     async fn test_analyze_file_with_validation() {
         let base_registry = crate::analyzers::AnalyzerRegistry::new();
         let registry = ValidatedAnalyzerRegistry::new(base_registry);
-        
+
         let result = registry.analyze_file_with_validation(
-            Path::new("test.rs"), 
+            Path::new("test.rs"),
             b"fn main() { let password = \"secret123\"; }"
         ).await;
-        
+
         assert!(result.is_ok());
     }
 
@@ -1844,7 +1844,7 @@ mod validation_analyzer_tests {
             line in 1..1000u32
         ) {
             let analyzer = ValidationAnalyzer::new();
-            
+
             let validation_result = crate::core::ValidationResult {
                 finding: Finding::new(
                     "security",
@@ -1860,9 +1860,9 @@ mod validation_analyzer_tests {
                 recommendations: Vec::new(),
                 requires_manual_review: false,
             };
-            
+
             let enhanced = analyzer.enhance_finding_with_validation(validation_result);
-            
+
             // Should not crash and should enhance the finding
             assert!(enhanced.description.is_some());
             assert!(enhanced.description.as_ref().unwrap().contains("Confidence"));

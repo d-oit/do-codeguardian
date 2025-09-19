@@ -82,6 +82,18 @@ pub enum Severity {
     Info,
 }
 
+impl Severity {
+    pub fn as_str(&self) -> &str {
+        match self {
+            Severity::Critical => "critical",
+            Severity::High => "high",
+            Severity::Medium => "medium",
+            Severity::Low => "low",
+            Severity::Info => "info",
+        }
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct ResultsSummary {
     pub total_files_scanned: usize,

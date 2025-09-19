@@ -153,19 +153,19 @@ async fn run_analysis_and_filter(
     ml_threshold: Option<f64>,
 ) -> Result<crate::types::AnalysisResults> {
     // Run analysis
-    let mut results = engine.analyze_files(files_to_scan, args.parallel).await?;
+    let results = engine.analyze_files(files_to_scan, args.parallel).await?;
 
-    // Apply ML-based false positive filtering if threshold is configured
-    #[allow(unused_variables)]
-    if let Some(threshold) = ml_threshold {
+    let results = if ml_threshold.is_some() {
         #[cfg(feature = "ml")]
         {
+            let threshold = ml_threshold.unwrap();
             let model_path_str = args
                 .ml_model
                 .as_ref()
                 .map(|p| p.to_string_lossy().to_string());
             let mut ml_classifier = crate::ml::MLClassifier::new(model_path_str.as_deref());
-            results.findings = ml_classifier
+            let mut filtered_results = results.clone();
+            filtered_results.findings = ml_classifier
                 .filter_findings(results.findings, threshold as f32)
                 .await?;
             if args.ml_model.is_some() {
@@ -179,13 +179,17 @@ async fn run_analysis_and_filter(
                     threshold
                 );
             }
+            filtered_results
         }
 
         #[cfg(not(feature = "ml"))]
         {
             tracing::warn!("ML threshold configured but ML feature is not enabled. Use --features ml to enable ML-based filtering");
+            results
         }
-    }
+    } else {
+        results
+    };
 
     Ok(results)
 }

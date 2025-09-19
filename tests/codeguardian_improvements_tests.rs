@@ -92,7 +92,7 @@ mod edge_case_tests {
 
             // Pattern definitions
             "Regex::new(r\"sk-[a-zA-Z0-9]+\").unwrap()",
-            "let pattern = \"api_key = \\\"sk-\\\"\";",
+            r#"let pattern = "api_key = \"sk-\"";"#,
             "const SECRET_PATTERN: &str = \"password = \";",
 
             // Environment variable access

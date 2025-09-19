@@ -44,7 +44,7 @@ more code
     let output = cmd
         .arg("check")
         .arg(&test_file)
-        .arg(String::from("--format"))
+        .arg("--format")
         .arg("json")
         .output()
         .unwrap();
@@ -59,7 +59,7 @@ more code
 #[test]
 fn test_ai_content_analyzer_ignores_documentation() {
     let temp_dir = TempDir::new().unwrap();
-    let test_file = temp_dir.path().join(String::from(r#"documented_code.rs"#));
+    let test_file = temp_dir.path().join(r#"documented_code.rs"#);
 
     // Create a file with legitimate documentation containing "TODO"
     let test_content = r#"
@@ -91,7 +91,7 @@ mod tests {
     let output = cmd
         .arg("check")
         .arg(&test_file)
-        .arg(String::from("--format"))
+        .arg("--format")
         .arg("json")
         .output()
         .unwrap();
@@ -112,7 +112,7 @@ mod tests {
 #[test]
 fn test_debug_statement_detection_accuracy() {
     let temp_dir = TempDir::new().unwrap();
-    let test_file = temp_dir.path().join(String::from("debug_test.rs"));
+    let test_file = temp_dir.path().join("debug_test.rs");
 
     let test_content = r#"
 use tracing::Level;
@@ -152,7 +152,7 @@ fn main() {
     let output = cmd
         .arg("check")
         .arg(&test_file)
-        .arg(String::from("--format"))
+        .arg("--format")
         .arg("json")
         .output()
         .unwrap();
@@ -171,10 +171,10 @@ fn main() {
 fn test_config_loading_graceful_degradation() {
     let mut cmd = Command::cargo_bin(BIN_NAME).unwrap();
     let output = cmd
-        .arg(String::from("--config"))
+        .arg("--config")
         .arg(r#"nonexistent-config.toml"#)
         .arg("check")
-        .arg(String::from(r#"--help"#))
+        .arg("--help")
         .output()
         .unwrap();
 
@@ -192,7 +192,7 @@ fn test_config_loading_graceful_degradation() {
 #[test]
 fn test_performance_analyzer_accuracy() {
     let temp_dir = TempDir::new().unwrap();
-    let test_file = temp_dir.path().join(String::from(r#"performance_test.rs"#));
+    let test_file = temp_dir.path().join(r#"performance_test.rs"#);
 
     let test_content = r#"
 fn legitimate_loops() {
@@ -234,7 +234,7 @@ mod tests {
     let output = cmd
         .arg("check")
         .arg(&test_file)
-        .arg(String::from("--format"))
+        .arg("--format")
         .arg("json")
         .output()
         .unwrap();
@@ -247,7 +247,7 @@ mod tests {
 #[test]
 fn test_json_output_schema_consistency() {
     let temp_dir = TempDir::new().unwrap();
-    let test_file = temp_dir.path().join(String::from(r#"schema_test.rs"#));
+    let test_file = temp_dir.path().join(r#"schema_test.rs"#);
 
     fs::write(&test_file, "fn main() {}").unwrap();
 
@@ -255,7 +255,7 @@ fn test_json_output_schema_consistency() {
     let output = cmd
         .arg("check")
         .arg(&test_file)
-        .arg(String::from("--format"))
+        .arg("--format")
         .arg("json")
         .output()
         .unwrap();
@@ -286,8 +286,8 @@ fn test_json_output_schema_consistency() {
 #[test]
 fn test_sarif_output_format() {
     let temp_dir = TempDir::new().unwrap();
-    let test_file = temp_dir.path().join(String::from(r#"sarif_test.rs"#));
-    let output_file = temp_dir.path().join(String::from(r#"output.sarif"#));
+    let test_file = temp_dir.path().join(r#"sarif_test.rs"#);
+    let output_file = temp_dir.path().join(r#"output.sarif"#);
 
     fs::write(&test_file, "fn main() {}").unwrap();
 
@@ -295,9 +295,9 @@ fn test_sarif_output_format() {
     let output = cmd
         .arg("check")
         .arg(&test_file)
-        .arg(String::from("--format"))
+        .arg("--format")
         .arg("sarif")
-        .arg(String::from(r#"--out"#))
+        .arg("--out")
         .arg(&output_file)
         .output()
         .unwrap();
@@ -326,9 +326,9 @@ fn test_parallel_processing_stability() {
     let output = cmd
         .arg("check")
         .arg(temp_dir.path())
-        .arg(String::from(r#"--parallel"#))
+        .arg("--parallel")
         .arg("4")
-        .arg(String::from("--format"))
+        .arg("--format")
         .arg("json")
         .output()
         .unwrap();
@@ -340,5 +340,5 @@ fn test_parallel_processing_stability() {
 
     // Should have processed all files
     let files_scanned = json["summary"]["total_files_scanned"].as_u64().unwrap();
-    assert_eq!(files_scanned, 5, r#"Should scan all 5 test files"#);
+    assert_eq!(files_scanned, 5, "Should scan all 5 test files");
 }
