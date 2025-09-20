@@ -1,8 +1,10 @@
-//! Release Monitoring Module
-//!
-//! This module provides comprehensive release monitoring capabilities for CodeGuardian,
-//! collecting and tracking release metrics from GitHub API including success rates,
-//! deployment times, post-release issues, and user adoption patterns.
+// Release Monitoring Module
+///
+// This module provides comprehensive release monitoring capabilities for CodeGuardian,
+// collecting and tracking release metrics from GitHub API including success rates,
+// deployment times, post-release issues, and user adoption patterns.
+
+use crate::error::Result;
 
 use crate::github_api::GitHubApiClient;
 use chrono::{DateTime, Duration, Utc};

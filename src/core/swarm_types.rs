@@ -1,4 +1,5 @@
 //! Common types and traits for the swarm orchestrator framework
+use crate::types::Finding;
 
 use crate::core::performance_monitor::SwarmPerformanceMonitor;
 use serde::{Deserialize, Serialize};

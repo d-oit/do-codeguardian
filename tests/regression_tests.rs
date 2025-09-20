@@ -287,7 +287,7 @@ fn test_json_output_schema_consistency() {
 fn test_sarif_output_format() {
     let temp_dir = TempDir::new().unwrap();
     let test_file = temp_dir.path().join("sarif_test.rs");
-    let output_file = temp_dir.path().join(r#"output.sarif"#);
+    let output_file = temp_dir.path().join("output.sarif");
 
     fs::write(&test_file, "fn main() {}").unwrap();
 

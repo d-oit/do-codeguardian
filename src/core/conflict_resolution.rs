@@ -70,7 +70,7 @@ impl ConflictResolver {
         let mut selected_agent = String::new();
 
         for (i, finding) in conflict.conflicting_findings.iter().enumerate() {
-            let agent_id = &conflict.agent_ids[i];
+            let agent_id: &String = &conflict.agent_ids[i];
             let priority = self
                 .agent_priorities
                 .get(agent_id)
@@ -104,7 +104,7 @@ impl ConflictResolver {
         let mut selected_agent = String::new();
 
         for (i, finding) in conflict.conflicting_findings.iter().enumerate() {
-            let agent_id = &conflict.agent_ids[i];
+            let agent_id: &String = &conflict.agent_ids[i];
             let confidence = self
                 .confidence_thresholds
                 .get(agent_id)
@@ -169,7 +169,7 @@ impl ConflictResolver {
 
         // If we have a clear consensus (more than one agent agrees)
         if max_count > 1 {
-            let (finding, agent_id) = &consensus_group[0];
+            let (finding, agent_id): &(Finding, String) = &consensus_group[0];
             let confidence = Some(max_count as f64 / conflict.conflicting_findings.len() as f64);
             Ok(ResolvedConflict {
                 original_conflict: conflict,
