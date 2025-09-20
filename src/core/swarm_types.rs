@@ -1,13 +1,11 @@
 //! Common types and traits for the swarm orchestrator framework
 
 use crate::core::performance_monitor::SwarmPerformanceMonitor;
-use crate::types::{AnalysisResults, Finding};
-use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fmt;
 use std::sync::Arc;
-use std::time::{Duration, Instant};
+use std::time::Duration;
 use tokio::sync::mpsc;
 
 /// Priority levels for swarm tasks and results

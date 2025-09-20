@@ -44,7 +44,7 @@ icon_emoji = ":warning:"
 [performance.monitoring.notifications.webhook]
 url = "https://your-monitoring-system.com/webhook"
 headers = [
-    ["Authorization", "Bearer your-api-token"],
+    ["Authorization", "Bearer ${MONITORING_API_TOKEN}"],
     ["Content-Type", "application/json"]
 ]
 timeout_seconds = 30

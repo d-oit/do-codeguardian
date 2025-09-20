@@ -5,6 +5,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.1-alpha.2] - 2025-09-20
+
+### Added
+- **Documentation Improvements**: Updated all version references to reflect current release, enhanced API examples with correct version information, and added comprehensive release notes for better transparency
+- **Stability Enhancements**: Improved security validation in code analysis pipelines and better error reporting and recovery mechanisms
+
+### Fixed
+- **Documentation Fixes**: Corrected version information in main README, updated version strings in API documentation examples, and added missing changelog entries for current version
+- **Minor Fixes**: General stability enhancements, bug fixes, and minor performance optimizations in analysis routines
+
+### Technical Details
+- **Performance Metrics**: Maintained analysis speed and memory usage levels from previous alpha, with consistent false positive rates
+- **Backward Compatibility**: Full backward compatibility maintained from v0.2.1-alpha.1
+
+**Note**: This alpha release focuses on ensuring accurate version information across all documentation and improving overall system reliability.
+
+### Contributors
+- Dominik Oswald (@d-oit)
+
+---
+
 ## [0.2.1-alpha.1] - 2025-09-19
 
 ### Added

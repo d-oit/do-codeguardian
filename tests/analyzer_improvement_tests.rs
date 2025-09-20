@@ -194,7 +194,7 @@ fn main() {
             !line_content.contains(r##""TODO: remember to update this text""##),
             "Should not flag TODO inside string literals."
         );
-        assert!(!line_content.contains(r#""NotImplementedException occurred"#),
+        assert!(!line_content.contains(r#""NotImplementedException occurred"#)),
                "Should not flag exceptions inside string literals.");
     }
 }

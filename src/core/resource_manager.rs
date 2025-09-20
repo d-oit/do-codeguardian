@@ -1,7 +1,7 @@
 //! Resource management system for optimizing CPU, memory, and I/O usage across parallel agents
 
 use crate::core::swarm_types::{
-    Priority, ResourceRequirements, SwarmConfig, SwarmError, TaskResult, TaskStatus,
+    Priority, ResourceRequirements, SwarmConfig, SwarmError,
 };
 use std::collections::{HashMap, HashSet};
 use std::sync::Arc;

@@ -1,10 +1,8 @@
 //! Task decomposition logic for breaking down complex analysis tasks into parallel subtasks
 
 use crate::core::swarm_types::{Priority, SwarmConfig, SwarmError, SwarmTask};
-use crate::types::{AnalysisResults, Finding};
 use std::collections::{HashMap, HashSet};
 use std::path::Path;
-use std::sync::Arc;
 
 /// Strategy for decomposing analysis tasks
 #[derive(Debug, Clone)]

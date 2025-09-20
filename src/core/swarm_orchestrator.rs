@@ -15,7 +15,7 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::{mpsc, Mutex};
 use tokio::time::{timeout, Duration};
-use tracing::{error, info, warn};
+use tracing::{info, warn};
 
 /// Main swarm orchestrator for coordinating parallel analysis tasks
 pub struct SwarmOrchestrator {

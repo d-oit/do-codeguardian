@@ -8,7 +8,7 @@
 
 > **Secure Your Codebase with AI-Powered Analysis**
 
-**Version: 0.2.1** | [📋 Changelog](CHANGELOG.md) | [📚 API Documentation](docs/api/index.md)
+**Version: 0.2.1-alpha.2** | [📋 Changelog](CHANGELOG.md) | [📚 API Documentation](docs/api/index.md)
 
 CodeGuardian is a cutting-edge, security-first code analysis tool that combines machine learning, advanced static analysis, and seamless GitHub integration to help developers identify vulnerabilities, optimize performance, and maintain high code quality standards. Built with Rust for speed and reliability, it empowers teams to ship secure software faster.
 
@@ -29,7 +29,7 @@ CodeGuardian is a cutting-edge, security-first code analysis tool that combines 
 - 🎛️ **Advanced Configuration**: Preset configurations with environment variable support and validation
 - 🌐 **Web Dashboard**: Optional real-time monitoring and analysis visualization (feature-gated)
 
-### 🆕 New in v0.2.1
+### 🆕 New in v0.2.1-alpha.2
 
 - 🔧 **External System Integrations**: Native support for Jira, Confluence, Jenkins, GitLab, Bitbucket, and Azure DevOps
 - 📱 **Interactive Web Dashboard**: Real-time monitoring with customizable views and stakeholder-specific dashboards
@@ -258,7 +258,7 @@ Explore CodeGuardian's comprehensive documentation:
 - **[Remediation Workflows](docs/remediation/index.md)** - Automated remediation
 - **[Relationship Management](docs/relationships/index.md)** - Advanced artifact relationships
 
-### 📚 API Documentation (v0.2.1)
+### 📚 API Documentation (v0.2.1-alpha.2)
 - **[Core API](docs/api/core.md)** - Core functionality and library interfaces
 - **[CLI API](docs/api/cli.md)** - Command-line interface documentation
 - **[Configuration API](docs/api/config.md)** - Configuration management

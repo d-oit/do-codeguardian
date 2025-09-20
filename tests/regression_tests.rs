@@ -59,7 +59,7 @@ more code
 #[test]
 fn test_ai_content_analyzer_ignores_documentation() {
     let temp_dir = TempDir::new().unwrap();
-    let test_file = temp_dir.path().join(r#"documented_code.rs"#);
+    let test_file = temp_dir.path().join("documented_code.rs");
 
     // Create a file with legitimate documentation containing "TODO"
     let test_content = r#"
@@ -101,10 +101,10 @@ mod tests {
     // Should not flag documentation comments or test content
     if output_str.contains("incomplete_implementation") {
         // If any incomplete implementation findings exist, they should not be in comments
-        assert!(!output_str.contains(r#"TODO: Add more comprehensive examples"#),
-                r#"AI content analyzer should not flag TODO in documentation comments"#);
-        assert!(!output_str.contains(r#"TODO: Implement additional validation"#),
-                r#"AI content analyzer should not flag TODO in function documentation"#);
+        assert!(!output_str.contains("TODO: Add more comprehensive examples"),
+                "AI content analyzer should not flag TODO in documentation comments");
+        assert!(!output_str.contains("TODO: Implement additional validation"),
+                "AI content analyzer should not flag TODO in function documentation");
     }
 }
 
@@ -161,8 +161,8 @@ fn main() {
 
     if output_str.contains("debug_statement") {
         // Should flag eprintln! but not tracing::Level::DEBUG or documentation
-        assert!(!output_str.contains(r#"tracing::Level::DEBUG"#),
-                r#"Should not flag proper tracing level usage as debug statement"#);
+        assert!(!output_str.contains("tracing::Level::DEBUG"),
+                "Should not flag proper tracing level usage as debug statement");
     }
 }
 
@@ -172,7 +172,7 @@ fn test_config_loading_graceful_degradation() {
     let mut cmd = Command::cargo_bin(BIN_NAME).unwrap();
     let output = cmd
         .arg("--config")
-        .arg(r#"nonexistent-config.toml"#)
+        .arg("nonexistent-config.toml")
         .arg("check")
         .arg("--help")
         .output()
@@ -180,19 +180,19 @@ fn test_config_loading_graceful_degradation() {
 
     // Should not panic or fail hard, should continue with defaults
     assert!(output.status.success() || output.status.code() == Some(0),
-            r#"Should handle missing config gracefully and continue"#);
+            "Should handle missing config gracefully and continue");
 
     let stderr = String::from_utf8(output.stderr).unwrap();
     // Should show warning but not crash
-    assert!(stderr.contains(r#"Configuration file error"#) || stderr.contains(r#"Using defaults"#),
-            r#"Should warn about missing config and use defaults"#);
+    assert!(stderr.contains("Configuration file error") || stderr.contains("Using defaults"),
+            "Should warn about missing config and use defaults");
 }
 
 /// Test that performance analyzer doesn't over-flag legitimate patterns
 #[test]
 fn test_performance_analyzer_accuracy() {
     let temp_dir = TempDir::new().unwrap();
-    let test_file = temp_dir.path().join(r#"performance_test.rs"#);
+    let test_file = temp_dir.path().join("performance_test.rs");
 
     let test_content = r#"
 fn legitimate_loops() {
@@ -247,7 +247,7 @@ mod tests {
 #[test]
 fn test_json_output_schema_consistency() {
     let temp_dir = TempDir::new().unwrap();
-    let test_file = temp_dir.path().join(r#"schema_test.rs"#);
+    let test_file = temp_dir.path().join("schema_test.rs");
 
     fs::write(&test_file, "fn main() {}").unwrap();
 
@@ -264,29 +264,29 @@ fn test_json_output_schema_consistency() {
 
     // Parse JSON to ensure it's valid
     let json_result: Result<serde_json::Value, _> = serde_json::from_str(&output_str);
-    assert!(json_result.is_ok(), r#"JSON output should be valid"#);
+    assert!(json_result.is_ok(), "JSON output should be valid");
 
     let json = json_result.unwrap();
 
     // Check required schema fields are present
-    assert!(json.get(r#"schema_version"#).is_some(), r#"Should have schema_version"#);
-    assert!(json.get(r#"tool_metadata"#).is_some(), r#"Should have tool_metadata"#);
-    assert!(json.get(r#"findings"#).is_some(), r#"Should have findings array"#);
-    assert!(json.get(r#"summary"#).is_some(), r#"Should have summary"#);
-    assert!(json.get(r#"timestamp"#).is_some(), r#"Should have timestamp"#);
+    assert!(json.get("schema_version").is_some(), "Should have schema_version");
+    assert!(json.get("tool_metadata").is_some(), "Should have tool_metadata");
+    assert!(json.get("findings").is_some(), "Should have findings array");
+    assert!(json.get("summary").is_some(), "Should have summary");
+    assert!(json.get("timestamp").is_some(), "Should have timestamp");
 
     // Check tool metadata structure
     let metadata = json.get("tool_metadata").unwrap();
-    assert!(metadata.get(r#"name"#).is_some(), r#"Should have tool name"#);
-    assert!(metadata.get(r#"version"#).is_some(), r#"Should have tool version"#);
-    assert!(metadata.get(r#"config_hash"#).is_some(), r#"Should have config hash"#);
+    assert!(metadata.get("name").is_some(), "Should have tool name");
+    assert!(metadata.get("version").is_some(), "Should have tool version");
+    assert!(metadata.get("config_hash").is_some(), "Should have config hash");
 }
 
 /// Test that SARIF output format works correctly
 #[test]
 fn test_sarif_output_format() {
     let temp_dir = TempDir::new().unwrap();
-    let test_file = temp_dir.path().join(r#"sarif_test.rs"#);
+    let test_file = temp_dir.path().join("sarif_test.rs");
     let output_file = temp_dir.path().join(r#"output.sarif"#);
 
     fs::write(&test_file, "fn main() {}").unwrap();

@@ -264,7 +264,7 @@ fn test_cli_mixed_content_analysis() {
     let test_file = temp_dir.path().join("mixed_content.rs");
 
     // File with mix of legitimate and problematic content
-    let test_content = r#"
+    let test_content = r##"
 //! Module documentation
 //! TODO: This should not be flagged - it's documentation
 
@@ -314,7 +314,7 @@ fn process_item(item: &str) {
     // Real implementation
     println!("Processing: {}", item);
 }
-"#;
+"##;
 
     fs::write(&test_file, test_content).unwrap();
 

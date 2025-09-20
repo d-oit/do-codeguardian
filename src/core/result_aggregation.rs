@@ -6,7 +6,6 @@ use crate::core::swarm_types::{
 };
 use crate::types::AnalysisResults;
 use crate::types::Finding;
-use async_trait::async_trait;
 use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
 

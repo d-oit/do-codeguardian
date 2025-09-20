@@ -592,7 +592,7 @@ Get dashboard health status.
 ```json
 {
   "status": "healthy",
-  "version": "0.2.1",
+  "version": "0.2.1-alpha.2",
   "uptime_seconds": 3600,
   "active_connections": 5
 }

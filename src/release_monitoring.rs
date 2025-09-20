@@ -5,10 +5,8 @@
 //! deployment times, post-release issues, and user adoption patterns.
 
 use crate::github_api::GitHubApiClient;
-use anyhow::{anyhow, Result};
 use chrono::{DateTime, Duration, Utc};
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 use std::fs;
 use std::path::Path;
 use tokio::sync::RwLock;
