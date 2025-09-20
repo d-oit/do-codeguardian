@@ -8,6 +8,8 @@
 //!
 //! ## Migration Guide
 //!
+#![allow(deprecated)]
+
 //! ### Before (Deprecated)
 //! ```rust,no_run
 //! use codeguardian::cache::enhanced_optimized_cache::EnhancedOptimizedCache;

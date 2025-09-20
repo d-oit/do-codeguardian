@@ -1,4 +1,4 @@
-// Release Monitoring Module
+//! Release Monitoring Module
 ///
 // This module provides comprehensive release monitoring capabilities for CodeGuardian,
 // collecting and tracking release metrics from GitHub API including success rates,

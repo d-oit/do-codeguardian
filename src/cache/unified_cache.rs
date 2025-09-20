@@ -4,6 +4,8 @@
 //! basic and enhanced cache implementations with runtime strategy selection.
 //! Supports both memory-pooled and non-pooled modes for optimal performance.
 
+#![allow(deprecated)]
+
 use crate::types::Finding;
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
