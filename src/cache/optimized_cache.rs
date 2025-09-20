@@ -24,6 +24,8 @@ pub struct CacheEntry {
     pub access_count: u32,
     pub last_accessed: u64,
     pub analysis_duration_ms: u64,
+    #[serde(default)]
+    pub priority_score: f64, // For advanced eviction policies
 }
 
 impl CacheEntry {
@@ -46,6 +48,7 @@ impl CacheEntry {
             .as_secs();
 
         Self {
+            priority_score: 0.0,
             findings,
             file_hash,
             config_hash,
@@ -150,8 +153,8 @@ pub struct OptimizedCache {
 impl OptimizedCache {
     pub fn new(max_entries: usize, max_memory_mb: usize) -> Self {
         Self {
-            entries: HashMap::with_capacity(max_entries),
             max_entries,
+            entries: HashMap::with_capacity(max_entries),
             max_memory_mb,
             current_memory_bytes: 0,
             stats: CacheStats::default(),

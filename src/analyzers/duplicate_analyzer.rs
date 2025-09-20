@@ -1,5 +1,4 @@
 use crate::analyzers::Analyzer;
-use crate::cache::optimized_cache::OptimizedCache;
 use crate::config::analysis::DuplicateAnalyzerConfig;
 #[cfg(feature = "ml")]
 #[allow(unused_imports)]
@@ -28,8 +27,6 @@ pub struct DuplicateAnalyzer {
     security_function_patterns: Vec<Regex>,
     #[cfg(feature = "ml")]
     github_client: Option<Arc<Mutex<GitHubApiClient>>>,
-    #[allow(dead_code)]
-    cache: OptimizedCache,
     #[allow(dead_code)]
     file_cache: HashMap<String, Vec<String>>,
 }
@@ -91,7 +88,6 @@ impl DuplicateAnalyzer {
             security_function_patterns: security_patterns,
             #[cfg(feature = "ml")]
             github_client: None,
-            cache: OptimizedCache::new(100, 50), // 100 entries, 50MB cache
             file_cache: HashMap::new(),
         })
     }

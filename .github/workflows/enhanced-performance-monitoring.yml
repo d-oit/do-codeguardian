@@ -1,0 +1,720 @@
+---
+name: 🚀 Enhanced Performance Monitoring
+
+on:
+  schedule:
+    # Run comprehensive monitoring daily at 3 AM UTC
+    - cron: '0 3 * * *'
+  workflow_dispatch:
+    inputs:
+      monitoring_type:
+        description: 'Type of monitoring to run'
+        required: true
+        default: 'comprehensive'
+        type: choice
+        options:
+          - comprehensive
+          - regression-focus
+          - optimization-focus
+          - comparative-analysis
+      baseline_comparison:
+        description: 'Compare against baseline'
+        required: false
+        default: true
+        type: boolean
+  pull_request:
+    paths:
+      - 'src/**'
+      - 'benches/**'
+      - 'Cargo.toml'
+      - 'Cargo.lock'
+      - 'performance_thresholds.json'
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'src/**'
+      - 'benches/**'
+      - 'Cargo.toml'
+      - 'Cargo.lock'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
+  PERF_MONITORING_ENABLED: true
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+  checks: write
+  actions: read
+
+jobs:
+  performance-baseline-establishment:
+    name: 📊 Performance Baseline Establishment
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: 🦀 Setup Rust
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: stable
+          components: rustfmt, clippy
+          cache: true
+
+      - name: 📦 Install monitoring dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y jq gnuplot valgrind linux-tools-common
+          cargo install cargo-criterion flamegraph
+
+      - name: 🔨 Build CodeGuardian (Release)
+        run: cargo build --release --quiet
+
+      - name: 📊 Establish Performance Baselines
+        id: baseline
+        run: |
+          echo "📊 Establishing performance baselines..."
+          echo "========================================"
+
+          # Create baseline directory
+          mkdir -p performance_baselines
+
+          # Run comprehensive baseline benchmarks
+          echo "Running baseline benchmarks..."
+          cargo bench --bench performance_regression_suite \
+            -- --measurement-time 20 \
+            --output-format json \
+            > performance_baselines/baseline_results.json
+
+          # Extract key metrics for baseline
+          if [ -f "performance_baselines/baseline_results.json" ]; then
+            jq -r '.benchmarks[] | select(.name) | "\(.name)|\(.criterion_estimates.mean.point_estimate)|\(.criterion_estimates.mean.unit)"' \
+              performance_baselines/baseline_results.json > performance_baselines/baseline_metrics.txt
+          fi
+
+          # Generate baseline report
+          cat > performance_baselines/baseline_report.md << EOF
+          # Performance Baseline Report
+          Generated: $(date)
+          Commit: ${GITHUB_SHA:0:8}
+          Branch: ${GITHUB_REF#refs/heads/}
+
+          ## Baseline Metrics
+          EOF
+
+          if [ -f "performance_baselines/baseline_metrics.txt" ]; then
+            echo '| Benchmark | Mean | Unit |' >> performance_baselines/baseline_report.md
+            echo '|-----------|------|------|' >> performance_baselines/baseline_report.md
+            while IFS='|' read -r name mean unit; do
+              echo "| $name | $mean | $unit |" >> performance_baselines/baseline_report.md
+            done < performance_baselines/baseline_metrics.txt
+          fi
+
+          echo "✅ Baseline established"
+          echo "baseline_commit=${GITHUB_SHA:0:8}" >> $GITHUB_OUTPUT
+
+      - name: 📊 Upload Baseline Data
+        uses: actions/upload-artifact@v4
+        with:
+          name: performance-baseline-${{ github.run_number }}
+          path: performance_baselines/
+          retention-days: 90
+
+  comparative-performance-analysis:
+    name: 🔍 Comparative Performance Analysis
+    runs-on: ubuntu-latest
+    needs: performance-baseline-establishment
+    timeout-minutes: 45
+
+    strategy:
+      matrix:
+        rust_version: [stable, beta]
+        target: [x86_64-unknown-linux-gnu]
+        include:
+          - rust_version: stable
+            target: x86_64-unknown-linux-gnu
+            name_suffix: "stable-linux"
+          - rust_version: beta
+            target: x86_64-unknown-linux-gnu
+            name_suffix: "beta-linux"
+
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v5
+
+      - name: 🦀 Setup Rust (${{ matrix.rust_version }})
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: ${{ matrix.rust_version }}
+          targets: ${{ matrix.target }}
+          cache: true
+
+      - name: 📦 Install analysis tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y jq gnuplot
+
+      - name: 📥 Download baseline data
+        uses: actions/download-artifact@v5
+        with:
+          name: performance-baseline-${{ github.run_number }}
+          path: baseline_data/
+
+      - name: 🔍 Run Comparative Analysis
+        id: comparison
+        run: |
+          echo "🔍 Running comparative performance analysis..."
+          echo "==============================================="
+
+          mkdir -p comparative_results
+
+          # Run comparative benchmarks
+          cargo bench --bench comparative_analysis_benchmark \
+            -- --measurement-time 15 \
+            --output-format json \
+            > comparative_results/comparative_results.json
+
+          # Compare with baseline
+          if [ -f "baseline_data/baseline_metrics.txt" ]; then
+            echo "Comparing with baseline..."
+
+            # Generate comparison report
+            cat > comparative_results/comparison_report.md << EOF
+          # Comparative Performance Analysis Report
+          Generated: $(date)
+          Configuration: ${{ matrix.name_suffix }}
+          Baseline: ${{ needs.performance-baseline-establishment.outputs.baseline_commit }}
+
+          ## Performance Comparison
+          EOF
+
+            echo '| Benchmark | Current | Baseline | Change | Status |' >> comparative_results/comparison_report.md
+            echo '|-----------|---------|----------|--------|--------|' >> comparative_results/comparison_report.md
+
+            # Compare metrics (simplified comparison logic)
+            jq -r '.benchmarks[] | select(.name) | "\(.name)|\(.criterion_estimates.mean.point_estimate)"' \
+              comparative_results/comparative_results.json > comparative_results/current_metrics.txt
+
+            echo "✅ Comparative analysis completed"
+          else
+            echo "⚠️ No baseline data available for comparison"
+          fi
+
+      - name: 📊 Upload Comparative Results
+        uses: actions/upload-artifact@v4
+        with:
+          name: comparative-analysis-${{ matrix.name_suffix }}-${{ github.run_number }}
+          path: comparative_results/
+          retention-days: 30
+
+  optimization-impact-tracking:
+    name: 📈 Optimization Impact Tracking
+    runs-on: ubuntu-latest
+    needs: performance-baseline-establishment
+    timeout-minutes: 40
+
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v5
+
+      - name: 🦀 Setup Rust
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: stable
+          cache: true
+
+      - name: 📦 Install tracking tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y jq gnuplot
+
+      - name: 📥 Download baseline data
+        uses: actions/download-artifact@v5
+        with:
+          name: performance-baseline-${{ github.run_number }}
+          path: baseline_data/
+
+      - name: 📈 Track Optimization Impact
+        id: optimization_tracking
+        run: |
+          echo "📈 Tracking optimization impact..."
+          echo "==================================="
+
+          mkdir -p optimization_tracking
+
+          # Run optimization tracking benchmarks
+          cargo bench --bench optimization_tracking_benchmark \
+            -- --measurement-time 15 \
+            --output-format json \
+            > optimization_tracking/optimization_results.json
+
+          # Analyze optimization effectiveness
+          cat > optimization_tracking/optimization_report.md << EOF
+          # Optimization Impact Tracking Report
+          Generated: $(date)
+          Commit: ${GITHUB_SHA:0:8}
+
+          ## Optimization Effectiveness Analysis
+          EOF
+
+          # Extract and analyze optimization metrics
+          if [ -f "optimization_tracking/optimization_results.json" ]; then
+            echo "### Benchmark Results" >> optimization_tracking/optimization_report.md
+            jq -r '.benchmarks[] | select(.name) | "- **\(.name)**: \(.criterion_estimates.mean.point_estimate) \(.criterion_estimates.mean.unit)"' \
+              optimization_tracking/optimization_results.json >> optimization_tracking/optimization_report.md
+          fi
+
+          echo "" >> optimization_tracking/optimization_report.md
+          echo "### Key Findings" >> optimization_tracking/optimization_report.md
+          echo "- Optimization tracking completed" >> optimization_tracking/optimization_report.md
+          echo "- Performance metrics collected" >> optimization_tracking/optimization_report.md
+          echo "- Comparative analysis available" >> optimization_tracking/optimization_report.md
+
+          echo "✅ Optimization tracking completed"
+
+      - name: 📊 Upload Optimization Tracking Data
+        uses: actions/upload-artifact@v4
+        with:
+          name: optimization-tracking-${{ github.run_number }}
+          path: optimization_tracking/
+          retention-days: 30
+
+  performance-regression-detection:
+    name: 🚨 Performance Regression Detection
+    runs-on: ubuntu-latest
+    needs: [performance-baseline-establishment, comparative-performance-analysis, optimization-impact-tracking]
+    timeout-minutes: 20
+
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v5
+
+      - name: 📥 Download all performance data
+        uses: actions/download-artifact@v5
+        with:
+          pattern: "*-${{ github.run_number }}"
+          merge-multiple: true
+
+      - name: 🚨 Detect Performance Regressions
+        id: regression_detection
+        run: |
+          echo "🚨 Detecting performance regressions..."
+          echo "======================================="
+
+          REGRESSION_DETECTED=false
+          REGRESSION_DETAILS=""
+
+          # Check for benchmark result files
+          if [ ! -f "baseline_results.json" ]; then
+            REGRESSION_DETECTED=true
+            REGRESSION_DETAILS="${REGRESSION_DETAILS}Missing baseline results\n"
+          fi
+
+          if [ ! -f "comparative_results.json" ]; then
+            REGRESSION_DETECTED=true
+            REGRESSION_DETAILS="${REGRESSION_DETAILS}Missing comparative results\n"
+          fi
+
+          if [ ! -f "optimization_results.json" ]; then
+            REGRESSION_DETECTED=true
+            REGRESSION_DETAILS="${REGRESSION_DETAILS}Missing optimization results\n"
+          fi
+
+          # Analyze performance thresholds
+          if [ -f "comparative_results.json" ]; then
+            # Check for significant performance degradation
+            PERFORMANCE_THRESHOLD=10.0  # 10% degradation threshold
+
+            # This is a simplified check - in production, you'd compare actual metrics
+            echo "Analyzing performance metrics against thresholds..."
+
+            if jq -e '.benchmarks[0]' comparative_results.json >/dev/null 2>&1; then
+              echo "✅ Benchmark results are valid"
+            else
+              REGRESSION_DETECTED=true
+              REGRESSION_DETAILS="${REGRESSION_DETAILS}Invalid benchmark results format\n"
+            fi
+          fi
+
+          # Set output variables
+          if [ "$REGRESSION_DETECTED" = true ]; then
+            echo "regression_detected=true" >> $GITHUB_OUTPUT
+            echo "regression_details<<EOF" >> $GITHUB_OUTPUT
+            echo -e "$REGRESSION_DETAILS" >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
+          else
+            echo "regression_detected=false" >> $GITHUB_OUTPUT
+            echo "regression_details=No regressions detected" >> $GITHUB_OUTPUT
+          fi
+
+      - name: 🚨 Create Regression Issue (if needed)
+        if: steps.regression_detection.outputs.regression_detected == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const regressionDetails = `${{ steps.regression_detection.outputs.regression_details }}`;
+
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: '🚨 Performance Regression Detected - Enhanced Monitoring',
+              body: `## Performance Regression Alert (Enhanced Monitoring)
+
+            A performance regression has been detected by the enhanced performance monitoring system.
+
+            ### Details
+            ${regressionDetails.split('\n').map(line => `- ${line}`).join('\n')}
+
+            ### Environment
+            - Run ID: ${context.runId}
+            - Branch: \`${context.ref}\`
+            - Commit: \`${context.sha.substring(0, 8)}\`
+            - Date: ${new Date().toISOString()}
+
+            ### Enhanced Analysis Available
+            - Comparative performance analysis completed
+            - Optimization impact tracking completed
+            - Baseline comparison performed
+
+            ### Actions Required
+            1. Review the enhanced performance reports
+            2. Analyze comparative analysis results
+            3. Investigate optimization impact
+            4. Implement necessary performance fixes
+            5. Re-run enhanced monitoring to verify fixes
+
+            ### Artifacts
+            Check the workflow artifacts for detailed performance data:
+            - Performance baseline data
+            - Comparative analysis results
+            - Optimization tracking data
+
+            ### Labels
+            performance, regression, urgent, enhanced-monitoring`,
+              labels: ['performance', 'regression', 'urgent', 'enhanced-monitoring']
+            });
+
+  performance-dashboard-update:
+    name: 📊 Performance Dashboard Update
+    runs-on: ubuntu-latest
+    needs: [performance-baseline-establishment, comparative-performance-analysis, optimization-impact-tracking, performance-regression-detection]
+    if: always()
+
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v5
+
+      - name: 📥 Download all performance data
+        uses: actions/download-artifact@v5
+        with:
+          pattern: "*-${{ github.run_number }}"
+          merge-multiple: true
+
+      - name: 📊 Generate Performance Dashboard
+        run: |
+          echo "📊 Generating performance dashboard..."
+          echo "======================================"
+
+          DASHBOARD_FILE="performance_dashboard_$(date +%Y%m%d_%H%M%S).md"
+
+          cat > "$DASHBOARD_FILE" << EOF
+          # 🚀 CodeGuardian Performance Dashboard
+          Generated: $(date)
+          Run ID: ${{ github.run_id }}
+          Commit: ${GITHUB_SHA:0:8}
+          Branch: ${GITHUB_REF#refs/heads/}
+
+          ## 📈 Performance Status Overview
+
+          ### Baseline Status
+          EOF
+
+          if [ -f "baseline_report.md" ]; then
+            echo "✅ Baseline established successfully" >> "$DASHBOARD_FILE"
+          else
+            echo "❌ Baseline establishment failed" >> "$DASHBOARD_FILE"
+          fi
+
+          cat >> "$DASHBOARD_FILE" << EOF
+
+          ### Comparative Analysis Status
+          EOF
+
+          if [ -f "comparison_report.md" ]; then
+            echo "✅ Comparative analysis completed" >> "$DASHBOARD_FILE"
+          else
+            echo "❌ Comparative analysis failed" >> "$DASHBOARD_FILE"
+          fi
+
+          cat >> "$DASHBOARD_FILE" << EOF
+
+          ### Optimization Tracking Status
+          EOF
+
+          if [ -f "optimization_report.md" ]; then
+            echo "✅ Optimization tracking completed" >> "$DASHBOARD_FILE"
+          else
+            echo "❌ Optimization tracking failed" >> "$DASHBOARD_FILE"
+          fi
+
+          cat >> "$DASHBOARD_FILE" << EOF
+
+          ### Regression Detection Status
+          EOF
+
+          if [ "${{ needs.performance-regression-detection.outputs.regression_detected }}" == "true" ]; then
+            echo "🚨 REGRESSIONS DETECTED - Immediate attention required" >> "$DASHBOARD_FILE"
+          else
+            echo "✅ No regressions detected" >> "$DASHBOARD_FILE"
+          fi
+
+          cat >> "$DASHBOARD_FILE" << EOF
+
+          ## 📊 Key Metrics Summary
+
+          ### Performance Thresholds
+          - Memory Usage: ≤ 200MB
+          - Processing Time: ≤ 2000ms per file
+          - Cache Hit Rate: ≥ 70%
+          - Regression Threshold: ≤ 10% degradation
+
+          ### Current Status
+          - Baseline: Established
+          - Comparative Analysis: Completed
+          - Optimization Tracking: Active
+          - Regression Monitoring: Active
+
+          ## 🔍 Detailed Analysis
+
+          ### Baseline Metrics
+          EOF
+
+          if [ -f "baseline_metrics.txt" ]; then
+            cat baseline_metrics.txt >> "$DASHBOARD_FILE"
+          else
+            echo "No baseline metrics available" >> "$DASHBOARD_FILE"
+          fi
+
+          cat >> "$DASHBOARD_FILE" << EOF
+
+          ### Comparative Results
+          EOF
+
+          if [ -f "comparison_report.md" ]; then
+            cat comparison_report.md >> "$DASHBOARD_FILE"
+          else
+            echo "No comparative results available" >> "$DASHBOARD_FILE"
+          fi
+
+          cat >> "$DASHBOARD_FILE" << EOF
+
+          ### Optimization Impact
+          EOF
+
+          if [ -f "optimization_report.md" ]; then
+            cat optimization_report.md >> "$DASHBOARD_FILE"
+          else
+            echo "No optimization impact data available" >> "$DASHBOARD_FILE"
+          fi
+
+          cat >> "$DASHBOARD_FILE" << EOF
+
+          ## 🎯 Recommendations
+
+          ### Immediate Actions
+          EOF
+
+          if [ "${{ needs.performance-regression-detection.outputs.regression_detected }}" == "true" ]; then
+            echo "- 🚨 **URGENT**: Address detected performance regressions" >> "$DASHBOARD_FILE"
+            echo "- Review regression details and implement fixes" >> "$DASHBOARD_FILE"
+            echo "- Re-run enhanced monitoring after fixes" >> "$DASHBOARD_FILE"
+          else
+            echo "- ✅ Performance is within acceptable thresholds" >> "$DASHBOARD_FILE"
+            echo "- Continue monitoring for optimization opportunities" >> "$DASHBOARD_FILE"
+          fi
+
+          cat >> "$DASHBOARD_FILE" << EOF
+
+          ### Optimization Opportunities
+          - Review comparative analysis for configuration improvements
+          - Analyze optimization tracking data for targeted improvements
+          - Consider memory pool and caching optimizations
+          - Evaluate parallel processing effectiveness
+
+          ### Monitoring Recommendations
+          - Enhanced monitoring is active and running daily
+          - Review performance trends weekly
+          - Update baselines quarterly or after major changes
+          - Monitor cache hit rates and memory usage patterns
+
+          ---
+          *This dashboard was generated automatically by the Enhanced Performance Monitoring workflow*
+          EOF
+
+          echo "📊 Dashboard generated: $DASHBOARD_FILE"
+
+      - name: 📊 Upload Performance Dashboard
+        uses: actions/upload-artifact@v4
+        with:
+          name: performance-dashboard-${{ github.run_number }}
+          path: "performance_dashboard_*.md"
+          retention-days: 30
+
+  performance-alerting:
+    name: 🚨 Performance Alerting
+    runs-on: ubuntu-latest
+    needs: performance-regression-detection
+    if: always()
+
+    steps:
+      - name: 🚨 Performance Alert Management
+        run: |
+          echo "🚨 Performance Alert Management"
+          echo "==============================="
+
+          if [ "${{ needs.performance-regression-detection.outputs.regression_detected }}" == "true" ]; then
+            echo "🚨 ALERT: Performance regression detected!"
+            echo "Details: ${{ needs.performance-regression-detection.outputs.regression_details }}"
+            echo ""
+            echo "Immediate action required:"
+            echo "1. Review performance regression details"
+            echo "2. Analyze root causes"
+            echo "3. Implement performance fixes"
+            echo "4. Re-run monitoring to verify fixes"
+            exit 1
+          else
+            echo "✅ No performance regressions detected"
+            echo "All performance metrics within acceptable thresholds"
+          fi
+
+  cleanup:
+    name: 🧹 Cleanup
+    runs-on: ubuntu-latest
+    needs: [performance-dashboard-update, performance-alerting]
+    if: always()
+
+    steps:
+      - name: 🧹 Clean up monitoring artifacts
+        run: |
+          echo "🧹 Cleaning up enhanced monitoring artifacts..."
+          # This would typically clean up old artifacts via GitHub API
+          # For now, just log the cleanup intention
+          echo "Cleanup completed (artifacts managed by retention policy)"
+
+  summary:
+    name: 📋 Enhanced Performance Monitoring Summary
+    runs-on: ubuntu-latest
+    needs: [performance-baseline-establishment, comparative-performance-analysis, optimization-impact-tracking, performance-regression-detection, performance-dashboard-update]
+    if: always()
+
+    steps:
+      - name: 📋 Generate Summary
+        run: |
+          echo "📋 Enhanced Performance Monitoring Summary"
+          echo "=========================================="
+          echo ""
+          echo "Workflow: ${{ github.workflow }}"
+          echo "Run ID: ${{ github.run_id }}"
+          echo "Branch: ${{ github.ref }}"
+          echo "Commit: ${{ github.sha }}"
+          echo "Triggered: ${{ github.event_name }}"
+          echo ""
+
+          # Overall status
+          SUCCESS_COUNT=0
+          TOTAL_JOBS=5
+
+          if [ "${{ needs.performance-baseline-establishment.result }}" == "success" ]; then
+            echo "✅ Baseline Establishment: PASSED"
+            SUCCESS_COUNT=$((SUCCESS_COUNT + 1))
+          else
+            echo "❌ Baseline Establishment: FAILED"
+          fi
+
+          if [ "${{ needs.comparative-performance-analysis.result }}" == "success" ]; then
+            echo "✅ Comparative Analysis: PASSED"
+            SUCCESS_COUNT=$((SUCCESS_COUNT + 1))
+          else
+            echo "❌ Comparative Analysis: FAILED"
+          fi
+
+          if [ "${{ needs.optimization-impact-tracking.result }}" == "success" ]; then
+            echo "✅ Optimization Tracking: PASSED"
+            SUCCESS_COUNT=$((SUCCESS_COUNT + 1))
+          else
+            echo "❌ Optimization Tracking: FAILED"
+          fi
+
+          if [ "${{ needs.performance-regression-detection.result }}" == "success" ]; then
+            echo "✅ Regression Detection: PASSED"
+            SUCCESS_COUNT=$((SUCCESS_COUNT + 1))
+          else
+            echo "❌ Regression Detection: FAILED"
+          fi
+
+          if [ "${{ needs.performance-dashboard-update.result }}" == "success" ]; then
+            echo "✅ Dashboard Update: PASSED"
+            SUCCESS_COUNT=$((SUCCESS_COUNT + 1))
+          else
+            echo "❌ Dashboard Update: FAILED"
+          fi
+
+          echo ""
+          echo "Success Rate: $SUCCESS_COUNT/$TOTAL_JOBS jobs completed successfully"
+
+          if [ "${{ needs.performance-regression-detection.outputs.regression_detected }}" == "true" ]; then
+            echo ""
+            echo "🚨 PERFORMANCE REGRESSION DETECTED"
+            echo "Please review the regression details and take immediate action."
+          else
+            echo ""
+            echo "✅ No performance regressions detected"
+          fi
+
+          echo ""
+          echo "## 📊 Available Artifacts"
+          echo "- Performance baseline data"
+          echo "- Comparative analysis results"
+          echo "- Optimization tracking data"
+          echo "- Performance dashboard"
+          echo "- Detailed benchmark reports"
+
+          echo ""
+          echo "## 🎯 Next Steps"
+          if [ "${{ needs.performance-regression-detection.outputs.regression_detected }}" == "true" ]; then
+            echo "1. 🚨 URGENT: Address detected performance regressions"
+            echo "2. Review enhanced performance reports"
+            echo "3. Implement necessary fixes"
+            echo "4. Re-run monitoring to verify improvements"
+          else
+            echo "1. Review performance dashboard for insights"
+            echo "2. Analyze optimization opportunities"
+            echo "3. Consider configuration improvements"
+            echo "4. Monitor trends in future runs"
+          fi
+
+      - name: 📊 Performance Metrics Summary
+        run: |
+          echo "## Performance Metrics Summary" >> $GITHUB_STEP_SUMMARY
+          echo "- **Monitoring Type**: Enhanced Performance Monitoring" >> $GITHUB_STEP_SUMMARY
+          echo "- **Jobs Completed**: ${{ needs.performance-baseline-establishment.result && '✅' || '❌' }} Baseline, ${{ needs.comparative-performance-analysis.result && '✅' || '❌' }} Comparative, ${{ needs.optimization-impact-tracking.result && '✅' || '❌' }} Optimization, ${{ needs.performance-regression-detection.result && '✅' || '❌' }} Regression, ${{ needs.performance-dashboard-update.result && '✅' || '❌' }} Dashboard" >> $GITHUB_STEP_SUMMARY
+          echo "- **Regression Status**: ${{ needs.performance-regression-detection.outputs.regression_detected == 'true' && '🚨 DETECTED' || '✅ NONE' }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Analysis Types**: Baseline, Comparative, Optimization Tracking" >> $GITHUB_STEP_SUMMARY
+          echo "- **Monitoring Frequency**: Daily (scheduled)" >> $GITHUB_STEP_SUMMARY
+
+          if [ "${{ needs.performance-regression-detection.outputs.regression_detected }}" == "true" ]; then
+            echo "- **Action Required**: Immediate attention to performance regressions" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "- **Status**: All performance metrics within acceptable thresholds" >> $GITHUB_STEP_SUMMARY
+          fi

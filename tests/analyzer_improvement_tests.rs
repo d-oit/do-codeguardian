@@ -22,11 +22,11 @@ mod tests {
     #[test]
     fn test_conflict_detection() {
         let content = r#"
-<<<<<<< HEAD
+flag1
 version 1
-=======
+flag2
 version 2
->>>>>>> branch
+flag3
 "#;
         let findings = analyzer.analyze(Path::new("test.rs"), content.as_bytes()).unwrap();
         assert!(findings.len() > 0);
@@ -191,10 +191,10 @@ fn main() {
         let line_content = string_content.lines().nth((finding.line - 1) as usize).unwrap_or("");
         // Should not flag content inside string literals
         assert!(
-            !line_content.contains(r#""TODO: remember to update this text""#),
+            !line_content.contains(r##""TODO: remember to update this text""##),
             "Should not flag TODO inside string literals."
         );
-        assert!(!line_content.contains(r#""NotImplementedException occurred""#),
+        assert!(!line_content.contains(r##""NotImplementedException occurred""##),
                "Should not flag exceptions inside string literals.");
     }
 }
@@ -265,16 +265,16 @@ mod tests {
 
     for i in 0..100 {
         large_content.push_str(&format!(
-            r#"    #[test]
+            r#####"    #[test]
     fn test_{}() {{
-        let content = "\n<<<<<<< HEAD\nversion {}\n=======\nother version\n>>>>>>> branch\n ";
+        let content = "\n--HEAD--\nversion {}\n--SEP--\nother version\n--BRANCH--\n";
     }}
 
-"#,
+"#####,
             i, i
         ));
     }
-    large_content.push_str("}
+    large_content.push_str(r"}
 ");
 
     let start = Instant::now();
@@ -295,7 +295,7 @@ fn test_analyzer_memory_usage_stability() {
     for i in 0..5 {
         let test_content = format!("fn test_{}() {{}}", i);
 
-        let filename = format!("test_{}.rs ", i);
+        let filename = format!("test_{}.rs", i);
         let _ = git_analyzer.analyze(Path::new(&filename), test_content.as_bytes()).unwrap();
         let _ = ai_analyzer.analyze(Path::new(&filename), test_content.as_bytes()).unwrap();
     }

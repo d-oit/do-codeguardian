@@ -1,17 +1,15 @@
 //! Main swarm orchestrator implementation for coordinating parallel security analysis
 
-use crate::core::conflict_resolution::{ConflictResolver, ResolutionStats};
+use crate::core::conflict_resolution::ConflictResolver;
 use crate::core::performance_monitor::{PerformanceConfig, SwarmPerformanceMonitor};
 use crate::core::resource_manager::{PendingTask, ResourceAwareScheduler, ResourceManager};
 use crate::core::result_aggregation::PriorityBasedResolver;
 use crate::core::result_aggregation::{AggregationConfig, ResultAggregator};
 use crate::core::swarm_types::{
-    ConflictInfo, ConflictResolutionStrategy, ExecutionSummary, Priority, ResourceRequirements,
-    SwarmAgent, SwarmConfig, SwarmError, SwarmPerformanceMetrics, SwarmResults, SwarmState,
-    SwarmTask, TaskResult, TaskStatus,
+    Priority, ResourceRequirements, SwarmAgent, SwarmConfig, SwarmError, SwarmPerformanceMetrics,
+    SwarmResults, SwarmState, SwarmTask, TaskResult, TaskStatus,
 };
 use crate::core::task_decomposition::{AnalysisRequest, DecompositionStrategy, TaskDecomposer};
-use crate::types::AnalysisResults;
 
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -66,13 +64,13 @@ impl SwarmOrchestrator {
                 max_conflicts_to_resolve: 100,
                 aggregation_timeout: Duration::from_secs(30),
             },
-            Arc::new(PriorityBasedResolver::new(HashMap::new())), // TODO: Load from config
+            Arc::new(PriorityBasedResolver::new(Self::default_agent_priorities())),
         );
 
         let conflict_resolver = ConflictResolver::new(
             config.conflict_resolution_strategy,
-            HashMap::new(), // TODO: Load agent priorities
-            HashMap::new(), // TODO: Load confidence thresholds
+            Self::default_agent_priorities(),
+            Self::default_confidence_thresholds(),
         );
 
         Ok(Self {
@@ -398,6 +396,28 @@ impl SwarmOrchestrator {
         }
 
         Ok(())
+    }
+
+    /// Default agent priorities for conflict resolution
+    fn default_agent_priorities() -> HashMap<String, Priority> {
+        let mut priorities = HashMap::new();
+        priorities.insert("security_analyzer".to_string(), Priority::High);
+        priorities.insert("vulnerability_analyzer".to_string(), Priority::High);
+        priorities.insert("performance_analyzer".to_string(), Priority::Medium);
+        priorities.insert("quality_analyzer".to_string(), Priority::Medium);
+        priorities.insert("dependency_analyzer".to_string(), Priority::Low);
+        priorities
+    }
+
+    /// Default confidence thresholds for agents
+    fn default_confidence_thresholds() -> HashMap<String, f64> {
+        let mut thresholds = HashMap::new();
+        thresholds.insert("security_analyzer".to_string(), 0.8);
+        thresholds.insert("vulnerability_analyzer".to_string(), 0.85);
+        thresholds.insert("performance_analyzer".to_string(), 0.7);
+        thresholds.insert("quality_analyzer".to_string(), 0.75);
+        thresholds.insert("dependency_analyzer".to_string(), 0.6);
+        thresholds
     }
 }
 

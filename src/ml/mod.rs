@@ -7,6 +7,7 @@ pub mod feature_extractor;
 pub mod multi_language_ast_analyzer;
 pub mod pattern_recognition;
 pub mod training_data;
+pub mod unified_feature_extractor;
 
 use crate::types::Finding;
 use anyhow::Result;
@@ -18,13 +19,8 @@ pub struct MLClassifier {
     #[cfg(not(feature = "ml"))]
     classifier: Option<()>, // Placeholder when ML is disabled
 
-    // Feature extraction strategy
-    #[cfg(all(feature = "ml", feature = "ast"))]
-    enhanced_extractor: enhanced_feature_extractor::EnhancedFeatureExtractor,
-    #[cfg(all(feature = "ml", not(feature = "ast")))]
-    base_extractor: feature_extractor::FeatureExtractor,
-    #[cfg(not(feature = "ml"))]
-    _extractor_placeholder: (),
+    // Unified feature extraction (replaces conditional compilation)
+    unified_extractor: unified_feature_extractor::UnifiedFeatureExtractor,
 
     enabled: bool,
     ast_enabled: bool,
@@ -52,16 +48,29 @@ impl MLClassifier {
 
         let ast_enabled = cfg!(feature = "ast");
 
+        // Create unified extractor with appropriate configuration
+        let extractor_config = if ast_enabled {
+            unified_feature_extractor::FeatureConfig {
+                mode: unified_feature_extractor::ExtractionMode::Enhanced,
+                feature_sets: vec![
+                    unified_feature_extractor::FeatureSet::Base,
+                    unified_feature_extractor::FeatureSet::Ast,
+                ],
+                ..Default::default()
+            }
+        } else {
+            unified_feature_extractor::FeatureConfig {
+                mode: unified_feature_extractor::ExtractionMode::Basic,
+                feature_sets: vec![unified_feature_extractor::FeatureSet::Base],
+                ..Default::default()
+            }
+        };
+
         Self {
             classifier,
-
-            #[cfg(all(feature = "ml", feature = "ast"))]
-            enhanced_extractor: enhanced_feature_extractor::EnhancedFeatureExtractor::new(),
-            #[cfg(all(feature = "ml", not(feature = "ast")))]
-            base_extractor: feature_extractor::FeatureExtractor::new(),
-            #[cfg(not(feature = "ml"))]
-            _extractor_placeholder: (),
-
+            unified_extractor: unified_feature_extractor::UnifiedFeatureExtractor::with_config(
+                extractor_config,
+            ),
             enabled,
             ast_enabled,
         }
@@ -138,58 +147,42 @@ impl MLClassifier {
         Ok(filtered)
     }
 
-    /// Extract features using the appropriate extractor
+    /// Extract features using the unified extractor
     async fn extract_features(&mut self, finding: &Finding) -> Result<Vec<f32>> {
-        #[cfg(all(feature = "ml", feature = "ast"))]
-        {
-            self.enhanced_extractor
-                .extract_enhanced_features(finding)
-                .await
-        }
-
-        #[cfg(all(feature = "ml", not(feature = "ast")))]
-        {
-            self.base_extractor.extract_features(finding)
-        }
-
-        #[cfg(not(feature = "ml"))]
-        {
-            let _ = finding;
-            Ok(vec![0.5; 8]) // Neutral features when ML is disabled
-        }
+        self.unified_extractor.extract_features(finding).await
     }
 
-    /// Get feature importance analysis for a finding (AST-enhanced only)
-    #[cfg(all(feature = "ml", feature = "ast"))]
+    /// Get feature importance analysis for a finding
     pub async fn analyze_feature_importance(
         &mut self,
         finding: &Finding,
-    ) -> Result<enhanced_feature_extractor::FeatureImportanceAnalysis> {
-        self.enhanced_extractor
+    ) -> Result<unified_feature_extractor::FeatureImportanceAnalysis> {
+        self.unified_extractor
             .analyze_feature_importance(finding)
             .await
     }
 
     /// Get information about the ML classifier configuration
     pub fn get_info(&self) -> MLClassifierInfo {
+        let config = self.unified_extractor.get_config();
         MLClassifierInfo {
             enabled: self.enabled,
             ast_enabled: self.ast_enabled,
-            feature_count: if self.ast_enabled { 24 } else { 8 },
+            feature_count: self.unified_extractor.get_feature_names().len(),
             model_loaded: self.enabled,
+            extraction_mode: config.mode,
+            feature_sets: config.feature_sets.clone(),
         }
     }
 
     /// Clear any cached analysis data
-    #[cfg(all(feature = "ml", feature = "ast"))]
-    pub fn clear_cache(&mut self) {
-        self.enhanced_extractor.clear_cache();
+    pub async fn clear_cache(&mut self) {
+        self.unified_extractor.clear_cache().await;
     }
 
-    /// Get cache statistics (AST-enhanced only)
-    #[cfg(all(feature = "ml", feature = "ast"))]
-    pub fn get_cache_stats(&self) -> enhanced_feature_extractor::CacheStats {
-        self.enhanced_extractor.get_cache_stats()
+    /// Get cache statistics
+    pub async fn get_cache_stats(&self) -> unified_feature_extractor::CacheStats {
+        self.unified_extractor.get_cache_stats().await
     }
 }
 
@@ -200,6 +193,8 @@ pub struct MLClassifierInfo {
     pub ast_enabled: bool,
     pub feature_count: usize,
     pub model_loaded: bool,
+    pub extraction_mode: unified_feature_extractor::ExtractionMode,
+    pub feature_sets: Vec<unified_feature_extractor::FeatureSet>,
 }
 
 impl std::fmt::Display for MLClassifierInfo {
@@ -225,11 +220,8 @@ impl std::fmt::Display for MLClassifierInfo {
             "  Model Loaded: {}",
             if self.model_loaded { "Yes" } else { "No" }
         )?;
-        if self.ast_enabled {
-            writeln!(f, "  Feature Types: Base (8) + AST (16) = Enhanced (24)")?;
-        } else {
-            writeln!(f, "  Feature Types: Base only (8)")?;
-        }
+        writeln!(f, "  Extraction Mode: {:?}", self.extraction_mode)?;
+        writeln!(f, "  Feature Sets: {:?}", self.feature_sets)?;
         Ok(())
     }
 }

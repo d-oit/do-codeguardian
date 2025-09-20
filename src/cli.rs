@@ -10,6 +10,7 @@ pub mod init;
 pub mod integrations;
 #[cfg(feature = "ml")]
 pub mod metrics;
+pub mod release_monitoring;
 pub mod remediation;
 pub mod report;
 pub mod retention;
@@ -20,6 +21,8 @@ pub mod train;
 #[cfg(feature = "dashboard")]
 use dashboard::DashboardArgs;
 use integrations::IntegrationsArgs;
+#[cfg(feature = "release-monitoring")]
+use release_monitoring::ReleaseMonitoringArgs;
 use remediation::RemediationArgs;
 
 #[derive(Parser)]
@@ -107,6 +110,10 @@ pub enum Commands {
     /// Tune monitoring thresholds for different environments
     #[command(name = "tune-thresholds")]
     TuneThresholds(threshold_tuning::ThresholdTuningArgs),
+
+    /// Release monitoring and metrics collection
+    #[cfg(feature = "release-monitoring")]
+    ReleaseMonitoring(ReleaseMonitoringArgs),
 }
 
 #[derive(Parser)]
@@ -361,6 +368,34 @@ pub struct GitCommitPushArgs {
     /// Skip pre-commit hooks
     #[arg(long)]
     pub no_verify: bool,
+
+    /// Perform a dry run (simulate operations without making changes)
+    #[arg(long)]
+    pub dry_run: bool,
+
+    /// Force push (use with caution - overwrites remote history)
+    #[arg(long)]
+    pub force: bool,
+
+    /// Custom remote name (default: origin)
+    #[arg(long, default_value = "origin")]
+    pub remote: String,
+
+    /// Custom branch name (default: current branch)
+    #[arg(long)]
+    pub branch: Option<String>,
+
+    /// Skip security analysis
+    #[arg(long)]
+    pub skip_security: bool,
+
+    /// Skip quality validation
+    #[arg(long)]
+    pub skip_quality: bool,
+
+    /// Skip conflict prevention checks
+    #[arg(long)]
+    pub skip_conflicts: bool,
 }
 
 #[derive(Parser)]

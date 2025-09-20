@@ -130,7 +130,7 @@ mod tests {{
         assert!(conflict_marker.len() == 7);
     }}
 }}
-", i, i, i);
+"#, i, i, i);
         fs::write(&test_file, content).unwrap();
     }
 

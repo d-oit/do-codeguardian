@@ -1,146 +1,13 @@
-//! Enhanced optimized cache with memory pool integration
-//!
-//! This module extends the optimized cache with memory pool optimizations
-//! for 15% memory reduction and 90% object reuse rate.
-
-use crate::cache::memory_pool::MemoryPoolManager;
-use crate::cache::optimized_cache::{CacheStats, CacheUtilization};
-use crate::types::Finding;
-use anyhow::Result;
-use blake3::Hasher;
-use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
-use std::path::{Path, PathBuf};
-use std::time::{SystemTime, UNIX_EPOCH};
-
-/// Enhanced cache entry with pooled memory management
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct PooledCacheEntry {
-    pub findings: Vec<Finding>,
-    pub file_hash: String,
-    pub config_hash: String,
-    pub modified_time: u64,
-    pub file_size: u64,
-    pub access_count: u32,
-    pub last_accessed: u64,
-    pub analysis_duration_ms: u64,
-}
-
-impl PooledCacheEntry {
-    pub fn new(
-        findings: Vec<Finding>,
-        file_hash: String,
-        config_hash: String,
-        modified_time: SystemTime,
-        file_size: u64,
-        analysis_duration_ms: u64,
-    ) -> Self {
-        let modified_time_secs = modified_time
-            .duration_since(UNIX_EPOCH)
-            .unwrap_or_default()
-            .as_secs();
-
-        let now = SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .unwrap_or_default()
-            .as_secs();
-
-        Self {
-            findings,
-            file_hash,
-            config_hash,
-            modified_time: modified_time_secs,
-            file_size,
-            access_count: 1,
-            last_accessed: now,
-            analysis_duration_ms,
-        }
-    }
-
-    pub fn update_access(&mut self) {
-        self.access_count += 1;
-        self.last_accessed = SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .unwrap_or_default()
-            .as_secs();
-    }
-
-    pub fn is_valid(&self, file_metadata: &FileMetadata, config_hash: &str) -> bool {
-        self.config_hash == config_hash
-            && self.modified_time == file_metadata.modified_time
-            && self.file_size == file_metadata.size
-            && self.file_hash == file_metadata.content_hash
-    }
-
-    pub fn age_seconds(&self) -> u64 {
-        let now = SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .unwrap_or_default()
-            .as_secs();
-        now.saturating_sub(self.last_accessed)
-    }
-
-    pub fn priority_score(&self) -> f64 {
-        // Higher score = higher priority to keep in cache
-        let access_weight = (self.access_count as f64).ln_1p();
-        let recency_weight = 1.0 / (1.0 + self.age_seconds() as f64 / 3600.0); // Decay over hours
-        let size_weight = 1.0 / (1.0 + self.file_size as f64 / 1024.0); // Prefer smaller files
-
-        access_weight * recency_weight * size_weight
-    }
-}
-
-/// File metadata for cache validation
-#[derive(Debug, Clone)]
-pub struct FileMetadata {
-    pub modified_time: u64,
-    pub size: u64,
-    pub content_hash: String,
-}
-
-impl FileMetadata {
-    pub fn from_file(file_path: &Path) -> Result<Self> {
-        let metadata = std::fs::metadata(file_path)?;
-        let modified_time = metadata.modified()?.duration_since(UNIX_EPOCH)?.as_secs();
-        let size = metadata.len();
-
-        // Compute content hash for integrity
-        let content = std::fs::read(file_path)?;
-        let content_hash = Self::compute_hash(&content);
-
-        Ok(Self {
-            modified_time,
-            size,
-            content_hash,
-        })
-    }
-
-    pub async fn from_file_async(file_path: &Path) -> Result<Self> {
-        let metadata = tokio::fs::metadata(file_path).await?;
-        let modified_time = metadata.modified()?.duration_since(UNIX_EPOCH)?.as_secs();
-        let size = metadata.len();
-
-        // Compute content hash for integrity
-        let content = tokio::fs::read(file_path).await?;
-        let content_hash = Self::compute_hash(&content);
-
-        Ok(Self {
-            modified_time,
-            size,
-            content_hash,
-        })
-    }
-
-    pub fn compute_hash(content: &[u8]) -> String {
-        let mut hasher = Hasher::new();
-        hasher.update(content);
-        hasher.finalize().to_hex().to_string()
-    }
-}
+use super::*;
 
 /// Enhanced optimized cache with memory pool integration
+#[deprecated(
+    since = "0.1.0",
+    note = "Use `crate::cache::unified_cache::UnifiedCache` with `CacheStrategyType::Pooled` instead. \
+            See the migration guide in the module documentation for details."
+)]
 pub struct EnhancedOptimizedCache {
-    entries: HashMap<PathBuf, PooledCacheEntry>,
+    entries: HashMap<PathBuf, super::PooledCacheEntry>,
     max_entries: usize,
     max_memory_mb: usize,
     current_memory_bytes: usize,
@@ -149,6 +16,10 @@ pub struct EnhancedOptimizedCache {
 }
 
 impl EnhancedOptimizedCache {
+    #[deprecated(
+        since = "0.1.0",
+        note = "Use `UnifiedCache::pooled(max_entries, max_memory_mb)` instead"
+    )]
     pub fn new(max_entries: usize, max_memory_mb: usize) -> Self {
         Self {
             entries: HashMap::with_capacity(max_entries),
@@ -160,12 +31,17 @@ impl EnhancedOptimizedCache {
         }
     }
 
+    #[deprecated(
+        since = "0.1.0",
+        note = "Memory pools are automatically configured in UnifiedCache"
+    )]
     pub fn with_memory_pools(mut self, pools: MemoryPoolManager) -> Self {
         self.memory_pools = pools;
         self
     }
 
     /// Get cached findings if valid, otherwise return None
+    #[deprecated(since = "0.1.0", note = "Use `UnifiedCache::get()` instead")]
     pub fn get(&mut self, file_path: &Path, config_hash: &str) -> Result<Option<Vec<Finding>>> {
         self.stats.total_requests += 1;
 
@@ -178,7 +54,7 @@ impl EnhancedOptimizedCache {
             }
 
             // Validate against current file state
-            match FileMetadata::from_file(file_path) {
+            match super::FileMetadata::from_file(file_path) {
                 Ok(metadata) => {
                     if entry.is_valid(&metadata, config_hash) {
                         entry.update_access();
@@ -203,6 +79,7 @@ impl EnhancedOptimizedCache {
     }
 
     /// Store findings in cache with pooled memory management
+    #[deprecated(since = "0.1.0", note = "Use `UnifiedCache::put()` instead")]
     pub fn put(
         &mut self,
         file_path: &Path,
@@ -210,7 +87,7 @@ impl EnhancedOptimizedCache {
         config_hash: &str,
         analysis_duration_ms: u64,
     ) -> Result<()> {
-        let metadata = FileMetadata::from_file(file_path)?;
+        let metadata = super::FileMetadata::from_file(file_path)?;
 
         // Use pooled strings for config hash
         let config_hash_pooled = self
@@ -220,7 +97,7 @@ impl EnhancedOptimizedCache {
             .unwrap()
             .get(config_hash);
 
-        let entry = PooledCacheEntry::new(
+        let entry = super::PooledCacheEntry::new(
             findings,
             metadata.content_hash,
             (*config_hash_pooled).clone(),
@@ -258,10 +135,12 @@ impl EnhancedOptimizedCache {
             self.current_memory_bytes = self.current_memory_bytes.saturating_sub(entry_size);
             self.stats.entries_evicted += 1;
 
-            // TODO: Return findings to pool - temporarily disabled
-            // let mut finding_pool = self.memory_pools.finding_pool().lock().unwrap();
-            // for finding in entry.findings {
-            //     finding_pool.put(finding);
+            // Return findings to memory pool for reuse
+            if let Ok(mut finding_pool) = self.memory_pools.finding_pool().lock() {
+                for finding in entry.findings {
+                    finding_pool.put(finding);
+                }
+            }
         }
     }
 
@@ -300,8 +179,8 @@ impl EnhancedOptimizedCache {
     }
 
     /// Estimate memory usage of a cache entry
-    fn estimate_entry_size(&self, entry: &PooledCacheEntry) -> usize {
-        let base_size = std::mem::size_of::<PooledCacheEntry>();
+    fn estimate_entry_size(&self, entry: &super::PooledCacheEntry) -> usize {
+        let base_size = std::mem::size_of::<super::PooledCacheEntry>();
         let findings_size = entry.findings.len() * std::mem::size_of::<Finding>();
         let string_sizes = entry.file_hash.len() + entry.config_hash.len();
 
@@ -320,6 +199,7 @@ impl EnhancedOptimizedCache {
     }
 
     /// Clean up expired and invalid entries
+    #[deprecated(since = "0.1.0", note = "Use `UnifiedCache::cleanup()` instead")]
     pub fn cleanup(&mut self, max_age_hours: u64) -> usize {
         let max_age_seconds = max_age_hours * 3600;
         let mut removed_count = 0;
@@ -341,11 +221,13 @@ impl EnhancedOptimizedCache {
     }
 
     /// Get cache statistics
+    #[deprecated(since = "0.1.0", note = "Use `UnifiedCache::stats()` instead")]
     pub fn stats(&self) -> &CacheStats {
         &self.stats
     }
 
     /// Get current cache utilization
+    #[deprecated(since = "0.1.0", note = "Use `UnifiedCache::utilization()` instead")]
     pub fn utilization(&self) -> CacheUtilization {
         CacheUtilization {
             entry_count: self.entries.len(),
@@ -362,18 +244,30 @@ impl EnhancedOptimizedCache {
     }
 
     /// Get memory pool statistics
+    #[deprecated(
+        since = "0.1.0",
+        note = "Use `UnifiedCache::memory_pool_stats()` instead"
+    )]
     pub fn memory_pool_stats(&self) -> crate::cache::memory_pool::MemoryPoolStats {
         self.memory_pools.stats()
     }
 
     /// Get memory savings estimate
+    #[deprecated(since = "0.1.0", note = "Use `UnifiedCache::memory_savings()` instead")]
     pub fn memory_savings(&self) -> crate::cache::memory_pool::MemorySavings {
         self.memory_pools.memory_savings_estimate()
     }
 
+    /// Get access to memory pools (for UnifiedCache compatibility)
+    pub fn memory_pools(&self) -> &MemoryPoolManager {
+        &self.memory_pools
+    }
+
     /// Clear all cache entries and return objects to pools
+    #[deprecated(since = "0.1.0", note = "Use `UnifiedCache::clear()` instead")]
     pub fn clear(&mut self) {
-        let entries_to_clear: Vec<(PathBuf, PooledCacheEntry)> = self.entries.drain().collect();
+        let entries_to_clear: Vec<(PathBuf, super::PooledCacheEntry)> =
+            self.entries.drain().collect();
 
         {
             // let mut finding_pool = self.memory_pools.finding_pool().lock().unwrap();

@@ -2,8 +2,8 @@
 use crate::ml::ast_analyzer::{AstAnalyzer, AstFeatures};
 use crate::ml::feature_extractor::FeatureExtractor;
 use crate::types::Finding;
-use anyhow::Result;
-use std::collections::HashMap;
+use anyhow::{Context, Result};
+use std::collections::{HashMap, VecDeque};
 use std::path::Path;
 
 /// Enhanced feature extractor that combines traditional features with AST analysis
@@ -12,6 +12,7 @@ pub struct EnhancedFeatureExtractor {
     #[cfg(feature = "ast")]
     ast_analyzer: AstAnalyzer,
     file_cache: HashMap<String, CachedFileAnalysis>,
+    cache_order: VecDeque<String>,
 }
 
 #[derive(Debug, Clone)]
@@ -26,12 +27,16 @@ struct CachedFileAnalysis {
 }
 
 impl EnhancedFeatureExtractor {
+    const MAX_FILE_SIZE: u64 = 10 * 1024 * 1024; // 10MB limit
+    const MAX_CACHE_SIZE: usize = 1000; // Prevent unbounded cache growth
+
     pub fn new() -> Self {
         Self {
             base_extractor: FeatureExtractor::new(),
             #[cfg(feature = "ast")]
             ast_analyzer: AstAnalyzer::new(),
             file_cache: HashMap::new(),
+            cache_order: VecDeque::new(),
         }
     }
 
@@ -56,12 +61,16 @@ impl EnhancedFeatureExtractor {
     /// Get AST features for a file, using cache when possible
     #[cfg(feature = "ast")]
     async fn get_ast_features_async(&mut self, file_path: &Path) -> Result<Vec<f32>> {
-        let file_path_str = file_path.to_string_lossy().to_string();
+        // Canonicalize path to resolve symlinks and relative paths
+        let canonical_path = file_path
+            .canonicalize()
+            .context("Failed to canonicalize file path")?;
+        let file_path_str = canonical_path.to_string_lossy().to_string();
 
         // Check if we have cached analysis
         if let Some(cached) = self.file_cache.get(&file_path_str) {
             // Check if cache is still valid (file hasn't changed)
-            if let Ok(metadata) = tokio::fs::metadata(file_path).await {
+            if let Ok(metadata) = tokio::fs::metadata(&canonical_path).await {
                 if let Ok(modified) = metadata.modified() {
                     if modified <= cached.timestamp {
                         return Ok(cached.ast_features.to_feature_vector());
@@ -70,22 +79,46 @@ impl EnhancedFeatureExtractor {
             }
         }
 
-        // Read and analyze file
-        let content = tokio::fs::read_to_string(file_path)
+        // Get file metadata for size validation
+        let metadata = tokio::fs::metadata(&canonical_path)
             .await
-            .unwrap_or_else(|_| String::new());
+            .context("Failed to read file metadata")?;
+
+        // Security check: file size limit
+        if metadata.len() > Self::MAX_FILE_SIZE {
+            return Err(anyhow::anyhow!(
+                "File too large: {} bytes (limit: {} bytes)",
+                metadata.len(),
+                Self::MAX_FILE_SIZE
+            ));
+        }
+
+        // Read and analyze file
+        let content = tokio::fs::read_to_string(&canonical_path)
+            .await
+            .context("Failed to read file content")?;
 
         let ast_features = self
             .ast_analyzer
-            .extract_ast_features(file_path, &content)?;
+            .extract_ast_features(&canonical_path, &content)?;
 
-        // Cache the analysis
+        // Cache the analysis with size limit
         let cached_analysis = CachedFileAnalysis {
             ast_features: ast_features.clone(),
             file_hash: self.calculate_file_hash(&content),
             timestamp: std::time::SystemTime::now(),
         };
-        self.file_cache.insert(file_path_str, cached_analysis);
+
+        // Manage cache size
+        if self.file_cache.len() >= Self::MAX_CACHE_SIZE {
+            if let Some(oldest_key) = self.cache_order.pop_front() {
+                self.file_cache.remove(&oldest_key);
+            }
+        }
+
+        self.file_cache
+            .insert(file_path_str.clone(), cached_analysis);
+        self.cache_order.push_back(file_path_str);
 
         Ok(ast_features.to_feature_vector())
     }
@@ -181,6 +214,7 @@ impl EnhancedFeatureExtractor {
     /// Clear the file analysis cache
     pub fn clear_cache(&mut self) {
         self.file_cache.clear();
+        self.cache_order.clear();
     }
 
     /// Get cache statistics
@@ -188,6 +222,7 @@ impl EnhancedFeatureExtractor {
         CacheStats {
             cached_files: self.file_cache.len(),
             cache_size_bytes: self.file_cache.len() * std::mem::size_of::<CachedFileAnalysis>(),
+            max_cache_size: Self::MAX_CACHE_SIZE,
         }
     }
 }
@@ -210,6 +245,7 @@ pub struct FeatureImportanceAnalysis {
 pub struct CacheStats {
     pub cached_files: usize,
     pub cache_size_bytes: usize,
+    pub max_cache_size: usize,
 }
 
 impl std::fmt::Display for FeatureImportanceAnalysis {
@@ -238,9 +274,10 @@ impl std::fmt::Display for CacheStats {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
-            "Cache: {} files, ~{} KB",
+            "Cache: {} files, ~{} KB (max: {})",
             self.cached_files,
-            self.cache_size_bytes / 1024
+            self.cache_size_bytes / 1024,
+            self.max_cache_size
         )
     }
 }
@@ -250,6 +287,8 @@ mod tests {
     use super::*;
     use crate::types::{Finding, Severity};
     use std::path::PathBuf;
+    use tempfile::NamedTempFile;
+    use tokio::fs;
 
     #[test]
     fn test_enhanced_feature_extractor_creation() {
@@ -307,5 +346,59 @@ mod tests {
         assert!(analysis.base_feature_contribution >= 0.0);
         assert!(analysis.ast_feature_contribution >= 0.0);
         assert_eq!(analysis.top_features.len(), 5);
+    }
+
+    #[cfg(feature = "ast")]
+    #[tokio::test]
+    async fn test_file_size_limit() {
+        let mut extractor = EnhancedFeatureExtractor::new();
+
+        // Create a temporary file larger than 10MB
+        let temp_file = NamedTempFile::new().unwrap();
+        let large_content = vec![b'a'; 15 * 1024 * 1024]; // 15MB
+        fs::write(&temp_file, &large_content).await.unwrap();
+
+        let result = extractor.get_ast_features_async(temp_file.path()).await;
+        assert!(result.is_err());
+        let err_msg = result.unwrap_err().to_string();
+        assert!(err_msg.contains("too large"));
+        assert!(err_msg.contains("10485760")); // 10MB in bytes
+    }
+
+    #[cfg(feature = "ast")]
+    #[tokio::test]
+    async fn test_valid_file_size() {
+        let mut extractor = EnhancedFeatureExtractor::new();
+
+        // Create a temporary file smaller than 10MB
+        let temp_file = NamedTempFile::new().unwrap();
+        let content = b"fn main() { println!(\"Hello\"); }";
+        fs::write(&temp_file, content).await.unwrap();
+
+        let result = extractor.get_ast_features_async(temp_file.path()).await;
+        // Should succeed or fail based on AST parsing, but not due to size
+        // We just check it's not a size error
+        if let Err(e) = &result {
+            assert!(!e.to_string().contains("too large"));
+        }
+    }
+
+    #[cfg(feature = "ast")]
+    #[tokio::test]
+    async fn test_cache_size_limit() {
+        let mut extractor = EnhancedFeatureExtractor::new();
+
+        // Create multiple small files to fill cache
+        for i in 0..1100 {
+            // More than MAX_CACHE_SIZE
+            let temp_file = NamedTempFile::new().unwrap();
+            let content = format!("fn func_{}() {{}}", i);
+            fs::write(&temp_file, content).await.unwrap();
+
+            let _ = extractor.get_ast_features_async(temp_file.path()).await;
+        }
+
+        let stats = extractor.get_cache_stats();
+        assert!(stats.cached_files <= EnhancedFeatureExtractor::MAX_CACHE_SIZE);
     }
 }

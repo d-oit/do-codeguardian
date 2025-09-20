@@ -1,9 +1,8 @@
 //! Conflict resolution protocol for handling conflicting recommendations from multiple agents
 
 use crate::core::swarm_types::{ConflictInfo, ConflictResolutionStrategy, Priority, SwarmError};
-use crate::types::AnalysisResults;
 use crate::types::Finding;
-use async_trait::async_trait;
+
 use std::collections::HashMap;
 use std::sync::Arc;
 
@@ -340,7 +339,7 @@ impl MLConflictResolver {
                     .conflicting_findings
                     .iter()
                     .zip(&conflict.agent_ids)
-                    .find(|(_, id)| *id == agent_id)
+                    .find(|(_, id)| **id == agent_id)
                     .map(|(f, _)| f.clone());
 
                 Ok(ResolvedConflict {

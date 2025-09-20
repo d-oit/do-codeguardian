@@ -1,6 +1,6 @@
 //! Performance monitoring system for tracking swarm performance and identifying bottlenecks
 
-use crate::core::swarm_types::{SwarmError, SwarmPerformanceMetrics, TaskMetrics, TaskResult};
+use crate::core::swarm_types::{SwarmError, TaskMetrics, TaskResult, TaskStatus};
 use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::{Duration, Instant};
@@ -453,14 +453,6 @@ pub struct TaskPerformanceData {
     pub io_samples: Vec<(Instant, f64)>,
     pub status: TaskStatus,
     pub final_metrics: Option<TaskMetrics>,
-}
-
-/// Task status for monitoring
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum TaskStatus {
-    Running,
-    Completed,
-    Failed,
 }
 
 /// System performance data

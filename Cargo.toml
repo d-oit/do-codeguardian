@@ -25,6 +25,7 @@ ml = ["fann"]
 ast = ["syn", "quote", "proc-macro2"]
 ml-enhanced = ["ml", "ast"]
 dashboard = ["axum", "tower", "tower-http"]
+release-monitoring = []
 
 # Fast development build - minimal features
 dev = ["git", "security", "logging"]

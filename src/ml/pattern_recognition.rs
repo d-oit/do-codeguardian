@@ -358,11 +358,13 @@ impl PatternRecognitionEngine {
             let temp_file = tempfile::NamedTempFile::new()?;
             std::fs::write(temp_file.path(), &model.model_data)?;
             let classifier = FannClassifier::load(temp_file.path())?;
-            let prediction = classifier.predict(features)?;
+            // Convert features from f64 to f32 for the classifier
+            let features_f32: Vec<f32> = features.iter().map(|&x| x as f32).collect();
+            let prediction = classifier.predict(&features_f32)?;
 
             Ok(ModelPrediction {
-                confidence: prediction.confidence,
-                similarity_score: prediction.confidence,
+                confidence: prediction as f64,
+                similarity_score: prediction as f64,
                 matched_patterns: vec![],
                 feature_importance: vec![],
             })

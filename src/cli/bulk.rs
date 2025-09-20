@@ -359,13 +359,14 @@ async fn execute_bulk_scan(options: BulkScanOptions, config: &Config) -> Result<
         duration_seconds: start_time.elapsed().as_secs_f64(),
         results: results
             .into_iter()
-            .map(|r| {
+            .enumerate()
+            .map(|(idx, r)| {
                 let data = serde_json::to_value(&r).ok();
                 BulkOperationResult {
                     success: true,
                     item_id: Some(r.summary.total_files_scanned.to_string()),
                     error: None,
-                    operation_index: 0, // TODO: set proper index
+                    operation_index: idx,
                     message: Some(format!(
                         "Scanned {} files, found {} findings",
                         r.summary.total_files_scanned,
@@ -617,7 +618,7 @@ async fn process_single_codebase(
         success: true,
         item_id: Some(codebase.display().to_string()),
         error: None,
-        operation_index: 0, // TODO: set proper index
+        operation_index: 0,
         message: Some(format!("Processed codebase with operation {:?}", operation)),
         data: None,
     })

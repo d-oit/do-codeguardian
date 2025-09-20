@@ -79,3 +79,4 @@ benchmark_results/
 *.key
 *.p12
 *.tar.gz*
+.codeguardian/cache/cache.json

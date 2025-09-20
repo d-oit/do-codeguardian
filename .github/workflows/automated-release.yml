@@ -1,0 +1,437 @@
+---
+name: 🚀 Automated Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      bump_type:
+        description: 'Version bump type'
+        required: true
+        default: 'patch'
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+      custom_version:
+        description: 'Custom version (leave empty for automatic bump)'
+        required: false
+        type: string
+      dry_run:
+        description: 'Dry run mode'
+        required: false
+        default: false
+        type: boolean
+      skip_publish:
+        description: 'Skip publishing to crates.io'
+        required: false
+        default: false
+        type: boolean
+  push:
+    tags:
+      - 'v*'
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
+
+# Default permissions
+permissions:
+  contents: write
+  pull-requests: read
+  packages: write
+  id-token: write
+
+jobs:
+  # Pre-release validation job
+  pre-release-validation:
+    name: 🔍 Pre-Release Validation
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      should_release: ${{ steps.check.outputs.should_release }}
+
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0  # Full history for changelog generation
+
+      - name: 🦀 Setup Rust
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: stable
+          components: rustfmt, clippy
+
+      - name: 📦 Cache Cargo dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-
+
+      - name: 🔍 Check if this is a release trigger
+        id: check
+        run: |
+          if [[ "${{ github.event_name }}" == "push" && "${{ github.ref }}" == refs/tags/* ]]; then
+            echo "should_release=true" >> $GITHUB_OUTPUT
+            echo "Triggered by tag push"
+          elif [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            echo "should_release=true" >> $GITHUB_OUTPUT
+            echo "Triggered by manual dispatch"
+          else
+            echo "should_release=false" >> $GITHUB_OUTPUT
+            echo "Not a release trigger"
+          fi
+
+      - name: 📋 Determine version
+        id: version
+        if: steps.check.outputs.should_release == 'true'
+        run: |
+          if [[ "${{ github.event_name }}" == "push" && "${{ github.ref }}" == refs/tags/* ]]; then
+            # Extract version from tag
+            VERSION=${GITHUB_REF#refs/tags/v}
+            echo "version=$VERSION" >> $GITHUB_OUTPUT
+            echo "Using version from tag: $VERSION"
+          else
+            # Determine version from inputs
+            if [[ -n "${{ inputs.custom_version }}" ]]; then
+              echo "version=${{ inputs.custom_version }}" >> $GITHUB_OUTPUT
+              echo "Using custom version: ${{ inputs.custom_version }}"
+            else
+              # Get current version and bump it
+              CURRENT_VERSION=$(grep '^version = ' Cargo.toml | sed 's/version = "\(.*\)"/\1/')
+              BUMP_TYPE="${{ inputs.bump_type }}"
+
+              # Calculate next version
+              IFS='.' read -r MAJOR MINOR PATCH <<< "$CURRENT_VERSION"
+
+              case $BUMP_TYPE in
+                major)
+                  MAJOR=$((MAJOR + 1))
+                  MINOR=0
+                  PATCH=0
+                  ;;
+                minor)
+                  MINOR=$((MINOR + 1))
+                  PATCH=0
+                  ;;
+                patch)
+                  PATCH=$((PATCH + 1))
+                  ;;
+              esac
+
+              NEW_VERSION="$MAJOR.$MINOR.$PATCH"
+              echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
+              echo "Calculated version: $NEW_VERSION (bump type: $BUMP_TYPE)"
+            fi
+          fi
+
+      - name: 🧪 Run Tests
+        if: steps.check.outputs.should_release == 'true'
+        run: |
+          echo "🧪 Running comprehensive test suite..."
+          cargo test --release --verbose
+
+      - name: 🔧 Run Clippy
+        if: steps.check.outputs.should_release == 'true'
+        run: |
+          echo "🔧 Running Clippy checks..."
+          cargo clippy -- -D warnings
+
+      - name: 📏 Check Formatting
+        if: steps.check.outputs.should_release == 'true'
+        run: |
+          echo "📏 Checking code formatting..."
+          cargo fmt --check
+
+      - name: 📊 Run Benchmarks
+        if: steps.check.outputs.should_release == 'true'
+        run: |
+          echo "📊 Running benchmarks..."
+          cargo bench --no-run  # Just check that benchmarks compile
+
+  # Build release artifacts
+  build-release:
+    name: 🔨 Build Release Artifacts
+    runs-on: ${{ matrix.os }}
+    needs: pre-release-validation
+    if: needs.pre-release-validation.outputs.should_release == 'true'
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            name: linux-x64
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            name: windows-x64
+          - os: macos-latest
+            target: x86_64-apple-darwin
+            name: macos-x64
+          - os: ubuntu-latest
+            target: aarch64-unknown-linux-gnu
+            name: linux-arm64
+
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v5
+
+      - name: 🦀 Setup Rust
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: stable
+          target: ${{ matrix.target }}
+
+      - name: 📦 Cache Cargo dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-
+
+      - name: 🔨 Build Release Binary
+        run: |
+          echo "🔨 Building CodeGuardian for ${{ matrix.target }}"
+          cargo build --release --target ${{ matrix.target }}
+
+      - name: 📦 Package Release Artifacts
+        run: |
+          echo "📦 Packaging release artifacts..."
+
+          # Create artifact directory
+          mkdir -p artifacts
+
+          # Copy binary with appropriate name
+          if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
+            cp "target/${{ matrix.target }}/release/codeguardian.exe" "artifacts/codeguardian-${{ needs.pre-release-validation.outputs.version }}-${{ matrix.name }}.exe"
+          else
+            cp "target/${{ matrix.target }}/release/codeguardian" "artifacts/codeguardian-${{ needs.pre-release-validation.outputs.version }}-${{ matrix.name }}"
+          fi
+
+      - name: 📤 Upload Release Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-artifacts-${{ matrix.name }}
+          path: artifacts/
+          retention-days: 30
+
+  # Generate release notes and changelog
+  generate-release-content:
+    name: 📝 Generate Release Content
+    runs-on: ubuntu-latest
+    needs: [pre-release-validation, build-release]
+    if: needs.pre-release-validation.outputs.should_release == 'true'
+
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: 🦀 Setup Rust
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: stable
+
+      - name: 📦 Generate Changelog
+        run: |
+          echo "📦 Generating changelog..."
+
+          # Get the previous tag
+          PREVIOUS_TAG=$(git describe --tags --abbrev=0 HEAD~1 2>/dev/null || echo "")
+
+          if [[ -n "$PREVIOUS_TAG" ]]; then
+            bash scripts/release/generate-changelog.sh \
+              --version "${{ needs.pre-release-validation.outputs.version }}" \
+              --since "$PREVIOUS_TAG"
+          else
+            bash scripts/release/generate-changelog.sh \
+              --version "${{ needs.pre-release-validation.outputs.version }}"
+          fi
+
+      - name: 📝 Generate Release Notes
+        run: |
+          echo "📝 Generating release notes..."
+
+          # Get the previous tag
+          PREVIOUS_TAG=$(git describe --tags --abbrev=0 HEAD~1 2>/dev/null || echo "")
+
+          if [[ -n "$PREVIOUS_TAG" ]]; then
+            bash scripts/release/generate-release-notes.sh \
+              --version "${{ needs.pre-release-validation.outputs.version }}" \
+              --since "$PREVIOUS_TAG" \
+              --until "HEAD" \
+              --output release-notes.md
+          else
+            echo "# Release ${{ needs.pre-release-validation.outputs.version }}" > release-notes.md
+            echo "" >> release-notes.md
+            echo "**Full Changelog**: https://github.com/d-oit/do-codeguardian/compare/HEAD...v${{ needs.pre-release-validation.outputs.version }}" >> release-notes.md
+            echo "" >> release-notes.md
+            echo "## 🚀 Features" >> release-notes.md
+            echo "" >> release-notes.md
+            echo "- Initial release" >> release-notes.md
+          fi
+
+      - name: 📤 Upload Release Notes
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-notes
+          path: release-notes.md
+          retention-days: 30
+
+      - name: 📤 Upload Changelog
+        uses: actions/upload-artifact@v4
+        with:
+          name: changelog
+          path: CHANGELOG.md
+          retention-days: 30
+
+  # Publish to crates.io
+  publish-crates:
+    name: 📦 Publish to Crates.io
+    runs-on: ubuntu-latest
+    needs: [pre-release-validation, build-release, generate-release-content]
+    if: needs.pre-release-validation.outputs.should_release == 'true' && inputs.skip_publish != true
+
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v5
+
+      - name: 🦀 Setup Rust
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: stable
+
+      - name: 📦 Publish to Crates.io
+        run: |
+          echo "📦 Publishing to crates.io..."
+          cargo publish --token ${{ secrets.CRATES_IO_TOKEN }}
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CRATES_IO_TOKEN }}
+
+  # Create GitHub release
+  create-github-release:
+    name: 🎉 Create GitHub Release
+    runs-on: ubuntu-latest
+    needs: [pre-release-validation, build-release, generate-release-content, publish-crates]
+    if: needs.pre-release-validation.outputs.should_release == 'true'
+
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v5
+
+      - name: 📥 Download Release Artifacts
+        uses: actions/download-artifact@v5
+        with:
+          pattern: release-artifacts-*
+          merge-multiple: true
+
+      - name: 📥 Download Release Notes
+        uses: actions/download-artifact@v5
+        with:
+          name: release-notes
+
+      - name: 🎉 Create GitHub Release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: v${{ needs.pre-release-validation.outputs.version }}
+          release_name: Release v${{ needs.pre-release-validation.outputs.version }}
+          body_path: release-notes.md
+          draft: false
+          prerelease: ${{ contains(needs.pre-release-validation.outputs.version, 'alpha') || contains(needs.pre-release-validation.outputs.version, 'beta') || contains(needs.pre-release-validation.outputs.version, 'rc') }}
+
+      - name: 📤 Upload Release Assets
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./codeguardian-${{ needs.pre-release-validation.outputs.version }}-linux-x64
+          asset_name: codeguardian-${{ needs.pre-release-validation.outputs.version }}-linux-x64
+          asset_content_type: application/octet-stream
+
+      - name: 📤 Upload Windows Asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./codeguardian-${{ needs.pre-release-validation.outputs.version }}-windows-x64.exe
+          asset_name: codeguardian-${{ needs.pre-release-validation.outputs.version }}-windows-x64.exe
+          asset_content_type: application/octet-stream
+
+      - name: 📤 Upload macOS Asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./codeguardian-${{ needs.pre-release-validation.outputs.version }}-macos-x64
+          asset_name: codeguardian-${{ needs.pre-release-validation.outputs.version }}-macos-x64
+          asset_content_type: application/octet-stream
+
+  # Post-release cleanup and notification
+  post-release:
+    name: 🧹 Post-Release Cleanup
+    runs-on: ubuntu-latest
+    needs: [pre-release-validation, create-github-release]
+    if: always() && needs.pre-release-validation.outputs.should_release == 'true'
+
+    steps:
+      - name: 📊 Generate Release Summary
+        run: |
+          echo "📊 Release Summary for v${{ needs.pre-release-validation.outputs.version }}"
+          echo "========================================"
+
+          if [[ "${{ needs.pre-release-validation.result }}" == "success" ]]; then
+            echo "✅ Pre-release validation: PASSED"
+          else
+            echo "❌ Pre-release validation: FAILED"
+          fi
+
+          if [[ "${{ needs.build-release.result }}" == "success" ]]; then
+            echo "✅ Build artifacts: PASSED"
+          else
+            echo "❌ Build artifacts: FAILED"
+          fi
+
+          if [[ "${{ needs.generate-release-content.result }}" == "success" ]]; then
+            echo "✅ Release content generation: PASSED"
+          else
+            echo "❌ Release content generation: FAILED"
+          fi
+
+          if [[ "${{ needs.publish-crates.result }}" == "success" ]]; then
+            echo "✅ Crates.io publication: PASSED"
+          else
+            echo "❌ Crates.io publication: FAILED"
+          fi
+
+          if [[ "${{ needs.create-github-release.result }}" == "success" ]]; then
+            echo "✅ GitHub release creation: PASSED"
+          else
+            echo "❌ GitHub release creation: FAILED"
+          fi
+
+          echo ""
+          echo "🔗 Release Links:"
+          echo "  - GitHub Release: https://github.com/d-oit/do-codeguardian/releases/tag/v${{ needs.pre-release-validation.outputs.version }}"
+          echo "  - Crates.io: https://crates.io/crates/do-codeguardian/${{ needs.pre-release-validation.outputs.version }}"
+          echo "  - Changelog: https://github.com/d-oit/do-codeguardian/blob/main/CHANGELOG.md"
+
+      - name: 🔔 Send Notification
+        if: always()
+        run: |
+          echo "🔔 Release process completed"
+          echo "Check the job summaries above for detailed status"

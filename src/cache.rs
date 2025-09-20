@@ -10,7 +10,11 @@ pub mod enhanced_optimized_cache;
 pub mod memory_pool;
 pub mod optimized_cache;
 pub mod regex_cache;
+pub mod unified_cache;
+
+// Re-export the unified cache for easy access
 use tokio::fs;
+pub use unified_cache::{CacheStrategyType, MemoryPoolSizes, UnifiedCache, UnifiedCacheConfig};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CacheEntry {

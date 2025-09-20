@@ -1,0 +1,72 @@
+# CodeGuardian Deployment Configuration Example
+# Copy this file to deployment-config.yml and customize for your environment
+
+# Global settings
+global:
+  registry: "your-registry.com"
+  namespace: "codeguardian"
+  replicas: 3
+
+# Staging environment
+staging:
+  image:
+    tag: "staging-latest"
+  resources:
+    requests:
+      memory: "512Mi"
+      cpu: "500m"
+    limits:
+      memory: "1Gi"
+      cpu: "1000m"
+  environment:
+    LOG_LEVEL: "debug"
+    DATABASE_URL: "${STAGING_DATABASE_URL}"
+  ingress:
+    host: "staging.codeguardian.example.com"
+    tls: true
+
+# Production environment
+production:
+  image:
+    tag: "latest"
+  resources:
+    requests:
+      memory: "1Gi"
+      cpu: "1000m"
+    limits:
+      memory: "2Gi"
+      cpu: "2000m"
+  environment:
+    LOG_LEVEL: "info"
+    DATABASE_URL: "${PRODUCTION_DATABASE_URL}"
+  ingress:
+    host: "codeguardian.example.com"
+    tls: true
+  monitoring:
+    enabled: true
+    prometheus: true
+    grafana: true
+
+# Rollback configuration
+rollback:
+  enabled: true
+  max_history: 10
+  timeout: "300s"
+
+# Health checks
+healthcheck:
+  liveness:
+    path: "/health/live"
+    initialDelaySeconds: 30
+    periodSeconds: 10
+  readiness:
+    path: "/health/ready"
+    initialDelaySeconds: 5
+    periodSeconds: 5
+
+# Security settings
+security:
+  runAsUser: 1001
+  runAsGroup: 1001
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true

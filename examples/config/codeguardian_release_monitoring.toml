@@ -1,0 +1,87 @@
+# CodeGuardian Configuration with Release Monitoring Alerts
+# This example shows how to configure release monitoring with alerts and notifications
+
+[performance]
+enabled = true
+
+[performance.monitoring]
+enabled = true
+metrics_collection = true
+reporting_interval_seconds = 60
+
+# Alert thresholds for performance and release monitoring
+[performance.monitoring.alert_thresholds]
+cache_hit_rate_warning = 0.7
+memory_reuse_rate_warning = 0.5
+max_processing_time_critical = 2000.0
+release_success_rate_warning = 0.95
+max_post_release_issues_warning = 5.0
+max_deployment_time_warning = 60.0
+alert_escalation_minutes = 30
+
+# Notification configuration
+[performance.monitoring.notifications]
+enabled = true
+
+# Email notifications
+[performance.monitoring.notifications.email]
+smtp_server = "smtp.gmail.com"
+smtp_port = 587
+username = "alerts@yourcompany.com"
+password = "your-smtp-password"
+from_address = "alerts@yourcompany.com"
+to_addresses = ["devops@yourcompany.com", "security@yourcompany.com"]
+use_tls = true
+
+# Slack notifications
+[performance.monitoring.notifications.slack]
+webhook_url = "https://hooks.slack.com/services/YOUR/SLACK/WEBHOOK"
+channel = "#codeguardian-alerts"
+username = "CodeGuardian"
+icon_emoji = ":warning:"
+
+# Webhook notifications
+[performance.monitoring.notifications.webhook]
+url = "https://your-monitoring-system.com/webhook"
+headers = [
+    ["Authorization", "Bearer your-api-token"],
+    ["Content-Type", "application/json"]
+]
+timeout_seconds = 30
+
+# Escalation policies
+[performance.monitoring.notifications.escalation]
+warning_escalation_minutes = 30
+critical_escalation_minutes = 15
+escalation_contacts = [
+    "oncall-devops@yourcompany.com",
+    "security-lead@yourcompany.com"
+]
+max_escalation_level = 3
+
+# Release monitoring configuration (requires release-monitoring feature)
+[release_monitoring]
+repository = "your-org/your-repo"
+max_releases_to_monitor = 10
+post_release_issue_window_days = 30
+metrics_storage_path = "release_metrics.json"
+enable_real_time = true
+monitoring_interval_seconds = 3600
+
+# Dashboard configuration (requires dashboard feature)
+[dashboard]
+enabled = true
+host = "127.0.0.1"
+port = 8080
+refresh_interval_seconds = 30
+max_history_days = 30
+enable_real_time = true
+
+# Release monitoring dashboard config
+[dashboard.release_monitoring_config]
+repository = "your-org/your-repo"
+max_releases_to_monitor = 10
+post_release_issue_window_days = 30
+metrics_storage_path = "release_metrics.json"
+enable_real_time = true
+monitoring_interval_seconds = 3600

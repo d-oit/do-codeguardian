@@ -9,6 +9,7 @@ use regex::Regex;
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 use std::time::Instant;
+use tracing;
 
 /// Cached regex entry with metadata
 #[derive(Debug, Clone)]
@@ -219,37 +220,58 @@ impl SharedRegexCache {
     }
 
     pub fn get_or_compile(&self, pattern: &str) -> Result<Regex> {
-        let mut cache = self.cache.lock().unwrap();
+        let mut cache = self.cache.lock().unwrap_or_else(|poisoned| {
+            tracing::warn!("Mutex poisoned in SharedRegexCache::get_or_compile");
+            poisoned.into_inner()
+        });
         cache.get_or_compile(pattern)
     }
 
     pub fn get(&self, pattern: &str) -> Option<Regex> {
-        let mut cache = self.cache.lock().unwrap();
+        let mut cache = self.cache.lock().unwrap_or_else(|poisoned| {
+            tracing::warn!("Mutex poisoned in SharedRegexCache::get");
+            poisoned.into_inner()
+        });
         cache.get(pattern)
     }
 
     pub fn preload_patterns(&self, patterns: &[&str]) -> Result<()> {
-        let mut cache = self.cache.lock().unwrap();
+        let mut cache = self.cache.lock().unwrap_or_else(|poisoned| {
+            tracing::warn!("Mutex poisoned in SharedRegexCache::preload_patterns");
+            poisoned.into_inner()
+        });
         cache.preload_patterns(patterns)
     }
 
     pub fn cleanup(&self) -> usize {
-        let mut cache = self.cache.lock().unwrap();
+        let mut cache = self.cache.lock().unwrap_or_else(|poisoned| {
+            tracing::warn!("Mutex poisoned in SharedRegexCache::cleanup");
+            poisoned.into_inner()
+        });
         cache.cleanup()
     }
 
     pub fn stats(&self) -> RegexCacheStats {
-        let cache = self.cache.lock().unwrap();
+        let cache = self.cache.lock().unwrap_or_else(|poisoned| {
+            tracing::warn!("Mutex poisoned in SharedRegexCache::stats");
+            poisoned.into_inner()
+        });
         cache.stats().clone()
     }
 
     pub fn utilization(&self) -> RegexCacheUtilization {
-        let cache = self.cache.lock().unwrap();
+        let cache = self.cache.lock().unwrap_or_else(|poisoned| {
+            tracing::warn!("Mutex poisoned in SharedRegexCache::utilization");
+            poisoned.into_inner()
+        });
         cache.utilization()
     }
 
     pub fn clear(&self) {
-        let mut cache = self.cache.lock().unwrap();
+        let mut cache = self.cache.lock().unwrap_or_else(|poisoned| {
+            tracing::warn!("Mutex poisoned in SharedRegexCache::clear");
+            poisoned.into_inner()
+        });
         cache.clear()
     }
 }
@@ -423,7 +445,9 @@ mod tests {
         let handle = thread::spawn(move || cache_clone.get_or_compile(r"thread\d+").unwrap());
 
         let regex = cache.get_or_compile(r"main\d+").unwrap();
-        let thread_regex = handle.join().unwrap();
+        let thread_regex = handle
+            .join()
+            .expect("Failed to join thread in test_shared_regex_cache_thread_safety");
 
         assert!(regex.is_match("main123"));
         assert!(thread_regex.is_match("thread456"));

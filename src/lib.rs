@@ -47,6 +47,7 @@ pub mod ml;
 pub mod output;
 pub mod performance;
 pub mod relationships;
+pub mod release_monitoring;
 pub mod remediation;
 pub mod report;
 pub mod security;

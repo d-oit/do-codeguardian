@@ -8,6 +8,12 @@ use crate::types::{Finding, Severity};
 use std::collections::{HashMap, VecDeque};
 use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
+use tracing;
+
+// Security constants for pool size validation
+const MAX_POOL_SIZE: usize = 1_000_000;
+const MIN_POOL_SIZE: usize = 1;
+const MAX_STRING_LENGTH: usize = 10_000;
 
 /// Memory pool for Findings with reuse tracking
 pub struct FindingPool {
@@ -18,9 +24,14 @@ pub struct FindingPool {
 
 impl FindingPool {
     pub fn new(max_pool_size: usize) -> Self {
+        let validated_size = if max_pool_size < MIN_POOL_SIZE || max_pool_size > MAX_POOL_SIZE {
+            1000 // Default safe size
+        } else {
+            max_pool_size
+        };
         Self {
-            pool: VecDeque::with_capacity(max_pool_size),
-            max_pool_size,
+            pool: VecDeque::with_capacity(validated_size),
+            max_pool_size: validated_size,
             stats: PoolStats::default(),
         }
     }
@@ -104,9 +115,14 @@ pub struct StringPool {
 
 impl StringPool {
     pub fn new(max_entries: usize) -> Self {
+        let validated_size = if max_entries < MIN_POOL_SIZE || max_entries > MAX_POOL_SIZE {
+            5000 // Default safe size
+        } else {
+            max_entries
+        };
         Self {
-            strings: HashMap::with_capacity(max_entries),
-            max_entries,
+            strings: HashMap::with_capacity(validated_size),
+            max_entries: validated_size,
             stats: PoolStats::default(),
         }
     }
@@ -117,6 +133,12 @@ impl StringPool {
 
     /// Get interned string or intern new one
     pub fn get(&mut self, s: &str) -> Arc<String> {
+        // Security check: prevent excessive string lengths
+        if s.len() > MAX_STRING_LENGTH {
+            // Return empty string for security
+            return Arc::new(String::new());
+        }
+
         if let Some(interned) = self.strings.get(s) {
             self.stats.reused += 1;
             Arc::clone(interned)
@@ -124,6 +146,7 @@ impl StringPool {
             // Check if we need to evict old entries
             if self.strings.len() >= self.max_entries {
                 // Simple LRU: remove oldest entry (this is a simplification)
+                // Improved safety: ensure we have entries to evict
                 if let Some(key) = self.strings.keys().next().cloned() {
                     self.strings.remove(&key);
                     self.stats.evicted += 1;
@@ -165,9 +188,14 @@ pub struct PathBufPool {
 
 impl PathBufPool {
     pub fn new(max_pool_size: usize) -> Self {
+        let validated_size = if max_pool_size < MIN_POOL_SIZE || max_pool_size > MAX_POOL_SIZE {
+            500 // Default safe size
+        } else {
+            max_pool_size
+        };
         Self {
-            pool: VecDeque::with_capacity(max_pool_size),
-            max_pool_size,
+            pool: VecDeque::with_capacity(validated_size),
+            max_pool_size: validated_size,
             stats: PoolStats::default(),
         }
     }
@@ -227,9 +255,14 @@ pub struct HashMapPool<K, V> {
 
 impl<K, V> HashMapPool<K, V> {
     pub fn new(max_pool_size: usize) -> Self {
+        let validated_size = if max_pool_size < MIN_POOL_SIZE || max_pool_size > MAX_POOL_SIZE {
+            200 // Default safe size
+        } else {
+            max_pool_size
+        };
         Self {
-            pool: VecDeque::with_capacity(max_pool_size),
-            max_pool_size,
+            pool: VecDeque::with_capacity(validated_size),
+            max_pool_size: validated_size,
             stats: PoolStats::default(),
         }
     }
@@ -286,7 +319,7 @@ pub struct PoolStats {
 
 impl PoolStats {
     pub fn reuse_rate(&self) -> f64 {
-        let total_requests = self.allocated + self.reused;
+        let total_requests = self.allocated.checked_add(self.reused).unwrap_or(u64::MAX);
         if total_requests == 0 {
             0.0
         } else {
@@ -394,10 +427,42 @@ impl MemoryPoolManager {
 
     /// Get comprehensive memory pool statistics
     pub fn stats(&self) -> MemoryPoolStats {
-        let finding_stats = self.finding_pool.lock().unwrap().stats().clone();
-        let string_stats = self.string_pool.lock().unwrap().stats().clone();
-        let path_stats = self.path_pool.lock().unwrap().stats().clone();
-        let metadata_stats = self.metadata_pool.lock().unwrap().stats().clone();
+        let finding_stats = self
+            .finding_pool
+            .lock()
+            .unwrap_or_else(|e| {
+                tracing::warn!("Finding pool mutex poisoned: {}", e);
+                e.into_inner()
+            })
+            .stats()
+            .clone();
+        let string_stats = self
+            .string_pool
+            .lock()
+            .unwrap_or_else(|e| {
+                tracing::warn!("String pool mutex poisoned: {}", e);
+                e.into_inner()
+            })
+            .stats()
+            .clone();
+        let path_stats = self
+            .path_pool
+            .lock()
+            .unwrap_or_else(|e| {
+                tracing::warn!("Path pool mutex poisoned: {}", e);
+                e.into_inner()
+            })
+            .stats()
+            .clone();
+        let metadata_stats = self
+            .metadata_pool
+            .lock()
+            .unwrap_or_else(|e| {
+                tracing::warn!("Metadata pool mutex poisoned: {}", e);
+                e.into_inner()
+            })
+            .stats()
+            .clone();
 
         MemoryPoolStats {
             finding_stats,
@@ -411,17 +476,30 @@ impl MemoryPoolManager {
     pub fn memory_savings_estimate(&self) -> MemorySavings {
         let stats = self.stats();
 
-        // Estimate memory savings based on reuse rates
-        let finding_savings = (stats.finding_stats.reused as f64
-            * std::mem::size_of::<Finding>() as f64)
+        // Estimate memory savings based on reuse rates with overflow protection
+        let finding_size = std::mem::size_of::<Finding>() as f64;
+        let finding_savings = stats
+            .finding_stats
+            .reused
+            .checked_mul(std::mem::size_of::<Finding>() as u64)
+            .unwrap_or(u64::MAX) as f64
+            * finding_size
             / (1024.0 * 1024.0);
         let string_savings = (stats.string_stats.reused as f64 * 32.0) / (1024.0 * 1024.0); // Estimate 32 bytes per string
-        let path_savings = (stats.path_stats.reused as f64 * std::mem::size_of::<PathBuf>() as f64)
+        let path_size = std::mem::size_of::<PathBuf>() as f64;
+        let path_savings = stats
+            .path_stats
+            .reused
+            .checked_mul(std::mem::size_of::<PathBuf>() as u64)
+            .unwrap_or(u64::MAX) as f64
+            * path_size
             / (1024.0 * 1024.0);
         let metadata_savings = (stats.metadata_stats.reused as f64 * 64.0) / (1024.0 * 1024.0); // Estimate 64 bytes per map
 
+        let total_mb_saved = finding_savings + string_savings + path_savings + metadata_savings;
+
         MemorySavings {
-            total_mb_saved: finding_savings + string_savings + path_savings + metadata_savings,
+            total_mb_saved,
             finding_mb_saved: finding_savings,
             string_mb_saved: string_savings,
             path_mb_saved: path_savings,
@@ -447,19 +525,29 @@ pub struct MemoryPoolStats {
 
 impl MemoryPoolStats {
     pub fn overall_reuse_rate(&self) -> f64 {
-        let total_reused = self.finding_stats.reused
-            + self.string_stats.reused
-            + self.path_stats.reused
-            + self.metadata_stats.reused;
-        let total_allocated = self.finding_stats.allocated
-            + self.string_stats.allocated
-            + self.path_stats.allocated
-            + self.metadata_stats.allocated;
+        let total_reused = self
+            .finding_stats
+            .reused
+            .checked_add(self.string_stats.reused)
+            .and_then(|sum| sum.checked_add(self.path_stats.reused))
+            .and_then(|sum| sum.checked_add(self.metadata_stats.reused))
+            .unwrap_or(u64::MAX);
+        let total_allocated = self
+            .finding_stats
+            .allocated
+            .checked_add(self.string_stats.allocated)
+            .and_then(|sum| sum.checked_add(self.path_stats.allocated))
+            .and_then(|sum| sum.checked_add(self.metadata_stats.allocated))
+            .unwrap_or(u64::MAX);
 
-        if total_allocated + total_reused == 0 {
+        let total_requests = total_allocated
+            .checked_add(total_reused)
+            .unwrap_or(u64::MAX);
+
+        if total_requests == 0 {
             0.0
         } else {
-            total_reused as f64 / (total_allocated + total_reused) as f64
+            total_reused as f64 / total_requests as f64
         }
     }
 
@@ -575,14 +663,44 @@ mod tests {
         // Test concurrent access
         let manager_clone = manager.clone();
         let handle = std::thread::spawn(move || {
-            let _finding = manager_clone.finding_pool().lock().unwrap().get();
-            let _string = manager_clone.string_pool().lock().unwrap().get("test");
+            let _finding = manager_clone
+                .finding_pool()
+                .lock()
+                .unwrap_or_else(|poisoned| {
+                    tracing::warn!("Finding pool mutex poisoned in test");
+                    poisoned.into_inner()
+                })
+                .get();
+            let _string = manager_clone
+                .string_pool()
+                .lock()
+                .unwrap_or_else(|poisoned| {
+                    tracing::warn!("String pool mutex poisoned in test");
+                    poisoned.into_inner()
+                })
+                .get("test");
         });
 
-        let _finding = manager.finding_pool().lock().unwrap().get();
-        let _string = manager.string_pool().lock().unwrap().get("test");
+        let _finding = manager
+            .finding_pool()
+            .lock()
+            .unwrap_or_else(|poisoned| {
+                tracing::warn!("Finding pool mutex poisoned in test");
+                poisoned.into_inner()
+            })
+            .get();
+        let _string = manager
+            .string_pool()
+            .lock()
+            .unwrap_or_else(|poisoned| {
+                tracing::warn!("String pool mutex poisoned in test");
+                poisoned.into_inner()
+            })
+            .get("test");
 
-        handle.join().unwrap();
+        handle
+            .join()
+            .expect("Failed to join thread in test_memory_pool_manager");
 
         let stats = manager.stats();
         assert!(stats.finding_stats.allocated >= 1);

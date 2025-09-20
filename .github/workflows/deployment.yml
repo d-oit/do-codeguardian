@@ -1,0 +1,258 @@
+---
+name: 🚀 Deployment Pipeline
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Deployment environment'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - staging
+          - production
+      version:
+        description: 'Version to deploy (leave empty for latest)'
+        required: false
+        type: string
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
+
+# Default permissions
+permissions:
+  contents: read
+  packages: write
+  id-token: write
+
+jobs:
+  # Deployment validation
+  deployment-validation:
+    name: 🔍 Deployment Validation
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      environment: ${{ steps.env.outputs.environment }}
+
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v5
+
+      - name: 🔍 Determine Version
+        id: version
+        run: |
+          if [[ -n "${{ inputs.version }}" ]]; then
+            echo "version=${{ inputs.version }}" >> $GITHUB_OUTPUT
+          elif [[ "${{ github.event_name }}" == "release" ]]; then
+            VERSION=${GITHUB_REF#refs/tags/v}
+            echo "version=$VERSION" >> $GITHUB_OUTPUT
+          else
+            # Get latest tag
+            LATEST_TAG=$(git describe --tags --abbrev=0)
+            VERSION=${LATEST_TAG#v}
+            echo "version=$VERSION" >> $GITHUB_OUTPUT
+          fi
+
+      - name: 🌍 Determine Environment
+        id: env
+        run: |
+          if [[ "${{ github.event_name }}" == "release" ]]; then
+            echo "environment=production" >> $GITHUB_OUTPUT
+          else
+            echo "environment=${{ inputs.environment }}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: ✅ Validate Deployment Requirements
+        run: |
+          echo "✅ Validating deployment requirements..."
+
+          # Check if version exists
+          if [[ -z "${{ steps.version.outputs.version }}" ]]; then
+            echo "❌ No version specified"
+            exit 1
+          fi
+
+          # Check if environment is valid
+          ENVIRONMENT="${{ steps.env.outputs.environment }}"
+          if [[ "$ENVIRONMENT" != "staging" && "$ENVIRONMENT" != "production" ]]; then
+            echo "❌ Invalid environment: $ENVIRONMENT"
+            exit 1
+          fi
+
+          echo "✅ Deployment validation passed"
+
+  # Deploy to staging
+  deploy-staging:
+    name: 🚀 Deploy to Staging
+    runs-on: ubuntu-latest
+    needs: deployment-validation
+    if: needs.deployment-validation.outputs.environment == 'staging'
+    environment: staging
+
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v5
+
+      - name: 🦀 Setup Rust
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: stable
+
+      - name: 📦 Download Release Artifacts
+        uses: actions/download-artifact@v5
+        with:
+          name: release-artifacts-linux-x64
+          path: ./artifacts
+
+      - name: 🐳 Build Docker Image
+        run: |
+          echo "🐳 Building Docker image for staging..."
+
+          # Build Docker image
+          docker build \
+            --build-arg VERSION=${{ needs.deployment-validation.outputs.version }} \
+            --tag codeguardian:staging-${{ needs.deployment-validation.outputs.version }} \
+            --tag codeguardian:staging-latest \
+            .
+
+      - name: 🚀 Deploy to Staging Environment
+        run: |
+          echo "🚀 Deploying to staging environment..."
+
+          # Here you would typically:
+          # 1. Push Docker image to registry
+          # 2. Update deployment manifests
+          # 3. Trigger deployment via kubectl, docker-compose, etc.
+
+          echo "📦 Pushing Docker image..."
+          # docker push your-registry/codeguardian:staging-${{ needs.deployment-validation.outputs.version }}
+
+          echo "📋 Updating deployment configuration..."
+          # Update your deployment configuration files
+
+          echo "🚀 Triggering deployment..."
+          # kubectl apply -f deployment.yaml
+          # docker-compose up -d
+
+          echo "✅ Staging deployment completed"
+
+  # Deploy to production
+  deploy-production:
+    name: 🚀 Deploy to Production
+    runs-on: ubuntu-latest
+    needs: deployment-validation
+    if: needs.deployment-validation.outputs.environment == 'production'
+    environment: production
+
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v5
+
+      - name: 🦀 Setup Rust
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: stable
+
+      - name: 📦 Download Release Artifacts
+        uses: actions/download-artifact@v5
+        with:
+          name: release-artifacts-linux-x64
+          path: ./artifacts
+
+      - name: 🐳 Build Production Docker Image
+        run: |
+          echo "🐳 Building production Docker image..."
+
+          # Build optimized production image
+          docker build \
+            --build-arg VERSION=${{ needs.deployment-validation.outputs.version }} \
+            --target production \
+            --tag codeguardian:${{ needs.deployment-validation.outputs.version }} \
+            --tag codeguardian:latest \
+            .
+
+      - name: 🧪 Run Production Smoke Tests
+        run: |
+          echo "🧪 Running production smoke tests..."
+
+          # Start the container
+          docker run -d \
+            --name codeguardian-smoke-test \
+            codeguardian:${{ needs.deployment-validation.outputs.version }}
+
+          # Wait for container to be ready
+          sleep 10
+
+          # Run basic functionality tests
+          docker exec codeguardian-smoke-test ./codeguardian --help > /dev/null
+
+          # Clean up
+          docker stop codeguardian-smoke-test
+          docker rm codeguardian-smoke-test
+
+          echo "✅ Smoke tests passed"
+
+      - name: 🚀 Deploy to Production Environment
+        run: |
+          echo "🚀 Deploying to production environment..."
+
+          # Production deployment steps
+          echo "📦 Pushing production Docker image..."
+          # docker push your-registry/codeguardian:${{ needs.deployment-validation.outputs.version }}
+
+          echo "📋 Updating production deployment..."
+          # Update production deployment configuration
+
+          echo "🔄 Rolling deployment..."
+          # kubectl set image deployment/codeguardian codeguardian=your-registry/codeguardian:${{ needs.deployment-validation.outputs.version }}
+          # kubectl rollout status deployment/codeguardian
+
+          echo "✅ Production deployment completed"
+
+  # Post-deployment verification
+  post-deployment-verification:
+    name: ✅ Post-Deployment Verification
+    runs-on: ubuntu-latest
+    needs: [deployment-validation, deploy-staging, deploy-production]
+    if: always()
+
+    steps:
+      - name: 📊 Generate Deployment Report
+        run: |
+          echo "📊 Deployment Report"
+          echo "==================="
+          echo "Version: ${{ needs.deployment-validation.outputs.version }}"
+          echo "Environment: ${{ needs.deployment-validation.outputs.environment }}"
+          echo "Timestamp: $(date)"
+          echo ""
+
+          # Check deployment status
+          if [[ "${{ needs.deploy-staging.result }}" == "success" || "${{ needs.deploy-production.result }}" == "success" ]]; then
+            echo "✅ Deployment: SUCCESS"
+          else
+            echo "❌ Deployment: FAILED"
+          fi
+
+          echo ""
+          echo "🔗 Deployment Links:"
+          if [[ "${{ needs.deployment-validation.outputs.environment }}" == "staging" ]]; then
+            echo "  - Staging: https://staging.codeguardian.example.com"
+          else
+            echo "  - Production: https://codeguardian.example.com"
+          fi
+
+      - name: 📢 Send Deployment Notification
+        if: always()
+        run: |
+          echo "📢 Deployment notification sent"
+          # Here you could integrate with Slack, Discord, etc.
+
+      - name: 🔄 Trigger Monitoring
+        if: needs.deploy-production.result == 'success'
+        run: |
+          echo "🔄 Triggering production monitoring..."
+          # Trigger monitoring workflows or health checks

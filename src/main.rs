@@ -20,6 +20,8 @@ use do_codeguardian::cli::gh_issue;
 use do_codeguardian::cli::init;
 #[cfg(feature = "ml")]
 use do_codeguardian::cli::metrics;
+#[cfg(feature = "release-monitoring")]
+use do_codeguardian::cli::release_monitoring;
 use do_codeguardian::cli::report;
 use do_codeguardian::cli::retention;
 use do_codeguardian::cli::{Cli, Commands};
@@ -130,6 +132,10 @@ async fn main() -> Result<()> {
         }
         Commands::TuneThresholds(args) => {
             do_codeguardian::cli::threshold_tuning::execute_threshold_tuning(args, &config).await?;
+        }
+        #[cfg(feature = "release-monitoring")]
+        Commands::ReleaseMonitoring(args) => {
+            do_codeguardian::cli::release_monitoring::execute(args).await?;
         }
     }
 
