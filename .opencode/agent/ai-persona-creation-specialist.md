@@ -1,6 +1,6 @@
 ---
 description: Creates specialized AI personas for CodeGuardian and development workflows with manual activation
-mode: all
+mode: subagent
 tools:
   write: true
   edit: true

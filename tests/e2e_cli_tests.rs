@@ -548,7 +548,10 @@ fn test_cli_error_handling_and_edge_cases() {
     empty_dir_cmd.arg("check").arg(temp_dir.path());
 
     let output = empty_dir_cmd.output().unwrap();
-    assert!(output.status.success(), "Empty directory scan should succeed");
+    assert!(
+        output.status.success(),
+        "Empty directory scan should succeed"
+    );
 
     // Test with binary file
     let temp_dir = TempDir::new().unwrap();
@@ -556,7 +559,11 @@ fn test_cli_error_handling_and_edge_cases() {
     fs::write(&binary_file, &[0u8; 1024]).unwrap();
 
     let mut binary_cmd = Command::cargo_bin("do-codeguardian").unwrap();
-    binary_cmd.arg("check").arg(&binary_file).arg("--format").arg("json");
+    binary_cmd
+        .arg("check")
+        .arg(&binary_file)
+        .arg("--format")
+        .arg("json");
 
     binary_cmd.assert().success();
 
@@ -572,7 +579,11 @@ fn test_cli_error_handling_and_edge_cases() {
     fs::write(&long_path, "fn main() {}").unwrap();
 
     let mut long_path_cmd = Command::cargo_bin("do-codeguardian").unwrap();
-    long_path_cmd.arg("check").arg(&long_path).arg("--format").arg("json");
+    long_path_cmd
+        .arg("check")
+        .arg(&long_path)
+        .arg("--format")
+        .arg("json");
 
     long_path_cmd.assert().success();
 }

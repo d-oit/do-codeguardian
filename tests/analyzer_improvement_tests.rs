@@ -194,7 +194,7 @@ fn main() {
             !line_content.contains(r##""TODO: remember to update this text""##),
             "Should not flag TODO inside string literals."
         );
-        assert!(!line_content.contains(r##""NotImplementedException occurred""##),
+        assert!(!line_content.contains(r#""NotImplementedException occurred"#),
                "Should not flag exceptions inside string literals.");
     }
 }
@@ -265,12 +265,12 @@ mod tests {
 
     for i in 0..100 {
         large_content.push_str(&format!(
-            r#####"    #[test]
+            r#"    #[test]
     fn test_{}() {{
         let content = "\n--HEAD--\nversion {}\n--SEP--\nother version\n--BRANCH--\n";
     }}
 
-"#####,
+"#,
             i, i
         ));
     }
@@ -295,7 +295,7 @@ fn test_analyzer_memory_usage_stability() {
     for i in 0..5 {
         let test_content = format!("fn test_{}() {{}}", i);
 
-        let filename = format!("test_{}.rs", i);
+        let filename = format!("test_{}.{}", i, "rs");
         let _ = git_analyzer.analyze(Path::new(&filename), test_content.as_bytes()).unwrap();
         let _ = ai_analyzer.analyze(Path::new(&filename), test_content.as_bytes()).unwrap();
     }
