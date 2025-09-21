@@ -99,10 +99,6 @@ jobs:
           echo "monitoring_status=failed" >> $GITHUB_OUTPUT
         fi
       continue-on-error: true
-        workspaces: "./ -> target"
-        cache-all-crates: true
-        cache-workspace-crates: true
-        save-if: ${{ github.ref == 'refs/heads/main' }}
 
     - name: Clippy
       run: |

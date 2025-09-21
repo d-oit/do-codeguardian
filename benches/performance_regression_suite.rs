@@ -1,17 +1,11 @@
-use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
+use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
 use do_codeguardian::{
-    analyzers::{performance_analyzer::PerformanceAnalyzer, security_analyzer::SecurityAnalyzer},
-    cache::FileCache,
-    config::{Config, PerformanceConfig},
+    config::Config,
     core::GuardianEngine,
     performance::{PerformanceAnalyzer as PerfAnalyzer, PerformanceMetrics, PerformanceProfiler},
-    streaming::StreamingAnalyzer,
-    types::Finding,
-    utils::{
-        adaptive_parallelism::{AdaptiveParallelismController, SystemLoadMonitor},
-        memory_pool::{thread_local_pools, GlobalMemoryPools},
-    },
+    utils::progress::ProgressReporter,
 };
+use std::hint::black_box;
 use std::io::Write;
 use std::path::PathBuf;
 use std::sync::Arc;
@@ -67,9 +61,9 @@ fn bench_performance_regression_detection(c: &mut Criterion) {
 
     // Baseline performance benchmark
     group.bench_function("baseline_analysis", |b| {
-        let config = Config::minimal();
+        let config = Config::default();
         let mut engine = rt.block_on(async {
-            GuardianEngine::new_with_ml(config, Default::default(), None)
+            GuardianEngine::new(config, ProgressReporter::new(false))
                 .await
                 .unwrap()
         });
@@ -100,9 +94,9 @@ fn bench_performance_regression_detection(c: &mut Criterion) {
 
     // Memory usage regression detection
     group.bench_function("memory_regression_detection", |b| {
-        let config = Config::minimal();
+        let config = Config::default();
         let mut engine = rt.block_on(async {
-            GuardianEngine::new_with_ml(config, Default::default(), None)
+            GuardianEngine::new(config, ProgressReporter::new(false))
                 .await
                 .unwrap()
         });
@@ -149,9 +143,9 @@ fn bench_load_testing_integration(c: &mut Criterion) {
             BenchmarkId::new("concurrent_file_processing", concurrency),
             concurrency,
             |b, &concurrency| {
-                let config = Config::minimal();
+                let config = Config::default();
                 let mut engine = rt.block_on(async {
-                    GuardianEngine::new_with_ml(config, Default::default(), None)
+                    GuardianEngine::new(config, ProgressReporter::new(false))
                         .await
                         .unwrap()
                 });
@@ -186,9 +180,9 @@ fn bench_performance_metrics_collection(c: &mut Criterion) {
     let mut group = c.benchmark_group("metrics_collection");
 
     group.bench_function("comprehensive_metrics_collection", |b| {
-        let config = Config::minimal();
+        let config = Config::default();
         let mut engine = rt.block_on(async {
-            GuardianEngine::new_with_ml(config, Default::default(), None)
+            GuardianEngine::new(config, ProgressReporter::new(false))
                 .await
                 .unwrap()
         });
@@ -207,7 +201,7 @@ fn bench_performance_metrics_collection(c: &mut Criterion) {
                     .await;
 
                 // Update metrics
-                metrics.update_memory_usage(get_memory_usage().unwrap_or(0));
+                metrics.update_memory_usage(get_memory_usage().unwrap_or(0) as usize);
 
                 black_box(result.unwrap());
             });
@@ -273,9 +267,9 @@ fn bench_regression_alerting(c: &mut Criterion) {
     let mut group = c.benchmark_group("regression_alerting");
 
     group.bench_function("performance_threshold_monitoring", |b| {
-        let config = Config::minimal();
+        let config = Config::default();
         let mut engine = rt.block_on(async {
-            GuardianEngine::new_with_ml(config, Default::default(), None)
+            GuardianEngine::new(config, ProgressReporter::new(false))
                 .await
                 .unwrap()
         });

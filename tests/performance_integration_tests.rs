@@ -17,7 +17,6 @@ mod performance_integration_tests {
     async fn test_analysis_performance_scaling() {
         let temp_dir = TempDir::new().unwrap();
         let config = Config::default();
-        let progress = ProgressReporter::new(false);
 
         // Test with different numbers of files
         let file_counts = [1, 5, 10, 20];
@@ -58,7 +57,6 @@ mod performance_integration_tests {
     async fn test_parallel_vs_sequential_performance() {
         let temp_dir = TempDir::new().unwrap();
         let config = Config::default();
-        let progress = ProgressReporter::new(false);
 
         // Create test files
         let mut files = Vec::new();

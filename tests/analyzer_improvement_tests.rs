@@ -4,10 +4,9 @@ const TEST_FILE: &str = "strings.rs";
 // These tests specifically validate the improvements made to reduce
 // false positives in the git conflict and AI content analyzers.
 
-use do_codeguardian::analyzers::{AiContentAnalyzer, Analyzer, GitConflictAnalyzer};
-use std::io::Write;
+use do_codeguardian::analyzers::ai_content_analyzer::AiContentAnalyzer;
+use do_codeguardian::analyzers::git_conflict_analyzer::GitConflictAnalyzer;
 use std::path::Path;
-use tempfile::NamedTempFile;
 
 #[test]
 fn test_git_conflict_analyzer_ignores_test_modules() {

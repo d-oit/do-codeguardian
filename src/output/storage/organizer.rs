@@ -1162,7 +1162,7 @@ mod tests {
         let temp_dir = TempDir::new().unwrap();
         let config = create_test_config(&temp_dir);
 
-        let organizer = ResultsOrganizer::new(config).unwrap();
+        let _organizer = ResultsOrganizer::new(config).unwrap();
         assert!(temp_dir.path().join("index").exists());
     }
 
@@ -1206,7 +1206,7 @@ mod tests {
     #[test]
     fn test_organization_strategies() {
         let temp_dir = TempDir::new().unwrap();
-        let mut organizer = ResultsOrganizer::new(StorageConfig {
+        let organizer = ResultsOrganizer::new(StorageConfig {
             base_directory: temp_dir.path().to_path_buf(),
             organization_strategy: OrganizationStrategy::ByDate,
             ..Default::default()
@@ -1226,7 +1226,7 @@ mod tests {
     #[test]
     fn test_hierarchical_time_based_organization() {
         let temp_dir = TempDir::new().unwrap();
-        let mut organizer = ResultsOrganizer::new(StorageConfig {
+        let organizer = ResultsOrganizer::new(StorageConfig {
             base_directory: temp_dir.path().to_path_buf(),
             organization_strategy: OrganizationStrategy::HierarchicalTimeBased,
             ..Default::default()

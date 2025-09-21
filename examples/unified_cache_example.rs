@@ -43,12 +43,11 @@ async fn main() -> Result<()> {
 
     // Cache some findings
     basic_cache
-        .put(&test_file, findings.clone(), "config_hash_123", 150)
-        .await?;
+        .put(&test_file, findings.clone(), "config_hash_123", 150)?;
     println!("✓ Cached findings with basic strategy");
 
     // Retrieve cached findings
-    if let Some(cached) = basic_cache.get(&test_file, "config_hash_123").await? {
+    if let Some(cached) = basic_cache.get(&test_file, "config_hash_123")? {
         println!("✓ Retrieved {} cached findings", cached.len());
     }
 
@@ -81,8 +80,7 @@ async fn main() -> Result<()> {
 
     // Cache findings with pooled strategy
     pooled_cache
-        .put(&test_file, findings, "config_hash_456", 200)
-        .await?;
+        .put(&test_file, findings, "config_hash_456", 200)?;
     println!("✓ Cached findings with pooled strategy");
 
     // Show memory pool stats

@@ -3,8 +3,7 @@
 //! This module implements comprehensive test coverage analysis to ensure
 //! we meet the 95% coverage goal from the testing improvements plan.
 
-use std::collections::{HashMap, HashSet};
-use std::path::Path;
+use std::collections::HashMap;
 
 /// Test coverage analyzer
 pub struct TestCoverageAnalyzer {

@@ -11,7 +11,7 @@ use std::path::Path;
 /// Comprehensive tests for GitConflictAnalyzer
 mod git_conflict_analyzer_tests {
     use super::*;
-    use do_codeguardian::analyzers::GitConflictAnalyzer;
+    use do_codeguardian::analyzers::git_conflict_analyzer::GitConflictAnalyzer;
 
     #[test]
     fn test_analyzer_creation() {
@@ -281,7 +281,7 @@ mod security_analyzer_tests {
 /// Comprehensive tests for AI Content Analyzer
 mod ai_content_analyzer_tests {
     use super::*;
-    use do_codeguardian::analyzers::AiContentAnalyzer;
+    use do_codeguardian::analyzers::ai_content_analyzer::AiContentAnalyzer;
 
     #[test]
     fn test_ai_analyzer_creation() {

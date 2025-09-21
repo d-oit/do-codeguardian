@@ -22,15 +22,23 @@ codeguardian [OPTIONS] <COMMAND>
 
 ### Available Commands
 
-- `analyze` - Analyze files for security issues
-- `scan` - Scan directories or repositories
-- `check` - Check current state and configuration
-- `dashboard` - Start the web dashboard (new in v0.2.0)
-- `remediate` - Run automated remediation workflows (new in v0.2.0)
-- `integrate` - Manage external system integrations (new in v0.2.0)
-- `relationships` - Manage artifact relationships (new in v0.2.0)
-- `config` - Configuration management
-- `output` - Output formatting and management
+- `check` - Run code analysis (primary command)
+- `report` - Convert results to different formats
+- `gh-issue` - Create or update GitHub issues
+- `init` - Initialize configuration
+- `git-commit` - Perform enhanced git commit with security analysis
+- `git-commit-push` - Perform enhanced git commit and push with security analysis
+- `turbo` - Run high-performance parallel analysis (turbo mode)
+- `train` - Train machine learning model for false positive reduction
+- `metrics` - Analyze ML model performance metrics
+- `update-docs` - Update and maintain documentation
+- `dashboard` - Dashboard management and monitoring (new in v0.2.0)
+- `remediation` - Automated remediation workflows (new in v0.2.0)
+- `integrations` - External system integrations (new in v0.2.0)
+- `bulk` - Bulk operations for multiple repositories and codebases
+- `retention` - Retention policy management
+- `tune-thresholds` - Tune monitoring thresholds for different environments
+- `release-monitoring` - Release monitoring and metrics collection
 
 ## Commands
 
@@ -391,6 +399,29 @@ codeguardian relationships analyze src/main.rs --change-type modify
 
 # Generate relationship visualization
 codeguardian relationships visualize --output relationships.dot
+```
+
+### Bulk Operations
+
+```bash
+# Scan multiple repositories for duplicates
+codeguardian bulk scan repo1 repo2 repo3 --output bulk-results.json
+
+# Scan with high concurrency and skip errors
+codeguardian bulk scan repos.txt --concurrency 8 --skip-errors
+```
+
+### Threshold Tuning
+
+```bash
+# Show current threshold configurations
+codeguardian tune-thresholds --show-current
+
+# Generate tuning recommendations based on historical data
+codeguardian tune-thresholds --recommend --metrics-file historical.json
+
+# Apply recommendations automatically with high confidence
+codeguardian tune-thresholds --apply-recommendations --confidence-threshold 0.9
 ```
 
 ## Exit Codes

@@ -1,12 +1,12 @@
 use do_codeguardian::cache::memory_pool::{FindingPool, MemoryPoolManager, StringPool};
 use do_codeguardian::cache::regex_cache::{RegexCache, SharedRegexCache};
-use do_codeguardian::types::{Finding, Severity};
+use do_codeguardian::types::Severity;
 use std::path::PathBuf;
 use std::time::Instant;
 
 #[test]
 fn test_regex_cache_performance() {
-    let mut cache = RegexCache::new(100, 3600);
+    let mut cache = RegexCache::new(100, 3600, "LRU".to_string());
     let patterns = vec![
         r"test\d+",
         r"error\s+\w+",
@@ -114,7 +114,7 @@ fn test_memory_pool_performance() {
 fn test_shared_regex_cache_thread_safety() {
     use std::thread;
 
-    let cache = SharedRegexCache::new(10, 3600);
+    let cache = SharedRegexCache::new(10, 3600, "LRU".to_string());
 
     let cache_clone = cache.clone();
     let handle = thread::spawn(move || cache_clone.get_or_compile(r"thread\d+").unwrap());

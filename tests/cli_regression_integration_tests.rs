@@ -8,7 +8,6 @@ use do_codeguardian::analyzers::git_conflict_analyzer::GitConflictAnalyzer;
 use predicates::prelude::*;
 use serde_json::Value;
 use std::fs;
-use std::path::Path;
 use tempfile::TempDir;
 
 #[test]
@@ -141,7 +140,7 @@ mod tests {{
     }}
 }}
 "###,
-            i, i, i
+            i, i, i, i
         );
         fs::write(&test_file, content).unwrap();
     }

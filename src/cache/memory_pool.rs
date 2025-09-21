@@ -709,7 +709,6 @@ impl MemorySavings {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::types::Severity;
 
     #[test]
     fn test_finding_pool() {
@@ -725,7 +724,7 @@ mod tests {
         assert_eq!(pool.stats().returned, 1);
 
         // Get it again (should reuse)
-        let finding2 = pool.get();
+        let _ = pool.get();
         assert_eq!(pool.stats().reused, 1);
         assert_eq!(pool.stats().allocated, 1);
     }
@@ -745,7 +744,7 @@ mod tests {
         assert!(Arc::ptr_eq(&s1, &s2));
 
         // Intern different string
-        let s3 = pool.get("world");
+        let _ = pool.get("world");
         assert_eq!(pool.stats().allocated, 2);
     }
 
@@ -762,7 +761,7 @@ mod tests {
         assert_eq!(pool.stats().returned, 1);
 
         // Get it again (should reuse)
-        let path2 = pool.get();
+        let _ = pool.get();
         assert_eq!(pool.stats().reused, 1);
     }
 

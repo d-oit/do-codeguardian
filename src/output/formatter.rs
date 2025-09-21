@@ -471,7 +471,6 @@ mod tests {
             max_recommended_size: None,
         };
         let formatter = BaseFormatter::new(metadata);
-        let results = create_test_results();
 
         let output_metadata = formatter.create_output_metadata("test content", "test", 100);
         assert_eq!(output_metadata.schema_version, "1.0.0");

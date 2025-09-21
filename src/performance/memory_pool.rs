@@ -576,14 +576,14 @@ mod tests {
 
         // Test zero-sized buffer (should still work)
         {
-            let buffer = pool.get_buffer(0);
-            assert!(buffer.len() >= 0);
+            let _buffer = pool.get_buffer(0);
+            // Buffer created successfully
         }
 
         // Test very large buffer
         {
-            let buffer = pool.get_buffer(1024 * 1024); // 1MB
-            assert!(buffer.len() >= 0); // Can't assert capacity, just check it works
+            let _buffer = pool.get_buffer(1024 * 1024); // 1MB
+            // Buffer created successfully
         }
     }
 }

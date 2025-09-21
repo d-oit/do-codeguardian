@@ -8,15 +8,10 @@ use rand;
 use serde::{Deserialize, Serialize};
 use serde_json;
 use std::collections::HashMap;
-use std::sync::Arc;
 use std::time::Duration;
 use tokio::time::sleep;
 
-use do_codeguardian::analyzers::security::SecretAnalyzer;
 use do_codeguardian::config::base::Config;
-use do_codeguardian::config::SecurityConfig;
-use do_codeguardian::github_api::GitHubApiClient;
-use do_codeguardian::integrations::traits::IntegrationSystem;
 
 /// Security testing configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -261,9 +256,9 @@ impl SecurityTestSuite {
     }
 
     /// Test authorization controls
-    async fn test_authorization_security(&self, config: &Config) -> SecurityTestResult {
+    async fn test_authorization_security(&self, _config: &Config) -> SecurityTestResult {
         let mut recommendations = Vec::new();
-        let mut passed = true;
+        let passed = true;
         let start = std::time::Instant::now();
 
         // Test 1: Rate limiting configuration
@@ -296,7 +291,7 @@ impl SecurityTestSuite {
     /// Test data encryption
     async fn test_encryption_security(&self, config: &Config) -> SecurityTestResult {
         let mut recommendations = Vec::new();
-        let mut passed = true;
+        let passed = true;
         let start = std::time::Instant::now();
 
         // Test 1: HTTPS enforcement
@@ -328,9 +323,9 @@ impl SecurityTestSuite {
     }
 
     /// Test input validation security
-    async fn test_input_validation_security(&self, config: &Config) -> SecurityTestResult {
+    async fn test_input_validation_security(&self, _config: &Config) -> SecurityTestResult {
         let mut recommendations = Vec::new();
-        let mut passed = true;
+        let passed = true;
         let start = std::time::Instant::now();
 
         // Test 1: Path traversal protection
@@ -406,9 +401,9 @@ impl SecurityTestSuite {
     }
 
     /// Test network security
-    async fn test_network_security(&self, config: &Config) -> SecurityTestResult {
+    async fn test_network_security(&self, _config: &Config) -> SecurityTestResult {
         let mut recommendations = Vec::new();
-        let mut passed = true;
+        let passed = true;
         let start = std::time::Instant::now();
 
         // Test 1: Certificate validation
@@ -470,7 +465,7 @@ impl SecurityTestSuite {
     }
 
     /// Run penetration testing scenarios
-    async fn run_penetration_tests(&self, config: &Config) -> Vec<PenetrationTestResult> {
+    async fn run_penetration_tests(&self, _config: &Config) -> Vec<PenetrationTestResult> {
         let mut results = Vec::new();
 
         // Scenario 1: Authentication Bypass

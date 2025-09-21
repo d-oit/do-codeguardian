@@ -80,28 +80,28 @@ run_benchmarks() {
     cd "$PROJECT_ROOT"
 
     # Run comprehensive benchmark suite
-    if cargo bench --bench performance_regression_suite -- --measurement-time 10 --output-format json > "$BENCHMARK_RESULTS_DIR/regression_results.json" 2>/dev/null; then
+    if cargo bench --bench performance_regression_suite -- --save-baseline current --measurement-time 10 > "$BENCHMARK_RESULTS_DIR/regression_results.txt" 2>/dev/null; then
         log_success "Performance regression benchmarks completed"
     else
         log_warning "Some benchmarks failed, but continuing with analysis"
     fi
 
     # Run load testing benchmarks
-    if cargo bench --bench load_testing_benchmark -- --measurement-time 15 --output-format json > "$BENCHMARK_RESULTS_DIR/load_test_results.json" 2>/dev/null; then
+    if cargo bench --bench load_testing_benchmark -- --save-baseline current --measurement-time 15 > "$BENCHMARK_RESULTS_DIR/load_test_results.txt" 2>/dev/null; then
         log_success "Load testing benchmarks completed"
     else
         log_warning "Load testing benchmarks failed"
     fi
 
     # Run metrics collection benchmarks
-    if cargo bench --bench performance_metrics_benchmark -- --measurement-time 10 --output-format json > "$BENCHMARK_RESULTS_DIR/metrics_results.json" 2>/dev/null; then
+    if cargo bench --bench performance_metrics_benchmark -- --save-baseline current --measurement-time 10 > "$BENCHMARK_RESULTS_DIR/metrics_results.txt" 2>/dev/null; then
         log_success "Metrics collection benchmarks completed"
     else
         log_warning "Metrics collection benchmarks failed"
     fi
 
     # Run optimization benchmarks
-    if cargo bench --bench optimization_recommendations_benchmark -- --measurement-time 10 --output-format json > "$BENCHMARK_RESULTS_DIR/optimization_results.json" 2>/dev/null; then
+    if cargo bench --bench optimization_recommendations_benchmark -- --save-baseline current --measurement-time 10 > "$BENCHMARK_RESULTS_DIR/optimization_results.txt" 2>/dev/null; then
         log_success "Optimization benchmarks completed"
     else
         log_warning "Optimization benchmarks failed"
@@ -116,7 +116,7 @@ analyze_results() {
     local alerts=()
 
     # Analyze regression results
-    if [ -f "$BENCHMARK_RESULTS_DIR/regression_results.json" ]; then
+    if [ -f "$BENCHMARK_RESULTS_DIR/regression_results.txt" ]; then
         analyze_regression_results
         if [ $? -eq 1 ]; then
             regression_detected=true
@@ -125,7 +125,7 @@ analyze_results() {
     fi
 
     # Analyze load testing results
-    if [ -f "$BENCHMARK_RESULTS_DIR/load_test_results.json" ]; then
+    if [ -f "$BENCHMARK_RESULTS_DIR/load_test_results.txt" ]; then
         analyze_load_test_results
         if [ $? -eq 1 ]; then
             regression_detected=true
@@ -134,7 +134,7 @@ analyze_results() {
     fi
 
     # Analyze metrics results
-    if [ -f "$BENCHMARK_RESULTS_DIR/metrics_results.json" ]; then
+    if [ -f "$BENCHMARK_RESULTS_DIR/metrics_results.txt" ]; then
         analyze_metrics_results
         if [ $? -eq 1 ]; then
             regression_detected=true
@@ -168,13 +168,12 @@ analyze_results() {
 analyze_regression_results() {
     log_info "Analyzing regression benchmark results..."
 
-    # This is a simplified analysis - in practice, you'd compare against historical baselines
-    # For now, we'll check if the benchmarks completed successfully
-    if jq -e '.benchmarks[0]' "$BENCHMARK_RESULTS_DIR/regression_results.json" >/dev/null 2>&1; then
+    # Check if the benchmark output contains successful results
+    if grep -q "time:" "$BENCHMARK_RESULTS_DIR/regression_results.txt" && ! grep -q "error\|Error\|ERROR" "$BENCHMARK_RESULTS_DIR/regression_results.txt"; then
         log_success "Regression benchmarks completed successfully"
         return 0
     else
-        log_warning "Regression benchmark results appear incomplete"
+        log_warning "Regression benchmark results appear incomplete or contain errors"
         return 1
     fi
 }
@@ -183,11 +182,11 @@ analyze_regression_results() {
 analyze_load_test_results() {
     log_info "Analyzing load testing results..."
 
-    if jq -e '.benchmarks[0]' "$BENCHMARK_RESULTS_DIR/load_test_results.json" >/dev/null 2>&1; then
+    if grep -q "time:" "$BENCHMARK_RESULTS_DIR/load_test_results.txt" && ! grep -q "error\|Error\|ERROR" "$BENCHMARK_RESULTS_DIR/load_test_results.txt"; then
         log_success "Load testing benchmarks completed successfully"
         return 0
     else
-        log_warning "Load testing results appear incomplete"
+        log_warning "Load testing results appear incomplete or contain errors"
         return 1
     fi
 }
@@ -196,11 +195,11 @@ analyze_load_test_results() {
 analyze_metrics_results() {
     log_info "Analyzing performance metrics..."
 
-    if jq -e '.benchmarks[0]' "$BENCHMARK_RESULTS_DIR/metrics_results.json" >/dev/null 2>&1; then
+    if grep -q "time:" "$BENCHMARK_RESULTS_DIR/metrics_results.txt" && ! grep -q "error\|Error\|ERROR" "$BENCHMARK_RESULTS_DIR/metrics_results.txt"; then
         log_success "Metrics collection completed successfully"
         return 0
     else
-        log_warning "Metrics results appear incomplete"
+        log_warning "Metrics results appear incomplete or contain errors"
         return 1
     fi
 }
@@ -218,7 +217,7 @@ Generated: $(date)
 Regression Detected: $([ "$regression_detected" = true ] && echo "YES" || echo "NO")
 
 ## Summary
-- Benchmarks Run: $(ls "$BENCHMARK_RESULTS_DIR"/*.json | wc -l)
+- Benchmarks Run: $(ls "$BENCHMARK_RESULTS_DIR"/*.txt | wc -l)
 - Test Environment: $(uname -a)
 - Rust Version: $(rustc --version)
 
@@ -297,24 +296,20 @@ store_historical_data() {
     }' > "$history_file"
 
     # Add individual results if they exist
-    if [ -f "$BENCHMARK_RESULTS_DIR/regression_results.json" ]; then
-        jq --argfile regression "$BENCHMARK_RESULTS_DIR/regression_results.json" \
-           '.results.regression = $regression' "$history_file" > "${history_file}.tmp" && mv "${history_file}.tmp" "$history_file"
+    if [ -f "$BENCHMARK_RESULTS_DIR/regression_results.txt" ]; then
+        echo "Regression results stored as text" # Since it's text, not JSON, just note it
     fi
 
-    if [ -f "$BENCHMARK_RESULTS_DIR/load_test_results.json" ]; then
-        jq --argfile loadtest "$BENCHMARK_RESULTS_DIR/load_test_results.json" \
-           '.results.load_testing = $loadtest' "$history_file" > "${history_file}.tmp" && mv "${history_file}.tmp" "$history_file"
+    if [ -f "$BENCHMARK_RESULTS_DIR/load_test_results.txt" ]; then
+        echo "Load test results stored as text"
     fi
 
-    if [ -f "$BENCHMARK_RESULTS_DIR/metrics_results.json" ]; then
-        jq --argfile metrics "$BENCHMARK_RESULTS_DIR/metrics_results.json" \
-           '.results.metrics = $metrics' "$history_file" > "${history_file}.tmp" && mv "${history_file}.tmp" "$history_file"
+    if [ -f "$BENCHMARK_RESULTS_DIR/metrics_results.txt" ]; then
+        echo "Metrics results stored as text"
     fi
 
-    if [ -f "$BENCHMARK_RESULTS_DIR/optimization_results.json" ]; then
-        jq --argfile optimization "$BENCHMARK_RESULTS_DIR/optimization_results.json" \
-           '.results.optimization = $optimization' "$history_file" > "${history_file}.tmp" && mv "${history_file}.tmp" "$history_file"
+    if [ -f "$BENCHMARK_RESULTS_DIR/optimization_results.txt" ]; then
+        echo "Optimization results stored as text"
     fi
 
     log_success "Historical data stored: $history_file"
