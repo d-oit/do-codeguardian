@@ -1,6 +1,6 @@
 # API Documentation
 
-This directory contains comprehensive API documentation for CodeGuardian v0.2.0.
+This directory contains comprehensive API documentation for CodeGuardian v0.2.1-alpha.2.
 
 ## Available Documentation
 
@@ -24,6 +24,11 @@ This directory contains comprehensive API documentation for CodeGuardian v0.2.0.
 For information on how to use the CodeGuardian API, see the [main documentation](../README.md).
 
 ## Recent Updates
+
+### v0.2.1-alpha.2
+- **Documentation Improvements**: Updated all version references to reflect current release
+- **Stability Enhancements**: Improved security validation in code analysis pipelines
+- **Version Consistency**: Enhanced API examples with correct version information
 
 ### v0.2.0
 - **External Integrations**: Added support for Jira, Confluence, Jenkins, GitLab, Bitbucket, and Azure DevOps

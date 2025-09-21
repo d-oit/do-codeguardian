@@ -385,7 +385,6 @@ pub struct ReleaseTrends {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use tempfile::tempdir;
 
     #[tokio::test]
     async fn test_metrics_calculation() {

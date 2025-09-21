@@ -1,4 +1,6 @@
-use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
+use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
+use std::hint::black_box;
+use do_codeguardian::analyzers::Analyzer;
 use do_codeguardian::analyzers::{
     performance_analyzer::PerformanceAnalyzer, security_analyzer::SecurityAnalyzer,
 };
@@ -122,7 +124,7 @@ fn benchmark_security_analyzer(c: &mut Criterion) {
 fn benchmark_performance_analyzer(c: &mut Criterion) {
     let mut group = c.benchmark_group("performance_analyzer");
 
-    let analyzer = PerformanceAnalyzer::new();
+    let analyzer = PerformanceAnalyzer::new().unwrap();
     let file_path = PathBuf::from("test.rs");
 
     // Test different content sizes with performance patterns
@@ -212,3 +214,5 @@ fn benchmark_regex_performance(c: &mut Criterion) {
 
     group.finish();
 }
+criterion_group!(benches, benchmark_security_analyzer, benchmark_performance_analyzer, benchmark_file_operations, benchmark_hashing_algorithms, benchmark_regex_performance);
+criterion_main!(benches);

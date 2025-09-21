@@ -10,7 +10,6 @@
 
 use assert_cmd::prelude::*;
 use std::fs;
-use std::path::Path;
 use std::process::Command;
 use std::sync::Arc;
 use std::time::Duration;

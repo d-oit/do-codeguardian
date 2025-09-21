@@ -22,7 +22,7 @@ jobs:
     steps:
     - uses: actions/checkout@v5
       with:
-        fetch-depth: 0  # Need full history for diff
+        fetch-depth: 0
 
     - name: Setup Rust
       uses: actions-rust-lang/setup-rust-toolchain@v1
@@ -62,11 +62,11 @@ jobs:
           results.json
           report.md
 
-   codeguardian-full:
-     if: github.event_name == 'push' || github.event_name == 'schedule'
-     runs-on: ubuntu-latest
-     timeout-minutes: 20
-     permissions:
+  codeguardian-full:
+    if: github.event_name == 'push' || github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
       contents: write
       issues: write
 

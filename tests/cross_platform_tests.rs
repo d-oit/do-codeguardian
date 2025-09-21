@@ -1,7 +1,5 @@
 use assert_cmd::Command;
-use std::env;
 use std::fs;
-use std::path::Path;
 use tempfile::TempDir;
 
 /// Cross-platform validation tests for CodeGuardian

@@ -536,7 +536,7 @@ fn main() {
         let progress = ProgressReporter::new(false);
         let mut engine = GuardianEngine::new(config, progress).await?;
         let files = vec![test_file];
-        let results = engine.analyze_files(&files, 1).await?;
+        let _results = engine.analyze_files(&files, 1).await?;
 
         // Should complete without crashing
         // Duplicate detection might not find anything due to high min_lines threshold

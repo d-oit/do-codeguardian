@@ -439,7 +439,7 @@ mod tests {
     use crate::types::{Finding, Severity};
     use std::path::PathBuf;
 
-    fn create_test_finding(id: &str, message: &str, severity: Severity) -> Finding {
+    fn create_test_finding(message: &str, severity: Severity) -> Finding {
         Finding::new(
             "test_analyzer",
             "test_rule",
@@ -454,9 +454,9 @@ mod tests {
     fn test_insight_generator() {
         let generator = InsightGenerator::new();
         let findings = vec![
-            create_test_finding("1", "SQL injection vulnerability", Severity::Critical),
-            create_test_finding("2", "XSS vulnerability", Severity::High),
-            create_test_finding("3", "Authentication bypass", Severity::Critical),
+            create_test_finding("SQL injection vulnerability", Severity::Critical),
+            create_test_finding("XSS vulnerability", Severity::High),
+            create_test_finding("Authentication bypass", Severity::Critical),
         ];
 
         let insights = generator
@@ -488,9 +488,9 @@ mod tests {
     fn test_security_pattern_rule() {
         let rule = SecurityPatternRule;
         let findings = vec![
-            create_test_finding("1", "SQL injection found", Severity::High),
-            create_test_finding("2", "XSS vulnerability detected", Severity::High),
-            create_test_finding("3", "Authentication bypass possible", Severity::Critical),
+            create_test_finding("SQL injection found", Severity::High),
+            create_test_finding("XSS vulnerability detected", Severity::High),
+            create_test_finding("Authentication bypass possible", Severity::Critical),
         ];
 
         let insights = rule.generate_insights(&findings, &[]);

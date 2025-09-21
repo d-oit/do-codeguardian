@@ -528,7 +528,6 @@ impl ResultsIndexer {
 mod tests {
     use super::*;
     use std::path::PathBuf;
-    use tempfile::TempDir;
 
     fn create_test_finding() -> Finding {
         Finding::new(

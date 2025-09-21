@@ -642,21 +642,23 @@ mod tests {
     use std::path::PathBuf;
 
     fn create_test_finding(id: &str, message: &str, file: &str, line: u32) -> Finding {
-        Finding::new(
+        let mut finding = Finding::new(
             "test_analyzer",
             "test_rule",
             Severity::High,
             PathBuf::from(file),
             line,
             message.to_string(),
-        )
+        );
+        finding.id = id.to_string();
+        finding
     }
 
     #[test]
     fn test_same_component_rule() {
         let rule = SameComponentRule;
-        let finding_a = create_test_finding("1", "First issue", "test.rs", 10);
-        let finding_b = create_test_finding("2", "Second issue", "test.rs", 15);
+        let finding_a = create_test_finding("test_id_a", "First issue", "test.rs", 10);
+        let finding_b = create_test_finding("test_id_b", "Second issue", "test.rs", 15);
 
         let confidence = rule.detect(&finding_a, &finding_b);
         assert!(confidence.is_some());

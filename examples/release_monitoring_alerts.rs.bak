@@ -2,6 +2,8 @@
 //!
 //! This example demonstrates how to set up release monitoring with
 //! comprehensive alerting and notification capabilities.
+//!
+//! NOTE: This example is currently disabled as it uses APIs that are not yet implemented.
 
 use anyhow::Result;
 use do_codeguardian::{
@@ -15,6 +17,7 @@ use do_codeguardian::{
 };
 use std::sync::Arc;
 
+/*
 #[tokio::main]
 async fn main() -> Result<()> {
     println!("🚀 CodeGuardian Release Monitoring with Alerts Example");
@@ -82,6 +85,7 @@ async fn main() -> Result<()> {
 
     Ok(())
 }
+*/
 
 /// Load example configuration with release monitoring settings
 fn load_example_config() -> Config {

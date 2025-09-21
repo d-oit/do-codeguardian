@@ -1,8 +1,8 @@
 //! Example usage of the CodeGuardian Swarm Orchestrator Framework
 
-use codeguardian::core::swarm_orchestrator::{OrchestratorStatus, SwarmOrchestrator};
-use codeguardian::core::swarm_types::{ConflictResolutionStrategy, Priority, SwarmConfig};
-use codeguardian::core::task_decomposition::AnalysisRequest;
+use do_codeguardian::core::swarm_orchestrator::SwarmOrchestrator;
+use do_codeguardian::core::swarm_types::{ConflictResolutionStrategy, Priority, SwarmConfig};
+use do_codeguardian::core::task_decomposition::AnalysisRequest;
 use std::collections::HashMap;
 use std::time::Duration;
 
@@ -11,14 +11,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("🚀 CodeGuardian Swarm Orchestrator Example");
     println!("==========================================");
 
-    // Create swarm configuration
+    // Create swarm configuration (using simple parallel mode)
     let config = SwarmConfig {
         max_concurrent_tasks: 10,
         max_memory_mb: 2048,
         max_cpu_percent: 80.0,
         task_timeout: Duration::from_secs(300),
-        enable_resource_monitoring: true,
-        enable_performance_tracking: true,
+        enable_resource_monitoring: false, // Disable for simple mode
+        enable_performance_tracking: false, // Disable for simple mode
         conflict_resolution_strategy: ConflictResolutionStrategy::PriorityBased,
     };
 
@@ -114,7 +114,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
         println!("By Category:");
         for (category, count) in category_counts {
-            println!("  {}: {}", category, count);
+            if let Some(cat) = category {
+                println!("  {}: {}", cat, count);
+            } else {
+                println!("  (uncategorized): {}", count);
+            }
         }
 
         println!("\nBy Severity:");

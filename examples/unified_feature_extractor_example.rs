@@ -4,7 +4,7 @@
 //! extraction modes and configurations.
 
 use anyhow::Result;
-use codeguardian::{
+use do_codeguardian::{
     ml::unified_feature_extractor::{
         ExtractionMode, FeatureConfig, FeatureSet, UnifiedFeatureExtractor,
     },
@@ -111,7 +111,7 @@ async fn main() -> Result<()> {
     println!("--------------------------------");
     let new_config = FeatureConfig {
         mode: ExtractionMode::AstOnly,
-        security: codeguardian::ml::unified_feature_extractor::SecurityConfig {
+        security: do_codeguardian::ml::unified_feature_extractor::SecurityConfig {
             max_file_size: 5 * 1024 * 1024, // 5MB
             ..Default::default()
         },

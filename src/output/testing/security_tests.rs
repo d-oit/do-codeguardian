@@ -558,7 +558,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_xss_prevention_in_html_formatter() {
-        let runner = SecurityTestRunner::new();
+        let _runner = SecurityTestRunner::new();
         let malicious_results = create_malicious_results();
 
         let formatter = HtmlFormatter::new();

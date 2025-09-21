@@ -113,7 +113,7 @@ enabled_analyzers = ["security"
         std::env::set_var("CODEGUARDIAN_MAX_FILE_SIZE", "20");
         std::env::set_var("CODEGUARDIAN_OUTPUT_FORMAT", "markdown");
 
-        let config = Config::default(); // Should pick up env vars if implemented
+        let _config = Config::default(); // Should pick up env vars if implemented
 
         // Clean up
         std::env::remove_var("CODEGUARDIAN_MAX_FILE_SIZE");

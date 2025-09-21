@@ -1,7 +1,5 @@
 //! Common types and traits for the swarm orchestrator framework
 use crate::types::Finding;
-
-use crate::core::performance_monitor::SwarmPerformanceMonitor;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fmt;
@@ -207,18 +205,16 @@ pub struct SwarmState {
     pub completed_tasks: HashMap<String, TaskResult>,
     pub task_dependencies: HashMap<String, Vec<String>>,
     pub agent_registry: HashMap<String, Arc<dyn SwarmAgent>>,
-    pub performance_monitor: Arc<SwarmPerformanceMonitor>,
 }
 
 impl SwarmState {
-    pub fn new(config: SwarmConfig, performance_monitor: Arc<SwarmPerformanceMonitor>) -> Self {
+    pub fn new(config: SwarmConfig) -> Self {
         Self {
             config,
             active_tasks: HashMap::new(),
             completed_tasks: HashMap::new(),
             task_dependencies: HashMap::new(),
             agent_registry: HashMap::new(),
-            performance_monitor,
         }
     }
 }

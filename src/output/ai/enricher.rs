@@ -629,7 +629,7 @@ mod tests {
     use crate::types::{Finding, Severity};
     use std::path::PathBuf;
 
-    fn create_test_finding(id: &str, message: &str, severity: Severity) -> Finding {
+    fn create_test_finding(message: &str, severity: Severity) -> Finding {
         Finding::new(
             "test_analyzer",
             "test_rule",
@@ -652,7 +652,7 @@ mod tests {
     fn test_finding_classification() {
         let engine = BasicEnhancementEngine::new().unwrap();
         let finding =
-            create_test_finding("1", "SQL injection vulnerability detected", Severity::High);
+            create_test_finding("SQL injection vulnerability detected", Severity::High);
 
         let classification = engine.classify_finding(&finding);
         assert_eq!(classification.primary_category, "Security");
@@ -663,8 +663,8 @@ mod tests {
     fn test_relationship_detection() {
         let engine = BasicEnhancementEngine::new().unwrap();
         let findings = vec![
-            create_test_finding("1", "Issue in test.rs", Severity::High),
-            create_test_finding("2", "Another issue in test.rs", Severity::Medium),
+            create_test_finding("Issue in test.rs", Severity::High),
+            create_test_finding("Another issue in test.rs", Severity::Medium),
         ];
 
         let relationships = engine.detect_relationships(&findings);
@@ -688,22 +688,18 @@ mod tests {
         let mut results = AnalysisResults::new("test_config".to_string());
 
         results.add_finding(create_test_finding(
-            "1",
             "SQL injection vulnerability",
             Severity::High,
         ));
         results.add_finding(create_test_finding(
-            "2",
             "XSS vulnerability detected",
             Severity::High,
         ));
         results.add_finding(create_test_finding(
-            "3",
             "Authentication bypass",
             Severity::Critical,
         ));
         results.add_finding(create_test_finding(
-            "4",
             "Performance issue detected",
             Severity::Medium,
         ));

@@ -5,16 +5,10 @@
 
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
-use std::sync::Arc;
 use std::time::{Duration, Instant};
-use tempfile::TempDir;
 use tokio::time::sleep;
 
 use do_codeguardian::config::base::Config;
-use do_codeguardian::core::parallel_file_processor::ParallelFileProcessor;
-use do_codeguardian::integrations::traits::{IntegrationSystem, SystemCapabilities};
-use do_codeguardian::types::{Finding, Report, ReportSummary};
 
 /// Ecosystem integration test configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -125,7 +119,7 @@ impl EcosystemIntegrationTestSuite {
     }
 
     /// Execute comprehensive ecosystem integration testing
-    pub async fn run_ecosystem_tests(&self, app_config: &Config) -> Result<EcosystemTestResults> {
+    pub async fn run_ecosystem_tests(&self, app__config: &Config) -> Result<EcosystemTestResults> {
         println!("🌐 Starting Ecosystem Integration Testing Suite");
         println!("==============================================");
 
@@ -207,7 +201,7 @@ impl EcosystemIntegrationTestSuite {
     /// Test cross-component workflows
     async fn test_cross_component_workflows(
         &self,
-        config: &Config,
+        _config: &Config,
     ) -> Result<Vec<WorkflowTestResult>> {
         let mut results = Vec::new();
 
@@ -230,7 +224,7 @@ impl EcosystemIntegrationTestSuite {
     }
 
     /// Test data flow between components
-    async fn test_data_flow(&self, config: &Config) -> Result<Vec<DataFlowTestResult>> {
+    async fn test_data_flow(&self, _config: &Config) -> Result<Vec<DataFlowTestResult>> {
         let mut results = Vec::new();
 
         // Data Flow 1: Analysis Engine → GitHub API
@@ -254,7 +248,7 @@ impl EcosystemIntegrationTestSuite {
     /// Test deployment automation
     async fn test_deployment_automation(
         &self,
-        config: &Config,
+        _config: &Config,
     ) -> Result<Vec<DeploymentTestResult>> {
         let mut results = Vec::new();
 
@@ -274,7 +268,7 @@ impl EcosystemIntegrationTestSuite {
     }
 
     /// Test chaos engineering scenarios
-    async fn test_chaos_engineering(&self, config: &Config) -> Result<Vec<ChaosTestResult>> {
+    async fn test_chaos_engineering(&self, _config: &Config) -> Result<Vec<ChaosTestResult>> {
         let mut results = Vec::new();
 
         // Chaos 1: GitHub API Failure
@@ -299,7 +293,7 @@ impl EcosystemIntegrationTestSuite {
 
     async fn test_github_jira_analysis_workflow(
         &self,
-        config: &Config,
+        _config: &Config,
     ) -> Result<WorkflowTestResult> {
         let start = Instant::now();
         let mut errors = Vec::new();
@@ -350,7 +344,7 @@ impl EcosystemIntegrationTestSuite {
 
     async fn test_analysis_documentation_workflow(
         &self,
-        config: &Config,
+        _config: &Config,
     ) -> Result<WorkflowTestResult> {
         let start = Instant::now();
         let mut errors = Vec::new();
@@ -391,7 +385,7 @@ impl EcosystemIntegrationTestSuite {
         })
     }
 
-    async fn test_bulk_processing_workflow(&self, config: &Config) -> Result<WorkflowTestResult> {
+    async fn test_bulk_processing_workflow(&self, _config: &Config) -> Result<WorkflowTestResult> {
         let start = Instant::now();
         let mut errors = Vec::new();
         let mut success = true;
@@ -433,7 +427,7 @@ impl EcosystemIntegrationTestSuite {
 
     async fn test_ml_analysis_dashboard_workflow(
         &self,
-        config: &Config,
+        _config: &Config,
     ) -> Result<WorkflowTestResult> {
         let start = Instant::now();
         let mut errors = Vec::new();
@@ -476,7 +470,7 @@ impl EcosystemIntegrationTestSuite {
 
     async fn test_security_notification_workflow(
         &self,
-        config: &Config,
+        _config: &Config,
     ) -> Result<WorkflowTestResult> {
         let start = Instant::now();
         let mut errors = Vec::new();
@@ -514,7 +508,7 @@ impl EcosystemIntegrationTestSuite {
 
     // Data flow test implementations
 
-    async fn test_analysis_to_github_flow(&self, config: &Config) -> Result<DataFlowTestResult> {
+    async fn test_analysis_to_github_flow(&self, _config: &Config) -> Result<DataFlowTestResult> {
         let start = Instant::now();
 
         // Simulate data transfer
@@ -535,7 +529,7 @@ impl EcosystemIntegrationTestSuite {
         })
     }
 
-    async fn test_github_to_jira_flow(&self, config: &Config) -> Result<DataFlowTestResult> {
+    async fn test_github_to_jira_flow(&self, _config: &Config) -> Result<DataFlowTestResult> {
         let start = Instant::now();
 
         let data_size_mb = 2.0;
@@ -555,7 +549,7 @@ impl EcosystemIntegrationTestSuite {
         })
     }
 
-    async fn test_analysis_to_dashboard_flow(&self, config: &Config) -> Result<DataFlowTestResult> {
+    async fn test_analysis_to_dashboard_flow(&self, _config: &Config) -> Result<DataFlowTestResult> {
         let start = Instant::now();
 
         let data_size_mb = 3.0;
@@ -575,7 +569,7 @@ impl EcosystemIntegrationTestSuite {
         })
     }
 
-    async fn test_ml_to_analysis_flow(&self, config: &Config) -> Result<DataFlowTestResult> {
+    async fn test_ml_to_analysis_flow(&self, _config: &Config) -> Result<DataFlowTestResult> {
         let start = Instant::now();
 
         let data_size_mb = 1.5;
@@ -595,7 +589,7 @@ impl EcosystemIntegrationTestSuite {
         })
     }
 
-    async fn test_config_distribution_flow(&self, config: &Config) -> Result<DataFlowTestResult> {
+    async fn test_config_distribution_flow(&self, _config: &Config) -> Result<DataFlowTestResult> {
         let start = Instant::now();
 
         let data_size_mb = 0.5;
@@ -617,7 +611,7 @@ impl EcosystemIntegrationTestSuite {
 
     // Deployment test implementations
 
-    async fn test_config_deployment(&self, config: &Config) -> Result<DeploymentTestResult> {
+    async fn test_config_deployment(&self, _config: &Config) -> Result<DeploymentTestResult> {
         let start = Instant::now();
 
         println!("    🔧 Testing configuration deployment...");
@@ -633,7 +627,7 @@ impl EcosystemIntegrationTestSuite {
         })
     }
 
-    async fn test_ml_model_deployment(&self, config: &Config) -> Result<DeploymentTestResult> {
+    async fn test_ml_model_deployment(&self, _config: &Config) -> Result<DeploymentTestResult> {
         let start = Instant::now();
 
         println!("    🤖 Testing ML model deployment...");
@@ -649,7 +643,7 @@ impl EcosystemIntegrationTestSuite {
         })
     }
 
-    async fn test_integration_deployment(&self, config: &Config) -> Result<DeploymentTestResult> {
+    async fn test_integration_deployment(&self, _config: &Config) -> Result<DeploymentTestResult> {
         let start = Instant::now();
 
         println!("    🔗 Testing integration deployment...");
@@ -665,7 +659,7 @@ impl EcosystemIntegrationTestSuite {
         })
     }
 
-    async fn test_dashboard_deployment(&self, config: &Config) -> Result<DeploymentTestResult> {
+    async fn test_dashboard_deployment(&self, _config: &Config) -> Result<DeploymentTestResult> {
         let start = Instant::now();
 
         println!("    📊 Testing dashboard deployment...");
@@ -683,7 +677,7 @@ impl EcosystemIntegrationTestSuite {
 
     // Chaos engineering test implementations
 
-    async fn test_github_api_failure(&self, config: &Config) -> Result<ChaosTestResult> {
+    async fn test_github_api_failure(&self, _config: &Config) -> Result<ChaosTestResult> {
         let start = Instant::now();
 
         println!("    ⚡ Injecting GitHub API failure...");
@@ -699,7 +693,7 @@ impl EcosystemIntegrationTestSuite {
         })
     }
 
-    async fn test_database_failure(&self, config: &Config) -> Result<ChaosTestResult> {
+    async fn test_database_failure(&self, _config: &Config) -> Result<ChaosTestResult> {
         let start = Instant::now();
 
         println!("    ⚡ Injecting database connection failure...");
@@ -715,7 +709,7 @@ impl EcosystemIntegrationTestSuite {
         })
     }
 
-    async fn test_network_partition(&self, config: &Config) -> Result<ChaosTestResult> {
+    async fn test_network_partition(&self, _config: &Config) -> Result<ChaosTestResult> {
         let start = Instant::now();
 
         println!("    ⚡ Injecting network partition...");
@@ -732,7 +726,7 @@ impl EcosystemIntegrationTestSuite {
         })
     }
 
-    async fn test_memory_pressure(&self, config: &Config) -> Result<ChaosTestResult> {
+    async fn test_memory_pressure(&self, _config: &Config) -> Result<ChaosTestResult> {
         let start = Instant::now();
 
         println!("    ⚡ Injecting memory pressure...");
@@ -748,7 +742,7 @@ impl EcosystemIntegrationTestSuite {
         })
     }
 
-    async fn test_integration_outage(&self, config: &Config) -> Result<ChaosTestResult> {
+    async fn test_integration_outage(&self, _config: &Config) -> Result<ChaosTestResult> {
         let start = Instant::now();
 
         println!("    ⚡ Injecting integration service outage...");
@@ -907,7 +901,7 @@ impl EcosystemIntegrationTestSuite {
             Duration::from_secs(0)
         };
 
-        let peak_throughput = data_flow_results
+        let _peak_throughput = data_flow_results
             .iter()
             .map(|r| r.throughput_mb_per_sec)
             .fold(0.0, f64::max);
