@@ -5,8 +5,8 @@
 
 use do_codeguardian::analyzers::*;
 use do_codeguardian::types::{Finding, Severity};
-use std::path::Path;
 use proptest::prelude::*;
+use std::path::Path;
 
 /// Comprehensive tests for GitConflictAnalyzer
 mod git_conflict_analyzer_tests {
@@ -68,17 +68,28 @@ mod git_conflict_analyzer_tests {
 
         // Test incomplete conflict markers
         let test_cases = vec![
-            "<<<<<<< HEAD\nsome code\n", // Missing end
-            "=======\nsome code\n", // Missing start
-            ">>>>>>> branch\nsome code\n", // Missing start
+            "<<<<<<< HEAD\nsome code\n",                 // Missing end
+            "=======\nsome code\n",                      // Missing start
+            ">>>>>>> branch\nsome code\n",               // Missing start
             "<<<<<<< HEAD\nsome code\n>>>>>>> branch\n", // Missing separator
         ];
 
         for (i, content) in test_cases.iter().enumerate() {
-            let result = analyzer.analyze(Path::new(&format!("malformed_{}.rs", i)), content.as_bytes());
-            assert!(result.is_ok(), "Should handle malformed conflicts: {}", content);
+            let result = analyzer.analyze(
+                Path::new(&format!("malformed_{}.rs", i)),
+                content.as_bytes(),
+            );
+            assert!(
+                result.is_ok(),
+                "Should handle malformed conflicts: {}",
+                content
+            );
             let findings = result.unwrap();
-            assert!(!findings.is_empty(), "Should detect malformed conflicts: {}", content);
+            assert!(
+                !findings.is_empty(),
+                "Should detect malformed conflicts: {}",
+                content
+            );
         }
     }
 
@@ -157,25 +168,55 @@ mod security_analyzer_tests {
         let analyzer = SecretAnalyzer::new();
 
         let test_cases = vec![
-            (r#"API_KEY = "sk-1234567890abcdef""#, true, "API key pattern"),
-            (r#"password = "secretpassword123""#, true, "Password pattern"),
-            (r#"aws_secret_access_key = "ABCD1234567890""#, true, "AWS secret"),
+            (
+                r#"API_KEY = "sk-1234567890abcdef""#,
+                true,
+                "API key pattern",
+            ),
+            (
+                r#"password = "secretpassword123""#,
+                true,
+                "Password pattern",
+            ),
+            (
+                r#"aws_secret_access_key = "ABCD1234567890""#,
+                true,
+                "AWS secret",
+            ),
             (r#"let x = "just a string";"#, false, "Normal string"),
             (r#"// API_KEY = "example""#, false, "Commented out"),
-            (r#"const API_KEY_NAME = "api_key";"#, false, "Variable name only"),
+            (
+                r#"const API_KEY_NAME = "api_key";"#,
+                false,
+                "Variable name only",
+            ),
         ];
 
         for (content, should_detect, description) in test_cases {
             let result = analyzer.analyze(Path::new("test.rs"), content.as_bytes());
-            assert!(result.is_ok(), "Analysis should succeed for: {}", description);
+            assert!(
+                result.is_ok(),
+                "Analysis should succeed for: {}",
+                description
+            );
             let findings = result.unwrap();
             if should_detect {
-                assert!(!findings.is_empty(), "Should detect secret in: {}", description);
-                assert!(findings.iter().any(|f| f.rule == "hardcoded_secret"),
-                       "Should flag as hardcoded secret: {}", description);
+                assert!(
+                    !findings.is_empty(),
+                    "Should detect secret in: {}",
+                    description
+                );
+                assert!(
+                    findings.iter().any(|f| f.rule == "hardcoded_secret"),
+                    "Should flag as hardcoded secret: {}",
+                    description
+                );
             } else {
-                assert!(findings.is_empty() || !findings.iter().any(|f| f.rule == "hardcoded_secret"),
-                       "Should not detect secret in: {}", description);
+                assert!(
+                    findings.is_empty() || !findings.iter().any(|f| f.rule == "hardcoded_secret"),
+                    "Should not detect secret in: {}",
+                    description
+                );
             }
         }
     }
@@ -195,7 +236,11 @@ mod security_analyzer_tests {
             let result = analyzer.analyze(Path::new("test.rs"), pattern.as_bytes());
             assert!(result.is_ok());
             let findings = result.unwrap();
-            assert!(!findings.is_empty(), "Should detect command injection in: {}", pattern);
+            assert!(
+                !findings.is_empty(),
+                "Should detect command injection in: {}",
+                pattern
+            );
         }
     }
 
@@ -214,7 +259,11 @@ mod security_analyzer_tests {
             let result = analyzer.analyze(Path::new("test.rs"), pattern.as_bytes());
             assert!(result.is_ok());
             let findings = result.unwrap();
-            assert!(!findings.is_empty(), "Should detect SQL injection in: {}", pattern);
+            assert!(
+                !findings.is_empty(),
+                "Should detect SQL injection in: {}",
+                pattern
+            );
         }
     }
 
@@ -269,10 +318,18 @@ mod ai_content_analyzer_tests {
 
         for (content, should_detect, description) in test_cases {
             let result = analyzer.analyze(Path::new("test.rs"), content.as_bytes());
-            assert!(result.is_ok(), "Analysis should succeed for: {}", description);
+            assert!(
+                result.is_ok(),
+                "Analysis should succeed for: {}",
+                description
+            );
             let findings = result.unwrap();
             if should_detect {
-                assert!(!findings.is_empty(), "Should detect AI content in: {}", description);
+                assert!(
+                    !findings.is_empty(),
+                    "Should detect AI content in: {}",
+                    description
+                );
             } else {
                 // May or may not detect, depending on implementation
                 // This is more lenient for AI-based detection
@@ -295,7 +352,12 @@ mod ai_content_analyzer_tests {
             let result = analyzer.analyze(Path::new("test.txt"), content.as_bytes());
             assert!(result.is_ok(), "Should handle {}", description);
             let findings = result.unwrap();
-            assert_eq!(findings.len(), 0, "Should not detect issues in {}", description);
+            assert_eq!(
+                findings.len(),
+                0,
+                "Should not detect issues in {}",
+                description
+            );
         }
     }
 }
@@ -321,10 +383,17 @@ mod analyzer_performance_tests {
             let result = analyzer.analyze(Path::new("large.rs"), large_content.as_bytes());
             let duration = start.elapsed();
 
-            assert!(result.is_ok(), "Large file analysis should succeed for {}", analyzer.name());
-            assert!(duration.as_millis() < 1000,
-                   "Analysis should complete within 1s for {} (took {}ms)",
-                   analyzer.name(), duration.as_millis());
+            assert!(
+                result.is_ok(),
+                "Large file analysis should succeed for {}",
+                analyzer.name()
+            );
+            assert!(
+                duration.as_millis() < 1000,
+                "Analysis should complete within 1s for {} (took {}ms)",
+                analyzer.name(),
+                duration.as_millis()
+            );
         }
     }
 
@@ -336,22 +405,26 @@ mod analyzer_performance_tests {
         let analyzer = Arc::new(GitConflictAnalyzer::new());
         let content = "fn main() { println!(\"Hello\"); }";
 
-        let handles: Vec<_> = (0..10).map(|i| {
-            let analyzer = Arc::clone(&analyzer);
-            let content = content.to_string();
-            thread::spawn(move || {
-                let result = analyzer.analyze(
-                    Path::new(&format!("test_{}.rs", i)),
-                    content.as_bytes()
-                );
-                assert!(result.is_ok());
-                result.unwrap()
+        let handles: Vec<_> = (0..10)
+            .map(|i| {
+                let analyzer = Arc::clone(&analyzer);
+                let content = content.to_string();
+                thread::spawn(move || {
+                    let result =
+                        analyzer.analyze(Path::new(&format!("test_{}.rs", i)), content.as_bytes());
+                    assert!(result.is_ok());
+                    result.unwrap()
+                })
             })
-        }).collect();
+            .collect();
 
         for handle in handles {
             let findings = handle.join().unwrap();
-            assert_eq!(findings.len(), 0, "Concurrent analysis should work correctly");
+            assert_eq!(
+                findings.len(),
+                0,
+                "Concurrent analysis should work correctly"
+            );
         }
     }
 }
@@ -434,7 +507,8 @@ mod performance_analyzer_tests {
 
         // Test various nested loop patterns
         let test_cases = vec![
-            (r#"
+            (
+                r#"
             fn nested_for() {
                 for i in 0..10 {
                     for j in 0..10 {
@@ -442,9 +516,12 @@ mod performance_analyzer_tests {
                     }
                 }
             }
-            "#, true, "Simple nested for loops"),
-
-            (r#"
+            "#,
+                true,
+                "Simple nested for loops",
+            ),
+            (
+                r#"
             fn nested_while() {
                 let mut i = 0;
                 while i < 10 {
@@ -456,17 +533,23 @@ mod performance_analyzer_tests {
                     i += 1;
                 }
             }
-            "#, true, "Nested while loops"),
-
-            (r#"
+            "#,
+                true,
+                "Nested while loops",
+            ),
+            (
+                r#"
             fn single_loop() {
                 for i in 0..10 {
                     println!("{}", i);
                 }
             }
-            "#, false, "Single loop should not trigger"),
-
-            (r#"
+            "#,
+                false,
+                "Single loop should not trigger",
+            ),
+            (
+                r#"
             fn mixed_loops() {
                 for i in 0..10 {
                     let mut j = 0;
@@ -476,16 +559,27 @@ mod performance_analyzer_tests {
                     }
                 }
             }
-            "#, true, "Mixed for/while loops"),
+            "#,
+                true,
+                "Mixed for/while loops",
+            ),
         ];
 
         for (content, should_detect, description) in test_cases {
             let findings = analyzer.detect_nested_loops(content, Path::new("test.rs"));
             if should_detect {
-                assert!(!findings.is_empty(), "Should detect nested loops in: {}", description);
+                assert!(
+                    !findings.is_empty(),
+                    "Should detect nested loops in: {}",
+                    description
+                );
                 assert!(findings.iter().any(|f| f.rule == "nested_loops"));
             } else {
-                assert!(findings.is_empty(), "Should not detect nested loops in: {}", description);
+                assert!(
+                    findings.is_empty(),
+                    "Should not detect nested loops in: {}",
+                    description
+                );
             }
         }
     }
@@ -495,38 +589,52 @@ mod performance_analyzer_tests {
         let analyzer = PerformanceAnalyzer::new().unwrap();
 
         let test_cases = vec![
-            (r#"
+            (
+                r#"
             fn bad_string_concat() {
                 let mut s = String::new();
                 for i in 0..100 {
                     s += &format!("item_{} ", i);
                 }
             }
-            "#, true, "String concatenation in loop"),
-
-            (r#"
+            "#,
+                true,
+                "String concatenation in loop",
+            ),
+            (
+                r#"
             fn good_string_concat() {
                 let s: String = (0..100)
                     .map(|i| format!("item_{}", i))
                     .collect::<Vec<_>>()
                     .join(" ");
             }
-            "#, false, "Efficient string building"),
-
-            (r#"
+            "#,
+                false,
+                "Efficient string building",
+            ),
+            (
+                r#"
             fn string_push() {
                 let mut s = String::new();
                 for i in 0..100 {
                     s.push_str(&format!("item_{} ", i));
                 }
             }
-            "#, false, "push_str is more efficient"),
+            "#,
+                false,
+                "push_str is more efficient",
+            ),
         ];
 
         for (content, should_detect, description) in test_cases {
             let findings = analyzer.detect_inefficient_strings(content, Path::new("test.rs"));
             if should_detect {
-                assert!(!findings.is_empty(), "Should detect inefficient strings in: {}", description);
+                assert!(
+                    !findings.is_empty(),
+                    "Should detect inefficient strings in: {}",
+                    description
+                );
                 assert!(findings.iter().any(|f| f.rule == "inefficient_string_ops"));
             } else {
                 // May or may not detect depending on implementation
@@ -539,30 +647,44 @@ mod performance_analyzer_tests {
         let analyzer = PerformanceAnalyzer::new().unwrap();
 
         let test_cases = vec![
-            (r#"
+            (
+                r#"
             #[tokio::main]
             async fn bad_async() {
                 std::fs::read_to_string("file.txt").unwrap();
             }
-            "#, true, "Blocking I/O in async function"),
-
-            (r#"
+            "#,
+                true,
+                "Blocking I/O in async function",
+            ),
+            (
+                r#"
             async fn good_async() {
                 tokio::fs::read_to_string("file.txt").await.unwrap();
             }
-            "#, false, "Proper async I/O"),
-
-            (r#"
+            "#,
+                false,
+                "Proper async I/O",
+            ),
+            (
+                r#"
             fn sync_function() {
                 std::fs::read_to_string("file.txt").unwrap();
             }
-            "#, false, "Blocking I/O in sync function is OK"),
+            "#,
+                false,
+                "Blocking I/O in sync function is OK",
+            ),
         ];
 
         for (content, should_detect, description) in test_cases {
             let findings = analyzer.detect_blocking_io(content, Path::new("test.rs"));
             if should_detect {
-                assert!(!findings.is_empty(), "Should detect blocking I/O in: {}", description);
+                assert!(
+                    !findings.is_empty(),
+                    "Should detect blocking I/O in: {}",
+                    description
+                );
                 assert!(findings.iter().any(|f| f.rule == "blocking_io"));
             }
         }
@@ -573,28 +695,42 @@ mod performance_analyzer_tests {
         let analyzer = PerformanceAnalyzer::new().unwrap();
 
         let test_cases = vec![
-            (r#"
+            (
+                r#"
             fn inefficient_sort() {
                 let mut data = vec![1, 2, 3];
                 for _ in 0..10 {
                     data.sort();
                 }
             }
-            "#, true, "Sorting in loop"),
-
-            (r#"
+            "#,
+                true,
+                "Sorting in loop",
+            ),
+            (
+                r#"
             fn collect_iter_pattern() {
                 let data: Vec<i32> = vec![1, 2, 3];
                 let result: Vec<String> = data.iter().collect::<Vec<_>>().iter().map(|x| x.to_string()).collect();
             }
-            "#, true, "collect().iter() pattern"),
+            "#,
+                true,
+                "collect().iter() pattern",
+            ),
         ];
 
         for (content, should_detect, description) in test_cases {
-            let findings = analyzer.detect_algorithmic_inefficiencies(content, Path::new("test.rs"));
+            let findings =
+                analyzer.detect_algorithmic_inefficiencies(content, Path::new("test.rs"));
             if should_detect {
-                assert!(!findings.is_empty(), "Should detect algorithmic inefficiency in: {}", description);
-                assert!(findings.iter().any(|f| f.rule == "algorithmic_inefficiency"));
+                assert!(
+                    !findings.is_empty(),
+                    "Should detect algorithmic inefficiency in: {}",
+                    description
+                );
+                assert!(findings
+                    .iter()
+                    .any(|f| f.rule == "algorithmic_inefficiency"));
             }
         }
     }
@@ -611,7 +747,8 @@ mod performance_analyzer_tests {
     fn test_large_file_without_issues() {
         let analyzer = PerformanceAnalyzer::new().unwrap();
         let content = "fn main() { println!(\"Hello\"); }
-".repeat(1000);
+"
+        .repeat(1000);
         let result = analyzer.analyze(Path::new("large.rs"), content.as_bytes());
         assert!(result.is_ok());
         // Should not have excessive findings for clean code
@@ -620,7 +757,7 @@ mod performance_analyzer_tests {
 
     proptest! {
         #[test]
-        fn test_performance_analyzer_with_random_rust_code(content in "[a-zA-Z0-9\s\{\}\(\)\[\];=<>!@#$%^&*+-]{0,2000}") {
+        fn test_performance_analyzer_with_random_rust_code(content in r"[a-zA-Z0-9\s\{\}\(\)\[\];=<>!@#$%^&*+-]{0,2000}") {
             let analyzer = PerformanceAnalyzer::new().unwrap();
             let result = analyzer.analyze(Path::new("random.rs"), content.as_bytes());
             prop_assert!(result.is_ok());
@@ -744,31 +881,47 @@ mod duplicate_analyzer_tests {
         let analyzer = DuplicateAnalyzer::new().unwrap();
 
         let block1 = CodeBlock {
-            lines: vec!["line1".to_string(), "line2".to_string(), "line3".to_string()],
+            lines: vec![
+                "line1".to_string(),
+                "line2".to_string(),
+                "line3".to_string(),
+            ],
             start_line: 1,
             end_line: 3,
         };
 
         let block2 = CodeBlock {
-            lines: vec!["line1".to_string(), "line2".to_string(), "line3".to_string()],
+            lines: vec![
+                "line1".to_string(),
+                "line2".to_string(),
+                "line3".to_string(),
+            ],
             start_line: 5,
             end_line: 7,
         };
 
         let block3 = CodeBlock {
-            lines: vec!["line1".to_string(), "different".to_string(), "line3".to_string()],
+            lines: vec![
+                "line1".to_string(),
+                "different".to_string(),
+                "line3".to_string(),
+            ],
             start_line: 9,
             end_line: 11,
         };
 
         let block4 = CodeBlock {
-            lines: vec!["completely".to_string(), "different".to_string(), "content".to_string()],
+            lines: vec![
+                "completely".to_string(),
+                "different".to_string(),
+                "content".to_string(),
+            ],
             start_line: 13,
             end_line: 15,
         };
 
         assert_eq!(analyzer.calculate_similarity(&block1, &block2), 1.0);
-        assert!((analyzer.calculate_similarity(&block1, &block3) - 2.0/3.0).abs() < 0.01);
+        assert!((analyzer.calculate_similarity(&block1, &block3) - 2.0 / 3.0).abs() < 0.01);
         assert_eq!(analyzer.calculate_similarity(&block1, &block4), 0.0);
     }
 
@@ -839,7 +992,10 @@ mod duplicate_analyzer_tests {
 
         let patterns = analyzer.detect_security_patterns_in_duplicate(&block1, &block2);
         assert!(!patterns.is_empty());
-        assert!(patterns.contains(&"authentication".to_string()) || patterns.contains(&"input_validation".to_string()));
+        assert!(
+            patterns.contains(&"authentication".to_string())
+                || patterns.contains(&"input_validation".to_string())
+        );
     }
 
     #[test]
@@ -861,7 +1017,7 @@ mod duplicate_analyzer_tests {
         // High similarity with security content should be high severity
         let severity = analyzer.calculate_severity(0.95, &block1, &block2);
         match severity {
-            Severity::High => {},
+            Severity::High => {}
             _ => panic!("Expected High severity for high similarity security content"),
         }
     }
@@ -886,7 +1042,7 @@ mod duplicate_analyzer_tests {
 
     proptest! {
         #[test]
-        fn test_duplicate_analyzer_with_random_content(content in "[a-zA-Z0-9\s\{\}\(\)\[\];=<>!@#$%^&*+-]{0,1000}") {
+        fn test_duplicate_analyzer_with_random_content(content in r"[a-zA-Z0-9\s\{\}\(\)\[\];=<>!@#$%^&*+-]{0,1000}") {
             let analyzer = DuplicateAnalyzer::new().unwrap();
             let result = analyzer.analyze(Path::new("random.rs"), content.as_bytes());
             prop_assert!(result.is_ok());
@@ -914,7 +1070,9 @@ mod build_artifact_analyzer_tests {
         // Check default patterns
         assert!(analyzer.artifact_patterns.contains(&"*.so".to_string()));
         assert!(analyzer.artifact_patterns.contains(&"*.exe".to_string()));
-        assert!(analyzer.artifact_patterns.contains(&"Cargo.toml".to_string()));
+        assert!(analyzer
+            .artifact_patterns
+            .contains(&"Cargo.toml".to_string()));
     }
 
     #[test]
@@ -980,35 +1138,86 @@ mod build_artifact_analyzer_tests {
         let analyzer = BuildArtifactAnalyzer::new();
 
         // Test shared libraries
-        assert_eq!(analyzer.determine_artifact_type(Path::new("lib.so")), ArtifactType::SharedLibrary);
-        assert_eq!(analyzer.determine_artifact_type(Path::new("lib.dylib")), ArtifactType::SharedLibrary);
-        assert_eq!(analyzer.determine_artifact_type(Path::new("lib.dll")), ArtifactType::SharedLibrary);
+        assert_eq!(
+            analyzer.determine_artifact_type(Path::new("lib.so")),
+            ArtifactType::SharedLibrary
+        );
+        assert_eq!(
+            analyzer.determine_artifact_type(Path::new("lib.dylib")),
+            ArtifactType::SharedLibrary
+        );
+        assert_eq!(
+            analyzer.determine_artifact_type(Path::new("lib.dll")),
+            ArtifactType::SharedLibrary
+        );
 
         // Test archives
-        assert_eq!(analyzer.determine_artifact_type(Path::new("lib.a")), ArtifactType::Archive);
-        assert_eq!(analyzer.determine_artifact_type(Path::new("lib.lib")), ArtifactType::Archive);
+        assert_eq!(
+            analyzer.determine_artifact_type(Path::new("lib.a")),
+            ArtifactType::Archive
+        );
+        assert_eq!(
+            analyzer.determine_artifact_type(Path::new("lib.lib")),
+            ArtifactType::Archive
+        );
 
         // Test object files
-        assert_eq!(analyzer.determine_artifact_type(Path::new("main.o")), ArtifactType::ObjectFile);
-        assert_eq!(analyzer.determine_artifact_type(Path::new("module.obj")), ArtifactType::ObjectFile);
+        assert_eq!(
+            analyzer.determine_artifact_type(Path::new("main.o")),
+            ArtifactType::ObjectFile
+        );
+        assert_eq!(
+            analyzer.determine_artifact_type(Path::new("module.obj")),
+            ArtifactType::ObjectFile
+        );
 
         // Test binaries
-        assert_eq!(analyzer.determine_artifact_type(Path::new("app.exe")), ArtifactType::Binary);
-        assert_eq!(analyzer.determine_artifact_type(Path::new("program.bin")), ArtifactType::Binary);
-        assert_eq!(analyzer.determine_artifact_type(Path::new("script.out")), ArtifactType::Binary);
+        assert_eq!(
+            analyzer.determine_artifact_type(Path::new("app.exe")),
+            ArtifactType::Binary
+        );
+        assert_eq!(
+            analyzer.determine_artifact_type(Path::new("program.bin")),
+            ArtifactType::Binary
+        );
+        assert_eq!(
+            analyzer.determine_artifact_type(Path::new("script.out")),
+            ArtifactType::Binary
+        );
 
         // Test Java archives
-        assert_eq!(analyzer.determine_artifact_type(Path::new("app.jar")), ArtifactType::Archive);
-        assert_eq!(analyzer.determine_artifact_type(Path::new("web.war")), ArtifactType::Archive);
-        assert_eq!(analyzer.determine_artifact_type(Path::new("enterprise.ear")), ArtifactType::Archive);
+        assert_eq!(
+            analyzer.determine_artifact_type(Path::new("app.jar")),
+            ArtifactType::Archive
+        );
+        assert_eq!(
+            analyzer.determine_artifact_type(Path::new("web.war")),
+            ArtifactType::Archive
+        );
+        assert_eq!(
+            analyzer.determine_artifact_type(Path::new("enterprise.ear")),
+            ArtifactType::Archive
+        );
 
         // Test package files
-        assert_eq!(analyzer.determine_artifact_type(Path::new("package.deb")), ArtifactType::Binary);
-        assert_eq!(analyzer.determine_artifact_type(Path::new("software.rpm")), ArtifactType::Binary);
+        assert_eq!(
+            analyzer.determine_artifact_type(Path::new("package.deb")),
+            ArtifactType::Binary
+        );
+        assert_eq!(
+            analyzer.determine_artifact_type(Path::new("software.rpm")),
+            ArtifactType::Binary
+        );
 
         // Test unknown types
-        assert_eq!(analyzer.determine_artifact_type(Path::new("unknown.xyz")), ArtifactType::Other);
-        assert_eq!(analyzer.determine_artifact_type(Path::new("data.txt")), ArtifactType::Other);
+        assert_eq!(
+            analyzer.determine_artifact_type(Path::new("unknown.xyz")),
+            ArtifactType::Other
+        );
+        assert_eq!(
+            analyzer.determine_artifact_type(Path::new("data.txt")),
+            ArtifactType::Other
+        );
     }
 
     #[test]
@@ -1181,7 +1390,10 @@ numpy
                 dependencies: vec!["dep1".to_string()],
             },
         ];
-        assert_eq!(analyzer.assess_conflict_level(&low_conflict), ConflictLevel::Low);
+        assert_eq!(
+            analyzer.assess_conflict_level(&low_conflict),
+            ConflictLevel::Low
+        );
 
         // Test medium conflict (many duplicates)
         let medium_conflict = vec![
@@ -1214,7 +1426,10 @@ numpy
                 dependencies: vec!["dep1".to_string()],
             },
         ];
-        assert_eq!(analyzer.assess_conflict_level(&medium_conflict), ConflictLevel::Medium);
+        assert_eq!(
+            analyzer.assess_conflict_level(&medium_conflict),
+            ConflictLevel::Medium
+        );
 
         // Test high conflict (different types)
         let high_conflict = vec![
@@ -1233,7 +1448,10 @@ numpy
                 dependencies: vec!["dep1".to_string()],
             },
         ];
-        assert_eq!(analyzer.assess_conflict_level(&high_conflict), ConflictLevel::High);
+        assert_eq!(
+            analyzer.assess_conflict_level(&high_conflict),
+            ConflictLevel::High
+        );
 
         // Test critical conflict (different types and dependencies)
         let critical_conflict = vec![
@@ -1252,7 +1470,10 @@ numpy
                 dependencies: vec!["dep2".to_string()],
             },
         ];
-        assert_eq!(analyzer.assess_conflict_level(&critical_conflict), ConflictLevel::Critical);
+        assert_eq!(
+            analyzer.assess_conflict_level(&critical_conflict),
+            ConflictLevel::Critical
+        );
     }
 
     #[test]
@@ -1276,7 +1497,8 @@ numpy
             },
         ];
 
-        let recommendation = analyzer.generate_cleanup_recommendation(&artifacts, ConflictLevel::Low);
+        let recommendation =
+            analyzer.generate_cleanup_recommendation(&artifacts, ConflictLevel::Low);
         assert!(recommendation.contains("LOW"));
         assert!(recommendation.contains("duplicate artifacts"));
         assert!(recommendation.contains("Automated cleanup recommended"));
@@ -1313,8 +1535,14 @@ numpy
 
         // Should have one Keep and one Remove action
         assert_eq!(actions.len(), 2);
-        let keep_count = actions.iter().filter(|a| matches!(a, CleanupAction::Keep { .. })).count();
-        let remove_count = actions.iter().filter(|a| matches!(a, CleanupAction::Remove { .. })).count();
+        let keep_count = actions
+            .iter()
+            .filter(|a| matches!(a, CleanupAction::Keep { .. }))
+            .count();
+        let remove_count = actions
+            .iter()
+            .filter(|a| matches!(a, CleanupAction::Remove { .. }))
+            .count();
         assert_eq!(keep_count, 1);
         assert_eq!(remove_count, 1);
     }
@@ -1353,7 +1581,7 @@ numpy
 
     proptest! {
         #[test]
-        fn test_build_artifact_analyzer_with_random_content(content in "[a-zA-Z0-9\s\{\}\(\)\[\];=<>!@#$%^&*+-]{0,1000}") {
+        fn test_build_artifact_analyzer_with_random_content(content in r"[a-zA-Z0-9\s\{\}\(\)\[\];=<>!@#$%^&*+-]{0,1000}") {
             let analyzer = BuildArtifactAnalyzer::new();
             let result = analyzer.analyze(Path::new("random.txt"), content.as_bytes());
             prop_assert!(result.is_ok());
@@ -1539,7 +1767,7 @@ edition = "2021"
 
     proptest! {
         #[test]
-        fn test_dependency_analyzer_with_random_content(content in "[a-zA-Z0-9\s\{\}\(\)\[\];=<>!@#$%^&*+-]{0,1000}") {
+        fn test_dependency_analyzer_with_random_content(content in r"[a-zA-Z0-9\s\{\}\(\)\[\];=<>!@#$%^&*+-]{0,1000}") {
             let temp_dir = TempDir::new().unwrap();
             let analyzer = DependencyAnalyzer::new(temp_dir.path().to_path_buf());
             let result = analyzer.analyze(Path::new("random.txt"), content.as_bytes());
@@ -1684,12 +1912,24 @@ mod validation_analyzer_tests {
         let enhanced = analyzer.enhance_finding_with_validation(validation_result);
 
         // Should contain confidence information
-        assert!(enhanced.description.as_ref().unwrap().contains("Confidence: 75"));
+        assert!(enhanced
+            .description
+            .as_ref()
+            .unwrap()
+            .contains("Confidence: 75"));
 
         // Should contain recommendations
         assert!(enhanced.suggestion.is_some());
-        assert!(enhanced.suggestion.as_ref().unwrap().contains("parameterized queries"));
-        assert!(enhanced.suggestion.as_ref().unwrap().contains("Validate input data"));
+        assert!(enhanced
+            .suggestion
+            .as_ref()
+            .unwrap()
+            .contains("parameterized queries"));
+        assert!(enhanced
+            .suggestion
+            .as_ref()
+            .unwrap()
+            .contains("Validate input data"));
     }
 
     #[test]
@@ -1794,16 +2034,14 @@ mod validation_analyzer_tests {
     fn test_get_threshold_recommendations() {
         let analyzer = ValidationAnalyzer::new();
 
-        let findings = vec![
-            Finding::new(
-                "security",
-                "hardcoded_secret",
-                Severity::High,
-                PathBuf::from("test.rs"),
-                10,
-                "Test finding".to_string(),
-            ),
-        ];
+        let findings = vec![Finding::new(
+            "security",
+            "hardcoded_secret",
+            Severity::High,
+            PathBuf::from("test.rs"),
+            10,
+            "Test finding".to_string(),
+        )];
 
         let recommendations = analyzer.get_threshold_recommendations(&findings);
 
@@ -1829,10 +2067,12 @@ mod validation_analyzer_tests {
         let base_registry = crate::analyzers::AnalyzerRegistry::new();
         let registry = ValidatedAnalyzerRegistry::new(base_registry);
 
-        let result = registry.analyze_file_with_validation(
-            Path::new("test.rs"),
-            b"fn main() { let password = \"secret123\"; }"
-        ).await;
+        let result = registry
+            .analyze_file_with_validation(
+                Path::new("test.rs"),
+                b"fn main() { let password = \"secret123\"; }",
+            )
+            .await;
 
         assert!(result.is_ok());
     }
@@ -1840,7 +2080,7 @@ mod validation_analyzer_tests {
     proptest! {
         #[test]
         fn test_validation_analyzer_with_random_findings(
-            message in "[a-zA-Z0-9\s]{1,100}",
+            message in r"[a-zA-Z0-9\s]{1,100}",
             line in 1..1000u32
         ) {
             let analyzer = ValidationAnalyzer::new();

@@ -75,8 +75,13 @@ walkdir = "2.5"
 sha2 = "0.10"
 blake3 = "1.5"
 
-# Parallel processing
+# High-performance parallel processing
 rayon = "1.10"
+
+# SIMD optimizations for pattern matching
+memchr = "2.7"
+aho-corasick = "1.1"
+bstr = "1.9"
 
 # Additional utilities
 chrono = { version = "0.4", features = ["serde"] }
@@ -174,6 +179,10 @@ harness = false
 [[bench]]
 name = "optimization_recommendations_benchmark"
 harness = false
+
+[[bin]]
+name = "test_duplicate_detector"
+required-features = ["ast"]
 
 [profile.release]
 opt-level = 3

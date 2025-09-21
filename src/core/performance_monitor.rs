@@ -56,7 +56,7 @@ impl SwarmPerformanceMonitor {
             data.cpu_samples
                 .push((Instant::now(), metrics.cpu_usage_percent));
             data.memory_samples
-                .push((Instant::now(), metrics.memory_usage_mb as f64));
+                .push((Instant::now(), metrics.memory_usage_mb));
             data.io_samples
                 .push((Instant::now(), metrics.io_operations as f64));
         }
@@ -169,8 +169,7 @@ impl SwarmPerformanceMonitor {
 
         // Calculate resource utilization trends
         let cpu_trend = self.calculate_resource_trend(&history, |s| s.current_cpu_usage);
-        let memory_trend =
-            self.calculate_resource_trend(&history, |s| s.current_memory_usage as f64);
+        let memory_trend = self.calculate_resource_trend(&history, |s| s.current_memory_usage);
 
         Ok(PerformanceStats {
             total_execution_time,
@@ -220,7 +219,7 @@ impl SwarmPerformanceMonitor {
             .filter(|t| {
                 t.memory_samples
                     .iter()
-                    .any(|(_, mem)| *mem > self.config.memory_threshold_mb as f64)
+                    .any(|(_, mem)| *mem > self.config.memory_threshold_mb)
             })
             .collect();
 

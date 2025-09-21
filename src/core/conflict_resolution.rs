@@ -147,17 +147,17 @@ impl ConflictResolver {
         }
 
         // Group findings by similarity
-        let mut finding_groups = HashMap::new();
+        let mut finding_groups: HashMap<String, Vec<(Finding, String)>> = HashMap::new();
         for (i, finding) in conflict.conflicting_findings.iter().enumerate() {
             let key = self.generate_similarity_key(finding);
             finding_groups
                 .entry(key)
-                .or_insert_with(Vec::new)
+                .or_default()
                 .push((finding.clone(), conflict.agent_ids[i].clone()));
         }
 
         // Find the group with the most findings (consensus)
-        let mut consensus_group = Vec::new();
+        let mut consensus_group: Vec<(Finding, String)> = Vec::new();
         let mut max_count = 0;
 
         for group in finding_groups.values() {

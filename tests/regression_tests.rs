@@ -1,8 +1,8 @@
-//! Regression tests to prevent re-introduction of fixed issues
+// Regression tests to prevent re-introduction of fixed issues
 const BIN_NAME: &str = "do-codeguardian";
-//!
-//! This test suite validates that specific bugs and false positives
-//! that were previously fixed do not resurface in future changes.
+//
+// This test suite validates that specific bugs and false positives
+// that were previously fixed do not resurface in future changes.
 
 use assert_cmd::Command;
 use predicates::prelude::*;
@@ -16,14 +16,14 @@ fn test_git_conflict_analyzer_ignores_test_content() {
     let test_file = temp_dir.path().join("test_conflicts.rs");
 
     // Create a test file with conflict markers in test context
-    let test_content = r##"
+    let test_content = r###"
 #[cfg(test)]
 mod tests {
     use super::*;
 
     #[test]
     fn test_detect_complete_conflict() {
-        let content = r###"
+        let content = "
 some code
 <<<<<<< HEAD
 version 1
@@ -31,12 +31,13 @@ version 1
 version 2
 >>>>>>> branch
 more code
-"###;
+";
         // This is test code with conflict markers that should not be flagged
         // let findings = analyzer.analyze(Path::new("test.rs"), content.as_bytes()).unwrap();
         // assert!(findings.iter().any(|f| f.rule == "merge_conflict_start"));
     }
-"##;
+"}
+"###;
 
     fs::write(&test_file, test_content).unwrap();
 
@@ -51,8 +52,10 @@ more code
 
     // Should not detect git conflicts in test code
     let output_str = String::from_utf8(output.stdout).unwrap();
-    assert!(!output_str.contains("git_conflict"),
-            "Git conflict analyzer should not flag test content with conflict markers");
+    assert!(
+        !output_str.contains("git_conflict"),
+        "Git conflict analyzer should not flag test content with conflict markers"
+    );
 }
 
 /// Test that AI content analyzer doesn't flag legitimate documentation
@@ -101,10 +104,14 @@ mod tests {
     // Should not flag documentation comments or test content
     if output_str.contains("incomplete_implementation") {
         // If any incomplete implementation findings exist, they should not be in comments
-        assert!(!output_str.contains("TODO: Add more comprehensive examples"),
-                "AI content analyzer should not flag TODO in documentation comments");
-        assert!(!output_str.contains("TODO: Implement additional validation"),
-                "AI content analyzer should not flag TODO in function documentation");
+        assert!(
+            !output_str.contains("TODO: Add more comprehensive examples"),
+            "AI content analyzer should not flag TODO in documentation comments"
+        );
+        assert!(
+            !output_str.contains("TODO: Implement additional validation"),
+            "AI content analyzer should not flag TODO in function documentation"
+        );
     }
 }
 
@@ -161,8 +168,10 @@ fn main() {
 
     if output_str.contains("debug_statement") {
         // Should flag eprintln! but not tracing::Level::DEBUG or documentation
-        assert!(!output_str.contains("tracing::Level::DEBUG"),
-                "Should not flag proper tracing level usage as debug statement");
+        assert!(
+            !output_str.contains("tracing::Level::DEBUG"),
+            "Should not flag proper tracing level usage as debug statement"
+        );
     }
 }
 
@@ -179,13 +188,17 @@ fn test_config_loading_graceful_degradation() {
         .unwrap();
 
     // Should not panic or fail hard, should continue with defaults
-    assert!(output.status.success() || output.status.code() == Some(0),
-            "Should handle missing config gracefully and continue");
+    assert!(
+        output.status.success() || output.status.code() == Some(0),
+        "Should handle missing config gracefully and continue"
+    );
 
     let stderr = String::from_utf8(output.stderr).unwrap();
     // Should show warning but not crash
-    assert!(stderr.contains("Configuration file error") || stderr.contains("Using defaults"),
-            "Should warn about missing config and use defaults");
+    assert!(
+        stderr.contains("Configuration file error") || stderr.contains("Using defaults"),
+        "Should warn about missing config and use defaults"
+    );
 }
 
 /// Test that performance analyzer doesn't over-flag legitimate patterns
@@ -269,8 +282,14 @@ fn test_json_output_schema_consistency() {
     let json = json_result.unwrap();
 
     // Check required schema fields are present
-    assert!(json.get("schema_version").is_some(), "Should have schema_version");
-    assert!(json.get("tool_metadata").is_some(), "Should have tool_metadata");
+    assert!(
+        json.get("schema_version").is_some(),
+        "Should have schema_version"
+    );
+    assert!(
+        json.get("tool_metadata").is_some(),
+        "Should have tool_metadata"
+    );
     assert!(json.get("findings").is_some(), "Should have findings array");
     assert!(json.get("summary").is_some(), "Should have summary");
     assert!(json.get("timestamp").is_some(), "Should have timestamp");
@@ -278,8 +297,14 @@ fn test_json_output_schema_consistency() {
     // Check tool metadata structure
     let metadata = json.get("tool_metadata").unwrap();
     assert!(metadata.get("name").is_some(), "Should have tool name");
-    assert!(metadata.get("version").is_some(), "Should have tool version");
-    assert!(metadata.get("config_hash").is_some(), "Should have config hash");
+    assert!(
+        metadata.get("version").is_some(),
+        "Should have tool version"
+    );
+    assert!(
+        metadata.get("config_hash").is_some(),
+        "Should have config hash"
+    );
 }
 
 /// Test that SARIF output format works correctly
@@ -318,7 +343,7 @@ fn test_parallel_processing_stability() {
 
     // Create multiple test files
     for i in 0..5 {
-        let test_file = temp_dir.path().join(format!(r#"test_{}.rs"#, i));
+        let test_file = temp_dir.path().join(format!("test_{}.rs", i));
         fs::write(&test_file, format!("fn test_function_{}() {{}}", i)).unwrap();
     }
 
@@ -333,7 +358,10 @@ fn test_parallel_processing_stability() {
         .output()
         .unwrap();
 
-    assert!(output.status.success(), r#"Parallel processing should succeed"#);
+    assert!(
+        output.status.success(),
+        r#"Parallel processing should succeed"#
+    );
 
     let output_str = String::from_utf8(output.stdout).unwrap();
     let json: serde_json::Value = serde_json::from_str(&output_str).unwrap();

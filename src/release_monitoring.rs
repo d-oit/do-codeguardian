@@ -1,9 +1,8 @@
 //! Release Monitoring Module
-///
+/// Release monitoring functionality for tracking software releases and updates
 // This module provides comprehensive release monitoring capabilities for CodeGuardian,
 // collecting and tracking release metrics from GitHub API including success rates,
 // deployment times, post-release issues, and user adoption patterns.
-
 use crate::error::Result;
 
 use crate::github_api::GitHubApiClient;
@@ -220,7 +219,7 @@ impl ReleaseMonitoringService {
         }
 
         let since_date = release_date.format("%Y-%m-%d").to_string();
-        let until_date = window_end.format("%Y-%m-%d").to_string();
+        let _until_date = window_end.format("%Y-%m-%d").to_string();
 
         let args = [
             "issue",
@@ -236,7 +235,7 @@ impl ReleaseMonitoringService {
             "-q",
             ".[] | select(.createdAt >= $since and .createdAt <= $until)",
             "--jq",
-            &format!("length"),
+            "length",
         ];
 
         // Note: This is a simplified approach. In practice, you'd need more sophisticated

@@ -116,7 +116,7 @@ impl SwarmOrchestrator {
             .await?;
 
         // Step 5: Generate final performance metrics
-        let final_metrics = self
+        let _final_metrics = self
             .performance_monitor
             .generate_performance_report()
             .await?;
@@ -219,7 +219,7 @@ impl SwarmOrchestrator {
             let _ = performance_monitor.start_task_monitoring(&task.id).await;
 
             // Allocate resources
-            let allocation = match resource_manager
+            let _allocation = match resource_manager
                 .allocate_resources(
                     &task.id,
                     &ResourceRequirements {
@@ -391,7 +391,7 @@ impl SwarmOrchestrator {
         // Close channels
 
         // Wait for any remaining tasks to complete
-        while let Some(_) = self.task_receiver.recv().await {
+        while (self.task_receiver.recv().await).is_some() {
             // Process any remaining tasks
         }
 

@@ -985,6 +985,7 @@ dependencies = [
 name = "do-codeguardian"
 version = "0.2.1-alpha.2"
 dependencies = [
+ "aho-corasick",
  "anyhow",
  "assert_cmd",
  "async-trait",
@@ -992,6 +993,7 @@ dependencies = [
  "axum-test",
  "base64",
  "blake3",
+ "bstr",
  "cargo-audit",
  "cargo-husky",
  "cargo_metadata",
@@ -1009,6 +1011,7 @@ dependencies = [
  "indicatif",
  "is-terminal",
  "lazy_static",
+ "memchr",
  "memmap2",
  "mockito",
  "num_cpus",

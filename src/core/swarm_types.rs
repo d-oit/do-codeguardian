@@ -168,10 +168,12 @@ pub struct ResourceRequirements {
 #[derive(Debug, Clone)]
 pub enum SwarmError {
     TaskTimeout(String),
+    Timeout(String),
     ResourceExhausted(String),
     AgentFailure(String),
     DependencyFailure(String),
     ConfigurationError(String),
+    InvalidRequest(String),
     InternalError(String),
 }
 
@@ -179,10 +181,12 @@ impl fmt::Display for SwarmError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             SwarmError::TaskTimeout(msg) => write!(f, "Task timeout: {}", msg),
+            SwarmError::Timeout(msg) => write!(f, "Timeout: {}", msg),
             SwarmError::ResourceExhausted(msg) => write!(f, "Resource exhausted: {}", msg),
             SwarmError::AgentFailure(msg) => write!(f, "Agent failure: {}", msg),
             SwarmError::DependencyFailure(msg) => write!(f, "Dependency failure: {}", msg),
             SwarmError::ConfigurationError(msg) => write!(f, "Configuration error: {}", msg),
+            SwarmError::InvalidRequest(msg) => write!(f, "Invalid request: {}", msg),
             SwarmError::InternalError(msg) => write!(f, "Internal error: {}", msg),
         }
     }

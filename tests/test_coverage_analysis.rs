@@ -143,7 +143,13 @@ impl CoverageReport {
         modules.sort_by(|a, b| b.1.partial_cmp(a.1).unwrap());
 
         for (module, coverage) in modules {
-            let status = if *coverage >= 95.0 { "✅" } else if *coverage >= 90.0 { "⚠️" } else { "❌" };
+            let status = if *coverage >= 95.0 {
+                "✅"
+            } else if *coverage >= 90.0 {
+                "⚠️"
+            } else {
+                "❌"
+            };
             println!("  {} {}: {:.1}%", status, module, coverage);
         }
 
@@ -200,24 +206,37 @@ impl TestQualityMetrics {
         println!("📈 TEST QUALITY METRICS");
         println!("=======================");
         println!("Total Tests: {}", self.total_tests);
-        println!("├─ Unit Tests: {} ({:.1}%)",
-                self.unit_tests,
-                (self.unit_tests as f64 / self.total_tests as f64) * 100.0);
-        println!("├─ Integration Tests: {} ({:.1}%)",
-                self.integration_tests,
-                (self.integration_tests as f64 / self.total_tests as f64) * 100.0);
-        println!("├─ E2E Tests: {} ({:.1}%)",
-                self.e2e_tests,
-                (self.e2e_tests as f64 / self.total_tests as f64) * 100.0);
-        println!("├─ Performance Tests: {} ({:.1}%)",
-                self.performance_tests,
-                (self.performance_tests as f64 / self.total_tests as f64) * 100.0);
-        println!("└─ Property Tests: {} ({:.1}%)",
-                self.property_tests,
-                (self.property_tests as f64 / self.total_tests as f64) * 100.0);
+        println!(
+            "├─ Unit Tests: {} ({:.1}%)",
+            self.unit_tests,
+            (self.unit_tests as f64 / self.total_tests as f64) * 100.0
+        );
+        println!(
+            "├─ Integration Tests: {} ({:.1}%)",
+            self.integration_tests,
+            (self.integration_tests as f64 / self.total_tests as f64) * 100.0
+        );
+        println!(
+            "├─ E2E Tests: {} ({:.1}%)",
+            self.e2e_tests,
+            (self.e2e_tests as f64 / self.total_tests as f64) * 100.0
+        );
+        println!(
+            "├─ Performance Tests: {} ({:.1}%)",
+            self.performance_tests,
+            (self.performance_tests as f64 / self.total_tests as f64) * 100.0
+        );
+        println!(
+            "└─ Property Tests: {} ({:.1}%)",
+            self.property_tests,
+            (self.property_tests as f64 / self.total_tests as f64) * 100.0
+        );
 
         println!("\n⏱️  Performance Metrics:");
-        println!("Average Test Execution: {:.1}ms", self.avg_test_execution_time_ms);
+        println!(
+            "Average Test Execution: {:.1}ms",
+            self.avg_test_execution_time_ms
+        );
 
         if self.slow_tests.is_empty() {
             println!("✅ No slow tests detected");
@@ -244,17 +263,26 @@ impl TestQualityMetrics {
         // Check test distribution
         let unit_percentage = (self.unit_tests as f64 / self.total_tests as f64) * 100.0;
         if unit_percentage < 50.0 {
-            issues.push(format!("Unit tests should be >50% of total (currently {:.1}%)", unit_percentage));
+            issues.push(format!(
+                "Unit tests should be >50% of total (currently {:.1}%)",
+                unit_percentage
+            ));
         }
 
         // Check performance
         if self.avg_test_execution_time_ms > 5.0 {
-            issues.push(format!("Average test time too high: {:.1}ms (target <5ms)", self.avg_test_execution_time_ms));
+            issues.push(format!(
+                "Average test time too high: {:.1}ms (target <5ms)",
+                self.avg_test_execution_time_ms
+            ));
         }
 
         // Check for flaky tests
         if !self.flaky_tests.is_empty() {
-            issues.push(format!("Flaky tests detected: {} tests need fixing", self.flaky_tests.len()));
+            issues.push(format!(
+                "Flaky tests detected: {} tests need fixing",
+                self.flaky_tests.len()
+            ));
         }
 
         issues
@@ -308,15 +336,24 @@ mod coverage_analysis_tests {
         let mut analyzer = TestCoverageAnalyzer::new();
 
         // Add a low coverage module
-        analyzer.module_coverage.insert("test_module".to_string(), 75.0);
-        analyzer.function_coverage.insert("uncovered_function".to_string(), false);
+        analyzer
+            .module_coverage
+            .insert("test_module".to_string(), 75.0);
+        analyzer
+            .function_coverage
+            .insert("uncovered_function".to_string(), false);
 
         let report = analyzer.analyze_coverage();
         assert!(!report.recommendations.is_empty());
 
-        let has_module_recommendation = report.recommendations.iter()
+        let has_module_recommendation = report
+            .recommendations
+            .iter()
             .any(|r| r.contains("test_module"));
-        assert!(has_module_recommendation, "Should recommend improving low coverage modules");
+        assert!(
+            has_module_recommendation,
+            "Should recommend improving low coverage modules"
+        );
     }
 
     #[test]
@@ -324,13 +361,17 @@ mod coverage_analysis_tests {
         let mut analyzer = TestCoverageAnalyzer::new();
 
         // Test high coverage scenario
-        analyzer.module_coverage.insert("high_coverage".to_string(), 98.0);
+        analyzer
+            .module_coverage
+            .insert("high_coverage".to_string(), 98.0);
         let report = analyzer.analyze_coverage();
         assert!(report.overall_coverage > 95.0);
 
         // Test low coverage scenario
         analyzer.module_coverage.clear();
-        analyzer.module_coverage.insert("low_coverage".to_string(), 70.0);
+        analyzer
+            .module_coverage
+            .insert("low_coverage".to_string(), 70.0);
         let report = analyzer.analyze_coverage();
         assert!(report.overall_coverage < 95.0);
         assert!(!report.recommendations.is_empty());

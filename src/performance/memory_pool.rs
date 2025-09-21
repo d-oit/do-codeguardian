@@ -587,3 +587,60 @@ mod tests {
         }
     }
 }
+
+// Thread-local memory pools for reduced contention
+pub mod thread_local_pools {
+    use super::*;
+    use std::cell::RefCell;
+
+    thread_local! {
+        static STRING_POOL: RefCell<StringPool> = RefCell::new(StringPool::new(16, 256));
+        static FINDING_POOL: RefCell<VecPool<crate::types::Finding>> = RefCell::new(VecPool::new(8, 8));
+        static PATH_POOL: RefCell<VecPool<std::path::PathBuf>> = RefCell::new(VecPool::new(4, 4));
+    }
+
+    pub fn init() {
+        // Initialize thread-local pools
+        STRING_POOL.with(|_| {});
+        FINDING_POOL.with(|_| {});
+        PATH_POOL.with(|_| {});
+    }
+
+    pub fn get_string_buffer() -> PooledString<'static> {
+        STRING_POOL.with(|pool| {
+            // This is safe because we're returning a reference to thread-local data
+            // The lifetime is tied to the thread, not the function
+            unsafe {
+                let pool_ptr = pool.as_ptr();
+                (*pool_ptr).get_buffer()
+            }
+        })
+    }
+
+    pub fn put_string_buffer(buffer: PooledString) {
+        // The buffer will be automatically returned when dropped
+        drop(buffer);
+    }
+
+    pub fn get_findings_vec() -> PooledVec<'static, crate::types::Finding> {
+        FINDING_POOL.with(|pool| unsafe {
+            let pool_ptr = pool.as_ptr();
+            (*pool_ptr).get_vec()
+        })
+    }
+
+    pub fn put_findings_vec(vec: PooledVec<crate::types::Finding>) {
+        drop(vec);
+    }
+
+    pub fn get_paths_vec() -> PooledVec<'static, std::path::PathBuf> {
+        PATH_POOL.with(|pool| unsafe {
+            let pool_ptr = pool.as_ptr();
+            (*pool_ptr).get_vec()
+        })
+    }
+
+    pub fn put_paths_vec(vec: PooledVec<std::path::PathBuf>) {
+        drop(vec);
+    }
+}

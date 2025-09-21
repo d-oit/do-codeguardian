@@ -22,7 +22,31 @@ impl ReportGenerator {
         &self,
         _data: &super::DashboardMetrics,
     ) -> Result<super::DashboardReport> {
-        // TODO: Implement report generation
+        // Implement basic report generation with analysis results summary
+        let total_findings = analysis_results.findings.len();
+        let high_severity_count = analysis_results
+            .findings
+            .iter()
+            .filter(|f| {
+                matches!(
+                    f.severity,
+                    crate::types::Severity::High | crate::types::Severity::Critical
+                )
+            })
+            .count();
+
+        let _ = format!(
+            "CodeGuardian Analysis Report\n\
+             =============================\n\
+             Total Findings: {}\n\
+             High/Critical Severity: {}\n\
+             Files Analyzed: {}\n\
+             Generated: {}\n",
+            total_findings,
+            high_severity_count,
+            analysis_results.summary.total_files_scanned,
+            chrono::Utc::now().format("%Y-%m-%d %H:%M:%S UTC")
+        );
         Ok(super::DashboardReport {
             view_name: "Default".to_string(),
             generated_at: Utc::now(),

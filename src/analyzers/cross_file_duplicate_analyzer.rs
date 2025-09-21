@@ -190,7 +190,7 @@ impl CrossFileDuplicateAnalyzer {
 
                 // Length-based filtering to reduce O(n²) complexity
                 let len_ratio = block1.lines.len() as f64 / block2.lines.len() as f64;
-                if len_ratio < 0.5 || len_ratio > 2.0 {
+                if !(0.5..=2.0).contains(&len_ratio) {
                     continue;
                 }
 
@@ -505,7 +505,7 @@ impl CrossFileDuplicateAnalyzer {
 
     /// Normalize a line for comparison
     fn normalize_line(&self, line: &str) -> String {
-        line.trim().split_whitespace().collect::<Vec<_>>().join(" ")
+        line.split_whitespace().collect::<Vec<_>>().join(" ")
     }
 
     /// Check if file should be ignored

@@ -65,15 +65,20 @@ more code
         let findings = json["findings"].as_array().unwrap();
 
         // Should not detect git conflicts in test code
-        let git_conflict_findings: Vec<_> = findings.iter()
+        let git_conflict_findings: Vec<_> = findings
+            .iter()
             .filter(|f| f["analyzer"] == "git_conflict")
             .collect();
 
-        assert_eq!(git_conflict_findings.len(), 0,
-                  "Should not detect git conflicts in test file content");
+        assert_eq!(
+            git_conflict_findings.len(),
+            0,
+            "Should not detect git conflicts in test file content"
+        );
 
         // Should not detect incomplete implementations in test strings
-        let ai_findings: Vec<_> = findings.iter()
+        let ai_findings: Vec<_> = findings
+            .iter()
             .filter(|f| f["analyzer"] == "ai_content" && f["rule"] == "incomplete_implementation")
             .collect();
 
@@ -83,10 +88,14 @@ more code
             let lines: Vec<&str> = test_content.lines().collect();
             if line > 0 && line <= lines.len() {
                 let line_content = lines[line - 1];
-                assert!(!line_content.contains("let sample_conflict = r#"),
-                       "Should not flag test string literals");
-                assert!(!line_content.contains("let incomplete_code = \"TODO:"),
-                       "Should not flag TODO in test string assignments");
+                assert!(
+                    !line_content.contains("let sample_conflict = r#"),
+                    "Should not flag test string literals"
+                );
+                assert!(
+                    !line_content.contains("let incomplete_code = \"TODO:"),
+                    "Should not flag TODO in test string assignments"
+                );
             }
         }
     }
@@ -100,12 +109,12 @@ fn test_cli_config_error_handling() {
 
     let mut cmd = Command::cargo_bin("do-codeguardian").unwrap();
     cmd.arg("--config")
-       .arg("nonexistent-config.toml")
-       .arg("check")
-       .arg(&test_file)
-       .arg("--quiet")
-       .assert()
-       .success(); // Should not fail, should use defaults
+        .arg("nonexistent-config.toml")
+        .arg("check")
+        .arg(&test_file)
+        .arg("--quiet")
+        .assert()
+        .success(); // Should not fail, should use defaults
 }
 
 #[test]
@@ -115,7 +124,8 @@ fn test_cli_parallel_processing_stability() {
     // Create multiple test files
     for i in 0..10 {
         let test_file = temp_dir.path().join(format!("test_{}.rs", i));
-        let content = format!(r#"
+        let content = format!(
+            r###"
 fn function_{}() {{
     println!("Function {}", {});
 }}
@@ -130,19 +140,21 @@ mod tests {{
         assert!(conflict_marker.len() == 7);
     }}
 }}
-"#, i, i, i);
+"###,
+            i, i, i
+        );
         fs::write(&test_file, content).unwrap();
     }
 
     let mut cmd = Command::cargo_bin("do-codeguardian").unwrap();
     cmd.arg("check")
-       .arg(temp_dir.path())
-       .arg("--parallel")
-       .arg("4")
-       .arg("--format")
-       .arg("json")
-       .assert()
-       .success();
+        .arg(temp_dir.path())
+        .arg("--parallel")
+        .arg("4")
+        .arg("--format")
+        .arg("json")
+        .assert()
+        .success();
 }
 
 #[test]
@@ -179,24 +191,24 @@ fn main() {
     let sarif_file = temp_dir.path().join("output.sarif");
     let mut cmd = Command::cargo_bin("do-codeguardian").unwrap();
     cmd.arg("check")
-       .arg(&test_file)
-       .arg("--format")
-       .arg("sarif")
-       .arg("--out")
-       .arg(&sarif_file)
-       .assert()
-       .success();
+        .arg(&test_file)
+        .arg("--format")
+        .arg("sarif")
+        .arg("--out")
+        .arg(&sarif_file)
+        .assert()
+        .success();
 
     assert!(sarif_file.exists(), "SARIF file should be created");
 
     // Test human format
     let mut cmd = Command::cargo_bin("do-codeguardian").unwrap();
     cmd.arg("check")
-       .arg(&test_file)
-       .arg("--format")
-       .arg("human")
-       .assert()
-       .success();
+        .arg(&test_file)
+        .arg("--format")
+        .arg("human")
+        .assert()
+        .success();
 }
 
 #[test]
@@ -239,7 +251,8 @@ fn main() {
 
     if let Ok(json) = serde_json::from_str::<Value>(&stdout) {
         let findings = json["findings"].as_array().unwrap();
-        let debug_findings: Vec<_> = findings.iter()
+        let debug_findings: Vec<_> = findings
+            .iter()
             .filter(|f| f["rule"] == "debug_statement")
             .collect();
 
@@ -249,10 +262,14 @@ fn main() {
             let lines: Vec<&str> = test_content.lines().collect();
             if line > 0 && line <= lines.len() {
                 let line_content = lines[line - 1];
-                assert!(!line_content.contains("tracing::Level::DEBUG"),
-                       "Should not flag tracing::Level::DEBUG as debug statement");
-                assert!(!line_content.contains("tracing::debug!"),
-                       "Should not flag proper tracing::debug! calls");
+                assert!(
+                    !line_content.contains("tracing::Level::DEBUG"),
+                    "Should not flag tracing::Level::DEBUG as debug statement"
+                );
+                assert!(
+                    !line_content.contains("tracing::debug!"),
+                    "Should not flag proper tracing::debug! calls"
+                );
             }
         }
     }
@@ -334,15 +351,20 @@ fn process_item(item: &str) {
         let findings = json["findings"].as_array().unwrap();
 
         // Check git conflict findings
-        let git_conflict_findings: Vec<_> = findings.iter()
+        let git_conflict_findings: Vec<_> = findings
+            .iter()
             .filter(|f| f["analyzer"] == "git_conflict")
             .collect();
 
-        assert_eq!(git_conflict_findings.len(), 0,
-                  "Should not detect git conflicts in test string literals");
+        assert_eq!(
+            git_conflict_findings.len(),
+            0,
+            "Should not detect git conflicts in test string literals"
+        );
 
         // Check AI content findings
-        let ai_findings: Vec<_> = findings.iter()
+        let ai_findings: Vec<_> = findings
+            .iter()
             .filter(|f| f["analyzer"] == "ai_content" && f["rule"] == "incomplete_implementation")
             .collect();
 
@@ -352,12 +374,18 @@ fn process_item(item: &str) {
             let lines: Vec<&str> = test_content.lines().collect();
             if line > 0 && line <= lines.len() {
                 let line_content = lines[line - 1];
-                assert!(!line_content.contains("//! TODO: This should not be flagged"),
-                       "Should not flag module documentation TODOs");
-                assert!(!line_content.contains("/// TODO: This should also not be flagged"),
-                       "Should not flag function documentation TODOs");
-                assert!(!line_content.contains("let incomplete_msg = \"TODO:"),
-                       "Should not flag TODOs in test string literals");
+                assert!(
+                    !line_content.contains("//! TODO: This should not be flagged"),
+                    "Should not flag module documentation TODOs"
+                );
+                assert!(
+                    !line_content.contains("/// TODO: This should also not be flagged"),
+                    "Should not flag function documentation TODOs"
+                );
+                assert!(
+                    !line_content.contains("let incomplete_msg = \"TODO:"),
+                    "Should not flag TODOs in test string literals"
+                );
             }
         }
     }
@@ -371,10 +399,7 @@ fn test_cli_error_exit_codes() {
 
     // Test normal operation (should exit 0)
     let mut cmd = Command::cargo_bin("do-codeguardian").unwrap();
-    cmd.arg("check")
-       .arg(&test_file)
-       .assert()
-       .success();
+    cmd.arg("check").arg(&test_file).assert().success();
 
     // Test with --fail-on-issues flag (behavior depends on findings)
     let mut cmd = Command::cargo_bin("do-codeguardian").unwrap();
@@ -387,7 +412,10 @@ fn test_cli_error_exit_codes() {
 
     // Should exit successfully if no issues found, or with error code if issues found
     // Either way, it should not crash or panic
-    assert!(output.status.code().is_some(), "Should have a proper exit code");
+    assert!(
+        output.status.code().is_some(),
+        "Should have a proper exit code"
+    );
 }
 
 #[test]
@@ -395,22 +423,22 @@ fn test_cli_version_and_help() {
     // Test --version flag
     let mut cmd = Command::cargo_bin("do-codeguardian").unwrap();
     cmd.arg("--version")
-       .assert()
-       .success()
-       .stdout(predicate::str::contains("codeguardian"));
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("codeguardian"));
 
     // Test --help flag
     let mut cmd = Command::cargo_bin("do-codeguardian").unwrap();
     cmd.arg("--help")
-       .assert()
-       .success()
-       .stdout(predicate::str::contains("Usage:"));
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Usage:"));
 
     // Test subcommand help
     let mut cmd = Command::cargo_bin("do-codeguardian").unwrap();
     cmd.arg("check")
-       .arg("--help")
-       .assert()
-       .success()
-       .stdout(predicate::str::contains("Run code analysis"));
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Run code analysis"));
 }

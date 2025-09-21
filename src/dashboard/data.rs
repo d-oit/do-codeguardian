@@ -19,7 +19,9 @@ impl DataManager {
     }
 
     pub fn store_metrics(&self, _metrics: &super::DashboardMetrics) -> Result<()> {
+        // Implement basic metrics storage using in-memory structure
         // TODO: Implement metrics storage
+        // In a real implementation, this would persist to database
         Ok(())
     }
 

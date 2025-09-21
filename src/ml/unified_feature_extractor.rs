@@ -361,7 +361,7 @@ impl UnifiedFeatureExtractor {
                 base_features: vec![], // Not cached here
                 file_hash: self.calculate_file_hash(&feature_vector),
                 timestamp: SystemTime::now(),
-                file_size: 0, // TODO: Get actual file size
+                file_size: content.len() as u64, // Get actual file size from content
             };
 
             let mut cache = self.cache.write().await;

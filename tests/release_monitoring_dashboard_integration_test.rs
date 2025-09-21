@@ -6,13 +6,10 @@ mod release_monitoring_tests {
     use chrono::{Duration, Utc};
     use do_codeguardian::{
         dashboard::{
-            DashboardService, DashboardConfig, DashboardMetrics,
-            DuplicateStats, PreventionStats, SystemHealth, PerformanceMetrics,
-            ReleaseMetrics,
+            DashboardConfig, DashboardMetrics, DashboardService, DuplicateStats,
+            PerformanceMetrics, PreventionStats, ReleaseMetrics, SystemHealth,
         },
-        release_monitoring::{
-            ReleaseMonitoringService, ReleaseMonitoringConfig, ReleaseData,
-        },
+        release_monitoring::{ReleaseData, ReleaseMonitoringConfig, ReleaseMonitoringService},
     };
     use std::collections::HashMap;
     use tempfile::tempdir;

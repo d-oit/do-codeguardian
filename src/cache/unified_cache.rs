@@ -10,6 +10,8 @@ use crate::types::Finding;
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
+use std::sync::Arc;
+use tokio::fs;
 use tracing;
 
 /// Unified cache statistics
@@ -619,20 +621,18 @@ impl UnifiedCache {
 
     /// Get memory pool statistics (if using pooled strategy)
     pub fn memory_pool_stats(&self) -> Option<crate::cache::memory_pool::MemoryPoolStats> {
-        if let Some(pooled) = self.strategy.as_any().downcast_ref::<PooledCacheStrategy>() {
-            Some(pooled.cache.memory_pools().stats())
-        } else {
-            None
-        }
+        self.strategy
+            .as_any()
+            .downcast_ref::<PooledCacheStrategy>()
+            .map(|pooled| pooled.cache.memory_pools().stats())
     }
 
     /// Get memory savings estimate (if using pooled strategy)
     pub fn memory_savings(&self) -> Option<crate::cache::memory_pool::MemorySavings> {
-        if let Some(pooled) = self.strategy.as_any().downcast_ref::<PooledCacheStrategy>() {
-            Some(pooled.cache.memory_pools().memory_savings_estimate())
-        } else {
-            None
-        }
+        self.strategy
+            .as_any()
+            .downcast_ref::<PooledCacheStrategy>()
+            .map(|pooled| pooled.cache.memory_pools().memory_savings_estimate())
     }
 }
 
@@ -714,5 +714,76 @@ mod tests {
 
         cache.switch_strategy(new_config).unwrap();
         assert_eq!(cache.strategy_name(), "PooledCache");
+    }
+}
+
+impl UnifiedCache {
+    /// Save cache to disk asynchronously
+    pub async fn save_async(&self, cache_file: &Path) -> Result<()> {
+        // Create parent directory if it doesn't exist
+        if let Some(parent) = cache_file.parent() {
+            fs::create_dir_all(parent).await?;
+        }
+
+        // Save config
+        let config_data = serde_json::to_string_pretty(&self.config)?;
+        fs::write(cache_file, config_data).await?;
+
+        // Save strategy data
+        let data_file = cache_file.with_extension("data");
+        self.strategy.save_to_disk(&data_file)?;
+
+        tracing::debug!(
+            "Cache saved to {} and {}",
+            cache_file.display(),
+            data_file.display()
+        );
+        Ok(())
+    }
+
+    /// Load cache from disk asynchronously
+    pub async fn load_async(cache_file: &Path) -> Result<Self> {
+        if !cache_file.exists() {
+            tracing::debug!(
+                "Cache file {} does not exist, creating new cache",
+                cache_file.display()
+            );
+            return Self::new(UnifiedCacheConfig::default());
+        }
+
+        let config_data = fs::read_to_string(cache_file).await?;
+        let config: UnifiedCacheConfig = serde_json::from_str(&config_data)?;
+
+        let mut cache = Self::new(config)?;
+
+        let data_file = cache_file.with_extension("data");
+        if data_file.exists() {
+            cache.strategy.load_from_disk(&data_file)?;
+        }
+
+        tracing::debug!(
+            "Cache loaded from {} and {}",
+            cache_file.display(),
+            data_file.display()
+        );
+        Ok(cache)
+    }
+
+    /// Save cache periodically in background
+    pub fn start_periodic_save(
+        self: Arc<Self>,
+        cache_file: PathBuf,
+        interval_seconds: u64,
+    ) -> tokio::task::JoinHandle<()> {
+        tokio::spawn(async move {
+            let mut interval =
+                tokio::time::interval(std::time::Duration::from_secs(interval_seconds));
+            loop {
+                interval.tick().await;
+                if let Err(e) = self.save_async(&cache_file).await {
+                    tracing::warn!("Failed to save cache periodically: {}", e);
+                }
+            }
+        })
     }
 }

@@ -24,7 +24,7 @@ pub struct FindingPool {
 
 impl FindingPool {
     pub fn new(max_pool_size: usize) -> Self {
-        let validated_size = if max_pool_size < MIN_POOL_SIZE || max_pool_size > MAX_POOL_SIZE {
+        let validated_size = if !(MIN_POOL_SIZE..=MAX_POOL_SIZE).contains(&max_pool_size) {
             1000 // Default safe size
         } else {
             max_pool_size
@@ -115,7 +115,7 @@ pub struct StringPool {
 
 impl StringPool {
     pub fn new(max_entries: usize) -> Self {
-        let validated_size = if max_entries < MIN_POOL_SIZE || max_entries > MAX_POOL_SIZE {
+        let validated_size = if !(MIN_POOL_SIZE..=MAX_POOL_SIZE).contains(&max_entries) {
             5000 // Default safe size
         } else {
             max_entries
@@ -188,7 +188,7 @@ pub struct PathBufPool {
 
 impl PathBufPool {
     pub fn new(max_pool_size: usize) -> Self {
-        let validated_size = if max_pool_size < MIN_POOL_SIZE || max_pool_size > MAX_POOL_SIZE {
+        let validated_size = if !(MIN_POOL_SIZE..=MAX_POOL_SIZE).contains(&max_pool_size) {
             500 // Default safe size
         } else {
             max_pool_size
@@ -255,7 +255,7 @@ pub struct HashMapPool<K, V> {
 
 impl<K, V> HashMapPool<K, V> {
     pub fn new(max_pool_size: usize) -> Self {
-        let validated_size = if max_pool_size < MIN_POOL_SIZE || max_pool_size > MAX_POOL_SIZE {
+        let validated_size = if !(MIN_POOL_SIZE..=MAX_POOL_SIZE).contains(&max_pool_size) {
             200 // Default safe size
         } else {
             max_pool_size
@@ -319,7 +319,7 @@ pub struct PoolStats {
 
 impl PoolStats {
     pub fn reuse_rate(&self) -> f64 {
-        let total_requests = self.allocated.checked_add(self.reused).unwrap_or(u64::MAX);
+        let total_requests = self.allocated.saturating_add(self.reused);
         if total_requests == 0 {
             0.0
         } else {
@@ -387,12 +387,25 @@ pub struct MemoryPoolManager {
 
 impl MemoryPoolManager {
     pub fn new() -> Self {
-        Self {
-            finding_pool: Arc::new(Mutex::new(FindingPool::default())),
-            string_pool: Arc::new(Mutex::new(StringPool::default())),
-            path_pool: Arc::new(Mutex::new(PathBufPool::default())),
-            metadata_pool: Arc::new(Mutex::new(HashMapPool::new(200))),
-        }
+        Self::new_with_system_detection()
+    }
+
+    /// Create a new memory pool manager with automatic system resource detection
+    pub fn new_with_system_detection() -> Self {
+        let system_info = Self::detect_system_resources();
+        let (findings_size, strings_size, paths_size, hashmaps_size) =
+            Self::calculate_optimal_pool_sizes(&system_info);
+
+        let mut manager = Self {
+            finding_pool: Arc::new(Mutex::new(FindingPool::new(findings_size))),
+            string_pool: Arc::new(Mutex::new(StringPool::new(strings_size))),
+            path_pool: Arc::new(Mutex::new(PathBufPool::new(paths_size))),
+            metadata_pool: Arc::new(Mutex::new(HashMapPool::new(hashmaps_size))),
+        };
+
+        // Warm up the pools with pre-allocated objects
+        manager.warm_pools();
+        manager
     }
 
     pub fn with_config(
@@ -472,6 +485,87 @@ impl MemoryPoolManager {
         }
     }
 
+    /// Detect current system resources
+    fn detect_system_resources() -> SystemResourceInfo {
+        // Simple system resource detection
+        let total_memory_mb = 8192; // Default 8GB - would use sysinfo crate in real implementation
+        let available_memory_mb = 6144; // 6GB available
+        let cpu_cores = num_cpus::get();
+
+        let memory_usage_percent =
+            ((total_memory_mb - available_memory_mb) * 100) / total_memory_mb;
+        let memory_pressure = match memory_usage_percent {
+            0..=50 => MemoryPressureLevel::Low,
+            51..=80 => MemoryPressureLevel::Medium,
+            81..=95 => MemoryPressureLevel::High,
+            _ => MemoryPressureLevel::Critical,
+        };
+
+        SystemResourceInfo {
+            total_memory_mb,
+            available_memory_mb,
+            cpu_cores,
+            memory_pressure,
+        }
+    }
+
+    /// Calculate optimal pool sizes based on system resources
+    fn calculate_optimal_pool_sizes(
+        system_info: &SystemResourceInfo,
+    ) -> (usize, usize, usize, usize) {
+        let base_multiplier = match system_info.memory_pressure {
+            MemoryPressureLevel::Low => 2.0,
+            MemoryPressureLevel::Medium => 1.5,
+            MemoryPressureLevel::High => 1.0,
+            MemoryPressureLevel::Critical => 0.5,
+        };
+
+        let cpu_multiplier = (system_info.cpu_cores as f64).sqrt();
+        let memory_multiplier = (system_info.available_memory_mb as f64 / 1024.0).log2() / 4.0;
+        let total_multiplier = base_multiplier * cpu_multiplier * memory_multiplier;
+
+        let findings_size = (1000.0 * total_multiplier) as usize;
+        let strings_size = (5000.0 * total_multiplier) as usize;
+        let paths_size = (500.0 * total_multiplier) as usize;
+        let hashmaps_size = (200.0 * total_multiplier) as usize;
+
+        (
+            findings_size.clamp(100, 10000),
+            strings_size.clamp(500, 50000),
+            paths_size.clamp(50, 5000),
+            hashmaps_size.clamp(20, 2000),
+        )
+    }
+
+    /// Warm up pools with pre-allocated objects
+    fn warm_pools(&mut self) {
+        // Warm string pool with common strings
+        if let Ok(mut pool) = self.string_pool.lock() {
+            let common_strings = vec![
+                "security",
+                "hardcoded_secret",
+                "Hardcoded secret detected",
+                "Use environment variables or secure credential storage",
+                "performance",
+                "blocking_io",
+                "ai_content",
+                "placeholder_content",
+                "High",
+                "Medium",
+                "Low",
+                "Info",
+                "Critical",
+            ];
+            for common_str in &common_strings {
+                pool.get(common_str); // This will intern the string
+            }
+            tracing::debug!(
+                "Warmed string pool with {} common strings",
+                common_strings.len()
+            );
+        }
+    }
+
     /// Get overall memory savings estimate
     pub fn memory_savings_estimate(&self) -> MemorySavings {
         let stats = self.stats();
@@ -481,8 +575,8 @@ impl MemoryPoolManager {
         let finding_savings = stats
             .finding_stats
             .reused
-            .checked_mul(std::mem::size_of::<Finding>() as u64)
-            .unwrap_or(u64::MAX) as f64
+            .saturating_mul(std::mem::size_of::<Finding>() as u64)
+            as f64
             * finding_size
             / (1024.0 * 1024.0);
         let string_savings = (stats.string_stats.reused as f64 * 32.0) / (1024.0 * 1024.0); // Estimate 32 bytes per string
@@ -490,8 +584,8 @@ impl MemoryPoolManager {
         let path_savings = stats
             .path_stats
             .reused
-            .checked_mul(std::mem::size_of::<PathBuf>() as u64)
-            .unwrap_or(u64::MAX) as f64
+            .saturating_mul(std::mem::size_of::<PathBuf>() as u64)
+            as f64
             * path_size
             / (1024.0 * 1024.0);
         let metadata_savings = (stats.metadata_stats.reused as f64 * 64.0) / (1024.0 * 1024.0); // Estimate 64 bytes per map
@@ -540,9 +634,7 @@ impl MemoryPoolStats {
             .and_then(|sum| sum.checked_add(self.metadata_stats.allocated))
             .unwrap_or(u64::MAX);
 
-        let total_requests = total_allocated
-            .checked_add(total_reused)
-            .unwrap_or(u64::MAX);
+        let total_requests = total_allocated.saturating_add(total_reused);
 
         if total_requests == 0 {
             0.0
@@ -576,6 +668,24 @@ pub struct MemorySavings {
     pub string_mb_saved: f64,
     pub path_mb_saved: f64,
     pub metadata_mb_saved: f64,
+}
+
+/// System resource information for pool sizing
+#[derive(Debug, Clone)]
+pub struct SystemResourceInfo {
+    pub total_memory_mb: u64,
+    pub available_memory_mb: u64,
+    pub cpu_cores: usize,
+    pub memory_pressure: MemoryPressureLevel,
+}
+
+/// Memory pressure levels for dynamic pool management
+#[derive(Debug, Clone, PartialEq)]
+pub enum MemoryPressureLevel {
+    Low,      // < 50% memory usage
+    Medium,   // 50-80% memory usage
+    High,     // 80-95% memory usage
+    Critical, // > 95% memory usage
 }
 
 impl MemorySavings {

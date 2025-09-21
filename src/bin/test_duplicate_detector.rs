@@ -195,7 +195,7 @@ impl TestDuplicateDetector {
 
         // Create a simple hash of the function body for comparison
         let body_text = format!("{:?}", func.block);
-        let body_hash = format!("{:x}", blake3::hash(body_text.as_bytes()));
+        let body_hash = blake3::hash(body_text.as_bytes()).to_hex().to_string();
 
         Ok(TestFunction {
             name,

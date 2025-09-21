@@ -14,9 +14,9 @@ use tokio::time::sleep;
 
 use do_codeguardian::analyzers::security::SecretAnalyzer;
 use do_codeguardian::config::base::Config;
+use do_codeguardian::config::SecurityConfig;
 use do_codeguardian::github_api::GitHubApiClient;
 use do_codeguardian::integrations::traits::IntegrationSystem;
-use do_codeguardian::config::SecurityConfig;
 
 /// Security testing configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]

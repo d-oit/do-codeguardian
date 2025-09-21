@@ -308,12 +308,12 @@ fn perform_git_commit(
         cmd.arg(message);
 
         let output = cmd.output().map_err(|e| {
-            CodeGuardianError::generic(&format!("Failed to execute git commit: {}", e))
+            CodeGuardianError::generic(format!("Failed to execute git commit: {}", e))
         })?;
 
         if !output.status.success() {
             let stderr = String::from_utf8_lossy(&output.stderr);
-            return Err(CodeGuardianError::generic(&format!(
+            return Err(CodeGuardianError::generic(format!(
                 "Git commit failed:\n{}",
                 stderr
             )));
@@ -384,13 +384,13 @@ fn perform_quality_validation(files: &[PathBuf]) -> Result<()> {
         // Run cargo fmt --check
         info!("Running cargo fmt check");
         let output = std::process::Command::new("cargo")
-            .args(&["fmt", "--check"])
+            .args(["fmt", "--check"])
             .output()
-            .map_err(|e| CodeGuardianError::generic(&format!("Failed to run cargo fmt: {}", e)))?;
+            .map_err(|e| CodeGuardianError::generic(format!("Failed to run cargo fmt: {}", e)))?;
 
         if !output.status.success() {
             let stderr = String::from_utf8_lossy(&output.stderr);
-            return Err(CodeGuardianError::generic(&format!(
+            return Err(CodeGuardianError::generic(format!(
                 "Code formatting issues found:\n{}",
                 stderr
             )));
@@ -399,15 +399,15 @@ fn perform_quality_validation(files: &[PathBuf]) -> Result<()> {
         // Run cargo clippy
         info!("Running cargo clippy");
         let output = std::process::Command::new("cargo")
-            .args(&["clippy", "--", "-D", "warnings"])
+            .args(["clippy", "--", "-D", "warnings"])
             .output()
             .map_err(|e| {
-                CodeGuardianError::generic(&format!("Failed to run cargo clippy: {}", e))
+                CodeGuardianError::generic(format!("Failed to run cargo clippy: {}", e))
             })?;
 
         if !output.status.success() {
             let stderr = String::from_utf8_lossy(&output.stderr);
-            return Err(CodeGuardianError::generic(&format!(
+            return Err(CodeGuardianError::generic(format!(
                 "Code quality issues found:\n{}",
                 stderr
             )));
@@ -435,7 +435,7 @@ fn check_for_conflicts(repo: &Repository, remote_name: &str, branch_name: &str) 
     // Fetch latest changes from remote
     let mut remote = repo
         .find_remote(remote_name)
-        .map_err(|_| CodeGuardianError::generic(&format!("No remote '{}' found", remote_name)))?;
+        .map_err(|_| CodeGuardianError::generic(format!("No remote '{}' found", remote_name)))?;
 
     // Fetch the remote branch
     remote.fetch(&[branch_name], None, None)?;
@@ -479,10 +479,10 @@ fn check_for_conflicts(repo: &Repository, remote_name: &str, branch_name: &str) 
 
     // Branches have diverged - potential conflict
     warn!("Local and remote branches have diverged - potential merge conflict detected");
-    return Err(CodeGuardianError::generic(
+    Err(CodeGuardianError::generic(
         "Local and remote branches have diverged. Force push would overwrite remote history. \
          Consider pulling and resolving conflicts locally, or use --force if you know what you're doing."
-    ));
+    ))
 }
 
 /// Perform git push to remote repository
@@ -505,7 +505,7 @@ fn perform_git_push(
 ) -> Result<()> {
     // Get the remote
     let mut remote = repo.find_remote(remote_name).map_err(|_| {
-        CodeGuardianError::generic(&format!(
+        CodeGuardianError::generic(format!(
             "No remote '{}' found. Please add the remote repository.",
             remote_name
         ))

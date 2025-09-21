@@ -11,7 +11,7 @@ use tokio::task::JoinHandle;
 use tracing::{debug, warn};
 
 // Constants for optimization
-const LARGE_FILE_THRESHOLD: u64 = 10 * 1024 * 1024; // 10MB
+const LARGE_FILE_THRESHOLD: u64 = 2 * 1024 * 1024; // 2MB
 const BUFFER_SIZE: usize = 64 * 1024; // 64KB buffer
 
 /// Parallel file processor with bounded concurrency and optimized I/O
@@ -24,7 +24,7 @@ impl ParallelFileProcessor {
     /// Create a new parallel file processor
     pub fn new(max_concurrent_files: Option<usize>) -> Self {
         let cpu_count = num_cpus::get();
-        let max_concurrent = max_concurrent_files.unwrap_or(cpu_count * 2);
+        let max_concurrent = max_concurrent_files.unwrap_or(cpu_count * 4);
 
         Self {
             max_concurrent_files: max_concurrent,

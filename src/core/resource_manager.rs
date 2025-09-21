@@ -1,8 +1,6 @@
 //! Resource management system for optimizing CPU, memory, and I/O usage across parallel agents
 
-use crate::core::swarm_types::{
-    Priority, ResourceRequirements, SwarmConfig, SwarmError,
-};
+use crate::core::swarm_types::{Priority, ResourceRequirements, SwarmConfig, SwarmError};
 use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
 use tokio::sync::{Mutex, Semaphore};
@@ -76,8 +74,8 @@ impl ResourceManager {
         }
 
         // Acquire resource permits
-        let cpu_permits = self.acquire_permits("cpu", requirements.cpu_cores).await?;
-        let memory_permits = self
+        let _cpu_permits = self.acquire_permits("cpu", requirements.cpu_cores).await?;
+        let _memory_permits = self
             .acquire_permits("memory", (requirements.memory_mb / 100) as usize)
             .await?;
 
@@ -169,7 +167,7 @@ impl ResourceManager {
     /// Optimize resource allocation based on task priorities
     pub async fn optimize_allocation(&self, pending_tasks: Vec<PendingTask>) -> Vec<PendingTask> {
         let mut prioritized_tasks = pending_tasks;
-        let active = self.active_resources.lock().await;
+        let _active = self.active_resources.lock().await;
 
         // Sort tasks by priority (highest first)
         prioritized_tasks.sort_by(|a, b| b.priority.cmp(&a.priority));
@@ -253,7 +251,7 @@ impl ResourceManager {
     }
 
     /// Release permits back to semaphore
-    async fn release_permits(&self, resource_type: &str, count: usize) -> Result<(), SwarmError> {
+    async fn release_permits(&self, _resource_type: &str, _count: usize) -> Result<(), SwarmError> {
         // In this simplified implementation, permits are automatically released when dropped
         // In a real implementation, you might want to track permits explicitly
         Ok(())
