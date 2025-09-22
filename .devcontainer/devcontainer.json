@@ -1,14 +1,14 @@
 {
-  "name": "do-codeguardian",
-  "image": "mcr.microsoft.com/devcontainers/javascript-node:20",
+  "name": "do-codeguardian-dev",
+  "image": "ghcr.io/d-oit/do-codeguardian:dev",
   "features": {},
+  "postCreateCommand": "cargo build",
   "customizations": {
     "vscode": {
       "extensions": [
-        "dbaeumer.vscode-eslint",
-        "esbenp.prettier-vscode"
+        "rust-lang.rust-analyzer",
+        "serayuzgur.crates"
       ]
     }
-  },
-  "postCreateCommand": "npm install"
+  }
 }
