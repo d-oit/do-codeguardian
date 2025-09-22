@@ -1,14 +1,20 @@
+# .devcontainer/Dockerfile
 FROM mcr.microsoft.com/devcontainers/rust:1
 
-# Install Node for tooling if needed
-RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
- && apt-get install -y nodejs \
- && npm install -g pnpm
+# Install extra useful dev tools
+RUN apt-get update && apt-get install -y \
+    git curl bash pkg-config libssl-dev build-essential \
+ && rm -rf /var/lib/apt/lists/*
 
+# Set workspace
 WORKDIR /workspace
 
-# Copy full repo
+# Copy your Rust source code
 COPY . .
 
-# Build Rust project
+# Pre-build dependencies (faster subsequent builds)
+RUN cargo fetch
 RUN cargo build --release
+
+# Default command (shell)
+CMD [ "bash" ]
