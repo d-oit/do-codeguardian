@@ -1,0 +1,14 @@
+FROM mcr.microsoft.com/devcontainers/rust:1
+
+# Install Node for tooling if needed
+RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+ && apt-get install -y nodejs \
+ && npm install -g pnpm
+
+WORKDIR /workspace
+
+# Copy full repo
+COPY . .
+
+# Build Rust project
+RUN cargo build --release
