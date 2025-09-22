@@ -1,51 +1,14 @@
 {
-  "name": "CodeGuardian Dev Container",
-
-  // Use an official Rust image or a distro with rust installed
-  "image": "rust:1.70",  
-
-  // Or, if you want more control, use Dockerfile
-  // "build": {
-  //   "dockerfile": "Dockerfile",
-  //   "context": "..",
-  //   "args": {
-  //     "VARIANT": "1.70"
-  //   }
-  // },
-
-  "workspaceFolder": "/workspace",
-  "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=cached",
-
-  "settings": {
-    // Example VSCode settings
-    "terminal.integrated.shell.linux": "/bin/bash",
-    "editor.rust-analyzer.cargo.watchOptions.enable": true,
-    "editor.formatOnSave": true
+  "name": "do-codeguardian",
+  "image": "mcr.microsoft.com/devcontainers/javascript-node:20",
+  "features": {},
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode"
+      ]
+    }
   },
-
-  "extensions": [
-    "rust-lang.rust-analyzer",
-    "serayuzgur.crates",
-    "matklad.rust-analyzer", // if you prefer using a specific version
-    "ms-vscode.cpptools",     // if you use C/C++ FFI
-    "vadimcn.vscode-lldb"
-  ],
-
-  "postCreateCommand": "cargo build --workspace",
-
-  "remoteUser": "root",
-
-  "mounts": [
-  "source=/c/Users/doswa/.devpod/agent/contexts/default/workspaces/do-codeguardian/content/.cargo,target=/root/.cargo,type=bind"
-]
-
-  "forwardPorts": [
-    // If dev server, API, etc. listens on some port
-    8000
-  ],
-
-  "workspaceEnv": {
-    "RUST_BACKTRACE": "1",
-    "CARGO_TERM_COLOR": "always"
-  }
+  "postCreateCommand": "npm install"
 }
