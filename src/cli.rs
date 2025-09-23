@@ -5,11 +5,14 @@ pub mod bulk;
 pub mod check;
 #[cfg(feature = "dashboard")]
 pub mod dashboard;
+#[cfg(feature = "ml")]
+pub mod feature_engineering;
 pub mod gh_issue;
 pub mod init;
 pub mod integrations;
 #[cfg(feature = "ml")]
 pub mod metrics;
+pub mod ml_enhancements;
 pub mod release_monitoring;
 pub mod remediation;
 pub mod report;
@@ -114,6 +117,13 @@ pub enum Commands {
     /// Release monitoring and metrics collection
     #[cfg(feature = "release-monitoring")]
     ReleaseMonitoring(ReleaseMonitoringArgs),
+
+    /// Advanced feature engineering for ML models
+    #[cfg(feature = "ml")]
+    FeatureEngineering(feature_engineering::FeatureEngineeringArgs),
+
+    /// Advanced ML enhancements showcase
+    MLEnhancements(ml_enhancements::MLEnhancementsArgs),
 }
 
 #[derive(Parser)]
@@ -475,6 +485,22 @@ pub struct TrainArgs {
     /// Use AST-enhanced features (requires ast feature)
     #[arg(long)]
     pub enhanced: bool,
+
+    /// Enable cross-validation during training
+    #[arg(long)]
+    pub cross_validate: bool,
+
+    /// Number of folds for cross-validation
+    #[arg(long, default_value = "5")]
+    pub cv_folds: u32,
+
+    /// Use stratified cross-validation
+    #[arg(long)]
+    pub stratified: bool,
+
+    /// Output path for cross-validation results
+    #[arg(long)]
+    pub cv_output: Option<PathBuf>,
 }
 
 #[cfg(feature = "ml")]

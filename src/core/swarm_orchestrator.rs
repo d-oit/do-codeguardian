@@ -57,27 +57,45 @@ impl SwarmOrchestrator {
         );
 
         // Only initialize complex components if resource monitoring or performance tracking is enabled
-        let (resource_manager, performance_monitor, scheduler, task_sender, task_receiver, result_sender, result_receiver) =
-            if config.enable_resource_monitoring || config.enable_performance_tracking {
-                let performance_config = PerformanceConfig {
-                    cpu_threshold_percent: 80.0,
-                    memory_threshold_mb: 1024.0,
-                    io_threshold_operations: 1000,
-                    max_history_size: 1000,
-                    monitoring_interval_ms: 1000,
-                };
-
-                let performance_monitor = Some(Arc::new(SwarmPerformanceMonitor::new(performance_config)));
-                let resource_manager = Some(Arc::new(ResourceManager::new(config.clone())));
-                let scheduler = Some(ResourceAwareScheduler::new(resource_manager.as_ref().unwrap().clone()));
-
-                let (task_sender, task_receiver) = mpsc::unbounded_channel();
-                let (result_sender, result_receiver) = mpsc::unbounded_channel();
-
-                (resource_manager, performance_monitor, scheduler, Some(task_sender), Some(task_receiver), Some(result_sender), Some(result_receiver))
-            } else {
-                (None, None, None, None, None, None, None)
+        let (
+            resource_manager,
+            performance_monitor,
+            scheduler,
+            task_sender,
+            task_receiver,
+            result_sender,
+            result_receiver,
+        ) = if config.enable_resource_monitoring || config.enable_performance_tracking {
+            let performance_config = PerformanceConfig {
+                cpu_threshold_percent: 80.0,
+                memory_threshold_mb: 1024.0,
+                io_threshold_operations: 1000,
+                max_history_size: 1000,
+                monitoring_interval_ms: 1000,
             };
+
+            let performance_monitor =
+                Some(Arc::new(SwarmPerformanceMonitor::new(performance_config)));
+            let resource_manager = Some(Arc::new(ResourceManager::new(config.clone())));
+            let scheduler = Some(ResourceAwareScheduler::new(
+                resource_manager.as_ref().unwrap().clone(),
+            ));
+
+            let (task_sender, task_receiver) = mpsc::unbounded_channel();
+            let (result_sender, result_receiver) = mpsc::unbounded_channel();
+
+            (
+                resource_manager,
+                performance_monitor,
+                scheduler,
+                Some(task_sender),
+                Some(task_receiver),
+                Some(result_sender),
+                Some(result_receiver),
+            )
+        } else {
+            (None, None, None, None, None, None, None)
+        };
 
         Ok(Self {
             config,
@@ -381,7 +399,8 @@ impl SwarmOrchestrator {
                     finding_id: finding.id.clone(),
                     conflicting_findings: vec![finding.clone()], // Simplified - just store one
                     agent_ids: vec![finding.analyzer.clone()],
-                    resolution_strategy: crate::core::swarm_types::ConflictResolutionStrategy::PriorityBased,
+                    resolution_strategy:
+                        crate::core::swarm_types::ConflictResolutionStrategy::PriorityBased,
                 });
             }
         }
@@ -394,7 +413,7 @@ impl SwarmOrchestrator {
                 total_execution_time / task_results.len() as u32
             },
             max_concurrent_tasks: task_results.len(), // All executed concurrently
-            total_cpu_usage_percent: 0.0, // Not tracked in simple mode
+            total_cpu_usage_percent: 0.0,             // Not tracked in simple mode
             peak_memory_usage_mb: 0.0,
             total_io_operations: 0,
             total_network_requests: 0,
@@ -539,9 +558,7 @@ impl SwarmOrchestrator {
 
             // Complete performance monitoring if available
             if let Some(pm) = &performance_monitor {
-                let _ = pm
-                    .complete_task_monitoring(&result.task_id, &result)
-                    .await;
+                let _ = pm.complete_task_monitoring(&result.task_id, &result).await;
             }
 
             // Send result if sender is available

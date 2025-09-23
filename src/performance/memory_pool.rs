@@ -6,6 +6,8 @@
 use std::collections::VecDeque;
 use std::sync::Mutex;
 
+use anyhow::{Context, Result};
+
 /// String buffer pool for reusing string allocations
 #[derive(Debug)]
 pub struct StringPool {
@@ -313,12 +315,12 @@ impl GlobalMemoryPools {
     }
 
     /// Get a formatted string using the pool
-    pub fn format_string(&self, args: std::fmt::Arguments<'_>) -> String {
+    pub fn format_string(&self, args: std::fmt::Arguments<'_>) -> Result<String> {
         let mut buffer = self.string_pool.get_buffer();
         buffer
             .write_fmt(args)
-            .expect("Writing to String buffer should not fail");
-        buffer.into_string()
+            .context("Failed to write formatted string to buffer")?;
+        Ok(buffer.into_string())
     }
 
     /// Get a small buffer (256 bytes default capacity)
@@ -469,15 +471,16 @@ mod tests {
     }
 
     #[test]
-    fn test_global_memory_pools() {
+    fn test_global_memory_pools() -> Result<()> {
         let pools = GlobalMemoryPools::new();
 
-        let formatted = pool_format!(pools, "Test {} {}", "string", 42);
+        let formatted = pool_format!(pools, "Test {} {}", "string", 42)?;
         assert_eq!(formatted, "Test string 42");
 
         let stats = pools.memory_stats();
         let report = stats.report();
         assert!(report.contains("Memory Pool Statistics"));
+        Ok(())
     }
 
     #[test]
@@ -583,7 +586,7 @@ mod tests {
         // Test very large buffer
         {
             let _buffer = pool.get_buffer(1024 * 1024); // 1MB
-            // Buffer created successfully
+                                                        // Buffer created successfully
         }
     }
 }
@@ -608,12 +611,8 @@ pub mod thread_local_pools {
 
     pub fn get_string_buffer() -> PooledString<'static> {
         STRING_POOL.with(|pool| {
-            // This is safe because we're returning a reference to thread-local data
-            // The lifetime is tied to the thread, not the function
-            unsafe {
-                let pool_ptr = pool.as_ptr();
-                (*pool_ptr).get_buffer()
-            }
+            let buffer = pool.borrow().get_buffer();
+            unsafe { std::mem::transmute::<PooledString<'_>, PooledString<'static>>(buffer) }
         })
     }
 
@@ -623,9 +622,9 @@ pub mod thread_local_pools {
     }
 
     pub fn get_findings_vec() -> PooledVec<'static, crate::types::Finding> {
-        FINDING_POOL.with(|pool| unsafe {
-            let pool_ptr = pool.as_ptr();
-            (*pool_ptr).get_vec()
+        FINDING_POOL.with(|pool| {
+            let vec = pool.borrow().get_vec();
+            unsafe { std::mem::transmute::<PooledVec<'_, crate::types::Finding>, PooledVec<'static, crate::types::Finding>>(vec) }
         })
     }
 
@@ -634,9 +633,9 @@ pub mod thread_local_pools {
     }
 
     pub fn get_paths_vec() -> PooledVec<'static, std::path::PathBuf> {
-        PATH_POOL.with(|pool| unsafe {
-            let pool_ptr = pool.as_ptr();
-            (*pool_ptr).get_vec()
+        PATH_POOL.with(|pool| {
+            let vec = pool.borrow().get_vec();
+            unsafe { std::mem::transmute::<PooledVec<'_, std::path::PathBuf>, PooledVec<'static, std::path::PathBuf>>(vec) }
         })
     }
 

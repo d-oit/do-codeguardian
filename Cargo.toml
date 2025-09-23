@@ -48,6 +48,8 @@ toml = "0.9"
 
 # Error handling
 anyhow = "1.0"
+
+# System information
 thiserror = "2.0"
 
 # Git operations
@@ -103,6 +105,9 @@ uuid = { version = "1.6", features = ["v4", "serde"] }
 # Machine Learning
 fann = { version = "0.1", optional = true }
 
+# Random number generation
+rand = "0.8"
+
 # AST Analysis - full features for AST parsing and visiting
 syn = { version = "2.0", features = ["parsing", "printing", "full", "visit"], optional = true }
 quote = { version = "1.0", optional = true }
@@ -136,8 +141,7 @@ proptest = "1.5"
 # Futures utilities for async testing
 futures = "0.3"
 
-# Random number generation for load testing
-rand = "0.8"
+
 
 # Additional testing utilities for comprehensive coverage
 tokio-test = "0.4"

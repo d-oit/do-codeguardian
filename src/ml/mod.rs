@@ -1,13 +1,26 @@
+pub mod adaptive_learning;
+pub mod advanced_feature_engineering;
 #[cfg(feature = "ast")]
 pub mod ast_analyzer;
+pub mod cross_validation;
 #[cfg(feature = "ast")]
 pub mod enhanced_feature_extractor;
+pub mod ensemble;
 pub mod fann_classifier;
+pub mod fann_cross_validation_integration;
 pub mod feature_extractor;
+pub mod intelligent_caching;
+pub mod model_monitoring;
 pub mod multi_language_ast_analyzer;
 pub mod pattern_recognition;
 pub mod training_data;
 pub mod unified_feature_extractor;
+
+#[cfg(test)]
+mod tests;
+
+#[cfg(test)]
+pub use tests::*;
 
 use crate::types::Finding;
 use anyhow::Result;

@@ -88,7 +88,7 @@ impl AnalyzerRegistry {
                     .custom_patterns
                     .is_empty()
                 {
-                    ai_content_analyzer::AiContentAnalyzer::new()
+                    ai_content_analyzer::AiContentAnalyzer::new()?
                         .with_custom_patterns(
                             config
                                 .analyzers
@@ -96,10 +96,9 @@ impl AnalyzerRegistry {
                                 .placeholders
                                 .custom_patterns
                                 .clone(),
-                        )
-                        .unwrap_or_else(|_| ai_content_analyzer::AiContentAnalyzer::new())
+                        )?
                 } else {
-                    ai_content_analyzer::AiContentAnalyzer::new()
+                    ai_content_analyzer::AiContentAnalyzer::new()?
                 };
                 registry.register(Box::new(ai_analyzer));
             }

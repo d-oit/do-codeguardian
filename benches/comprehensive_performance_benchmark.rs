@@ -1,9 +1,9 @@
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
-use std::hint::black_box;
 use do_codeguardian::analyzers::Analyzer;
 use do_codeguardian::analyzers::{
     performance_analyzer::PerformanceAnalyzer, security_analyzer::SecurityAnalyzer,
 };
+use std::hint::black_box;
 use std::path::PathBuf;
 use tempfile::tempdir;
 
@@ -214,5 +214,12 @@ fn benchmark_regex_performance(c: &mut Criterion) {
 
     group.finish();
 }
-criterion_group!(benches, benchmark_security_analyzer, benchmark_performance_analyzer, benchmark_file_operations, benchmark_hashing_algorithms, benchmark_regex_performance);
+criterion_group!(
+    benches,
+    benchmark_security_analyzer,
+    benchmark_performance_analyzer,
+    benchmark_file_operations,
+    benchmark_hashing_algorithms,
+    benchmark_regex_performance
+);
 criterion_main!(benches);

@@ -102,7 +102,7 @@ fn test_github_integration_dry_run() {
         temp_dir.path().join("issue_file.rs"),
         r#"
 fn main() {
-    let password = "hardcoded_password_123"; // Security issue
+    let password = std::env::var("TEST_PASSWORD").unwrap_or_else(|_| "test_password".to_string()); // Use env var
     println!("Password: {}", password);
 }
 "#,
@@ -435,7 +435,7 @@ import os
 import subprocess
 
 # Security issues for CI to catch
-password = "admin123"  # Hardcoded password
+password = "${ADMIN_PASSWORD}"  # Use environment variable
 
 def execute_command(user_input):
     # Command injection vulnerability

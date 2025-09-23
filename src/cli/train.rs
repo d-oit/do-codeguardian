@@ -97,6 +97,12 @@ pub async fn run(args: TrainArgs, _config: &Config) -> Result<()> {
     if args.validate {
         info!("Validating model performance...");
         validate_model(&classifier, &training_pairs)?;
+
+        // Run cross-validation if enabled
+        if args.cross_validate.unwrap_or(false) {
+            info!("Running cross-validation...");
+            run_cross_validation(&dataset, &args).await?;
+        }
     }
 
     info!("Model training completed successfully!");
@@ -178,6 +184,73 @@ fn validate_model(classifier: &FannClassifier, training_data: &[(Vec<f32>, f32)]
     if accuracy < 0.7 {
         tracing::warn!("Model accuracy is low ({:.3}). Consider more training data or different hyperparameters.", accuracy);
     }
+
+    Ok(())
+}
+
+#[cfg(feature = "ml")]
+async fn run_cross_validation(dataset: &TrainingDataset, args: &TrainArgs) -> Result<()> {
+    use crate::ml::cross_validation::{CrossValidationConfig, CrossValidator, ValidationStrategy};
+    use crate::ml::fann_classifier::NetworkConfig;
+    use crate::ml::fann_cross_validation_integration::{
+        validate_fann_model, FannClassifierFactory,
+    };
+    use tracing::info;
+
+    info!("Starting cross-validation analysis...");
+
+    // Configure cross-validation
+    let mut cv_config = CrossValidationConfig::default();
+    cv_config.k_folds = args.cv_folds.unwrap_or(5);
+    cv_config.strategy = if args.stratified.unwrap_or(true) {
+        ValidationStrategy::StratifiedKFold
+    } else {
+        ValidationStrategy::KFold
+    };
+    cv_config.random_state = Some(42); // Reproducible results
+
+    // Configure network based on training args
+    let network_config = if args.enhanced && cfg!(feature = "ast") {
+        NetworkConfig::enhanced()
+    } else {
+        NetworkConfig::basic()
+    };
+
+    // Run cross-validation
+    match validate_fann_model(network_config, cv_config, dataset).await {
+        Ok(results) => {
+            info!("Cross-validation completed successfully!");
+            println!("\n{}", results);
+
+            // Save results if requested
+            if let Some(output_path) = &args.cv_output {
+                save_cv_results(&results, output_path)?;
+                info!(
+                    "Cross-validation results saved to: {}",
+                    output_path.display()
+                );
+            }
+        }
+        Err(e) => {
+            tracing::error!("Cross-validation failed: {}", e);
+            return Err(e);
+        }
+    }
+
+    Ok(())
+}
+
+#[cfg(feature = "ml")]
+fn save_cv_results(
+    results: &crate::ml::cross_validation::CrossValidationResults,
+    output_path: &std::path::Path,
+) -> Result<()> {
+    use std::fs;
+
+    let json = serde_json::to_string_pretty(results)
+        .map_err(|e| anyhow::anyhow!("Failed to serialize results: {}", e))?;
+
+    fs::write(output_path, json).map_err(|e| anyhow::anyhow!("Failed to write results: {}", e))?;
 
     Ok(())
 }

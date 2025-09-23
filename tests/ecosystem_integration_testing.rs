@@ -549,7 +549,10 @@ impl EcosystemIntegrationTestSuite {
         })
     }
 
-    async fn test_analysis_to_dashboard_flow(&self, _config: &Config) -> Result<DataFlowTestResult> {
+    async fn test_analysis_to_dashboard_flow(
+        &self,
+        _config: &Config,
+    ) -> Result<DataFlowTestResult> {
         let start = Instant::now();
 
         let data_size_mb = 3.0;
