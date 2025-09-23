@@ -63,9 +63,9 @@ tracing-subscriber = { version = "0.3", optional = true, features = ["env-filter
 reqwest = { version = "0.12", features = ["json", "rustls-tls"] }
 
 # Web framework for dashboard (optional)
-axum = { version = "0.7", optional = true }
-tower = { version = "0.4", optional = true }
-tower-http = { version = "0.5", features = ["cors", "fs"], optional = true }
+axum = { version = "0.8", optional = true }
+tower = { version = "0.5", optional = true }
+tower-http = { version = "0.6", features = ["cors", "fs"], optional = true }
 axum-test = { version = "15.0", optional = true }
 
 # Regular expressions and pattern matching
@@ -99,11 +99,11 @@ async-trait = "0.1"
 urlencoding = "2.1"
 html-escape = "0.2"
 flate2 = "1.0"
-tempfile = "3.10"
+tempfile = "3.23"
 uuid = { version = "1.6", features = ["v4", "serde"] }
 
 # System information for benchmarks
-sysinfo = "0.30"
+sysinfo = "0.37"
 
 # Directory traversal with gitignore support for benchmarks
 ignore = "0.4"
@@ -112,7 +112,7 @@ ignore = "0.4"
 fann = { version = "0.1", optional = true }
 
 # Random number generation
-rand = "0.8"
+rand = "0.9"
 
 # AST Analysis - full features for AST parsing and visiting
 syn = { version = "2.0", features = ["parsing", "printing", "full", "visit"], optional = true }
@@ -129,7 +129,7 @@ memmap2 = "0.9.8"
 
 [dev-dependencies]
 # Testing utilities - optimized for speed
-tempfile = "3.10"
+tempfile = "3.23"
 assert_cmd = { version = "2.0", default-features = false }
 predicates = { version = "3.1", default-features = false }
 criterion = { version = "0.7", default-features = false }
@@ -142,7 +142,7 @@ fake = { version = "4.4", default-features = false }
 cargo-husky = { version = "1", default-features = false, features = ["precommit-hook", "run-cargo-clippy", "run-cargo-fmt"] }
 
 # Property-based testing
-proptest = "1.5"
+proptest = "1.8"
 
 # Futures utilities for async testing
 futures = "0.3"
