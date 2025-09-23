@@ -1,3 +1,5 @@
+#![cfg(feature = "ml")]
+
 //! Example demonstrating the unified feature extractor
 //!
 //! This example shows how to use the unified feature extractor with different

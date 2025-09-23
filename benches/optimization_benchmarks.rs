@@ -1,5 +1,6 @@
-use criterion::{black_box, criterion_group, criterion_main, Criterion};
-use do_codeguardian::{
+use criterion::{criterion_group, criterion_main, Criterion};
+use std::hint::black_box;
+use do_do_codeguardian::{
     analyzers::AnalyzerRegistry,
     cache::FileCache,
     config::{Config, PerformanceConfig},
@@ -76,7 +77,7 @@ fn bench_memory_pool_optimizations(c: &mut Criterion) {
                 findings.push(Finding::new(
                     "test",
                     "test_finding",
-                    codeguardian::types::Severity::Info,
+                    do_codeguardian::types::Severity::Info,
                     PathBuf::from("test.rs"),
                     1,
                     "Test finding".to_string(),
@@ -105,7 +106,7 @@ fn bench_memory_pool_optimizations(c: &mut Criterion) {
                 finding_vec.push(Finding::new(
                     "test",
                     "test_finding",
-                    codeguardian::types::Severity::Info,
+                    do_codeguardian::types::Severity::Info,
                     PathBuf::from("test.rs"),
                     1,
                     "Test finding".to_string(),
@@ -327,16 +328,16 @@ fn bench_parallel_output_processing(c: &mut Criterion) {
         b.iter(|| {
             rt.block_on(async {
                 let formats = vec![
-                    do_codeguardian::output::OutputFormat::Json,
-                    do_codeguardian::output::OutputFormat::Html,
-                    do_codeguardian::output::OutputFormat::Markdown,
-                    do_codeguardian::output::OutputFormat::Sarif,
+                    do_do_codeguardian::output::OutputFormat::Json,
+                    do_do_codeguardian::output::OutputFormat::Html,
+                    do_do_codeguardian::output::OutputFormat::Markdown,
+                    do_do_codeguardian::output::OutputFormat::Sarif,
                 ];
 
                 let mut results = std::collections::HashMap::new();
                 for format in &formats {
                     let output =
-                        do_codeguardian::output::format_results(&test_results, *format).unwrap();
+                        do_do_codeguardian::output::format_results(&test_results, *format).unwrap();
                     results.insert(*format, output);
                 }
 
@@ -349,7 +350,7 @@ fn bench_parallel_output_processing(c: &mut Criterion) {
     group.bench_function("parallel_multiple_formats", |b| {
         b.iter(|| {
             rt.block_on(async {
-                use do_codeguardian::output::{OutputFormat, ParallelOutputProcessor};
+                use do_do_codeguardian::output::{OutputFormat, ParallelOutputProcessor};
 
                 let processor = ParallelOutputProcessor::new().unwrap();
                 let formats = vec![
@@ -372,9 +373,9 @@ fn bench_parallel_output_processing(c: &mut Criterion) {
 }
 
 /// Generate test analysis results for benchmarking
-fn generate_test_analysis_results() -> do_codeguardian::types::AnalysisResults {
+fn generate_test_analysis_results() -> do_do_codeguardian::types::AnalysisResults {
     use chrono::Utc;
-    use do_codeguardian::types::{AnalysisResults, Finding, Severity};
+    use do_do_codeguardian::types::{AnalysisResults, Finding, Severity};
 
     let mut results = AnalysisResults::new("benchmark_test".to_string());
 

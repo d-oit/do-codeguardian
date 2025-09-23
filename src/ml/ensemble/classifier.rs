@@ -139,15 +139,20 @@ impl<T: Classifier + Clone + Send + Sync> EnsembleClassifier<T> {
         if self.config.optimization.parallel_training {
             self.train_models_parallel(factory, &training_sets).await?;
         } else {
-            self.train_models_sequential(factory, &training_sets).await?;
+            self.train_models_sequential(factory, &training_sets)
+                .await?;
         }
 
         // Calculate model weights based on performance
         self.calculate_model_weights(dataset).await?;
 
         // Train meta-learner if using stacking
-        if let EnsembleStrategy::Stacking { meta_learner_config } = &self.config.strategy {
-            self.train_meta_learner(meta_learner_config, dataset).await?;
+        if let EnsembleStrategy::Stacking {
+            meta_learner_config,
+        } = &self.config.strategy
+        {
+            self.train_meta_learner(meta_learner_config, dataset)
+                .await?;
         }
 
         // Calculate diversity metrics
@@ -173,7 +178,8 @@ impl<T: Classifier + Clone + Send + Sync> EnsembleClassifier<T> {
 
             if self.config.diversity.data_bagging {
                 // Bootstrap sampling
-                let sample_size = (dataset.len() as f64 * self.config.diversity.bagging_fraction) as usize;
+                let sample_size =
+                    (dataset.len() as f64 * self.config.diversity.bagging_fraction) as usize;
                 let indices = self.bootstrap_sample(dataset.len(), sample_size);
 
                 for idx in indices {
@@ -231,7 +237,9 @@ impl<T: Classifier + Clone + Send + Sync> EnsembleClassifier<T> {
             let training_time = model_start.elapsed();
 
             // Evaluate model performance
-            let performance = self.evaluate_model_performance(&model, training_set, i, training_time).await?;
+            let performance = self
+                .evaluate_model_performance(&model, training_set, i, training_time)
+                .await?;
             self.training_history.model_performances.push(performance);
 
             self.base_models.push(model);
@@ -248,7 +256,11 @@ impl<T: Classifier + Clone + Send + Sync> EnsembleClassifier<T> {
     ) -> Result<()> {
         use tokio::task;
 
-        let max_concurrent = self.config.optimization.max_threads.min(self.config.n_models);
+        let max_concurrent = self
+            .config
+            .optimization
+            .max_threads
+            .min(self.config.n_models);
         let mut handles = Vec::new();
 
         for (i, training_set) in training_sets.iter().enumerate() {
@@ -295,7 +307,9 @@ impl<T: Classifier + Clone + Send + Sync> EnsembleClassifier<T> {
         let training_time = model_start.elapsed();
 
         // Evaluate model performance
-        let performance = Self::evaluate_model_performance_static(&model, &training_set, model_id, training_time).await?;
+        let performance =
+            Self::evaluate_model_performance_static(&model, &training_set, model_id, training_time)
+                .await?;
 
         Ok((model, performance))
     }
@@ -399,7 +413,8 @@ impl<T: Classifier + Clone + Send + Sync> EnsembleClassifier<T> {
                 }
             }
             EnsembleStrategy::AdaBoost { learning_rate, .. } => {
-                self.calculate_adaboost_weights(*learning_rate, dataset).await?;
+                self.calculate_adaboost_weights(*learning_rate, dataset)
+                    .await?;
             }
             _ => {
                 // Default to performance-based weights
@@ -484,7 +499,9 @@ impl<T: Classifier + Clone + Send + Sync> EnsembleClassifier<T> {
         info!("Training meta-learner for stacking ensemble");
 
         // Generate meta-features using cross-validation
-        let meta_features = self.generate_meta_features(dataset, meta_config.cv_folds).await?;
+        let meta_features = self
+            .generate_meta_features(dataset, meta_config.cv_folds)
+            .await?;
 
         // Create meta-learner
         self.meta_learner = Some(self.create_meta_learner(meta_config)?);
@@ -579,7 +596,9 @@ impl<T: Classifier + Clone + Send + Sync> EnsembleClassifier<T> {
         // Combine predictions based on strategy
         let final_prediction = match &self.config.strategy {
             EnsembleStrategy::MajorityVoting => self.majority_voting(&individual_predictions),
-            EnsembleStrategy::WeightedVoting { .. } => self.weighted_voting(&individual_predictions),
+            EnsembleStrategy::WeightedVoting { .. } => {
+                self.weighted_voting(&individual_predictions)
+            }
             EnsembleStrategy::Stacking { .. } => {
                 self.stacking_prediction(&individual_predictions).await?
             }
@@ -663,7 +682,8 @@ impl<T: Classifier + Clone + Send + Sync> EnsembleClassifier<T> {
 
         // Calculate variance as uncertainty measure
         let mean = predictions.iter().sum::<f32>() / predictions.len() as f32;
-        let variance = predictions.iter().map(|p| (p - mean).powi(2)).sum::<f32>() / predictions.len() as f32;
+        let variance =
+            predictions.iter().map(|p| (p - mean).powi(2)).sum::<f32>() / predictions.len() as f32;
 
         variance.sqrt() as f64
     }
@@ -708,7 +728,10 @@ impl<T: Classifier + Clone + Send + Sync> EnsembleClassifier<T> {
     }
 
     /// Calculate diversity metrics
-    async fn calculate_diversity_metrics(&self, dataset: &TrainingDataset) -> Result<DiversityMetrics> {
+    async fn calculate_diversity_metrics(
+        &self,
+        dataset: &TrainingDataset,
+    ) -> Result<DiversityMetrics> {
         if self.base_models.len() < 2 {
             return Ok(DiversityMetrics {
                 pairwise_diversity: 0.0,
@@ -737,7 +760,9 @@ impl<T: Classifier + Clone + Send + Sync> EnsembleClassifier<T> {
 
         for i in 0..all_predictions.len() {
             for j in (i + 1)..all_predictions.len() {
-                let diversity = self.calculate_pairwise_diversity(&all_predictions[i], &all_predictions[j]).await?;
+                let diversity = self
+                    .calculate_pairwise_diversity(&all_predictions[i], &all_predictions[j])
+                    .await?;
                 diversity_sum += diversity;
                 pair_count += 1;
             }
@@ -751,8 +776,12 @@ impl<T: Classifier + Clone + Send + Sync> EnsembleClassifier<T> {
 
         // Calculate other diversity metrics (simplified)
         let disagreement = self.calculate_disagreement(&all_predictions);
-        let q_statistic = self.calculate_q_statistic(&all_predictions, dataset).await?;
-        let double_fault = self.calculate_double_fault(&all_predictions, dataset).await?;
+        let q_statistic = self
+            .calculate_q_statistic(&all_predictions, dataset)
+            .await?;
+        let double_fault = self
+            .calculate_double_fault(&all_predictions, dataset)
+            .await?;
 
         Ok(DiversityMetrics {
             pairwise_diversity,
@@ -763,7 +792,11 @@ impl<T: Classifier + Clone + Send + Sync> EnsembleClassifier<T> {
     }
 
     /// Calculate pairwise diversity between two models
-    async fn calculate_pairwise_diversity(&self, predictions1: &[bool], predictions2: &[bool]) -> Result<f64> {
+    async fn calculate_pairwise_diversity(
+        &self,
+        predictions1: &[bool],
+        predictions2: &[bool],
+    ) -> Result<f64> {
         let mut disagreements = 0;
         let total = predictions1.len();
 
@@ -792,7 +825,8 @@ impl<T: Classifier + Clone + Send + Sync> EnsembleClassifier<T> {
                 .map(|preds| if preds[i] { 1 } else { 0 })
                 .sum();
             let negative_votes = n_models - positive_votes;
-            let disagreement = (positive_votes * negative_votes) as f64 / (n_models * n_models) as f64;
+            let disagreement =
+                (positive_votes * negative_votes) as f64 / (n_models * n_models) as f64;
             total_disagreement += disagreement;
         }
 
@@ -800,7 +834,11 @@ impl<T: Classifier + Clone + Send + Sync> EnsembleClassifier<T> {
     }
 
     /// Calculate Q-statistic
-    async fn calculate_q_statistic(&self, all_predictions: &[Vec<bool>], dataset: &TrainingDataset) -> Result<f64> {
+    async fn calculate_q_statistic(
+        &self,
+        all_predictions: &[Vec<bool>],
+        dataset: &TrainingDataset,
+    ) -> Result<f64> {
         // Simplified Q-statistic calculation
         if all_predictions.len() < 2 {
             return Ok(0.0);
@@ -811,7 +849,9 @@ impl<T: Classifier + Clone + Send + Sync> EnsembleClassifier<T> {
 
         for i in 0..all_predictions.len() {
             for j in (i + 1)..all_predictions.len() {
-                let q = self.calculate_q_statistic_pair(&all_predictions[i], &all_predictions[j], dataset).await?;
+                let q = self
+                    .calculate_q_statistic_pair(&all_predictions[i], &all_predictions[j], dataset)
+                    .await?;
                 q_sum += q;
                 pair_count += 1;
             }
@@ -825,7 +865,12 @@ impl<T: Classifier + Clone + Send + Sync> EnsembleClassifier<T> {
     }
 
     /// Calculate Q-statistic for a pair of models
-    async fn calculate_q_statistic_pair(&self, pred1: &[bool], pred2: &[bool], dataset: &TrainingDataset) -> Result<f64> {
+    async fn calculate_q_statistic_pair(
+        &self,
+        pred1: &[bool],
+        pred2: &[bool],
+        dataset: &TrainingDataset,
+    ) -> Result<f64> {
         let mut n11 = 0; // Both correct
         let mut n10 = 0; // First correct, second wrong
         let mut n01 = 0; // First wrong, second correct
@@ -857,7 +902,11 @@ impl<T: Classifier + Clone + Send + Sync> EnsembleClassifier<T> {
     }
 
     /// Calculate double fault measure
-    async fn calculate_double_fault(&self, all_predictions: &[Vec<bool>], dataset: &TrainingDataset) -> Result<f64> {
+    async fn calculate_double_fault(
+        &self,
+        all_predictions: &[Vec<bool>],
+        dataset: &TrainingDataset,
+    ) -> Result<f64> {
         if all_predictions.len() < 2 {
             return Ok(0.0);
         }

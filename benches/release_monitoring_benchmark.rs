@@ -1,8 +1,9 @@
 use chrono::{DateTime, Duration, Utc};
-use codeguardian::release_monitoring::{
+use do_do_codeguardian::release_monitoring::{
     ReleaseData, ReleaseMonitoringConfig, ReleaseMonitoringService,
 };
-use criterion::{black_box, criterion_group, criterion_main, Criterion};
+use criterion::{criterion_group, criterion_main, Criterion};
+use std::hint::black_box;
 use std::sync::Arc;
 use tokio::runtime::Runtime;
 
@@ -11,7 +12,7 @@ fn benchmark_release_monitoring(c: &mut Criterion) {
     let rt = Runtime::new().unwrap();
 
     c.bench_function("collect_release_data_small", |b| {
-        b.to_async(&rt).iter(|| async {
+        b.iter(|| {
             let config = ReleaseMonitoringConfig {
                 repository: "test/repo".to_string(),
                 max_releases_to_monitor: 5,

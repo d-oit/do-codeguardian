@@ -1,3 +1,5 @@
+#![cfg(feature = "ml")]
+
 //! Example demonstrating the Ensemble Methods system in CodeGuardian
 //!
 //! This example shows how to:

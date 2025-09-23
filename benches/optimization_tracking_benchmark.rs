@@ -1,5 +1,6 @@
-use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion};
-use do_codeguardian::{
+use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
+use std::hint::black_box;
+use do_do_codeguardian::{
     analyzers::{performance_analyzer::PerformanceAnalyzer, security_analyzer::SecurityAnalyzer},
     cache::FileCache,
     config::{Config, PerformanceConfig},
@@ -133,7 +134,7 @@ fn bench_optimization_impact_tracking(c: &mut Criterion) {
             &scenario,
             |b, scenario| {
                 let mut engine = rt.block_on(async {
-                    let cfg = Config::minimal();
+                    let cfg = Config::default();
                     GuardianEngine::new_with_ml(cfg, Default::default(), None)
                         .await
                         .unwrap()
@@ -196,7 +197,7 @@ fn bench_performance_regression_tracking(c: &mut Criterion) {
             version,
             |b, version| {
                 let mut engine = rt.block_on(async {
-                    let cfg = Config::minimal();
+                    let cfg = Config::default();
                     GuardianEngine::new_with_ml(cfg, Default::default(), None)
                         .await
                         .unwrap()
@@ -269,7 +270,7 @@ fn bench_optimization_effectiveness(c: &mut Criterion) {
             &(strategy_name, description),
             |b, (strategy_name, description)| {
                 let mut engine = rt.block_on(async {
-                    let mut cfg = Config::minimal();
+                    let mut cfg = Config::default();
 
                     // Apply strategy-specific configuration
                     match *strategy_name {

@@ -1,5 +1,5 @@
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
-use do_codeguardian::{
+use do_do_codeguardian::{
     config::Config,
     core::GuardianEngine,
     performance::{
@@ -235,10 +235,10 @@ fn bench_recommendation_prioritization(c: &mut Criterion) {
 
             for rec in recommendations {
                 match rec.priority {
-                    do_codeguardian::performance::Priority::Critical => critical.push(rec),
-                    do_codeguardian::performance::Priority::High => high.push(rec),
-                    do_codeguardian::performance::Priority::Medium => medium.push(rec),
-                    do_codeguardian::performance::Priority::Low => low.push(rec),
+                    do_do_codeguardian::performance::Priority::Critical => critical.push(rec),
+                    do_do_codeguardian::performance::Priority::High => high.push(rec),
+                    do_do_codeguardian::performance::Priority::Medium => medium.push(rec),
+                    do_do_codeguardian::performance::Priority::Low => low.push(rec),
                 }
             }
 
@@ -273,11 +273,11 @@ fn bench_implementation_effort_analysis(c: &mut Criterion) {
 
             for rec in recommendations {
                 match rec.implementation_effort {
-                    do_codeguardian::performance::ImplementationEffort::Low => low_effort.push(rec),
-                    do_codeguardian::performance::ImplementationEffort::Medium => {
+                    do_do_codeguardian::performance::ImplementationEffort::Low => low_effort.push(rec),
+                    do_do_codeguardian::performance::ImplementationEffort::Medium => {
                         medium_effort.push(rec)
                     }
-                    do_codeguardian::performance::ImplementationEffort::High => {
+                    do_do_codeguardian::performance::ImplementationEffort::High => {
                         high_effort.push(rec)
                     }
                 }

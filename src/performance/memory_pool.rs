@@ -611,7 +611,8 @@ pub mod thread_local_pools {
 
     pub fn get_string_buffer() -> PooledString<'static> {
         STRING_POOL.with(|pool| {
-            let buffer = pool.borrow().get_buffer();
+            let binding = pool.borrow();
+            let buffer = binding.get_buffer();
             unsafe { std::mem::transmute::<PooledString<'_>, PooledString<'static>>(buffer) }
         })
     }
@@ -623,8 +624,14 @@ pub mod thread_local_pools {
 
     pub fn get_findings_vec() -> PooledVec<'static, crate::types::Finding> {
         FINDING_POOL.with(|pool| {
-            let vec = pool.borrow().get_vec();
-            unsafe { std::mem::transmute::<PooledVec<'_, crate::types::Finding>, PooledVec<'static, crate::types::Finding>>(vec) }
+            let binding = pool.borrow();
+            let vec = binding.get_vec();
+            unsafe {
+                std::mem::transmute::<
+                    PooledVec<'_, crate::types::Finding>,
+                    PooledVec<'static, crate::types::Finding>,
+                >(vec)
+            }
         })
     }
 
@@ -634,8 +641,14 @@ pub mod thread_local_pools {
 
     pub fn get_paths_vec() -> PooledVec<'static, std::path::PathBuf> {
         PATH_POOL.with(|pool| {
-            let vec = pool.borrow().get_vec();
-            unsafe { std::mem::transmute::<PooledVec<'_, std::path::PathBuf>, PooledVec<'static, std::path::PathBuf>>(vec) }
+            let binding = pool.borrow();
+            let vec = binding.get_vec();
+            unsafe {
+                std::mem::transmute::<
+                    PooledVec<'_, std::path::PathBuf>,
+                    PooledVec<'static, std::path::PathBuf>,
+                >(vec)
+            }
         })
     }
 

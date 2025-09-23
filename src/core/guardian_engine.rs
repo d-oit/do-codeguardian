@@ -12,7 +12,8 @@ use crate::utils::security::{canonicalize_path_safe, should_follow_path};
 use anyhow::Result;
 
 use std::path::{Path, PathBuf};
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
+use tokio::sync::Mutex;
 use std::time::Instant;
 use tokio::fs;
 use walkdir::WalkDir;
@@ -267,19 +268,15 @@ impl GuardianEngine {
         let mut cached_files = Vec::new();
         let mut uncached_files = Vec::new();
 
-        if let Ok(cache_guard) = self.cache.lock() {
-            for file_path in files {
-                if let Some(cached_findings) =
-                    cache_guard.get_cached_findings(file_path, config_hash)
-                {
-                    cached_files.push((file_path.clone(), cached_findings));
-                } else {
-                    uncached_files.push(file_path.clone());
-                }
+        let cache_guard = self.cache.lock().await;
+        for file_path in files {
+            if let Some(cached_findings) =
+                cache_guard.get_cached_findings(file_path, config_hash)
+            {
+                cached_files.push((file_path.clone(), cached_findings));
+            } else {
+                uncached_files.push(file_path.clone());
             }
-        } else {
-            // If cache is locked, treat all files as uncached
-            uncached_files.extend_from_slice(files);
         }
 
         Ok((cached_files, uncached_files))
@@ -372,11 +369,10 @@ impl GuardianEngine {
         config_hash: &str,
     ) -> Result<()> {
         let findings_vec = findings.to_vec();
-        if let Ok(mut cache_guard) = self.cache.lock() {
-            cache_guard
-                .cache_findings(file_path, findings_vec, config_hash)
-                .await?;
-        }
+        let mut cache_guard = self.cache.lock().await;
+        cache_guard
+            .cache_findings(file_path, findings_vec, config_hash)
+            .await?;
         Ok(())
     }
 
@@ -393,17 +389,12 @@ impl GuardianEngine {
         // Save cache asynchronously without holding the lock
         let cache_clone = Arc::clone(&self.cache);
         tokio::spawn(async move {
-            let (entries, cache_path, cache_version) = {
-                if let Ok(cache_guard) = cache_clone.lock() {
-                    (
-                        cache_guard.entries.clone(),
-                        cache_guard.cache_path.clone(),
-                        cache_guard.cache_version.clone(),
-                    )
-                } else {
-                    return;
-                }
-            };
+            let cache_guard = cache_clone.lock().await;
+            let (entries, cache_path, cache_version) = (
+                cache_guard.entries.clone(),
+                cache_guard.cache_path.clone(),
+                cache_guard.cache_version.clone(),
+            );
             let temp_cache = FileCache {
                 entries,
                 cache_version,

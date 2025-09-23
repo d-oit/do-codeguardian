@@ -1,5 +1,5 @@
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
-use do_codeguardian::{
+use do_do_codeguardian::{
     config::Config,
     core::GuardianEngine,
     performance::{PerformanceAnalyzer as PerfAnalyzer, PerformanceMetrics, PerformanceProfiler},

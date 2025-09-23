@@ -88,15 +88,14 @@ impl AnalyzerRegistry {
                     .custom_patterns
                     .is_empty()
                 {
-                    ai_content_analyzer::AiContentAnalyzer::new()?
-                        .with_custom_patterns(
-                            config
-                                .analyzers
-                                .broken_files
-                                .placeholders
-                                .custom_patterns
-                                .clone(),
-                        )?
+                    ai_content_analyzer::AiContentAnalyzer::new()?.with_custom_patterns(
+                        config
+                            .analyzers
+                            .broken_files
+                            .placeholders
+                            .custom_patterns
+                            .clone(),
+                    )?
                 } else {
                     ai_content_analyzer::AiContentAnalyzer::new()?
                 };

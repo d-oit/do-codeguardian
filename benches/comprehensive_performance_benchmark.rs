@@ -1,6 +1,6 @@
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
-use do_codeguardian::analyzers::Analyzer;
-use do_codeguardian::analyzers::{
+use do_do_codeguardian::analyzers::Analyzer;
+use do_do_codeguardian::analyzers::{
     performance_analyzer::PerformanceAnalyzer, security_analyzer::SecurityAnalyzer,
 };
 use std::hint::black_box;

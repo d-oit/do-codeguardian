@@ -76,7 +76,9 @@ mod performance_integration_tests {
         let duration_seq = start_seq.elapsed();
 
         // Test parallel processing
-        let mut engine_par = GuardianEngine::new(config, progress).await.unwrap();
+        let mut engine_par = GuardianEngine::new(config, ProgressReporter::new(false))
+            .await
+            .unwrap();
         let start_par = Instant::now();
         let _results_par = engine_par.analyze_files(&files, 4).await.unwrap();
         let duration_par = start_par.elapsed();

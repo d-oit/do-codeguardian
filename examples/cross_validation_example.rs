@@ -1,3 +1,5 @@
+#![cfg(feature = "ml")]
+
 //! Example demonstrating the K-fold cross-validation system in CodeGuardian
 //!
 //! This example shows how to:
