@@ -137,6 +137,13 @@ async fn main() -> Result<()> {
         Commands::ReleaseMonitoring(args) => {
             do_codeguardian::cli::release_monitoring::execute(args).await?;
         }
+        #[cfg(feature = "ml")]
+        Commands::FeatureEngineering(args) => {
+            do_codeguardian::cli::feature_engineering::run_feature_engineering(args).await?;
+        }
+        Commands::MLEnhancements(args) => {
+            do_codeguardian::cli::ml_enhancements::run_ml_enhancements(args).await?;
+        }
     }
 
     info!("CodeGuardian CLI completed");

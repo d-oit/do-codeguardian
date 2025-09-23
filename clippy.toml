@@ -1,0 +1,73 @@
+# === GENERAL CONFIGURATION ===
+# Minimum Supported Rust Version (set if you want MSRV linting)
+# msrv = "1.70.0"
+
+# Prevent breaking exported APIs in libraries
+avoid-breaking-exported-api = true
+
+# === CODE QUALITY THRESHOLDS ===
+too-many-arguments-threshold = 7
+too-many-lines-threshold = 100
+type-complexity-threshold = 250
+
+# === SAFETY / UNWRAP RULES ===
+# Disallow unwrap/expect across the codebase
+disallowed-methods = [
+    "std::result::Result::unwrap",
+    "std::option::Option::unwrap",
+    "std::result::Result::expect",
+    "std::option::Option::expect",
+]
+
+# Unwrap/expect checks are handled by disallowed-methods above
+
+# === PERFORMANCE LIMITS ===
+pass-by-value-size-limit = 128       # safer default than 256
+trivial-copy-size-limit = 64
+stack-size-threshold = 131072        # 128 KB (avoid stack overflow risks)
+array-size-threshold = 16384
+future-size-threshold = 16384
+unnecessary-box-size = 128
+vec-box-size-threshold = 4096
+too-large-for-stack = 200
+
+# === NAMING AND STYLE ===
+disallowed-names = ["foo", "bar", "baz", "quux"]
+single-char-binding-names-threshold = 4
+min-ident-chars-threshold = 1
+allowed-idents-below-min-chars = ["i", "j", "k", "x", "y", "z", "w", "n", "id"]
+struct-field-name-threshold = 3
+
+# === IMPORTS AND MODULES ===
+warn-on-all-wildcard-imports = true
+allowed-wildcard-imports = ["std::prelude"]
+
+# === DOCUMENTATION ===
+check-private-items = true
+missing-docs-in-crate-items = true
+
+# === ARITHMETIC AND LITERALS ===
+arithmetic-side-effects-allowed = []
+literal-representation-threshold = 16384
+unreadable-literal-lint-fractions = true
+verbose-bit-mask-threshold = 1
+
+# === ADVANCED LIMITS ===
+max-trait-bounds = 3
+max-fn-params-bools = 3
+max-struct-bools = 3
+max-include-file-size = 1000000
+max-suggested-slice-pattern-length = 3
+
+# === INTERIOR MUTABILITY ===
+ignore-interior-mutability = ["bytes::Bytes"]
+
+# === INTERNATIONALIZATION ===
+allowed-scripts = ["Latin"]
+
+# === CASE STYLE ===
+upper-case-acronyms-aggressive = false
+
+# === DUPLICATES / DOTFILES ===
+allowed-duplicate-crates = []
+allowed-dotfiles = []

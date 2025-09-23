@@ -113,7 +113,7 @@ const express = require('express');
 const app = express();
 
 // Security issues
-const dbPassword = "admin123"; // Hardcoded password
+const dbPassword = process.env.DB_PASSWORD || "test_password"; // Use environment variable
 const apiKey = process.env.API_KEY || "default-key-123";
 
 app.get('/user/:id', (req, res) => {

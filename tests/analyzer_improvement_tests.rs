@@ -6,6 +6,7 @@ const TEST_FILE: &str = "strings.rs";
 
 use do_codeguardian::analyzers::ai_content_analyzer::AiContentAnalyzer;
 use do_codeguardian::analyzers::git_conflict_analyzer::GitConflictAnalyzer;
+use do_codeguardian::analyzers::Analyzer;
 use std::path::Path;
 
 #[test]
@@ -115,7 +116,7 @@ test content 2
 
 #[test]
 fn test_ai_content_analyzer_ignores_documentation_comments() {
-    let analyzer = AiContentAnalyzer::new();
+    let analyzer = AiContentAnalyzer::new().unwrap();
 
     let doc_content = r#"
 //! Module documentation
@@ -161,7 +162,7 @@ fn validate_input(input: &str) -> bool {
 
 #[test]
 fn test_ai_content_analyzer_ignores_test_content() {
-    let analyzer = AiContentAnalyzer::new();
+    let analyzer = AiContentAnalyzer::new().unwrap();
 
     let test_content = r#"
 #[cfg(test)]
@@ -210,7 +211,7 @@ fn main() {
 
 #[test]
 fn test_ai_content_analyzer_ignores_string_literals() {
-    let analyzer = AiContentAnalyzer::new();
+    let analyzer = AiContentAnalyzer::new().unwrap();
 
     let string_content = r#"
 fn main() {
@@ -255,7 +256,7 @@ fn main() {
 
 #[test]
 fn test_ai_content_analyzer_detects_real_incomplete_code() {
-    let analyzer = AiContentAnalyzer::new();
+    let analyzer = AiContentAnalyzer::new().unwrap();
 
     let incomplete_content = r#"
 fn process_data() {
@@ -344,8 +345,8 @@ mod tests {
         ));
     }
     large_content.push_str(
-        r"}
-",
+        r#"}
+ "#,
     );
 
     let start = Instant::now();
@@ -369,7 +370,7 @@ mod tests {
 #[test]
 fn test_analyzer_memory_usage_stability() {
     let git_analyzer = GitConflictAnalyzer::new();
-    let ai_analyzer = AiContentAnalyzer::new();
+    let ai_analyzer = AiContentAnalyzer::new().unwrap();
 
     // Process multiple files to ensure no memory leaks in improved logic
     for i in 0..5 {

@@ -42,8 +42,7 @@ async fn main() -> Result<()> {
     }];
 
     // Cache some findings
-    basic_cache
-        .put(&test_file, findings.clone(), "config_hash_123", 150)?;
+    basic_cache.put(&test_file, findings.clone(), "config_hash_123", 150)?;
     println!("✓ Cached findings with basic strategy");
 
     // Retrieve cached findings
@@ -79,8 +78,7 @@ async fn main() -> Result<()> {
     let mut pooled_cache = UnifiedCache::new(pooled_config)?;
 
     // Cache findings with pooled strategy
-    pooled_cache
-        .put(&test_file, findings, "config_hash_456", 200)?;
+    pooled_cache.put(&test_file, findings, "config_hash_456", 200)?;
     println!("✓ Cached findings with pooled strategy");
 
     // Show memory pool stats

@@ -4,7 +4,7 @@
 
 use super::*;
 use crate::types::{AnalysisResults, Finding, Severity};
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 use std::collections::HashMap;
 use std::time::Instant;
 
@@ -186,7 +186,7 @@ impl BasicEnhancementEngine {
     }
 
     /// Classify a finding using pattern matching
-    fn classify_finding(&self, finding: &Finding) -> FindingClassification {
+    fn classify_finding(&self, finding: &Finding) -> Result<FindingClassification> {
         let text = format!(
             "{} {} {}",
             finding.message,
@@ -223,14 +223,15 @@ impl BasicEnhancementEngine {
             scores
                 .iter()
                 .max_by(|a, b| a.1.partial_cmp(b.1).unwrap_or(std::cmp::Ordering::Equal))
-                .map(|(k, _)| k.clone())
-                .unwrap()
+                .ok_or_else(|| anyhow!("Failed to find max score despite non-empty scores"))?
+                .0
+                .clone()
         };
 
         let confidence = if scores.is_empty() {
             0.5 // Default confidence for general category
         } else {
-            scores.get(&primary_category).copied().unwrap_or(0.5)
+            scores.get(&primary_category).copied().ok_or_else(|| anyhow!("Primary category not found in scores"))?
         };
 
         // Secondary categories (scores > 0.3)
@@ -253,13 +254,13 @@ impl BasicEnhancementEngine {
         }
         suggested_tags.push(finding.severity.to_string().to_lowercase());
 
-        FindingClassification {
+        Ok(FindingClassification {
             primary_category,
             secondary_categories,
             confidence,
             reasoning,
             suggested_tags,
-        }
+        })
     }
 
     /// Assess business impact of a finding
@@ -486,7 +487,7 @@ impl AIEnhancementEngine for BasicEnhancementEngine {
                 results.findings.len()
             );
             for finding in &results.findings {
-                let classification = self.classify_finding(finding);
+                let classification = self.classify_finding(finding)?;
                 let impact = self.assess_impact(finding, &classification);
 
                 tracing::debug!(
@@ -642,26 +643,27 @@ mod tests {
     }
 
     #[test]
-    fn test_basic_enhancement_engine_creation() {
-        let engine = BasicEnhancementEngine::new().unwrap();
+    fn test_basic_enhancement_engine_creation() -> Result<()> {
+        let engine = BasicEnhancementEngine::new()?;
         assert!(engine.is_available());
         assert!(!engine.get_capabilities().is_empty());
+        Ok(())
     }
 
     #[test]
-    fn test_finding_classification() {
-        let engine = BasicEnhancementEngine::new().unwrap();
-        let finding =
-            create_test_finding("SQL injection vulnerability detected", Severity::High);
+    fn test_finding_classification() -> Result<()> {
+        let engine = BasicEnhancementEngine::new()?;
+        let finding = create_test_finding("SQL injection vulnerability detected", Severity::High);
 
-        let classification = engine.classify_finding(&finding);
+        let classification = engine.classify_finding(&finding)?;
         assert_eq!(classification.primary_category, "Security");
         assert!(classification.confidence > 0.0);
+        Ok(())
     }
 
     #[test]
-    fn test_relationship_detection() {
-        let engine = BasicEnhancementEngine::new().unwrap();
+    fn test_relationship_detection() -> Result<()> {
+        let engine = BasicEnhancementEngine::new()?;
         let findings = vec![
             create_test_finding("Issue in test.rs", Severity::High),
             create_test_finding("Another issue in test.rs", Severity::Medium),
@@ -680,11 +682,12 @@ mod tests {
             has_same_component,
             "Should find SameComponent relationships for same file"
         );
+        Ok(())
     }
 
     #[test]
-    fn test_enhancement_process() {
-        let engine = BasicEnhancementEngine::new().unwrap();
+    fn test_enhancement_process() -> Result<()> {
+        let engine = BasicEnhancementEngine::new()?;
         let mut results = AnalysisResults::new("test_config".to_string());
 
         results.add_finding(create_test_finding(
@@ -705,7 +708,7 @@ mod tests {
         ));
 
         let config = AIEnhancementConfig::default();
-        let enhanced = engine.enhance_results(&results, &config).unwrap();
+        let enhanced = engine.enhance_results(&results, &config)?;
 
         assert_eq!(enhanced.base_results.findings.len(), 4);
         assert!(!enhanced.semantic_annotations.classifications.is_empty());
@@ -715,5 +718,6 @@ mod tests {
         );
         assert!(!enhanced.insights.is_empty());
         assert!(enhanced.enhancement_metadata.quality_score > 0.0);
+        Ok(())
     }
 }

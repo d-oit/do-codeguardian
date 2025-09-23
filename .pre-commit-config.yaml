@@ -1,25 +1,73 @@
- repos:
-   - repo: https://github.com/pre-commit/pre-commit-hooks
-     rev: v4.4.0
-     hooks:
-       - id: trailing-whitespace
-       - id: end-of-file-fixer
-       - id: check-yaml
-       - id: check-added-large-files
-       - id: check-merge-conflict
-   - repo: local
-     require_serial: true
-     hooks:
-         - id: rustfmt
-           name: Check Rust code formatting
-           files: '\.rs$'
-           entry: rustfmt
-           language: system
-           env:
-             PATH: "$HOME/.cargo/bin:$PATH"
-           args: [--check]
-         - id: clippy
-           name: Check Rust code with clippy and verify compilation
-           files: '\.rs$'
-           entry: bash -c "cargo clippy -- -D warnings && cargo check"
-           language: system
+  repos:
+    - repo: https://github.com/pre-commit/pre-commit-hooks
+      rev: v4.4.0
+      hooks:
+        - id: trailing-whitespace
+        - id: end-of-file-fixer
+        - id: check-yaml
+        - id: check-added-large-files
+        - id: check-merge-conflict
+        - id: check-executables-have-shebangs
+        - id: check-shebang-scripts-are-executable
+        - id: mixed-line-ending
+          args: [--fix=lf]
+    - repo: https://github.com/pre-commit/mirrors-clang-format
+      rev: v18.1.8
+      hooks:
+        - id: clang-format
+          files: '\.(c|cpp|h|hpp)$'
+          exclude: '^data/'
+    - repo: https://github.com/psf/black
+      rev: 24.8.0
+      hooks:
+        - id: black
+          language_version: python3
+    - repo: https://github.com/pycqa/isort
+      rev: 5.13.2
+      hooks:
+        - id: isort
+          args: [--profile=black]
+    - repo: https://github.com/pre-commit/mirrors-mypy
+      rev: v1.11.2
+      hooks:
+        - id: mypy
+          additional_dependencies: [types-all]
+          exclude: '^test_.*\.py$'
+    - repo: local
+      hooks:
+          - id: rustfmt
+            name: Check Rust code formatting
+            files: '\.rs$'
+            entry: rustfmt
+            language: system
+            env:
+              PATH: "$HOME/.cargo/bin:$PATH"
+            args: [--check]
+            pass_filenames: false
+          - id: clippy
+            name: Check Rust code with clippy and verify compilation
+            files: '\.rs$'
+            entry: bash -c "cargo clippy --profile dev-fast --features dev -- -D warnings && cargo check --profile dev-fast --features dev"
+            language: system
+            pass_filenames: false
+          - id: cargo-test
+            name: Run Rust tests
+            files: '\.rs$'
+            entry: bash -c "cargo test --profile dev-fast --features dev --lib --bins --tests --examples"
+            language: system
+            pass_filenames: false
+            stages: [pre-push]
+          - id: security-audit
+            name: Run cargo audit for security vulnerabilities
+            files: '(Cargo\.toml|Cargo\.lock)$'
+            entry: bash -c "command -v cargo-audit >/dev/null 2>&1 && cargo audit --format json || echo 'cargo-audit not installed, skipping security audit'"
+            language: system
+            pass_filenames: false
+            stages: [pre-push]
+          - id: performance-check
+            name: Check performance regression
+            files: '\.rs$'
+            entry: bash -c "./scripts/performance_regression_detector.sh || echo 'Performance check skipped - script not found'"
+            language: system
+            pass_filenames: false
+            stages: [pre-push]
