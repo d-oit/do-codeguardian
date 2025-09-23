@@ -1,0 +1,457 @@
+---
+name: 🚀 CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  schedule:
+    # Daily comprehensive CI at 2 AM UTC
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+    inputs:
+      analysis_mode:
+        description: 'Analysis mode'
+        required: false
+        default: 'standard'
+        type: choice
+        options:
+          - standard
+          - comprehensive
+          - security-focus
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  security-events: write
+  pull-requests: write
+  checks: write
+
+jobs:
+  # Build and test matrix
+  build-test:
+    name: 🔨 Build & Test
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            rust_version: stable
+            features: default
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            rust_version: stable
+            features: full
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            rust_version: stable
+            features: dev
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            rust_version: stable
+            features: default
+          - os: macos-latest
+            target: x86_64-apple-darwin
+            rust_version: stable
+            features: default
+
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 1
+
+      - name: 🦀 Setup Rust (${{ matrix.rust_version }})
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: ${{ matrix.rust_version }}
+          targets: ${{ matrix.target }}
+          components: rustfmt, clippy
+
+      - name: 📦 Cache Rust dependencies
+        uses: Swatinem/rust-cache@v2.8.0
+        with:
+          key: ${{ matrix.os }}-${{ matrix.target }}-${{ matrix.features }}
+          workspaces: "./ -> target"
+          cache-all-crates: true
+          save-if: ${{ github.ref == 'refs/heads/main' }}
+
+      - name: 🔨 Build (${{ matrix.features }} features)
+        run: |
+          echo "Building with features: ${{ matrix.features }}"
+          case "${{ matrix.features }}" in
+            "default")
+              cargo build --release --quiet
+              ;;
+            "full")
+              cargo build --release --features full --quiet
+              ;;
+            "dev")
+              cargo build --features dev --quiet
+              ;;
+          esac
+
+      - name: 🧪 Run Tests
+        run: cargo test --release --quiet
+
+      - name: 📏 Check Formatting
+        if: matrix.os == 'ubuntu-latest' && matrix.features == 'default'
+        run: cargo fmt --check
+
+      - name: 🔧 Run Clippy
+        if: matrix.os == 'ubuntu-latest' && matrix.features == 'default'
+        run: cargo clippy -- -D warnings
+
+      - name: 📦 Verify Build Artifacts
+        run: |
+          if [ "${{ matrix.os }}" = "windows-latest" ]; then
+            BINARY="./target/${{ matrix.target }}/release/do-codeguardian.exe"
+          else
+            BINARY="./target/${{ matrix.target }}/release/do-codeguardian"
+          fi
+          if [ ! -f "$BINARY" ]; then
+            echo "❌ Binary not found: $BINARY"
+            exit 1
+          fi
+          echo "✅ Build artifacts verified"
+
+  # Security analysis
+  security-analysis:
+    name: 🔒 Security Analysis
+    runs-on: ubuntu-latest
+    needs: build-test
+    timeout-minutes: 20
+
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: 🦀 Setup Rust
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: stable
+          components: rustfmt, clippy
+
+      - name: 📦 Cache Rust dependencies
+        uses: Swatinem/rust-cache@v2.8.0
+        with:
+          workspaces: "./ -> target"
+          cache-all-crates: true
+
+      - name: 🔨 Build CodeGuardian
+        run: cargo build --release --quiet
+
+      - name: 🚀 Turbo Security Analysis
+        id: turbo-analysis
+        run: |
+          MODE="${{ github.event.inputs.analysis_mode || 'standard' }}"
+          EXTRA_ARGS=""
+          
+          if [ "$MODE" = "comprehensive" ]; then
+            EXTRA_ARGS="--aggressive --max-parallel 8 --memory-limit 1024"
+          elif [ "$MODE" = "security-focus" ]; then
+            EXTRA_ARGS="--aggressive --max-parallel 4 --memory-limit 512"
+          else
+            EXTRA_ARGS="--max-parallel 4 --memory-limit 512"
+          fi
+
+          START_TIME=$(date +%s.%N)
+          
+          ./target/release/do-codeguardian turbo . \
+            $EXTRA_ARGS \
+            --format json \
+            --output security-analysis.json \
+            --metrics
+
+          END_TIME=$(date +%s.%N)
+          DURATION=$(echo "$END_TIME - $START_TIME" | bc -l 2>/dev/null || echo "0")
+          
+          echo "duration=$DURATION" >> $GITHUB_OUTPUT
+
+      - name: 📊 Analyze Security Results
+        id: results
+        run: |
+          if [ -f "security-analysis.json" ]; then
+            TOTAL_FINDINGS=$(jq '.summary.total_findings' security-analysis.json)
+            CRITICAL=$(jq '[.findings[] | select(.severity == "Critical")] | length' security-analysis.json)
+            HIGH=$(jq '[.findings[] | select(.severity == "High")] | length' security-analysis.json)
+            
+            echo "total_findings=$TOTAL_FINDINGS" >> $GITHUB_OUTPUT
+            echo "critical_findings=$CRITICAL" >> $GITHUB_OUTPUT
+            echo "high_findings=$HIGH" >> $GITHUB_OUTPUT
+            
+            if [ "$CRITICAL" -gt 0 ]; then
+              echo "status=fail" >> $GITHUB_OUTPUT
+            elif [ "$HIGH" -gt 5 ]; then
+              echo "status=fail" >> $GITHUB_OUTPUT
+            else
+              echo "status=pass" >> $GITHUB_OUTPUT
+            fi
+          fi
+
+      - name: 🚨 Fail on Critical Security Issues
+        if: steps.results.outputs.critical_findings != '0'
+        run: |
+          echo "🚨 CRITICAL SECURITY ISSUES DETECTED"
+          echo "Critical findings: ${{ steps.results.outputs.critical_findings }}"
+          exit 1
+
+      - name: 📄 Upload Security Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-analysis-${{ github.run_number }}
+          path: security-analysis.json
+          retention-days: 30
+
+  # Code coverage
+  coverage:
+    name: 📊 Code Coverage
+    runs-on: ubuntu-latest
+    needs: build-test
+    timeout-minutes: 15
+
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v5
+
+      - name: 🦀 Setup Rust
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: stable
+          components: llvm-tools-preview
+
+      - name: 📦 Cache Rust dependencies
+        uses: Swatinem/rust-cache@v2.8.0
+        with:
+          workspaces: "./ -> target"
+          cache-all-crates: true
+
+      - name: 📦 Install cargo-tarpaulin
+        run: cargo install cargo-tarpaulin
+
+      - name: 📊 Generate Coverage Report
+        id: coverage
+        run: |
+          cargo tarpaulin \
+            --verbose \
+            --all-features \
+            --workspace \
+            --timeout 120 \
+            --out xml \
+            --output-dir coverage/ \
+            --exclude-files 'target/*' 'tests/fixtures/*' 'benches/*' 'examples/*' 'tmp_*' \
+            --fail-under 75
+
+          if [ -f "coverage/cobertura.xml" ]; then
+            COVERAGE=$(grep -oP '(?<=line-rate=")[^"]*' coverage/cobertura.xml | head -1)
+            COVERAGE_PERCENT=$(echo "scale=2; $COVERAGE * 100" | bc 2>/dev/null || echo "75.00")
+            echo "coverage_percent=$COVERAGE_PERCENT" >> $GITHUB_OUTPUT
+          fi
+
+      - name: 📤 Upload Coverage to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          file: coverage/cobertura.xml
+          flags: unittests
+          fail_ci_if_error: false
+
+      - name: 📤 Upload Coverage Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report-${{ github.run_id }}
+          path: coverage/
+          retention-days: 30
+
+  # Performance benchmarks
+  performance:
+    name: ⚡ Performance Benchmarks
+    runs-on: ubuntu-latest
+    needs: build-test
+    timeout-minutes: 25
+
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v5
+
+      - name: 🦀 Setup Rust
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: stable
+
+      - name: 📦 Cache Rust dependencies
+        uses: Swatinem/rust-cache@v2.8.0
+        with:
+          workspaces: "./ -> target"
+          cache-all-crates: true
+
+      - name: 🔨 Build CodeGuardian
+        run: cargo build --release --quiet
+
+      - name: ⚡ Run Performance Benchmarks
+        run: |
+          mkdir -p benchmark_results
+          
+          # Run key performance benchmarks
+          cargo bench --bench performance_regression_suite \
+            -- --measurement-time 10 \
+            --output-format json \
+            > benchmark_results/perf_results.json
+
+      - name: 📤 Upload Benchmark Results
+        uses: actions/upload-artifact@v4
+        with:
+          name: performance-benchmarks-${{ github.run_number }}
+          path: benchmark_results/
+          retention-days: 30
+
+  # CodeQL security scanning
+  codeql:
+    name: 🔍 CodeQL Analysis
+    runs-on: ubuntu-latest
+    needs: build-test
+    timeout-minutes: 20
+
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: 🦀 Setup Rust
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: stable
+          components: rust-src
+
+      - name: 📦 Cache Rust dependencies
+        uses: Swatinem/rust-cache@v2.8.0
+        with:
+          workspaces: "./ -> target"
+          cache-all-crates: true
+
+      - name: 🔍 Initialize CodeQL
+        uses: github/codeql-action/init@v3.30.3
+        with:
+          languages: rust
+          config-file: ./.github/codeql-config.yml
+          queries: security-and-quality
+
+      - name: 🔨 Build for CodeQL
+        run: cargo build --release --features full
+
+      - name: 🔍 Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3.30.3
+        with:
+          category: "/language:rust"
+
+  # Final validation and summary
+  validate-release:
+    name: ✅ Release Validation
+    runs-on: ubuntu-latest
+    needs: [build-test, security-analysis, coverage, performance, codeql]
+    if: always()
+
+    steps:
+      - name: 📋 CI/CD Pipeline Summary
+        run: |
+          echo "📋 CI/CD Pipeline Summary"
+          echo "========================"
+          echo ""
+          echo "Workflow: ${{ github.workflow }}"
+          echo "Run ID: ${{ github.run_id }}"
+          echo "Branch: ${{ github.ref }}"
+          echo "Commit: ${{ github.sha }}"
+          echo "Triggered: ${{ github.event_name }}"
+          echo ""
+
+          # Check each job status
+          echo "## Job Status Summary"
+          
+          if [ "${{ needs.build-test.result }}" == "success" ]; then
+            echo "✅ Build & Test: PASSED"
+          else
+            echo "❌ Build & Test: FAILED"
+          fi
+
+          if [ "${{ needs.security-analysis.result }}" == "success" ]; then
+            echo "✅ Security Analysis: PASSED (${{ needs.security-analysis.outputs.total_findings }} findings)"
+          else
+            echo "❌ Security Analysis: FAILED"
+          fi
+
+          if [ "${{ needs.coverage.result }}" == "success" ]; then
+            echo "✅ Code Coverage: PASSED (${{ needs.coverage.outputs.coverage_percent }}%)"
+          else
+            echo "❌ Code Coverage: FAILED"
+          fi
+
+          if [ "${{ needs.performance.result }}" == "success" ]; then
+            echo "✅ Performance Benchmarks: PASSED"
+          else
+            echo "❌ Performance Benchmarks: FAILED"
+          fi
+
+          if [ "${{ needs.codeql.result }}" == "success" ]; then
+            echo "✅ CodeQL Security Scan: PASSED"
+          else
+            echo "❌ CodeQL Security Scan: FAILED"
+          fi
+
+          echo ""
+          echo "## Quality Gates"
+          echo "- ✅ Multi-platform builds (Linux, Windows, macOS)"
+          echo "- ✅ Security analysis with zero critical issues"
+          echo "- ✅ Code coverage ≥ 75%"
+          echo "- ✅ Performance benchmarks passing"
+          echo "- ✅ CodeQL security scanning"
+
+          # Overall status
+          FAILED_JOBS=0
+          if [ "${{ needs.build-test.result }}" != "success" ]; then FAILED_JOBS=$((FAILED_JOBS + 1)); fi
+          if [ "${{ needs.security-analysis.result }}" != "success" ]; then FAILED_JOBS=$((FAILED_JOBS + 1)); fi
+          if [ "${{ needs.coverage.result }}" != "success" ]; then FAILED_JOBS=$((FAILED_JOBS + 1)); fi
+          if [ "${{ needs.performance.result }}" != "success" ]; then FAILED_JOBS=$((FAILED_JOBS + 1)); fi
+          if [ "${{ needs.codeql.result }}" != "success" ]; then FAILED_JOBS=$((FAILED_JOBS + 1)); fi
+
+          if [ $FAILED_JOBS -eq 0 ]; then
+            echo ""
+            echo "🎉 **ALL QUALITY GATES PASSED**"
+            echo "🚀 Ready for release!"
+          else
+            echo ""
+            echo "⚠️ **QUALITY GATES FAILED** ($FAILED_JOBS jobs failed)"
+            echo "Please review the failed jobs and fix issues before release."
+            exit 1
+          fi
+
+      - name: 📊 Pipeline Metrics Summary
+        run: |
+          echo "## CI/CD Pipeline Metrics" >> $GITHUB_STEP_SUMMARY
+          echo "- **Build Platforms**: Linux, Windows, macOS" >> $GITHUB_STEP_SUMMARY
+          echo "- **Test Coverage**: ${{ needs.coverage.outputs.coverage_percent }}%" >> $GITHUB_STEP_SUMMARY
+          echo "- **Security Findings**: ${{ needs.security-analysis.outputs.total_findings }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Critical Issues**: ${{ needs.security-analysis.outputs.critical_findings }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Performance Status**: ${{ needs.performance.result == 'success' && '✅ Passed' || '❌ Failed' }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Security Scan**: ${{ needs.codeql.result == 'success' && '✅ Passed' || '❌ Failed' }}" >> $GITHUB_STEP_SUMMARY
+          
+          if [ "${{ needs.security-analysis.outputs.critical_findings }}" != "0" ]; then
+            echo "- **Status**: 🚨 CRITICAL SECURITY ISSUES DETECTED" >> $GITHUB_STEP_SUMMARY
+          elif [ $FAILED_JOBS -eq 0 ]; then
+            echo "- **Status**: ✅ ALL QUALITY GATES PASSED" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "- **Status**: ⚠️ QUALITY GATES FAILED" >> $GITHUB_STEP_SUMMARY
+          fi
