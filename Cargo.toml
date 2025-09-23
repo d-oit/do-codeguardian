@@ -102,6 +102,12 @@ flate2 = "1.0"
 tempfile = "3.10"
 uuid = { version = "1.6", features = ["v4", "serde"] }
 
+# System information for benchmarks
+sysinfo = "0.30"
+
+# Directory traversal with gitignore support for benchmarks
+ignore = "0.4"
+
 # Machine Learning
 fann = { version = "0.1", optional = true }
 

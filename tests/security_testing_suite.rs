@@ -258,7 +258,7 @@ impl SecurityTestSuite {
     /// Test authorization controls
     async fn test_authorization_security(&self, _config: &Config) -> SecurityTestResult {
         let mut recommendations = Vec::new();
-        let passed = true;
+        let mut passed = true;
         let start = std::time::Instant::now();
 
         // Test 1: Rate limiting configuration
@@ -291,7 +291,7 @@ impl SecurityTestSuite {
     /// Test data encryption
     async fn test_encryption_security(&self, config: &Config) -> SecurityTestResult {
         let mut recommendations = Vec::new();
-        let passed = true;
+        let mut passed = true;
         let start = std::time::Instant::now();
 
         // Test 1: HTTPS enforcement
@@ -325,7 +325,7 @@ impl SecurityTestSuite {
     /// Test input validation security
     async fn test_input_validation_security(&self, _config: &Config) -> SecurityTestResult {
         let mut recommendations = Vec::new();
-        let passed = true;
+        let mut passed = true;
         let start = std::time::Instant::now();
 
         // Test 1: Path traversal protection
@@ -403,7 +403,7 @@ impl SecurityTestSuite {
     /// Test network security
     async fn test_network_security(&self, _config: &Config) -> SecurityTestResult {
         let mut recommendations = Vec::new();
-        let passed = true;
+        let mut passed = true;
         let start = std::time::Instant::now();
 
         // Test 1: Certificate validation

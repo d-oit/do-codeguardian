@@ -1,5 +1,6 @@
-use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
-use do_codeguardian::{
+use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
+use std::hint::black_box;
+use do_do_codeguardian::{
     cache::FileCache, config::Config, core::GuardianEngine, performance::PerformanceMetrics,
     utils::adaptive_parallelism::AdaptiveParallelismController,
 };
@@ -85,9 +86,9 @@ fn bench_load_testing_scenarios(c: &mut Criterion) {
     // Small repository load test
     group.bench_function("small_repository_load", |b| {
         let repo_dir = generate_load_test_repository(10, 5); // 10 files, 5KB each
-        let config = Config::minimal();
+        let config = Config::default();
         let mut engine = rt.block_on(async {
-            GuardianEngine::new_with_ml(config, Default::default(), None)
+            GuardianEngine::new(config, Default::default())
                 .await
                 .unwrap()
         });
@@ -103,9 +104,9 @@ fn bench_load_testing_scenarios(c: &mut Criterion) {
     // Medium repository load test
     group.bench_function("medium_repository_load", |b| {
         let repo_dir = generate_load_test_repository(100, 10); // 100 files, 10KB each
-        let config = Config::minimal();
+        let config = Config::default();
         let mut engine = rt.block_on(async {
-            GuardianEngine::new_with_ml(config, Default::default(), None)
+            GuardianEngine::new(config, Default::default())
                 .await
                 .unwrap()
         });
@@ -121,9 +122,9 @@ fn bench_load_testing_scenarios(c: &mut Criterion) {
     // Large repository load test
     group.bench_function("large_repository_load", |b| {
         let repo_dir = generate_load_test_repository(500, 20); // 500 files, 20KB each
-        let config = Config::minimal();
+        let config = Config::default();
         let mut engine = rt.block_on(async {
-            GuardianEngine::new_with_ml(config, Default::default(), None)
+            GuardianEngine::new(config, Default::default())
                 .await
                 .unwrap()
         });
@@ -152,9 +153,9 @@ fn bench_concurrent_processing_load(c: &mut Criterion) {
             concurrency,
             |b, &concurrency| {
                 let repo_dir = generate_load_test_repository(50, 15);
-                let config = Config::minimal();
+                let config = Config::default();
                 let mut engine = rt.block_on(async {
-                    GuardianEngine::new_with_ml(config, Default::default(), None)
+                    GuardianEngine::new(config, Default::default())
                         .await
                         .unwrap()
                 });
@@ -181,9 +182,9 @@ fn bench_memory_pressure_load(c: &mut Criterion) {
     // Large files memory test
     group.bench_function("large_files_memory_pressure", |b| {
         let repo_dir = generate_load_test_repository(20, 100); // 20 files, 100KB each
-        let config = Config::minimal();
+        let config = Config::default();
         let mut engine = rt.block_on(async {
-            GuardianEngine::new_with_ml(config, Default::default(), None)
+            GuardianEngine::new(config, Default::default())
                 .await
                 .unwrap()
         });
@@ -210,9 +211,9 @@ fn bench_memory_pressure_load(c: &mut Criterion) {
     // Many small files memory test
     group.bench_function("many_small_files_memory_pressure", |b| {
         let repo_dir = generate_load_test_repository(1000, 1); // 1000 files, 1KB each
-        let config = Config::minimal();
+        let config = Config::default();
         let mut engine = rt.block_on(async {
-            GuardianEngine::new_with_ml(config, Default::default(), None)
+            GuardianEngine::new(config, Default::default())
                 .await
                 .unwrap()
         });
@@ -236,9 +237,9 @@ fn bench_sustained_load(c: &mut Criterion) {
 
     group.bench_function("sustained_analysis_load", |b| {
         let repo_dir = generate_load_test_repository(200, 25);
-        let config = Config::minimal();
+        let config = Config::default();
         let mut engine = rt.block_on(async {
-            GuardianEngine::new_with_ml(config, Default::default(), None)
+            GuardianEngine::new(config, Default::default())
                 .await
                 .unwrap()
         });
@@ -276,10 +277,10 @@ fn bench_cache_performance_under_load(c: &mut Criterion) {
 
     group.bench_function("cache_hit_ratio_under_load", |b| {
         let repo_dir = generate_load_test_repository(50, 10);
-        let config = Config::minimal();
+        let config = Config::default();
         let cache = Arc::new(FileCache::new());
         let mut engine = rt.block_on(async {
-            GuardianEngine::new_with_ml(config, Default::default(), None)
+            GuardianEngine::new(config, Default::default())
                 .await
                 .unwrap()
         });
@@ -308,10 +309,10 @@ fn bench_adaptive_parallelism_under_load(c: &mut Criterion) {
 
     group.bench_function("adaptive_parallelism_scaling", |b| {
         let repo_dir = generate_load_test_repository(100, 15);
-        let config = Config::minimal();
+        let config = Config::default();
         let controller = AdaptiveParallelismController::new(1, 16, 8);
         let mut engine = rt.block_on(async {
-            GuardianEngine::new_with_ml(config, Default::default(), None)
+            GuardianEngine::new(config, Default::default())
                 .await
                 .unwrap()
         });

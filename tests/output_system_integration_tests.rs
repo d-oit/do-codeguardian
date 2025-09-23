@@ -6,9 +6,10 @@ use anyhow::Result;
 use chrono::Utc;
 use do_codeguardian::output::{
     format_results, ContinuousImprovementManager, DocumentationConfig, DocumentationGenerator,
-    OutputFormat, OutputMetricsService,
+    OutputFormat, OutputMetricsService, metrics::{HealthStatus, TrendDirection},
 };
-use do_codeguardian::types::{AnalysisResults, Finding, Location, Severity};
+use do_codeguardian::output::metrics::{HealthStatus, TrendDirection};
+use do_codeguardian::types::{AnalysisResults, Finding, Severity};
 use std::time::Instant;
 use tokio;
 
@@ -38,11 +39,11 @@ async fn test_comprehensive_metrics_collection() -> Result<()> {
                 &format.to_string(),
                 generation_time,
             )
-            .await?;
+            ?;
     }
 
     // Generate comprehensive metrics report
-    let report = metrics_service.generate_report(None).await?;
+    let report = metrics_service.generate_report(None)?;
 
     // Validate report structure
     assert!(
@@ -74,16 +75,16 @@ async fn test_output_system_health_monitoring() -> Result<()> {
     let metrics_service = OutputMetricsService::new();
 
     // Get current health status
-    let health = metrics_service.get_health_status().await?;
+    let health = metrics_service.get_health_status()?;
 
     // Validate health status structure
     assert!(
         matches!(
             health.overall_status,
-            do_codeguardian::output::HealthStatus::Healthy
-                | do_codeguardian::output::HealthStatus::Warning
-                | do_codeguardian::output::HealthStatus::Critical
-                | do_codeguardian::output::HealthStatus::Unknown
+            HealthStatus::Healthy
+                | HealthStatus::Warning
+                | HealthStatus::Critical
+                | HealthStatus::Unknown
         ),
         "Health status should be valid"
     );
@@ -125,10 +126,10 @@ async fn test_performance_alerting() -> Result<()> {
     let slow_output = format_results(&results, OutputFormat::Json)?;
     metrics_service
         .record_output_metrics(&results, &slow_output, "json", 10000)
-        .await?; // 10 seconds - should trigger alert
+        ?; // 10 seconds - should trigger alert
 
     // Generate report and check for performance alerts
-    let report = metrics_service.generate_report(None).await?;
+    let report = metrics_service.generate_report(None)?;
 
     // Should have performance-related recommendations
     let has_performance_recommendation = report.recommendations.iter().any(|rec| {
@@ -159,10 +160,10 @@ async fn test_output_system_kpis() -> Result<()> {
         let generation_time = if i < 8 { 100 } else { 6000 }; // Most fast, some slow
         metrics_service
             .record_output_metrics(&results, &output, "json", generation_time)
-            .await?;
+            ?;
     }
 
-    let report = metrics_service.generate_report(None).await?;
+    let report = metrics_service.generate_report(None)?;
 
     // Validate KPIs are calculated correctly
     assert_eq!(
@@ -184,10 +185,10 @@ async fn test_output_system_kpis() -> Result<()> {
 
     // Validate trending analysis
     assert!(
-        !report.trends.performance_trend == do_codeguardian::output::TrendDirection::Improving
-            || !report.trends.performance_trend == do_codeguardian::output::TrendDirection::Stable
+        report.trends.performance_trend == TrendDirection::Improving
+            || report.trends.performance_trend == TrendDirection::Stable
             || !report.trends.performance_trend
-                == do_codeguardian::output::TrendDirection::Degrading,
+                == TrendDirection::Degrading,
         "Should analyze performance trends"
     );
 
@@ -202,7 +203,7 @@ async fn test_comprehensive_documentation() -> Result<()> {
     let doc_generator = DocumentationGenerator::new(config);
 
     // Generate comprehensive documentation
-    let doc_suite = doc_generator.generate_complete_documentation().await?;
+    let doc_suite = doc_generator.generate_complete_documentation()?;
 
     // Validate API documentation
     assert!(
@@ -279,7 +280,7 @@ async fn test_training_materials() -> Result<()> {
     let doc_generator = DocumentationGenerator::new(config);
 
     // Generate user guides which include training materials
-    let user_guides = doc_generator.generate_user_guides().await?;
+    let user_guides = doc_generator.generate_user_guides()?;
 
     // Should have advanced features guide for customization
     let advanced_guide = user_guides
@@ -325,7 +326,7 @@ async fn test_automated_documentation_generation() -> Result<()> {
     let doc_generator = DocumentationGenerator::new(config);
 
     // Test API documentation generation
-    let api_docs = doc_generator.generate_api_documentation().await?;
+    let api_docs = doc_generator.generate_api_documentation()?;
     assert!(
         !api_docs.is_empty(),
         "Should generate API documentation automatically"
@@ -361,7 +362,7 @@ async fn test_troubleshooting_guides() -> Result<()> {
     let config = DocumentationConfig::default();
     let doc_generator = DocumentationGenerator::new(config);
 
-    let troubleshooting_guides = doc_generator.generate_troubleshooting_guides().await?;
+    let troubleshooting_guides = doc_generator.generate_troubleshooting_guides()?;
 
     // Should have performance troubleshooting
     let performance_guide = troubleshooting_guides
@@ -420,15 +421,15 @@ async fn test_automated_performance_monitoring() -> Result<()> {
     let fast_time = start.elapsed().as_millis() as u64;
     metrics_service
         .record_output_metrics(&results, &output, "json", fast_time)
-        .await?;
+        ?;
 
     // Slow operation (simulated)
     metrics_service
         .record_output_metrics(&results, &output, "json", 8000)
-        .await?; // 8 seconds
+        ?; // 8 seconds
 
     // Generate health status
-    let health = metrics_service.get_health_status().await?;
+    let health = metrics_service.get_health_status()?;
 
     // Performance monitoring should detect the slow operation
     if let Some(performance_status) = health.component_statuses.get("performance") {
@@ -436,9 +437,9 @@ async fn test_automated_performance_monitoring() -> Result<()> {
         assert!(
             matches!(
                 performance_status,
-                do_codeguardian::output::HealthStatus::Healthy
-                    | do_codeguardian::output::HealthStatus::Warning
-                    | do_codeguardian::output::HealthStatus::Critical
+                HealthStatus::Healthy
+                    | HealthStatus::Warning
+                    | HealthStatus::Critical
             ),
             "Should monitor performance status"
         );
@@ -459,10 +460,10 @@ async fn test_ab_testing_capabilities() -> Result<()> {
     // Process with improvement manager (includes A/B testing)
     let output1 = improvement_manager
         .process_with_improvement(&results, "json")
-        .await?;
+        ?;
     let output2 = improvement_manager
         .process_with_improvement(&results, "json")
-        .await?;
+        ?;
 
     // Both should succeed (testing the A/B test framework)
     assert!(
@@ -477,7 +478,7 @@ async fn test_ab_testing_capabilities() -> Result<()> {
     // Generate improvement recommendations (includes A/B test insights)
     let recommendations = improvement_manager
         .generate_improvement_recommendations()
-        .await?;
+        ?;
 
     // Should be able to generate recommendations (even if empty initially)
     assert!(
@@ -500,13 +501,13 @@ async fn test_feedback_loops() -> Result<()> {
     for _ in 0..5 {
         let _output = improvement_manager
             .process_with_improvement(&results, "json")
-            .await?;
+            ?;
     }
 
     // Generate improvement recommendations based on feedback
     let recommendations = improvement_manager
         .generate_improvement_recommendations()
-        .await?;
+        ?;
 
     // Feedback loop should be working (recommendations generated)
     assert!(
@@ -544,7 +545,7 @@ async fn test_optimization_cycles() -> Result<()> {
     // Generate improvement recommendations which include optimization opportunities
     let recommendations = improvement_manager
         .generate_improvement_recommendations()
-        .await?;
+        ?;
 
     // Should be able to identify optimization opportunities
     assert!(
@@ -573,22 +574,22 @@ async fn test_phase4_complete_implementation() -> Result<()> {
     println!("🚀 Running comprehensive Phase 4 validation...");
 
     // Test all Phase 4.1 components
-    test_comprehensive_metrics_collection().await?;
-    test_output_system_health_monitoring().await?;
-    test_performance_alerting().await?;
-    test_output_system_kpis().await?;
+    test_comprehensive_metrics_collection()?;
+    test_output_system_health_monitoring()?;
+    test_performance_alerting()?;
+    test_output_system_kpis()?;
 
     // Test all Phase 4.2 components
-    test_comprehensive_documentation().await?;
-    test_training_materials().await?;
-    test_automated_documentation_generation().await?;
-    test_troubleshooting_guides().await?;
+    test_comprehensive_documentation()?;
+    test_training_materials()?;
+    test_automated_documentation_generation()?;
+    test_troubleshooting_guides()?;
 
     // Test all Phase 4.3 components
-    test_automated_performance_monitoring().await?;
-    test_ab_testing_capabilities().await?;
-    test_feedback_loops().await?;
-    test_optimization_cycles().await?;
+    test_automated_performance_monitoring()?;
+    test_ab_testing_capabilities()?;
+    test_feedback_loops()?;
+    test_optimization_cycles()?;
 
     println!("🎉 Phase 4 implementation validated successfully!");
     println!("📊 All monitoring and continuous improvement systems operational");
@@ -603,15 +604,16 @@ fn create_sample_analysis_results() -> AnalysisResults {
     AnalysisResults {
         findings: vec![Finding {
             id: "test-001".to_string(),
-            title: "Test Finding".to_string(),
-            description: "A test finding for validation".to_string(),
+            analyzer: "test".to_string(),
+            rule: "TEST_RULE".to_string(),
             severity: Severity::Medium,
-            location: Location {
-                file: "test.rs".to_string(),
-                line: 42,
-                column: Some(10),
-            },
-            rule_id: Some("TEST_RULE".to_string()),
+            file: std::path::PathBuf::from("test.rs"),
+            line: 42,
+            column: Some(10),
+            message: "Test Finding".to_string(),
+            description: Some("A test finding for validation".to_string()),
+            suggestion: None,
+            category: None,
             metadata: std::collections::HashMap::new(),
         }],
         metadata: std::collections::HashMap::new(),

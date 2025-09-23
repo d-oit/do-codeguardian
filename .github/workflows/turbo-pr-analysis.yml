@@ -27,11 +27,12 @@ jobs:
       with:
         fetch-depth: 0
 
-    - name: 🦀 Setup Rust
-      uses: actions-rust-lang/setup-rust-toolchain@v1
-      with:
-        toolchain: stable
-        cache: true
+     - name: 🦀 Setup Rust
+       uses: actions-rust-lang/setup-rust-toolchain@v1
+       with:
+         toolchain: stable
+         components: rustfmt, clippy
+         cache: true
 
     - name: 📦 Install jq for JSON processing
       run: sudo apt-get update && sudo apt-get install -y jq
@@ -45,10 +46,16 @@ jobs:
           target/
         key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
 
-    - name: 🔨 Build CodeGuardian
-      run: cargo build --release --quiet
+     - name: 🔨 Build CodeGuardian
+       run: cargo build --release --quiet
 
-    - name: 🎯 Get Changed Files
+     - name: 📏 Check Formatting
+       run: cargo fmt --check
+
+     - name: 🔧 Run Clippy
+       run: cargo clippy -- -D warnings
+
+     - name: 🎯 Get Changed Files
       id: changed-files
       run: |
         # Get list of changed files in this PR

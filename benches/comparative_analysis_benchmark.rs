@@ -1,5 +1,6 @@
-use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion};
-use do_codeguardian::{
+use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
+use std::hint::black_box;
+use do_do_codeguardian::{
     analyzers::{performance_analyzer::PerformanceAnalyzer, security_analyzer::SecurityAnalyzer},
     cache::{CacheConfig, FileCache},
     config::{Config, PerformanceConfig},
@@ -94,7 +95,7 @@ fn bench_comparative_performance_analysis(c: &mut Criterion) {
     let rt = Runtime::new().unwrap();
     let test_files = generate_comparative_test_data();
     let configs = vec![
-        BenchmarkConfig::minimal(),
+        BenchmarkConfig::default(),
         BenchmarkConfig::standard(),
         BenchmarkConfig::optimized(),
     ];
@@ -107,7 +108,7 @@ fn bench_comparative_performance_analysis(c: &mut Criterion) {
             &config,
             |b, config| {
                 let mut engine = rt.block_on(async {
-                    let mut cfg = Config::minimal();
+                    let mut cfg = Config::default();
                     cfg.performance.parallel_workers = config.parallel_workers;
                     cfg.performance.memory_limit_mb = config.memory_limit_mb;
 
@@ -188,7 +189,7 @@ fn bench_cache_performance_comparison(c: &mut Criterion) {
             &(name, cache_config),
             |b, (name, cache_config)| {
                 let mut engine = rt.block_on(async {
-                    let mut cfg = Config::minimal();
+                    let mut cfg = Config::default();
                     cfg.cache = cache_config.clone();
                     GuardianEngine::new_with_ml(cfg, Default::default(), None)
                         .await
@@ -238,7 +239,7 @@ fn bench_memory_usage_comparison(c: &mut Criterion) {
             &(name, memory_limit),
             |b, (name, memory_limit)| {
                 let mut engine = rt.block_on(async {
-                    let mut cfg = Config::minimal();
+                    let mut cfg = Config::default();
                     cfg.performance.memory_limit_mb = *memory_limit;
                     GuardianEngine::new_with_ml(cfg, Default::default(), None)
                         .await

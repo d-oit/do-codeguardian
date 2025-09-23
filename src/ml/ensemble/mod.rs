@@ -3,16 +3,16 @@
 //! Advanced ensemble learning techniques including voting, stacking, and boosting
 //! for improved model performance and robustness.
 
-pub mod config;
 pub mod classifier;
-pub mod meta_learners;
+pub mod config;
 pub mod display;
+pub mod meta_learners;
 
 // Re-export main types
-pub use config::*;
 pub use classifier::*;
-pub use meta_learners::*;
+pub use config::*;
 pub use display::*;
+pub use meta_learners::*;
 
 // Re-export for tests
 #[cfg(test)]

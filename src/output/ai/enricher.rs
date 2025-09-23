@@ -231,7 +231,10 @@ impl BasicEnhancementEngine {
         let confidence = if scores.is_empty() {
             0.5 // Default confidence for general category
         } else {
-            scores.get(&primary_category).copied().ok_or_else(|| anyhow!("Primary category not found in scores"))?
+            scores
+                .get(&primary_category)
+                .copied()
+                .ok_or_else(|| anyhow!("Primary category not found in scores"))?
         };
 
         // Secondary categories (scores > 0.3)

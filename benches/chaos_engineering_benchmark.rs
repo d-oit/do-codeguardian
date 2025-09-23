@@ -1,5 +1,5 @@
 use criterion::{criterion_group, criterion_main, Criterion};
-use do_codeguardian::Config;
+use do_do_codeguardian::Config;
 use std::io::Write;
 use std::path::PathBuf;
 use std::time::Duration;

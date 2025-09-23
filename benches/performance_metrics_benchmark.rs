@@ -1,5 +1,6 @@
-use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
-use do_codeguardian::{
+use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
+use std::hint::black_box;
+use do_do_codeguardian::{
     config::Config,
     core::GuardianEngine,
     performance::{PerformanceAnalyzer as PerfAnalyzer, PerformanceMetrics, PerformanceProfiler},
@@ -108,9 +109,9 @@ fn bench_comprehensive_metrics_collection(c: &mut Criterion) {
     let mut group = c.benchmark_group("comprehensive_metrics");
 
     group.bench_function("full_metrics_collection_run", |b| {
-        let config = Config::minimal();
+        let config = Config::default();
         let mut engine = rt.block_on(async {
-            GuardianEngine::new_with_ml(config, Default::default(), None)
+            GuardianEngine::new(config, Default::default())
                 .await
                 .unwrap()
         });
@@ -236,9 +237,9 @@ fn bench_regression_detection(c: &mut Criterion) {
     let mut group = c.benchmark_group("regression_detection");
 
     group.bench_function("performance_baseline_comparison", |b| {
-        let config = Config::minimal();
+        let config = Config::default();
         let mut engine = rt.block_on(async {
-            GuardianEngine::new_with_ml(config, Default::default(), None)
+            GuardianEngine::new(config, Default::default())
                 .await
                 .unwrap()
         });

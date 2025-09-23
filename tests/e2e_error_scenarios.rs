@@ -355,16 +355,22 @@ fn test_encoding_and_charset_issues() {
     let temp_dir = TempDir::new().unwrap();
 
     // Test various encodings and character sets
-    let test_cases = vec![
-        ("utf8.rs", "fn main() { println!(\"Hello 🌍\"); }"),
-        ("latin1.rs", "fn main() { println!(\"Café résumé\"); }"),
+    let test_cases: Vec<(&str, String)> = vec![
+        (
+            "utf8.rs",
+            "fn main() { println!(\"Hello 🌍\"); }".to_string(),
+        ),
+        (
+            "latin1.rs",
+            "fn main() { println!(\"Café résumé\"); }".to_string(),
+        ),
         ("mixed_encoding.rs", {
             let mut content = "fn main() {\n".to_string();
             // Add some potentially problematic Unicode
             content.push_str("    println!(\"🚀 ✨ 💻\");\n");
             content.push_str("    let café = \"résumé\";\n");
             content.push('}');
-            &content
+            content
         }),
     ];
 

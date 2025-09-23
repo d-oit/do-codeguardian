@@ -1,5 +1,6 @@
-use criterion::{black_box, criterion_group, criterion_main, Criterion};
-use do_codeguardian::{
+use criterion::{criterion_group, criterion_main, Criterion};
+use std::hint::black_box;
+use do_do_codeguardian::{
     analyzers::AnalyzerRegistry,
     cache::FileCache,
     config::{Config, PerformanceConfig},
@@ -74,17 +75,19 @@ fn bench_cache_operations(c: &mut Criterion) {
     let rt = Runtime::new().unwrap();
 
     c.bench_function("cache_load_empty", |b| {
+        let cache_path = tempfile::NamedTempFile::new().unwrap().path().to_path_buf();
         b.iter(|| {
             rt.block_on(async {
-                black_box(FileCache::load().await.unwrap());
+                black_box(FileCache::load(cache_path.clone()).await.unwrap());
             });
         });
     });
 
     c.bench_function("cache_save_empty", |b| {
+        let cache_path = tempfile::NamedTempFile::new().unwrap().path().to_path_buf();
         b.iter(|| {
             rt.block_on(async {
-                let cache = FileCache::new();
+                let cache = FileCache::new(cache_path.clone());
                 black_box(cache.save().await.unwrap());
             });
         });
@@ -112,7 +115,7 @@ fn bench_streaming_operations(c: &mut Criterion) {
                     Ok(vec![Finding::new(
                         "test",
                         "function_found",
-                        codeguardian::types::Severity::Info,
+                        do_do_codeguardian::types::Severity::Info,
                         small_file.0.path().to_path_buf(),
                         1,
                         "Function found".to_string(),
@@ -137,7 +140,7 @@ fn bench_streaming_operations(c: &mut Criterion) {
                             Ok(vec![Finding::new(
                                 "test",
                                 "struct_found",
-                                codeguardian::types::Severity::Info,
+                                do_do_codeguardian::types::Severity::Info,
                                 medium_file.0.path().to_path_buf(),
                                 1,
                                 "Struct found".to_string(),
@@ -172,7 +175,7 @@ fn bench_memory_pool_operations(c: &mut Criterion) {
             findings.push(Finding::new(
                 "test",
                 "test_finding",
-                codeguardian::types::Severity::Info,
+                do_codeguardian::types::Severity::Info,
                 PathBuf::from("test.rs"),
                 1,
                 "Test finding".to_string(),
@@ -195,7 +198,7 @@ fn bench_adaptive_parallelism(c: &mut Criterion) {
 
     c.bench_function("adaptive_parallelism_load_update", |b| {
         let controller = AdaptiveParallelismController::new(1, 8, 4);
-        let load = codeguardian::utils::adaptive_parallelism::SystemLoad::new();
+        let load = do_codeguardian::utils::adaptive_parallelism::SystemLoad::new();
 
         b.iter(|| {
             rt.block_on(async {
@@ -242,9 +245,9 @@ fn bench_full_engine_operations(c: &mut Criterion) {
     c.bench_function("guardian_engine_creation", |b| {
         b.iter(|| {
             rt.block_on(async {
-                let config = Config::minimal();
+                let config = Config::default();
                 black_box(
-                    GuardianEngine::new_with_ml(config, Default::default(), None)
+                    GuardianEngine::new(config, Default::default())
                         .await
                         .unwrap(),
                 );
@@ -253,9 +256,9 @@ fn bench_full_engine_operations(c: &mut Criterion) {
     });
 
     c.bench_function("guardian_engine_analyze_small_files", |b| {
-        let config = Config::minimal();
+        let config = Config::default();
         let mut engine = rt.block_on(async {
-            GuardianEngine::new_with_ml(config, Default::default(), None)
+            GuardianEngine::new(config, Default::default())
                 .await
                 .unwrap()
         });
@@ -277,9 +280,9 @@ fn bench_full_engine_operations(c: &mut Criterion) {
     // Baseline comparison: Sequential vs Parallel analysis
     let mut group = c.benchmark_group("analysis_performance_comparison");
     group.bench_function("baseline_sequential_analysis", |b| {
-        let config = Config::minimal();
+        let config = Config::default();
         let mut engine = rt.block_on(async {
-            GuardianEngine::new_with_ml(config, Default::default(), None)
+            GuardianEngine::new(config, Default::default())
                 .await
                 .unwrap()
         });
@@ -300,9 +303,9 @@ fn bench_full_engine_operations(c: &mut Criterion) {
     });
 
     group.bench_function("optimized_parallel_analysis", |b| {
-        let config = Config::minimal();
+        let config = Config::default();
         let mut engine = rt.block_on(async {
-            GuardianEngine::new_with_ml(config, Default::default(), None)
+            GuardianEngine::new(config, Default::default())
                 .await
                 .unwrap()
         });
@@ -325,9 +328,9 @@ fn bench_full_engine_operations(c: &mut Criterion) {
 
     // Memory usage benchmark with regression detection
     c.bench_function("memory_usage_during_analysis", |b| {
-        let config = Config::minimal();
+        let config = Config::default();
         let mut engine = rt.block_on(async {
-            GuardianEngine::new_with_ml(config, Default::default(), None)
+            GuardianEngine::new(config, Default::default())
                 .await
                 .unwrap()
         });
