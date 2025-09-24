@@ -1,0 +1,69 @@
+name: Slack Notification
+
+on:
+  workflow_call:
+    inputs:
+      webhook_url:
+        description: 'Slack webhook URL'
+        required: true
+        type: string
+      channel:
+        description: 'Slack channel to post to'
+        required: false
+        type: string
+        default: '#ci-cd'
+      message:
+        description: 'Message to send'
+        required: true
+        type: string
+      color:
+        description: 'Message color (good, warning, danger)'
+        required: false
+        type: string
+        default: 'good'
+      title:
+        description: 'Message title'
+        required: false
+        type: string
+      fields:
+        description: 'Additional fields as JSON string'
+        required: false
+        type: string
+      username:
+        description: 'Slack username'
+        required: false
+        type: string
+        default: 'CodeGuardian CI/CD'
+      icon_emoji:
+        description: 'Slack icon emoji'
+        required: false
+        type: string
+        default: ':robot_face:'
+
+jobs:
+  notify:
+    name: Send Slack Notification
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 📢 Send Slack Notification
+        uses: slackapi/slack-github-action@v1.27.0
+        with:
+          payload: |
+            {
+              "channel": "${{ inputs.channel }}",
+              "username": "${{ inputs.username }}",
+              "icon_emoji": "${{ inputs.icon_emoji }}",
+              "attachments": [
+                {
+                  "color": "${{ inputs.color }}",
+                  "title": "${{ inputs.title }}",
+                  "text": "${{ inputs.message }}",
+                  "fields": ${{ inputs.fields || '[]' }},
+                  "footer": "CodeGuardian CI/CD",
+                  "ts": ${{ github.event.head_commit.timestamp && format('"{0}"', github.event.head_commit.timestamp) || github.event.repository.updated_at && format('"{0}"', github.event.repository.updated_at) || 'null' }}
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ inputs.webhook_url }}

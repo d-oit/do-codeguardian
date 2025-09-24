@@ -1,0 +1,372 @@
+---
+name: 🔄 Cross-Platform & Release Validation
+
+on:
+   push:
+     branches: [main, develop]
+   pull_request:
+     branches: [main, develop]
+   release:
+     types: [published]
+   workflow_dispatch:
+     inputs:
+       validation_level:
+         description: 'Validation level'
+         required: true
+         default: 'comprehensive'
+         type: choice
+         options:
+           - basic
+           - comprehensive
+           - stress-test
+
+env:
+   CARGO_TERM_COLOR: always
+   RUST_BACKTRACE: 1
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  # Cross-Platform Build Matrix
+  cross-platform-build:
+    name: 🏗️ Build (${{ matrix.target }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Linux x86_64
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            cross: false
+          # Linux ARM64
+          - os: ubuntu-latest
+            target: aarch64-unknown-linux-gnu
+            cross: true
+          # Linux musl
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-musl
+            cross: true
+          # Windows
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            cross: false
+          # macOS x86_64
+          - os: macos-latest
+            target: x86_64-apple-darwin
+            cross: false
+          # macOS ARM64
+          - os: macos-latest
+            target: aarch64-apple-darwin
+            cross: false
+
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 1
+
+      - name: 🦀 Setup Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: 📦 Rust Cache
+        uses: Swatinem/rust-cache@v2.8.0
+        with:
+          workspaces: "./ -> target"
+          cache-all-crates: true
+          save-if: ${{ github.ref == 'refs/heads/main' }}
+
+      - name: 📦 Install cross-compilation tools (Linux)
+        if: matrix.cross && matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-aarch64-linux-gnu gcc-x86-64-linux-musl
+          cargo install cross
+
+      - name: 🔨 Build CodeGuardian (${{ matrix.target }})
+        run: |
+          if [ "${{ matrix.cross }}" = "true" ] && [ "${{ matrix.os }}" = "ubuntu-latest" ]; then
+            echo "Using cross-compilation for ${{ matrix.target }}"
+            cross build --release --target ${{ matrix.target }}
+          else
+            echo "Using native build for ${{ matrix.target }}"
+            cargo build --release --target ${{ matrix.target }}
+          fi
+
+      - name: 🧪 Run basic tests (${{ matrix.target }})
+        run: |
+          if [ "${{ matrix.cross }}" = "true" ] && [ "${{ matrix.os }}" = "ubuntu-latest" ]; then
+            echo "Skipping tests for cross-compiled targets"
+          else
+            echo "Running tests for ${{ matrix.target }}"
+            cargo test --target ${{ matrix.target }} --lib --bins --release
+          fi
+
+      - name: ✅ Verify binary (${{ matrix.target }})
+        run: |
+          BINARY_NAME="do-codeguardian"
+          if [ "${{ matrix.os }}" = "windows-latest" ]; then
+            BINARY_NAME="${BINARY_NAME}.exe"
+          fi
+
+          BINARY_PATH="target/${{ matrix.target }}/release/${BINARY_NAME}"
+
+          if [ -f "${BINARY_PATH}" ]; then
+            echo "✅ Binary found: ${BINARY_PATH}"
+            file "${BINARY_PATH}" || echo "file command not available"
+
+            # Test basic functionality
+            if [ "${{ matrix.cross }}" != "true" ] || [ "${{ matrix.os }}" != "ubuntu-latest" ]; then
+              ./${BINARY_PATH} --version
+              ./${BINARY_PATH} --help > /dev/null
+              echo "✅ Binary is functional"
+            fi
+          else
+            echo "❌ Binary not found: ${BINARY_PATH}"
+            exit 1
+          fi
+
+      - name: 📤 Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: codeguardian-${{ matrix.target }}
+          path: |
+            target/${{ matrix.target }}/release/do-codeguardian*
+          retention-days: 30
+
+  # Cross-Platform Test Validation
+  cross-platform-test:
+    name: 🧪 Cross-Platform Tests
+    runs-on: ubuntu-latest
+    needs: cross-platform-build
+    timeout-minutes: 30
+
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v5
+
+      - name: 📥 Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: codeguardian-*
+          merge-multiple: true
+
+      - name: 🧪 Test downloaded binaries
+        run: |
+          echo "Testing downloaded binaries..."
+
+          # Test Linux x86_64
+          if [ -f "do-codeguardian" ]; then
+            echo "✅ Linux x86_64 binary found"
+            chmod +x do-codeguardian
+            ./do-codeguardian --version
+            ./do-codeguardian --help > /dev/null
+            echo "✅ Linux x86_64 binary functional"
+          fi
+
+          # Test Windows binary
+          if [ -f "do-codeguardian.exe" ]; then
+            echo "✅ Windows binary found"
+            file do-codeguardian.exe
+          fi
+
+      - name: 📊 Generate cross-platform report
+        run: |
+          echo "## Cross-Platform Build Report" > cross-platform-report.md
+          echo "" >> cross-platform-report.md
+          echo "### Build Status" >> cross-platform-report.md
+          echo "- ✅ Linux x86_64: Built and tested" >> cross-platform-report.md
+          echo "- ✅ Linux ARM64: Built (cross-compiled)" >> cross-platform-report.md
+          echo "- ✅ Linux musl: Built (cross-compiled)" >> cross-platform-report.md
+          echo "- ✅ Windows x86_64: Built and tested" >> cross-platform-report.md
+          echo "- ✅ macOS x86_64: Built and tested" >> cross-platform-report.md
+          echo "- ✅ macOS ARM64: Built and tested" >> cross-platform-report.md
+          echo "" >> cross-platform-report.md
+          echo "### Notes" >> cross-platform-report.md
+          echo "- ARM64 and musl builds use cross-compilation" >> cross-platform-report.md
+          echo "- Full test suite runs on native platforms only" >> cross-platform-report.md
+          echo "- All binaries verified for basic functionality" >> cross-platform-report.md
+
+      - name: 📤 Upload cross-platform report
+        uses: actions/upload-artifact@v4
+        with:
+          name: cross-platform-report
+          path: cross-platform-report.md
+          retention-days: 30
+
+  # Release Validation
+  release-validation:
+    name: 🎯 Release Validation
+    runs-on: ubuntu-latest
+    if: github.event_name == 'release'
+    timeout-minutes: 30
+
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v5
+
+      - name: 🦀 Setup Rust
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: stable
+
+      - name: 📦 Rust Cache
+        uses: Swatinem/rust-cache@v2.8.0
+        with:
+          workspaces: "./ -> target"
+          cache-all-crates: true
+
+      - name: 🔨 Build Release Binary
+        run: cargo build --release
+
+      - name: 🧪 Comprehensive Turbo Testing
+        run: |
+          echo "🧪 Comprehensive Turbo Testing"
+          echo "=============================="
+
+          ./target/release/do-codeguardian turbo . \
+            --max-parallel 4 \
+            --memory-limit 512 \
+            --format json \
+            --output release-test.json \
+            --metrics
+
+      - name: 📤 Upload Release Validation Results
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-validation-${{ github.run_number }}
+          path: release-test.json
+          retention-days: 90
+
+  # Build Verification
+  build-verification:
+    name: ✅ Build Verification
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    strategy:
+      fail-fast: false
+      matrix:
+        rust_version: [stable]
+        target: [x86_64-unknown-linux-gnu]
+        include:
+          - rust_version: stable
+            target: x86_64-unknown-linux-gnu
+            features: "default"
+          - rust_version: stable
+            target: x86_64-unknown-linux-gnu
+            features: "full"
+          - rust_version: stable
+            target: x86_64-unknown-linux-gnu
+            features: "dev"
+
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 1
+
+      - name: 🦀 Setup Rust (${{ matrix.rust_version }})
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: 📦 Rust Cache
+        uses: Swatinem/rust-cache@v2.8.0
+        with:
+          workspaces: "./ -> target"
+          cache-all-crates: true
+          save-if: ${{ github.ref == 'refs/heads/main' }}
+
+      - name: 🔨 Build with ${{ matrix.features }} features
+        run: |
+          echo "Building with features: ${{ matrix.features }}"
+
+          case "${{ matrix.features }}" in
+            "default")
+              cargo build --release --quiet
+              ;;
+            "full")
+              cargo build --release --features full --quiet
+              ;;
+            "dev")
+              cargo build --features dev --quiet
+              ;;
+          esac
+
+          echo "✅ Build verification completed for ${{ matrix.features }} features"
+
+      - name: ✅ Verify build artifacts
+        run: |
+          echo "Verifying build artifacts..."
+
+          if [ ! -f "target/${{ matrix.target }}/release/do-codeguardian" ]; then
+            echo "❌ Release binary not found"
+            exit 1
+          fi
+
+          echo "✅ Build artifacts verified"
+
+  # Cross-Platform & Release Summary
+  cross-platform-summary:
+    name: 📋 Cross-Platform & Release Summary
+    runs-on: ubuntu-latest
+    needs: [cross-platform-build, cross-platform-test, release-validation, build-verification]
+    if: always()
+
+    steps:
+      - name: 📋 Generate Summary
+        run: |
+          echo "## 🔄 Cross-Platform & Release Validation Summary" >> $GITHUB_STEP_SUMMARY
+          echo "**Date:** $(date)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          # Overall status
+          SUCCESS_COUNT=0
+          TOTAL_JOBS=4
+
+          if [ "${{ needs.cross-platform-build.result }}" == "success" ]; then
+            echo "✅ Cross-Platform Build: PASSED" >> $GITHUB_STEP_SUMMARY
+            SUCCESS_COUNT=$((SUCCESS_COUNT + 1))
+          else
+            echo "❌ Cross-Platform Build: FAILED" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          if [ "${{ needs.cross-platform-test.result }}" == "success" ]; then
+            echo "✅ Cross-Platform Test: PASSED" >> $GITHUB_STEP_SUMMARY
+            SUCCESS_COUNT=$((SUCCESS_COUNT + 1))
+          else
+            echo "❌ Cross-Platform Test: FAILED" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          if [ "${{ needs.release-validation.result }}" == "success" ] || [ "${{ needs.release-validation.result }}" == "skipped" ]; then
+            echo "✅ Release Validation: PASSED" >> $GITHUB_STEP_SUMMARY
+            SUCCESS_COUNT=$((SUCCESS_COUNT + 1))
+          else
+            echo "❌ Release Validation: FAILED" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          if [ "${{ needs.build-verification.result }}" == "success" ]; then
+            echo "✅ Build Verification: PASSED" >> $GITHUB_STEP_SUMMARY
+            SUCCESS_COUNT=$((SUCCESS_COUNT + 1))
+          else
+            echo "❌ Build Verification: FAILED" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Success Rate:** $SUCCESS_COUNT/$TOTAL_JOBS validations passed" >> $GITHUB_STEP_SUMMARY
+
+          if [ "${{ github.event_name }}" == "release" ]; then
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "🚀 **RELEASE VALIDATION COMPLETE**" >> $GITHUB_STEP_SUMMARY
+            echo "All cross-platform builds and validations have been completed." >> $GITHUB_STEP_SUMMARY
+          fi

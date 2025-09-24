@@ -1,0 +1,46 @@
+{
+  "channel": "{{channel}}",
+  "username": "CodeGuardian CI/CD",
+  "icon_emoji": ":white_check_mark:",
+  "attachments": [
+    {
+      "color": "good",
+      "title": "✅ CI/CD Pipeline Succeeded",
+      "text": "All quality gates passed successfully!",
+      "fields": [
+        {
+          "title": "Workflow",
+          "value": "{{workflow_name}}",
+          "short": true
+        },
+        {
+          "title": "Branch",
+          "value": "{{branch}}",
+          "short": true
+        },
+        {
+          "title": "Commit",
+          "value": "{{commit_sha}}",
+          "short": true
+        },
+        {
+          "title": "Duration",
+          "value": "{{duration}}",
+          "short": true
+        },
+        {
+          "title": "Test Coverage",
+          "value": "{{coverage_percent}}%",
+          "short": true
+        },
+        {
+          "title": "Security Findings",
+          "value": "{{security_findings}} ({{critical_findings}} critical)",
+          "short": true
+        }
+      ],
+      "footer": "CodeGuardian CI/CD",
+      "ts": "{{timestamp}}"
+    }
+  ]
+}

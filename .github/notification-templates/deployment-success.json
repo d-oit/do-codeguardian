@@ -1,0 +1,58 @@
+{
+  "channel": "{{channel}}",
+  "username": "CodeGuardian Deployments",
+  "icon_emoji": ":rocket:",
+  "attachments": [
+    {
+      "color": "good",
+      "title": "🚀 Deployment Successful",
+      "text": "New version deployed to {{environment}} environment",
+      "fields": [
+        {
+          "title": "Version",
+          "value": "{{version}}",
+          "short": true
+        },
+        {
+          "title": "Environment",
+          "value": "{{environment}}",
+          "short": true
+        },
+        {
+          "title": "Deployment Time",
+          "value": "{{deployment_time}}",
+          "short": true
+        },
+        {
+          "title": "Deployed By",
+          "value": "{{deployed_by}}",
+          "short": true
+        },
+        {
+          "title": "Smoke Tests",
+          "value": "{{smoke_tests_status}}",
+          "short": true
+        },
+        {
+          "title": "Rollback Available",
+          "value": "{{rollback_available}}",
+          "short": true
+        }
+      ],
+      "actions": [
+        {
+          "type": "button",
+          "text": "View Application",
+          "url": "{{application_url}}"
+        },
+        {
+          "type": "button",
+          "text": "View Deployment",
+          "url": "{{deployment_url}}"
+        }
+      ],
+      "footer": "CodeGuardian Deployments",
+      "ts": "{{timestamp}}"
+    }
+  ]
+}

@@ -1,0 +1,435 @@
+---
+name: 🧹 Code Quality & Analysis
+
+on:
+   push:
+     branches: [main, develop]
+   pull_request:
+     types: [opened, synchronize, reopened]
+     branches: [main, develop]
+   workflow_dispatch:
+     inputs:
+       analysis_type:
+         description: 'Analysis type'
+         required: true
+         default: 'comprehensive'
+         type: choice
+         options:
+           - comprehensive
+           - duplicate-prevention-only
+           - pr-analysis-only
+           - validation-only
+
+env:
+   CARGO_TERM_COLOR: always
+   CODEGUARDIAN_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+
+jobs:
+  # Duplicate Prevention Analysis
+  duplicate-prevention:
+    name: 🔍 Duplicate Prevention Analysis
+    runs-on: ubuntu-latest
+    if: ${{ github.event.inputs.analysis_type == 'comprehensive' || github.event.inputs.analysis_type == 'duplicate-prevention-only' || !github.event.inputs.analysis_type }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          profile: minimal
+          override: true
+          components: clippy, rustfmt
+
+      - name: 📦 Rust Cache
+        uses: Swatinem/rust-cache@v2.8.0
+        with:
+          workspaces: "./ -> target"
+          cache-all-crates: true
+
+      - name: Install CodeGuardian
+        run: |
+          cargo build --release --features "ml,ast"
+          sudo cp target/release/do-codeguardian /usr/local/bin/
+
+      - name: Configure CodeGuardian for CI
+        run: |
+          cat > codeguardian-ci.toml << 'INNER_EOF'
+          [output]
+          directory = "analysis-results"
+          format = "json"
+          verbose = true
+          generate_summary = true
+
+          [integrations.github]
+          enabled = true
+          repository = "${{ github.repository }}"
+          token = "${CODEGUARDIAN_GITHUB_TOKEN}"
+          create_issues = true
+          issue_labels = ["security", "codeguardian", "duplicate-prevention", "automated"]
+          comment_prs = true
+          min_severity = "medium"
+          duplicate_prevention = true
+          semantic_similarity_threshold = 0.8
+          cross_repository_search = false
+
+          [analyzers.duplicate_analyzer]
+          enabled = true
+          min_lines = 10
+          focus_security = true
+          ignore_test_files = true
+          max_files_to_compare = 1000
+          enable_ml_similarity = true
+          similarity_threshold = 0.8
+          enable_github_prevention = true
+
+          [security]
+          enabled = true
+          fail_on_issues = false
+          min_severity = "medium"
+          check_hardcoded_secrets = true
+          check_unsafe_code = true
+          check_dependencies = true
+
+          [performance]
+          enabled = true
+          check_allocations = true
+          check_async_blocking = true
+          max_complexity = 15
+
+          [files]
+          exclude_patterns = ["*.log", "*.tmp", "target/", "node_modules/", ".git/", "analysis-results/"]
+          analyze_extensions = [".rs", ".js", ".ts", ".py", ".java"]
+INNER_EOF
+
+      - name: Run Duplicate Prevention Analysis
+        id: analysis
+        run: |
+          echo "Running CodeGuardian duplicate prevention analysis..."
+
+          ./target/release/do-codeguardian check --config codeguardian-ci.toml \
+            --output-format json \
+            --enable-github-integration \
+            --duplicate-prevention \
+            --semantic-similarity \
+            . || true
+
+          if [ -f "analysis-results/results.json" ]; then
+            echo "analysis_completed=true" >> $GITHUB_OUTPUT
+
+            DUPLICATES=$(jq '[.findings[] | select(.category == "duplicate" or .rule | contains("duplicate"))] | length' analysis-results/results.json 2>/dev/null || echo "0")
+            echo "duplicate_count=${DUPLICATES}" >> $GITHUB_OUTPUT
+
+            SECURITY_DUPLICATES=$(jq '[.findings[] | select((.category == "duplicate" or (.rule | contains("duplicate"))) and (.severity == "high" or .severity == "critical"))] | length' analysis-results/results.json 2>/dev/null || echo "0")
+            echo "security_duplicate_count=${SECURITY_DUPLICATES}" >> $GITHUB_OUTPUT
+
+            CROSS_FILE_DUPLICATES=$(jq '[.findings[] | select(.rule == "cross_file_duplicate" or .rule == "enhanced_security_duplication")] | length' analysis-results/results.json 2>/dev/null || echo "0")
+            echo "cross_file_duplicate_count=${CROSS_FILE_DUPLICATES}" >> $GITHUB_OUTPUT
+          else
+            echo "analysis_completed=false" >> $GITHUB_OUTPUT
+            echo "duplicate_count=0" >> $GITHUB_OUTPUT
+            echo "security_duplicate_count=0" >> $GITHUB_OUTPUT
+            echo "cross_file_duplicate_count=0" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Upload Analysis Results
+        if: steps.analysis.outputs.analysis_completed == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: codeguardian-duplicate-analysis
+          path: |
+            analysis-results/
+            codeguardian-ci.toml
+          retention-days: 30
+
+      - name: Fail on Critical Security Duplicates
+        if: steps.analysis.outputs.security_duplicate_count > 0
+        run: |
+          echo "::warning::Found ${{ steps.analysis.outputs.security_duplicate_count }} security-related duplicates"
+          echo "::notice::Review the created GitHub issues for security-sensitive duplicate code"
+
+          if [ "${{ steps.analysis.outputs.security_duplicate_count }}" -gt 5 ]; then
+            echo "::error::Too many security-related duplicates found (${{ steps.analysis.outputs.security_duplicate_count }})"
+            echo "Please address critical security duplicates before merging"
+            exit 1
+          fi
+
+  # Duplicate Prevention Validation
+  duplicate-validation:
+    name: ✅ Duplicate Prevention Validation
+    runs-on: ubuntu-latest
+    if: ${{ github.event.inputs.analysis_type == 'comprehensive' || github.event.inputs.analysis_type == 'validation-only' || !github.event.inputs.analysis_type }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Validate CodeGuardian Configuration
+        run: |
+          if [ ! -f "codeguardian.toml" ]; then
+            echo "::error::codeguardian.toml not found"
+            exit 1
+          fi
+
+          if ! grep -q "enable_github_prevention.*true" codeguardian.toml; then
+            echo "::warning::GitHub duplicate prevention not enabled in configuration"
+          fi
+
+          if ! grep -q "enable_ml_similarity.*true" codeguardian.toml; then
+            echo "::warning::ML similarity detection not enabled in configuration"
+          fi
+
+          if ! grep -q "duplicate_prevention.*true" codeguardian.toml; then
+            echo "::warning::Duplicate prevention not enabled in GitHub integration"
+          fi
+
+          echo "Configuration validation completed"
+
+  # Turbo PR Analysis
+  turbo-pr-analysis:
+    name: 🚀 Turbo PR Analysis
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'pull_request' && (github.event.inputs.analysis_type == 'comprehensive' || github.event.inputs.analysis_type == 'pr-analysis-only' || !github.event.inputs.analysis_type) }}
+    timeout-minutes: 10
+
+    steps:
+      - name: 📥 Checkout PR
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: 🦀 Setup Rust
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: stable
+          components: rustfmt, clippy
+
+      - name: 📦 Rust Cache
+        uses: Swatinem/rust-cache@v2.8.0
+        with:
+          workspaces: "./ -> target"
+          cache-all-crates: true
+
+      - name: 🔨 Build CodeGuardian
+        run: cargo build --release --quiet
+
+      - name: 📏 Check Formatting
+        run: cargo fmt --check
+
+      - name: 🔧 Run Clippy
+        run: cargo clippy -- -D warnings
+
+      - name: 🎯 Get Changed Files
+        id: changed-files
+        run: |
+          git diff --name-only origin/${{ github.base_ref }}..HEAD > changed_files.txt
+
+          grep -E '\.(rs|js|jsx|ts|tsx|py|java|cpp|cc|cxx|c|go|php|rb|json|toml|yaml|yml)$' changed_files.txt > analyzable_files.txt || true
+
+          CHANGED_COUNT=$(wc -l < analyzable_files.txt)
+          echo "changed_count=${CHANGED_COUNT}" >> $GITHUB_OUTPUT
+
+      - name: 🚀 Turbo Analysis on Changed Files
+        if: steps.changed-files.outputs.changed_count != '0'
+        id: turbo-scan
+        run: |
+          echo "🚀 Running Turbo analysis on changed files..."
+
+          mkdir -p changed_files_analysis
+
+          while IFS= read -r file; do
+            if [ -f "$file" ]; then
+              mkdir -p "changed_files_analysis/$(dirname "$file")"
+              cp "$file" "changed_files_analysis/$file"
+            fi
+          done < analyzable_files.txt
+
+          START_TIME=$(date +%s.%N)
+
+          ./target/release/do-codeguardian turbo changed_files_analysis \
+            --max-parallel 4 \
+            --memory-limit 256 \
+            --format json \
+            --output pr-analysis.json \
+            --metrics
+
+          END_TIME=$(date +%s.%N)
+          DURATION=$(echo "$END_TIME - $START_TIME" | bc -l)
+
+          echo "duration=${DURATION}" >> $GITHUB_OUTPUT
+
+      - name: 📊 Analyze Results
+        if: steps.changed-files.outputs.changed_count > 0
+        id: results
+        run: |
+          if [ -f "pr-analysis.json" ]; then
+            TOTAL_FINDINGS=$(jq '.summary.total_findings' pr-analysis.json)
+            CRITICAL_FINDINGS=$(jq '[.findings[] | select(.severity == "Critical")] | length' pr-analysis.json)
+            HIGH_FINDINGS=$(jq '[.findings[] | select(.severity == "High")] | length' pr-analysis.json)
+            MEDIUM_FINDINGS=$(jq '[.findings[] | select(.severity == "Medium")] | length' pr-analysis.json)
+
+            echo "total_findings=${TOTAL_FINDINGS}" >> $GITHUB_OUTPUT
+            echo "critical_findings=${CRITICAL_FINDINGS}" >> $GITHUB_OUTPUT
+            echo "high_findings=${HIGH_FINDINGS}" >> $GITHUB_OUTPUT
+            echo "medium_findings=${MEDIUM_FINDINGS}" >> $GITHUB_OUTPUT
+
+            jq -r '.findings[] | select(.severity == "Critical" or .severity == "High") |
+              "🔴 **\(.severity)**: \(.message) (\(.file | split("/") | last):\(.line))"' pr-analysis.json > critical_high_findings.txt
+
+            if [ "$CRITICAL_FINDINGS" -gt 0 ]; then
+              echo "status=critical" >> $GITHUB_OUTPUT
+            elif [ "$HIGH_FINDINGS" -gt 0 ]; then
+              echo "status=warning" >> $GITHUB_OUTPUT
+            else
+              echo "status=success" >> $GITHUB_OUTPUT
+            fi
+          else
+            echo "status=success" >> $GITHUB_OUTPUT
+          fi
+
+      - name: 💬 Comment on PR
+        if: steps.changed-files.outputs.changed_count > 0
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const fs = require('fs');
+
+            const status = '${{ steps.results.outputs.status }}';
+            const statusEmoji = {
+              'critical': '🚨',
+              'warning': '⚠️',
+              'success': '✅'
+            }[status] || '📊';
+
+            const statusMessage = {
+              'critical': '**Action Required**: Critical security issues found',
+              'warning': '**Review Recommended**: High severity issues found',
+              'success': '**Passed**: No critical security issues detected'
+            }[status] || 'Analysis completed';
+
+            let criticalHighFindings = '';
+            if (fs.existsSync('critical_high_findings.txt')) {
+              const findings = fs.readFileSync('critical_high_findings.txt', 'utf8').trim();
+              if (findings) {
+                criticalHighFindings = `
+### 🔍 Critical & High Severity Issues
+${findings}
+`;
+              }
+            }
+
+            const comment = `## ${statusEmoji} Turbo Security Analysis - PR Review
+
+### 📊 Quick Scan Results
+- **Files analyzed**: ${{ steps.changed-files.outputs.changed_count }} changed files
+- **Analysis time**: ${{ steps.turbo-scan.outputs.duration }}s
+- **Critical issues**: ${{ steps.results.outputs.critical_findings }}
+- **High severity**: ${{ steps.results.outputs.high_findings }}
+- **Medium severity**: ${{ steps.results.outputs.medium_findings }}
+- **Total findings**: ${{ steps.results.outputs.total_findings }}
+
+### 🎯 Status
+${statusMessage}
+${criticalHighFindings}
+
+<details>
+<summary>🚀 Performance Metrics</summary>
+
+- **Analysis speed**: Ultra-fast PR scanning
+- **Scope**: Only changed files analyzed
+- **Duration**: ${{ steps.turbo-scan.outputs.duration }}s
+- **Mode**: Optimized for CI/CD
+
+</details>
+
+---
+*Powered by CodeGuardian Turbo Mode* ⚡
+`;
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
+
+      - name: 🚨 Fail on Critical Issues
+        if: steps.results.outputs.critical_findings != '0'
+        run: |
+          echo "🚨 CRITICAL SECURITY ISSUES DETECTED"
+          echo "====================================="
+          echo "Critical issues found: ${{ steps.results.outputs.critical_findings }}"
+          echo ""
+          echo "Please review and fix these critical security issues before merging:"
+          echo ""
+          cat critical_high_findings.txt || echo "See PR analysis report for details"
+          echo ""
+          echo "💡 Tip: Run 'codeguardian turbo . --aggressive' locally to see all issues"
+          exit 1
+
+      - name: 📄 Upload PR Analysis Report
+        if: steps.changed-files.outputs.changed_count > 0
+        uses: actions/upload-artifact@v4
+        with:
+          name: pr-analysis-${{ github.event.number }}
+          path: |
+            pr-analysis.json
+            critical_high_findings.txt
+            analyzable_files.txt
+          retention-days: 30
+
+  # Code Quality Summary
+  code-quality-summary:
+    name: 📋 Code Quality Summary
+    runs-on: ubuntu-latest
+    needs: [duplicate-prevention, duplicate-validation, turbo-pr-analysis]
+    if: always()
+
+    steps:
+      - name: 📋 Generate Code Quality Summary
+        run: |
+          echo "## 🧹 Code Quality & Analysis Summary" >> $GITHUB_STEP_SUMMARY
+          echo "**Date:** $(date)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          # Overall status
+          SUCCESS_COUNT=0
+          TOTAL_JOBS=3
+
+          if [ "${{ needs.duplicate-prevention.result }}" == "success" ]; then
+            echo "✅ Duplicate Prevention: PASSED (${{ needs.duplicate-prevention.outputs.duplicate_count }} duplicates found)" >> $GITHUB_STEP_SUMMARY
+            SUCCESS_COUNT=$((SUCCESS_COUNT + 1))
+          else
+            echo "❌ Duplicate Prevention: FAILED" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          if [ "${{ needs.duplicate-validation.result }}" == "success" ]; then
+            echo "✅ Duplicate Validation: PASSED" >> $GITHUB_STEP_SUMMARY
+            SUCCESS_COUNT=$((SUCCESS_COUNT + 1))
+          else
+            echo "❌ Duplicate Validation: FAILED" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          if [ "${{ needs.turbo-pr-analysis.result }}" == "success" ] || [ "${{ needs.turbo-pr-analysis.result }}" == "skipped" ]; then
+            echo "✅ Turbo PR Analysis: PASSED" >> $GITHUB_STEP_SUMMARY
+            SUCCESS_COUNT=$((SUCCESS_COUNT + 1))
+          else
+            echo "❌ Turbo PR Analysis: FAILED" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Success Rate:** $SUCCESS_COUNT/$TOTAL_JOBS quality checks passed" >> $GITHUB_STEP_SUMMARY
+
+          if [ "${{ needs.duplicate-prevention.outputs.security_duplicate_count }}" -gt 0 ]; then
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "🚨 **SECURITY DUPLICATES DETECTED**: ${{ needs.duplicate-prevention.outputs.security_duplicate_count }} security-related duplicates found" >> $GITHUB_STEP_SUMMARY
+          fi

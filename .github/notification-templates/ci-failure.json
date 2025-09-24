@@ -1,0 +1,53 @@
+{
+  "channel": "{{channel}}",
+  "username": "CodeGuardian CI/CD",
+  "icon_emoji": ":x:",
+  "attachments": [
+    {
+      "color": "danger",
+      "title": "❌ CI/CD Pipeline Failed",
+      "text": "Quality gates failed - immediate attention required!",
+      "fields": [
+        {
+          "title": "Workflow",
+          "value": "{{workflow_name}}",
+          "short": true
+        },
+        {
+          "title": "Branch",
+          "value": "{{branch}}",
+          "short": true
+        },
+        {
+          "title": "Commit",
+          "value": "{{commit_sha}}",
+          "short": true
+        },
+        {
+          "title": "Failed Jobs",
+          "value": "{{failed_jobs}}",
+          "short": true
+        },
+        {
+          "title": "Error Summary",
+          "value": "{{error_summary}}",
+          "short": false
+        }
+      ],
+      "actions": [
+        {
+          "type": "button",
+          "text": "View Details",
+          "url": "{{workflow_url}}"
+        },
+        {
+          "type": "button",
+          "text": "View Commit",
+          "url": "{{commit_url}}"
+        }
+      ],
+      "footer": "CodeGuardian CI/CD",
+      "ts": "{{timestamp}}"
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+# CodeGuardian Enhanced Changelog Generator Configuration
+# This file contains configuration options for the changelog generator
+
+# Output format: "markdown" or "json"
+output_format = "markdown"
+
+# Include author information in changelog entries
+include_authors = false
+
+# Include PR information when available (requires git notes or commit message parsing)
+include_pr_info = false
+
+# Enable verbose logging
+verbose = false
+
+# Custom categorization rules (optional)
+# You can define custom rules to categorize commits based on patterns
+[categorization]
+# Example custom rules:
+# security_keywords = ["security", "vulnerability", "cve"]
+# performance_keywords = ["performance", "optimize", "speed"]
+# deprecation_keywords = ["deprecat", "obsolete"]
+# removal_keywords = ["remov", "delet", "drop"]
+
+# Custom section names (optional)
+[sections]
+# breaking_changes = "⚠️ Breaking Changes"
+# features = "Added"
+# bug_fixes = "Fixed"
+# security = "Security"
+# performance = "Performance"
+# deprecated = "Deprecated"
+# removed = "Removed"

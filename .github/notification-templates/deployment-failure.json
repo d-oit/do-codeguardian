@@ -1,0 +1,58 @@
+{
+  "channel": "{{channel}}",
+  "username": "CodeGuardian Deployments",
+  "icon_emoji": ":boom:",
+  "attachments": [
+    {
+      "color": "danger",
+      "title": "💥 Deployment Failed",
+      "text": "Deployment to {{environment}} failed - rollback initiated",
+      "fields": [
+        {
+          "title": "Version",
+          "value": "{{version}}",
+          "short": true
+        },
+        {
+          "title": "Environment",
+          "value": "{{environment}}",
+          "short": true
+        },
+        {
+          "title": "Failed At",
+          "value": "{{failed_step}}",
+          "short": true
+        },
+        {
+          "title": "Error Message",
+          "value": "{{error_message}}",
+          "short": false
+        },
+        {
+          "title": "Rollback Status",
+          "value": "{{rollback_status}}",
+          "short": true
+        },
+        {
+          "title": "Incident Response",
+          "value": "{{incident_response}}",
+          "short": true
+        }
+      ],
+      "actions": [
+        {
+          "type": "button",
+          "text": "View Deployment Logs",
+          "url": "{{deployment_logs_url}}"
+        },
+        {
+          "type": "button",
+          "text": "View Incident",
+          "url": "{{incident_url}}"
+        }
+      ],
+      "footer": "CodeGuardian Deployments",
+      "ts": "{{timestamp}}"
+    }
+  ]
+}

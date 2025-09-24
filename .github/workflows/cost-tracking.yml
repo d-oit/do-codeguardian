@@ -1,0 +1,330 @@
+---
+name: 💰 CI/CD Cost Tracking
+
+on:
+  schedule:
+    # Run daily at 6 AM UTC
+    - cron: '0 6 * * *'
+  workflow_dispatch:
+    inputs:
+      period:
+        description: 'Analysis period (7d, 30d, 90d)'
+        required: false
+        default: '30d'
+        type: choice
+        options:
+          - 7d
+          - 30d
+          - 90d
+      notify:
+        description: 'Send notification'
+        required: false
+        default: true
+        type: boolean
+
+env:
+  CARGO_TERM_COLOR: always
+
+permissions:
+  contents: read
+  actions: read
+  issues: write
+
+jobs:
+  # Collect usage data
+  collect-usage:
+    name: 📊 Collect Usage Data
+    runs-on: ubuntu-latest
+    outputs:
+      usage_data: ${{ steps.usage.outputs.usage_data }}
+      total_minutes: ${{ steps.usage.outputs.total_minutes }}
+      total_storage: ${{ steps.usage.outputs.total_storage }}
+      total_bandwidth: ${{ steps.usage.outputs.total_bandwidth }}
+      cost_estimate: ${{ steps.usage.outputs.cost_estimate }}
+
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v5
+
+      - name: 📊 Collect GitHub Actions Usage
+        id: usage
+        run: |
+          # Get the analysis period
+          PERIOD="${{ github.event.inputs.period || '30d' }}"
+          
+          # Calculate date range
+          case $PERIOD in
+            7d)
+              SINCE_DATE=$(date -u -d '7 days ago' +%Y-%m-%dT%H:%M:%SZ)
+              ;;
+            30d)
+              SINCE_DATE=$(date -u -d '30 days ago' +%Y-%m-%dT%H:%M:%SZ)
+              ;;
+            90d)
+              SINCE_DATE=$(date -u -d '90 days ago' +%Y-%m-%dT%H:%M:%SZ)
+              ;;
+            *)
+              SINCE_DATE=$(date -u -d '30 days ago' +%Y-%m-%dT%H:%M:%SZ)
+              ;;
+          esac
+          
+          echo "Analyzing usage since: $SINCE_DATE"
+          
+          # Get workflow runs for the period
+          WORKFLOW_RUNS=$(gh api repos/${{ github.repository }}/actions/runs \
+            --paginate \
+            -f created=">$SINCE_DATE" \
+            -f status="completed" \
+            --jq '.workflow_runs[] | {id: .id, name: .name, status: .status, conclusion: .conclusion, created_at: .created_at, updated_at: .updated_at, run_started_at: .run_started_at}')
+          
+          # Calculate usage statistics
+          TOTAL_RUNS=$(echo "$WORKFLOW_RUNS" | jq -s 'length')
+          SUCCESSFUL_RUNS=$(echo "$WORKFLOW_RUNS" | jq -s '[.[] | select(.conclusion == "success")] | length')
+          FAILED_RUNS=$(echo "$WORKFLOW_RUNS" | jq -s '[.[] | select(.conclusion == "failure")] | length')
+          
+          # Calculate total duration (rough estimate)
+          TOTAL_DURATION_MINUTES=0
+          while IFS= read -r run; do
+            if [ -n "$run" ]; then
+              CREATED=$(echo "$run" | jq -r '.created_at')
+              UPDATED=$(echo "$run" | jq -r '.updated_at')
+              
+              if [ "$CREATED" != "null" ] && [ "$UPDATED" != "null" ]; then
+                # Calculate duration in minutes
+                CREATED_TS=$(date -d "$CREATED" +%s)
+                UPDATED_TS=$(date -d "$UPDATED" +%s)
+                DURATION_MINUTES=$(( (UPDATED_TS - CREATED_TS) / 60 ))
+                TOTAL_DURATION_MINUTES=$((TOTAL_DURATION_MINUTES + DURATION_MINUTES))
+              fi
+            fi
+          done <<< "$(echo "$WORKFLOW_RUNS" | jq -c '.')"
+          
+          # Estimate costs (rough calculation)
+          # GitHub Actions pricing: $0.008 per minute for Linux, $0.016 for Windows/macOS
+          LINUX_RUNS=$(echo "$WORKFLOW_RUNS" | jq -s '[.[] | select(.name | contains("ubuntu") or contains("linux"))] | length')
+          OTHER_RUNS=$((TOTAL_RUNS - LINUX_RUNS))
+          
+          LINUX_COST=$((LINUX_RUNS * 8))  # $0.008 * 1000 for millicents
+          OTHER_COST=$((OTHER_RUNS * 16))  # $0.016 * 1000 for millicents
+          TOTAL_COST_MILLICENTS=$((LINUX_COST + OTHER_COST))
+          TOTAL_COST_DOLLARS=$((TOTAL_COST_MILLICENTS / 1000))
+          
+          # Get storage usage (rough estimate)
+          STORAGE_BYTES=$(gh api repos/${{ github.repository }}/actions/cache/usage --jq '.active_caches_size_in_bytes // 0')
+          STORAGE_MB=$((STORAGE_BYTES / 1024 / 1024))
+          
+          # Create usage data JSON
+          USAGE_DATA=$(cat <<EOF_JSON
+          {
+            "period": "$PERIOD",
+            "since_date": "$SINCE_DATE",
+            "total_runs": $TOTAL_RUNS,
+            "successful_runs": $SUCCESSFUL_RUNS,
+            "failed_runs": $FAILED_RUNS,
+            "success_rate": $(echo "scale=2; $SUCCESSFUL_RUNS * 100 / ($TOTAL_RUNS > 0 ? $TOTAL_RUNS : 1)" | bc),
+            "total_duration_minutes": $TOTAL_DURATION_MINUTES,
+            "estimated_cost_dollars": $TOTAL_COST_DOLLARS,
+            "storage_mb": $STORAGE_MB,
+            "bandwidth_gb": 0
+          }
+          EOF_JSON
+          )
+          
+          echo "usage_data=$USAGE_DATA" >> $GITHUB_OUTPUT
+          echo "total_minutes=$TOTAL_DURATION_MINUTES" >> $GITHUB_OUTPUT
+          echo "total_storage=$STORAGE_MB" >> $GITHUB_OUTPUT
+          echo "total_bandwidth=0" >> $GITHUB_OUTPUT
+          echo "cost_estimate=$TOTAL_COST_DOLLARS" >> $GITHUB_OUTPUT
+
+      - name: 📊 Generate Cost Report
+        run: |
+          USAGE_DATA='${{ steps.usage.outputs.usage_data }}'
+          
+          echo "## 💰 GitHub Actions Cost Report" > cost_report.md
+          echo "" >> cost_report.md
+          echo "**Period:** $(echo "$USAGE_DATA" | jq -r '.period')" >> cost_report.md
+          echo "**Analysis Date:** $(date)" >> cost_report.md
+          echo "" >> cost_report.md
+          echo "### 📈 Usage Statistics" >> cost_report.md
+          echo "- **Total Workflow Runs:** $(echo "$USAGE_DATA" | jq -r '.total_runs')" >> cost_report.md
+          echo "- **Successful Runs:** $(echo "$USAGE_DATA" | jq -r '.successful_runs')" >> cost_report.md
+          echo "- **Failed Runs:** $(echo "$USAGE_DATA" | jq -r '.failed_runs')" >> cost_report.md
+          echo "- **Success Rate:** $(echo "$USAGE_DATA" | jq -r '.success_rate')%" >> cost_report.md
+          echo "" >> cost_report.md
+          echo "### ⏱️ Performance Metrics" >> cost_report.md
+          echo "- **Total Duration:** $(echo "$USAGE_DATA" | jq -r '.total_duration_minutes') minutes" >> cost_report.md
+          echo "- **Average Duration per Run:** $(echo "scale=1; $(echo "$USAGE_DATA" | jq -r '.total_duration_minutes') / ($(echo "$USAGE_DATA" | jq -r '.total_runs') > 0 ? $(echo "$USAGE_DATA" | jq -r '.total_runs') : 1)" | bc) minutes" >> cost_report.md
+          echo "" >> cost_report.md
+          echo "### 💵 Cost Analysis" >> cost_report.md
+          echo "- **Estimated Cost:** $$(echo "$USAGE_DATA" | jq -r '.estimated_cost_dollars')" >> cost_report.md
+          echo "- **Storage Used:** $(echo "$USAGE_DATA" | jq -r '.storage_mb') MB" >> cost_report.md
+          echo "- **Bandwidth Used:** $(echo "$USAGE_DATA" | jq -r '.bandwidth_gb') GB" >> cost_report.md
+          echo "" >> cost_report.md
+          echo "### 📊 Cost Breakdown" >> cost_report.md
+          echo "- **Per Run Cost:** $$(echo "scale=3; $(echo "$USAGE_DATA" | jq -r '.estimated_cost_dollars') / ($(echo "$USAGE_DATA" | jq -r '.total_runs') > 0 ? $(echo "$USAGE_DATA" | jq -r '.total_runs') : 1)" | bc)" >> cost_report.md
+          echo "- **Cost per Minute:** $$(echo "scale=3; $(echo "$USAGE_DATA" | jq -r '.estimated_cost_dollars') / ($(echo "$USAGE_DATA" | jq -r '.total_duration_minutes') > 0 ? $(echo "$USAGE_DATA" | jq -r '.total_duration_minutes') : 1)" | bc)" >> cost_report.md
+
+      - name: 📤 Upload Cost Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: cost-report-${{ github.run_id }}
+          path: cost_report.md
+          retention-days: 90
+
+  # Send notifications
+  notify:
+    name: 📢 Send Cost Notifications
+    runs-on: ubuntu-latest
+    needs: collect-usage
+    if: ${{ github.event.inputs.notify != 'false' && (vars.SLACK_WEBHOOK_URL || secrets.SLACK_WEBHOOK_URL) }}
+
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v5
+
+      - name: 📊 Prepare Cost Notification
+        id: notification
+        run: |
+          USAGE_DATA='${{ needs.collect-usage.outputs.usage_data }}'
+          
+          # Determine notification level based on costs
+          COST_DOLLARS=$(echo "$USAGE_DATA" | jq -r '.estimated_cost_dollars')
+          SUCCESS_RATE=$(echo "$USAGE_DATA" | jq -r '.success_rate')
+          
+          if (( $(echo "$COST_DOLLARS > 50" | bc -l) )); then
+            COLOR="danger"
+            TITLE="🚨 High CI/CD Costs Detected"
+          elif (( $(echo "$COST_DOLLARS > 20" | bc -l) )); then
+            COLOR="warning"
+            TITLE="⚠️ Elevated CI/CD Costs"
+          else
+            COLOR="good"
+            TITLE="💰 CI/CD Cost Report"
+          fi
+          
+          if (( $(echo "$SUCCESS_RATE < 90" | bc -l) )); then
+            TITLE="$TITLE (Low Success Rate)"
+            COLOR="danger"
+          fi
+          
+          # Create message
+          MESSAGE=$(cat <<EOF_MSG
+          *Period:* $(echo "$USAGE_DATA" | jq -r '.period')
+          *Total Runs:* $(echo "$USAGE_DATA" | jq -r '.total_runs')
+          *Success Rate:* $(echo "$USAGE_DATA" | jq -r '.success_rate')%
+          *Estimated Cost:* $${echo "$USAGE_DATA" | jq -r '.estimated_cost_dollars'}
+          *Total Duration:* $(echo "$USAGE_DATA" | jq -r '.total_duration_minutes') minutes
+          *Storage Used:* $(echo "$USAGE_DATA" | jq -r '.storage_mb') MB
+          EOF_MSG
+          )
+          
+          # Create fields for Slack attachment
+          FIELDS=$(cat <<EOF_FIELDS
+          [
+            {
+              "title": "Workflow Runs",
+              "value": "$(echo "$USAGE_DATA" | jq -r '.total_runs') total\n$(echo "$USAGE_DATA" | jq -r '.successful_runs') successful\n$(echo "$USAGE_DATA" | jq -r '.failed_runs') failed",
+              "short": true
+            },
+            {
+              "title": "Cost Breakdown",
+              "value": "\$${echo "$USAGE_DATA" | jq -r '.estimated_cost_dollars'} estimated\n$(echo "$USAGE_DATA" | jq -r '.total_duration_minutes') minutes\n$(echo "$USAGE_DATA" | jq -r '.storage_mb') MB storage",
+              "short": true
+            }
+          ]
+          EOF_FIELDS
+          )
+          
+          echo "color=$COLOR" >> $GITHUB_OUTPUT
+          echo "title=$TITLE" >> $GITHUB_OUTPUT
+          echo "message=$MESSAGE" >> $GITHUB_OUTPUT
+          echo "fields=$FIELDS" >> $GITHUB_OUTPUT
+
+      - name: 📢 Send Slack Cost Notification
+        uses: slackapi/slack-github-action@v1.27.0
+        with:
+          payload: |
+            {
+              "channel": "${{ vars.SLACK_CHANNEL || '#ci-cd' }}",
+              "username": "CodeGuardian Cost Tracker",
+              "icon_emoji": ":money_with_wings:",
+              "attachments": [
+                {
+                  "color": "${{ steps.notification.outputs.color }}",
+                  "title": "${{ steps.notification.outputs.title }}",
+                  "text": "${{ steps.notification.outputs.message }}",
+                  "fields": ${{ steps.notification.outputs.fields }},
+                  "footer": "CodeGuardian CI/CD Cost Tracking",
+                  "ts": ${{ github.event.repository.updated_at && format('"{0}"', github.event.repository.updated_at) || 'null' }}
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ vars.SLACK_WEBHOOK_URL || secrets.SLACK_WEBHOOK_URL }}
+
+  # Create cost tracking issue
+  create-issue:
+    name: 📋 Create Cost Tracking Issue
+    runs-on: ubuntu-latest
+    needs: collect-usage
+    if: ${{ github.event.inputs.notify != 'false' && needs.collect-usage.outputs.cost_estimate > 30 }}
+
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v5
+
+      - name: 📋 Create Cost Alert Issue
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const usageData = JSON.parse('${{ needs.collect-usage.outputs.usage_data }}');
+            
+            const title = `💰 High CI/CD Costs Detected - $${usageData.estimated_cost_dollars} in ${usageData.period}`;
+            
+            const body = `## 🚨 CI/CD Cost Alert
+            
+            ### Cost Summary
+            - **Period:** ${usageData.period}
+            - **Estimated Cost:** $${usageData.estimated_cost_dollars}
+            - **Total Runs:** ${usageData.total_runs}
+            - **Success Rate:** ${usageData.success_rate}%
+            - **Total Duration:** ${usageData.total_duration_minutes} minutes
+            - **Storage Used:** ${usageData.storage_mb} MB
+            
+            ### Recommendations
+            - Review failed workflow runs and fix issues to improve success rate
+            - Optimize workflow durations by caching dependencies more effectively
+            - Consider using self-hosted runners for cost-intensive jobs
+            - Review artifact retention policies to reduce storage costs
+            
+            ### Actions Required
+            - [ ] Review and optimize expensive workflows
+            - [ ] Fix failing tests/builds to reduce retry costs
+            - [ ] Implement better caching strategies
+            - [ ] Consider workflow scheduling optimizations
+            
+            ---
+            *This issue was automatically created by the cost tracking workflow.*`;
+            
+            // Check if similar issue already exists
+            const existingIssues = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              labels: ['cost-tracking', 'automation'],
+              state: 'open'
+            });
+            
+            const similarIssue = existingIssues.data.find(issue => 
+              issue.title.includes('High CI/CD Costs') && 
+              issue.title.includes(usageData.period)
+            );
+            
+            if (!similarIssue) {
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: title,
+                body: body,
+                labels: ['cost-tracking', 'automation', 'enhancement']
+              });
+            }

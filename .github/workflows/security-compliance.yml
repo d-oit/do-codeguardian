@@ -1,0 +1,296 @@
+---
+name: 🔒 Security & Compliance Analysis
+
+on:
+   push:
+     branches: [main, develop]
+     paths:
+       - 'src/**'
+       - 'Cargo.toml'
+       - 'Cargo.lock'
+   pull_request:
+     branches: [main, develop]
+     paths:
+       - 'src/**'
+       - 'Cargo.toml'
+       - 'Cargo.lock'
+   schedule:
+     - cron: '0 0 * * 1'  # Weekly on Mondays
+   workflow_dispatch:
+     inputs:
+       analysis_mode:
+         description: 'Analysis mode'
+         required: true
+         default: 'standard'
+         type: choice
+         options:
+           - standard
+           - comprehensive
+           - security-focus
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  security-events: write
+  pull-requests: write
+
+jobs:
+  # CodeQL Security Analysis
+  codeql-analysis:
+    name: 🔍 CodeQL Analysis
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: 🦀 Setup Rust toolchain
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: stable
+          components: rust-src
+
+      - name: 📦 Rust Cache
+        uses: Swatinem/rust-cache@v2.8.0
+        with:
+          workspaces: "./ -> target"
+          cache-all-crates: true
+          save-if: ${{ github.ref == 'refs/heads/main' }}
+
+      - name: 🔍 Initialize CodeQL
+        uses: github/codeql-action/init@v3.30.3
+        with:
+          languages: rust
+          config-file: ./.github/codeql-config.yml
+          queries: security-and-quality
+
+      - name: 🔨 Build for CodeQL
+        run: cargo build --release --features full
+
+      - name: 🔍 Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3.30.3
+        with:
+          category: "/language:rust"
+          wait-for-processing: true
+          output: sarif-results
+
+      - name: 📤 Upload SARIF results
+        if: always()
+        uses: github/codeql-action/upload-sarif@v3.30.3
+        with:
+          sarif_file: sarif-results/rust.sarif
+          category: "/language:rust"
+
+      - name: 📊 CodeQL Summary
+        if: always()
+        run: |
+          echo "## 🔍 CodeQL Security Analysis" >> $GITHUB_STEP_SUMMARY
+          echo "**Status**: Analysis completed" >> $GITHUB_STEP_SUMMARY
+          echo "**Results**: Uploaded to GitHub Security tab" >> $GITHUB_STEP_SUMMARY
+
+  # Turbo Security Analysis
+  turbo-security:
+    name: 🚀 Turbo Security Analysis
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v5
+
+      - name: 🦀 Setup Rust
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: stable
+
+      - name: 📦 Rust Cache
+        uses: Swatinem/rust-cache@v2.8.0
+        with:
+          workspaces: "./ -> target"
+          cache-all-crates: true
+
+      - name: 🔨 Build CodeGuardian
+        run: cargo build --release --quiet
+
+      - name: 🚀 Turbo Security Analysis
+        id: turbo-analysis
+        run: |
+          MODE="${{ github.event.inputs.analysis_mode || 'standard' }}"
+          EXTRA_ARGS=""
+          
+          if [ "$MODE" = "comprehensive" ]; then
+            EXTRA_ARGS="--aggressive --max-parallel 8 --memory-limit 1024"
+          elif [ "$MODE" = "security-focus" ]; then
+            EXTRA_ARGS="--aggressive --max-parallel 4 --memory-limit 512"
+          else
+            EXTRA_ARGS="--max-parallel 4 --memory-limit 512"
+          fi
+
+          START_TIME=$(date +%s.%N)
+          
+          ./target/release/do-codeguardian turbo . \
+            $EXTRA_ARGS \
+            --format json \
+            --output turbo-security-analysis.json \
+            --metrics
+
+          END_TIME=$(date +%s.%N)
+          DURATION=$(echo "$END_TIME - $START_TIME" | bc -l 2>/dev/null || echo "0")
+          
+          echo "duration=$DURATION" >> $GITHUB_OUTPUT
+
+      - name: 📊 Analyze Security Results
+        id: results
+        run: |
+          if [ -f "turbo-security-analysis.json" ]; then
+            TOTAL_FINDINGS=$(jq '.summary.total_findings' turbo-security-analysis.json)
+            CRITICAL=$(jq '[.findings[] | select(.severity == "Critical")] | length' turbo-security-analysis.json)
+            HIGH=$(jq '[.findings[] | select(.severity == "High")] | length' turbo-security-analysis.json)
+            
+            echo "total_findings=$TOTAL_FINDINGS" >> $GITHUB_OUTPUT
+            echo "critical_findings=$CRITICAL" >> $GITHUB_OUTPUT
+            echo "high_findings=$HIGH" >> $GITHUB_OUTPUT
+          fi
+
+      - name: 🚨 Fail on Critical Security Issues
+        if: steps.results.outputs.critical_findings != '0'
+        run: |
+          echo "🚨 CRITICAL SECURITY ISSUES DETECTED"
+          echo "Critical findings: ${{ steps.results.outputs.critical_findings }}"
+          exit 1
+
+      - name: 📤 Upload Security Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: turbo-security-analysis-${{ github.run_number }}
+          path: turbo-security-analysis.json
+          retention-days: 30
+
+  # License Compliance Check
+  license-compliance:
+    name: 📋 License Compliance
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v5
+
+      - name: 🦀 Setup Rust toolchain
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: stable
+
+      - name: 📦 Rust Cache
+        uses: Swatinem/rust-cache@v2.8.0
+        with:
+          workspaces: "./ -> target"
+          cache-all-crates: true
+
+      - name: 🔍 Install cargo-deny
+        run: cargo install cargo-deny --locked
+
+      - name: 📋 Run license compliance check
+        run: cargo deny check licenses
+
+      - name: 📊 Generate license report
+        if: always()
+        run: |
+          cargo deny list --format json > license-report.json 2>/dev/null || echo "License report generation completed"
+
+      - name: 📤 Upload license report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: license-compliance-report
+          path: license-report.json
+          retention-days: 30
+
+      - name: 📝 License compliance summary
+        if: always()
+        run: |
+          echo "## 📋 License Compliance Summary" >> $GITHUB_STEP_SUMMARY
+          echo "**Date:** $(date)" >> $GITHUB_STEP_SUMMARY
+          echo "**Status:** Check completed" >> $GITHUB_STEP_SUMMARY
+
+  # Dependency Review
+  dependency-review:
+    name: 🔍 Dependency Review
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+
+    steps:
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: 🔍 Dependency Review
+        uses: actions/dependency-review-action@v4
+        with:
+          fail-on-severity: moderate
+          allow-licenses: 'MIT, Apache-2.0, BSD-2-Clause, BSD-3-Clause, ISC'
+          deny-licenses: 'MS-PL, JSON'
+          vulnerability-check: true
+          license-check: true
+
+  # Security Compliance Summary
+  security-summary:
+    name: 📊 Security Compliance Summary
+    runs-on: ubuntu-latest
+    needs: [codeql-analysis, turbo-security, license-compliance, dependency-review]
+    if: always()
+
+    steps:
+      - name: 📊 Generate Security Summary
+        run: |
+          echo "## 🔒 Security & Compliance Analysis Summary" >> $GITHUB_STEP_SUMMARY
+          echo "**Date:** $(date)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          # Overall status
+          SUCCESS_COUNT=0
+          TOTAL_JOBS=4
+
+          if [ "${{ needs.codeql-analysis.result }}" == "success" ]; then
+            echo "✅ CodeQL Analysis: PASSED" >> $GITHUB_STEP_SUMMARY
+            SUCCESS_COUNT=$((SUCCESS_COUNT + 1))
+          else
+            echo "❌ CodeQL Analysis: FAILED" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          if [ "${{ needs.turbo-security.result }}" == "success" ]; then
+            echo "✅ Turbo Security: PASSED" >> $GITHUB_STEP_SUMMARY
+            SUCCESS_COUNT=$((SUCCESS_COUNT + 1))
+          else
+            echo "❌ Turbo Security: FAILED" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          if [ "${{ needs.license-compliance.result }}" == "success" ]; then
+            echo "✅ License Compliance: PASSED" >> $GITHUB_STEP_SUMMARY
+            SUCCESS_COUNT=$((SUCCESS_COUNT + 1))
+          else
+            echo "❌ License Compliance: FAILED" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          if [ "${{ needs.dependency-review.result }}" == "success" ]; then
+            echo "✅ Dependency Review: PASSED" >> $GITHUB_STEP_SUMMARY
+            SUCCESS_COUNT=$((SUCCESS_COUNT + 1))
+          else
+            echo "❌ Dependency Review: FAILED" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Success Rate:** $SUCCESS_COUNT/$TOTAL_JOBS security checks passed" >> $GITHUB_STEP_SUMMARY
