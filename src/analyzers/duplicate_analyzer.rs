@@ -608,10 +608,10 @@ impl DuplicateAnalyzer {
 }
 
 #[derive(Debug, Clone)]
-struct CodeBlock {
-    lines: Vec<String>,
-    start_line: usize,
-    end_line: usize,
+pub struct CodeBlock {
+    pub lines: Vec<String>,
+    pub start_line: usize,
+    pub end_line: usize,
 }
 
 impl Analyzer for DuplicateAnalyzer {
