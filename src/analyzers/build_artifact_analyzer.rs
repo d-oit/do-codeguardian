@@ -9,10 +9,11 @@ use std::path::{Path, PathBuf};
 use walkdir::WalkDir;
 
 /// Build artifact duplicate analyzer for detecting and managing duplicate build outputs
+#[derive(Debug)]
 pub struct BuildArtifactAnalyzer {
-    build_dirs: Vec<PathBuf>,
-    artifact_patterns: Vec<String>,
-    max_file_size: u64,
+    pub build_dirs: Vec<PathBuf>,
+    pub artifact_patterns: Vec<String>,
+    pub max_file_size: u64,
     hash_cache: HashMap<String, Vec<PathBuf>>,
     conflict_resolver: ConflictResolver,
 }

@@ -133,25 +133,25 @@ impl EcosystemIntegrationTestSuite {
         // Cross-Component Workflow Tests
         if self.config.test_cross_component_workflows {
             println!("🔄 Testing Cross-Component Workflows...");
-            workflow_results = self.test_cross_component_workflows(app_config).await?;
+            workflow_results = self.test_cross_component_workflows(self.config).await?;
         }
 
         // Data Flow Tests
         if self.config.test_data_flow {
             println!("📊 Testing Data Flow Between Components...");
-            data_flow_results = self.test_data_flow(app_config).await?;
+            data_flow_results = self.test_data_flow(self.config).await?;
         }
 
         // Deployment Automation Tests
         if self.config.test_deployment_automation {
             println!("🚀 Testing Deployment Automation...");
-            deployment_results = self.test_deployment_automation(app_config).await?;
+            deployment_results = self.test_deployment_automation(self.config).await?;
         }
 
         // Chaos Engineering Tests
         if self.config.test_chaos_engineering {
             println!("⚡ Running Chaos Engineering Tests...");
-            chaos_results = self.test_chaos_engineering(app_config).await?;
+            chaos_results = self.test_chaos_engineering(self.config).await?;
         }
 
         let total_duration = start_time.elapsed();
@@ -206,19 +206,19 @@ impl EcosystemIntegrationTestSuite {
         let mut results = Vec::new();
 
         // Workflow 1: GitHub Issue → Jira Integration → Analysis → Report
-        results.push(self.test_github_jira_analysis_workflow(config).await?);
+        results.push(self.test_github_jira_analysis_workflow(self.config).await?);
 
         // Workflow 2: Code Analysis → Confluence Documentation → GitHub Issue Creation
-        results.push(self.test_analysis_documentation_workflow(config).await?);
+        results.push(self.test_analysis_documentation_workflow(self.config).await?);
 
         // Workflow 3: Bulk Repository Processing → Integration Reporting
-        results.push(self.test_bulk_processing_workflow(config).await?);
+        results.push(self.test_bulk_processing_workflow(self.config).await?);
 
         // Workflow 4: ML Training → Analysis → Dashboard Update
-        results.push(self.test_ml_analysis_dashboard_workflow(config).await?);
+        results.push(self.test_ml_analysis_dashboard_workflow(self.config).await?);
 
         // Workflow 5: Security Scan → Multiple Integration Notifications
-        results.push(self.test_security_notification_workflow(config).await?);
+        results.push(self.test_security_notification_workflow(self.config).await?);
 
         Ok(results)
     }
@@ -228,19 +228,19 @@ impl EcosystemIntegrationTestSuite {
         let mut results = Vec::new();
 
         // Data Flow 1: Analysis Engine → GitHub API
-        results.push(self.test_analysis_to_github_flow(config).await?);
+        results.push(self.test_analysis_to_github_flow(self.config).await?);
 
         // Data Flow 2: GitHub API → Jira Integration
-        results.push(self.test_github_to_jira_flow(config).await?);
+        results.push(self.test_github_to_jira_flow(self.config).await?);
 
         // Data Flow 3: Analysis Results → Dashboard
-        results.push(self.test_analysis_to_dashboard_flow(config).await?);
+        results.push(self.test_analysis_to_dashboard_flow(self.config).await?);
 
         // Data Flow 4: ML Models → Analysis Engine
-        results.push(self.test_ml_to_analysis_flow(config).await?);
+        results.push(self.test_ml_to_analysis_flow(self.config).await?);
 
         // Data Flow 5: Configuration → All Components
-        results.push(self.test_config_distribution_flow(config).await?);
+        results.push(self.test_config_distribution_flow(self.config).await?);
 
         Ok(results)
     }
@@ -253,13 +253,13 @@ impl EcosystemIntegrationTestSuite {
         let mut results = Vec::new();
 
         // Deployment 1: Configuration Update Deployment
-        results.push(self.test_config_deployment(config).await?);
+        results.push(self.test_config_deployment(self.config).await?);
 
         // Deployment 2: ML Model Deployment
-        results.push(self.test_ml_model_deployment(config).await?);
+        results.push(self.test_ml_model_deployment(self.config).await?);
 
         // Deployment 3: Integration Update Deployment
-        results.push(self.test_integration_deployment(config).await?);
+        results.push(self.test_integration_deployment(self.config).await?);
 
         // Deployment 4: Dashboard Deployment
         results.push(self.test_dashboard_deployment(config).await?);
@@ -272,16 +272,16 @@ impl EcosystemIntegrationTestSuite {
         let mut results = Vec::new();
 
         // Chaos 1: GitHub API Failure
-        results.push(self.test_github_api_failure(config).await?);
+        results.push(self.test_github_api_failure(self.config).await?);
 
         // Chaos 2: Database Connection Loss
-        results.push(self.test_database_failure(config).await?);
+        results.push(self.test_database_failure(self.config).await?);
 
         // Chaos 3: Network Partition
-        results.push(self.test_network_partition(config).await?);
+        results.push(self.test_network_partition(self.config).await?);
 
         // Chaos 4: High Memory Pressure
-        results.push(self.test_memory_pressure(config).await?);
+        results.push(self.test_memory_pressure(self.config).await?);
 
         // Chaos 5: Integration Service Outage
         results.push(self.test_integration_outage(config).await?);

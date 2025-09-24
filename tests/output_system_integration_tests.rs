@@ -8,7 +8,6 @@ use do_codeguardian::output::{
     format_results, ContinuousImprovementManager, DocumentationConfig, DocumentationGenerator,
     OutputFormat, OutputMetricsService, metrics::{HealthStatus, TrendDirection},
 };
-use do_codeguardian::output::metrics::{HealthStatus, TrendDirection};
 use do_codeguardian::types::{AnalysisResults, Finding, Severity};
 use std::time::Instant;
 use tokio;
@@ -124,9 +123,9 @@ async fn test_performance_alerting() -> Result<()> {
 
     // Record metrics with intentionally slow generation time
     let slow_output = format_results(&results, OutputFormat::Json)?;
-    metrics_service
-        .record_output_metrics(&results, &slow_output, "json", 10000)
-        ?; // 10 seconds - should trigger alert
+        metrics_service
+            .record_output_metrics(&results, &slow_output, "json", 10000)
+            .await?; // 10 seconds - should trigger alert
 
     // Generate report and check for performance alerts
     let report = metrics_service.generate_report(None)?;
@@ -160,7 +159,7 @@ async fn test_output_system_kpis() -> Result<()> {
         let generation_time = if i < 8 { 100 } else { 6000 }; // Most fast, some slow
         metrics_service
             .record_output_metrics(&results, &output, "json", generation_time)
-            ?;
+            .await?;
     }
 
     let report = metrics_service.generate_report(None)?;
@@ -617,7 +616,7 @@ fn create_sample_analysis_results() -> AnalysisResults {
             metadata: std::collections::HashMap::new(),
         }],
         metadata: std::collections::HashMap::new(),
-        summary: do_codeguardian::types::AnalysisSummary {
+        summary: do_codeguardian::types::ResultsSummary {
             total_files: 1,
             total_findings: 1,
             high_severity: 0,

@@ -239,7 +239,7 @@ impl DuplicateAnalyzer {
     }
 
     /// Normalize a line for comparison (remove whitespace, comments)
-    fn normalize_line(&self, line: &str) -> String {
+    pub fn normalize_line(&self, line: &str) -> String {
         let mut normalized = line.trim().to_string();
 
         // Remove single-line comments
@@ -260,7 +260,7 @@ impl DuplicateAnalyzer {
     }
 
     /// Check if a position is inside a string literal
-    fn is_in_string(&self, line: &str, pos: usize) -> bool {
+    pub fn is_in_string(&self, line: &str, pos: usize) -> bool {
         let before = &line[..pos];
         let single_quotes = before.matches('\'').count();
         let double_quotes = before.matches('"').count();
@@ -271,7 +271,7 @@ impl DuplicateAnalyzer {
     }
 
     /// Extract meaningful code blocks from content
-    fn extract_code_blocks(&self, content: &str) -> Vec<CodeBlock> {
+    pub fn extract_code_blocks(&self, content: &str) -> Vec<CodeBlock> {
         let lines: Vec<String> = content
             .lines()
             .map(|line| self.normalize_line(line))
@@ -339,7 +339,7 @@ impl DuplicateAnalyzer {
     }
 
     /// Check if a code block contains security-relevant code
-    fn is_security_relevant(&self, block: &CodeBlock) -> bool {
+    pub fn is_security_relevant(&self, block: &CodeBlock) -> bool {
         if !self.config.focus_security {
             return true; // If not focusing on security, all blocks are relevant
         }
@@ -356,7 +356,7 @@ impl DuplicateAnalyzer {
     }
 
     /// Calculate similarity between two code blocks
-    fn calculate_similarity(&self, block1: &CodeBlock, block2: &CodeBlock) -> f64 {
+    pub fn calculate_similarity(&self, block1: &CodeBlock, block2: &CodeBlock) -> f64 {
         if block1.lines.is_empty() || block2.lines.is_empty() {
             return 0.0;
         }
@@ -473,7 +473,7 @@ impl DuplicateAnalyzer {
     }
 
     /// Detect security patterns in duplicated code blocks
-    fn detect_security_patterns_in_duplicate(
+    pub fn detect_security_patterns_in_duplicate(
         &self,
         block1: &CodeBlock,
         block2: &CodeBlock,
@@ -518,7 +518,7 @@ impl DuplicateAnalyzer {
     }
 
     /// Calculate severity based on similarity and security relevance
-    fn calculate_severity(
+    pub fn calculate_severity(
         &self,
         similarity: f64,
         block1: &CodeBlock,
@@ -546,7 +546,7 @@ impl DuplicateAnalyzer {
     }
 
     /// Check if file should be ignored
-    fn should_ignore_file(&self, file_path: &Path) -> bool {
+    pub fn should_ignore_file(&self, file_path: &Path) -> bool {
         if self.config.ignore_test_files && self.is_test_file(file_path) {
             return true;
         }
@@ -566,7 +566,7 @@ impl DuplicateAnalyzer {
     }
 
     /// Check if file is a test file
-    fn is_test_file(&self, file_path: &Path) -> bool {
+    pub fn is_test_file(&self, file_path: &Path) -> bool {
         let path_str = file_path.to_string_lossy().to_lowercase();
 
         path_str.contains("/test")
