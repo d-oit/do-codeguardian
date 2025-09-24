@@ -50,11 +50,11 @@ jobs:
         fetch-depth: 0  # Full history for comprehensive analysis
 
      - name: 🦀 Setup Rust toolchain
-       uses: actions-rust-lang/setup-rust-toolchain@v1
-       with:
-         toolchain: stable
-         components: rustfmt, clippy
-         cache: true
+      uses: actions-rust-lang/setup-rust-toolchain@v1
+      with:
+        toolchain: stable
+        components: rustfmt, clippy
+        cache: true
 
     - name: 📦 Install jq for JSON processing
       run: sudo apt-get update && sudo apt-get install -y jq

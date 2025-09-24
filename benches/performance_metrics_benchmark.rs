@@ -1,10 +1,10 @@
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
-use std::hint::black_box;
 use do_do_codeguardian::{
     config::Config,
     core::GuardianEngine,
     performance::{PerformanceAnalyzer as PerfAnalyzer, PerformanceMetrics, PerformanceProfiler},
 };
+use std::hint::black_box;
 use std::path::PathBuf;
 use std::sync::Arc;
 use std::time::{Duration, Instant};

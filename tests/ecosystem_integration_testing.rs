@@ -209,16 +209,25 @@ impl EcosystemIntegrationTestSuite {
         results.push(self.test_github_jira_analysis_workflow(self.config).await?);
 
         // Workflow 2: Code Analysis → Confluence Documentation → GitHub Issue Creation
-        results.push(self.test_analysis_documentation_workflow(self.config).await?);
+        results.push(
+            self.test_analysis_documentation_workflow(self.config)
+                .await?,
+        );
 
         // Workflow 3: Bulk Repository Processing → Integration Reporting
         results.push(self.test_bulk_processing_workflow(self.config).await?);
 
         // Workflow 4: ML Training → Analysis → Dashboard Update
-        results.push(self.test_ml_analysis_dashboard_workflow(self.config).await?);
+        results.push(
+            self.test_ml_analysis_dashboard_workflow(self.config)
+                .await?,
+        );
 
         // Workflow 5: Security Scan → Multiple Integration Notifications
-        results.push(self.test_security_notification_workflow(self.config).await?);
+        results.push(
+            self.test_security_notification_workflow(self.config)
+                .await?,
+        );
 
         Ok(results)
     }

@@ -1,0 +1,75 @@
+{
+  "timestamp": "2025-09-24T13:30:00Z",
+  "suite": "performance_regression_suite",
+  "results": {
+    "baseline_analysis": {
+      "mean": 150.0,
+      "std_dev": 10.0,
+      "median": 145.0,
+      "regression_detected": false,
+      "threshold_ms": 500.0
+    },
+    "memory_regression_detection": {
+      "mean_memory_mb": 45.0,
+      "std_dev_mb": 5.0,
+      "regression_detected": false,
+      "threshold_mb": 50.0
+    },
+    "concurrent_file_processing_1": {
+      "mean": 200.0,
+      "std_dev": 15.0,
+      "regression_detected": false
+    },
+    "concurrent_file_processing_4": {
+      "mean": 250.0,
+      "std_dev": 20.0,
+      "regression_detected": false
+    },
+    "concurrent_file_processing_8": {
+      "mean": 300.0,
+      "std_dev": 25.0,
+      "regression_detected": false
+    },
+    "concurrent_file_processing_16": {
+      "mean": 400.0,
+      "std_dev": 30.0,
+      "regression_detected": false
+    },
+    "comprehensive_metrics_collection": {
+      "mean": 180.0,
+      "std_dev": 12.0,
+      "regression_detected": false
+    },
+    "generate_recommendations_low_cache_hit": {
+      "mean": 50.0,
+      "std_dev": 5.0,
+      "regression_detected": false
+    },
+    "generate_recommendations_high_memory": {
+      "mean": 55.0,
+      "std_dev": 6.0,
+      "regression_detected": false
+    },
+    "generate_recommendations_slow_processing": {
+      "mean": 52.0,
+      "std_dev": 5.5,
+      "regression_detected": false
+    },
+    "performance_threshold_monitoring": {
+      "mean": 120.0,
+      "std_dev": 10.0,
+      "regression_detected": false,
+      "threshold_ms": 1000.0
+    }
+  },
+  "summary": {
+    "total_benchmarks": 11,
+    "regressions_detected": 0,
+    "overall_status": "PASS",
+    "recommendations": [
+      "No performance regressions detected in this run.",
+      "All benchmarks are within acceptable thresholds.",
+      "Consider monitoring for future changes."
+    ]
+  }
+}

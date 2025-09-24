@@ -349,7 +349,10 @@ mod ai_content_analyzer_tests {
         ];
 
         for (content, description) in test_cases {
-            let result = analyzer.as_ref().unwrap().analyze(Path::new("test.txt"), content.as_bytes());
+            let result = analyzer
+                .as_ref()
+                .unwrap()
+                .analyze(Path::new("test.txt"), content.as_bytes());
             assert!(result.is_ok(), "Should handle {}", description);
             let findings = result.unwrap();
             assert_eq!(
@@ -407,11 +410,13 @@ mod analyzer_performance_tests {
 
         let handles: Vec<_> = (0..10)
             .map(|i| {
-                let analyzer: Arc<ai_content_analyzer::AiContentAnalyzer> = Arc::clone(&analyzer.unwrap());
+                let analyzer: Arc<ai_content_analyzer::AiContentAnalyzer> =
+                    Arc::clone(&analyzer.unwrap());
                 let content = content.to_string();
                 thread::spawn(move || {
-                    let result =
-                        analyzer.analyze(Path::new(&format!("test_{}.rs", i)), content.as_bytes()).unwrap();
+                    let result = analyzer
+                        .analyze(Path::new(&format!("test_{}.rs", i)), content.as_bytes())
+                        .unwrap();
                     assert!(result.is_ok());
                     result.unwrap()
                 })
@@ -566,7 +571,9 @@ mod performance_analyzer_tests {
         ];
 
         for (content, should_detect, description) in test_cases {
-            let findings = analyzer.detect_nested_loops(content, Path::new("test.rs")).unwrap();
+            let findings = analyzer
+                .detect_nested_loops(content, Path::new("test.rs"))
+                .unwrap();
             if should_detect {
                 assert!(
                     !findings.is_empty(),
@@ -678,7 +685,9 @@ mod performance_analyzer_tests {
         ];
 
         for (content, should_detect, description) in test_cases {
-            let findings = analyzer.detect_blocking_io(content, Path::new("test.rs")).unwrap();
+            let findings = analyzer
+                .detect_blocking_io(content, Path::new("test.rs"))
+                .unwrap();
             if should_detect {
                 assert!(
                     !findings.is_empty(),
@@ -720,8 +729,9 @@ mod performance_analyzer_tests {
         ];
 
         for (content, should_detect, description) in test_cases {
-            let findings =
-                  analyzer.detect_algorithmic_inefficiencies(content, Path::new("test.rs")).unwrap();
+            let findings = analyzer
+                .detect_algorithmic_inefficiencies(content, Path::new("test.rs"))
+                .unwrap();
             if should_detect {
                 assert!(
                     !findings.is_empty(),

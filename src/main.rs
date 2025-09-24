@@ -111,6 +111,10 @@ async fn main() -> Result<()> {
             do_codeguardian::cli::train::run(args, &config).await?;
         }
         #[cfg(feature = "ml")]
+        Commands::TrainingData(args) => {
+            do_codeguardian::cli::training_data::run(args, &config).await?;
+        }
+        #[cfg(feature = "ml")]
         Commands::Metrics(args) => {
             metrics::run(args)?;
         }

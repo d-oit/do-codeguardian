@@ -5,8 +5,10 @@
 use anyhow::Result;
 use chrono::Utc;
 use do_codeguardian::output::{
-    format_results, ContinuousImprovementManager, DocumentationConfig, DocumentationGenerator,
-    OutputFormat, OutputMetricsService, metrics::{HealthStatus, TrendDirection},
+    format_results,
+    metrics::{HealthStatus, TrendDirection},
+    ContinuousImprovementManager, DocumentationConfig, DocumentationGenerator, OutputFormat,
+    OutputMetricsService,
 };
 use do_codeguardian::types::{AnalysisResults, Finding, Severity};
 use std::time::Instant;
@@ -31,14 +33,12 @@ async fn test_comprehensive_metrics_collection() -> Result<()> {
         let generation_time = start_time.elapsed().as_millis() as u64;
 
         // Record metrics
-        metrics_service
-            .record_output_metrics(
-                &results,
-                &output_result,
-                &format.to_string(),
-                generation_time,
-            )
-            ?;
+        metrics_service.record_output_metrics(
+            &results,
+            &output_result,
+            &format.to_string(),
+            generation_time,
+        )?;
     }
 
     // Generate comprehensive metrics report
@@ -123,9 +123,9 @@ async fn test_performance_alerting() -> Result<()> {
 
     // Record metrics with intentionally slow generation time
     let slow_output = format_results(&results, OutputFormat::Json)?;
-        metrics_service
-            .record_output_metrics(&results, &slow_output, "json", 10000)
-            .await?; // 10 seconds - should trigger alert
+    metrics_service
+        .record_output_metrics(&results, &slow_output, "json", 10000)
+        .await?; // 10 seconds - should trigger alert
 
     // Generate report and check for performance alerts
     let report = metrics_service.generate_report(None)?;
@@ -186,8 +186,7 @@ async fn test_output_system_kpis() -> Result<()> {
     assert!(
         report.trends.performance_trend == TrendDirection::Improving
             || report.trends.performance_trend == TrendDirection::Stable
-            || !report.trends.performance_trend
-                == TrendDirection::Degrading,
+            || !report.trends.performance_trend == TrendDirection::Degrading,
         "Should analyze performance trends"
     );
 
@@ -418,14 +417,10 @@ async fn test_automated_performance_monitoring() -> Result<()> {
     let start = Instant::now();
     let output = format_results(&results, OutputFormat::Json)?;
     let fast_time = start.elapsed().as_millis() as u64;
-    metrics_service
-        .record_output_metrics(&results, &output, "json", fast_time)
-        ?;
+    metrics_service.record_output_metrics(&results, &output, "json", fast_time)?;
 
     // Slow operation (simulated)
-    metrics_service
-        .record_output_metrics(&results, &output, "json", 8000)
-        ?; // 8 seconds
+    metrics_service.record_output_metrics(&results, &output, "json", 8000)?; // 8 seconds
 
     // Generate health status
     let health = metrics_service.get_health_status()?;
@@ -436,9 +431,7 @@ async fn test_automated_performance_monitoring() -> Result<()> {
         assert!(
             matches!(
                 performance_status,
-                HealthStatus::Healthy
-                    | HealthStatus::Warning
-                    | HealthStatus::Critical
+                HealthStatus::Healthy | HealthStatus::Warning | HealthStatus::Critical
             ),
             "Should monitor performance status"
         );
@@ -457,12 +450,8 @@ async fn test_ab_testing_capabilities() -> Result<()> {
     let results = create_sample_analysis_results();
 
     // Process with improvement manager (includes A/B testing)
-    let output1 = improvement_manager
-        .process_with_improvement(&results, "json")
-        ?;
-    let output2 = improvement_manager
-        .process_with_improvement(&results, "json")
-        ?;
+    let output1 = improvement_manager.process_with_improvement(&results, "json")?;
+    let output2 = improvement_manager.process_with_improvement(&results, "json")?;
 
     // Both should succeed (testing the A/B test framework)
     assert!(
@@ -475,9 +464,7 @@ async fn test_ab_testing_capabilities() -> Result<()> {
     );
 
     // Generate improvement recommendations (includes A/B test insights)
-    let recommendations = improvement_manager
-        .generate_improvement_recommendations()
-        ?;
+    let recommendations = improvement_manager.generate_improvement_recommendations()?;
 
     // Should be able to generate recommendations (even if empty initially)
     assert!(
@@ -498,15 +485,11 @@ async fn test_feedback_loops() -> Result<()> {
     let results = create_sample_analysis_results();
 
     for _ in 0..5 {
-        let _output = improvement_manager
-            .process_with_improvement(&results, "json")
-            ?;
+        let _output = improvement_manager.process_with_improvement(&results, "json")?;
     }
 
     // Generate improvement recommendations based on feedback
-    let recommendations = improvement_manager
-        .generate_improvement_recommendations()
-        ?;
+    let recommendations = improvement_manager.generate_improvement_recommendations()?;
 
     // Feedback loop should be working (recommendations generated)
     assert!(
@@ -542,9 +525,7 @@ async fn test_optimization_cycles() -> Result<()> {
     let improvement_manager = ContinuousImprovementManager::new();
 
     // Generate improvement recommendations which include optimization opportunities
-    let recommendations = improvement_manager
-        .generate_improvement_recommendations()
-        ?;
+    let recommendations = improvement_manager.generate_improvement_recommendations()?;
 
     // Should be able to identify optimization opportunities
     assert!(

@@ -273,7 +273,9 @@ fn bench_implementation_effort_analysis(c: &mut Criterion) {
 
             for rec in recommendations {
                 match rec.implementation_effort {
-                    do_do_codeguardian::performance::ImplementationEffort::Low => low_effort.push(rec),
+                    do_do_codeguardian::performance::ImplementationEffort::Low => {
+                        low_effort.push(rec)
+                    }
                     do_do_codeguardian::performance::ImplementationEffort::Medium => {
                         medium_effort.push(rec)
                     }

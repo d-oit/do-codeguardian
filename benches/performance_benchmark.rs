@@ -1,5 +1,4 @@
 use criterion::{criterion_group, criterion_main, Criterion};
-use std::hint::black_box;
 use do_do_codeguardian::{
     analyzers::AnalyzerRegistry,
     cache::FileCache,
@@ -12,6 +11,7 @@ use do_do_codeguardian::{
         memory_pool::{thread_local_pools, GlobalMemoryPools},
     },
 };
+use std::hint::black_box;
 use std::io::Write;
 use std::path::PathBuf;
 use tempfile::NamedTempFile;

@@ -1,5 +1,4 @@
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
-use std::hint::black_box;
 use do_do_codeguardian::{
     analyzers::{performance_analyzer::PerformanceAnalyzer, security_analyzer::SecurityAnalyzer},
     cache::FileCache,
@@ -8,6 +7,7 @@ use do_do_codeguardian::{
     performance::{OptimizationTracker, PerformanceMetrics},
 };
 use std::collections::HashMap;
+use std::hint::black_box;
 use std::path::PathBuf;
 use std::sync::Arc;
 use std::time::{Duration, Instant};

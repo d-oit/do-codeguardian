@@ -1,0 +1,17 @@
+{
+  "min_examples": 500,
+  "target_balance_ratio": 1.0,
+  "include_low_confidence": false,
+  "require_manual_review": true,
+  "export_formats": [
+    "json",
+    "csv",
+    "tfrecord"
+  ],
+  "labeling_strategies": [
+    "heuristic",
+    "severity_based", 
+    "file_type_based",
+    "analyzer_based"
+  ]
+}

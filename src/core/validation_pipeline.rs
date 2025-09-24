@@ -92,6 +92,12 @@ pub struct ValidationPipeline {
     metrics: ValidationMetrics,
 }
 
+impl Default for ValidationPipeline {
+    fn default() -> Self {
+        Self::new(ValidationConfig::default())
+    }
+}
+
 impl ValidationPipeline {
     pub fn new(config: ValidationConfig) -> Self {
         Self {
@@ -210,5 +216,9 @@ impl ValidationPipeline {
 
     pub fn get_metrics(&self) -> ValidationMetrics {
         self.metrics.clone()
+    }
+
+    pub fn reset_metrics(&mut self) {
+        self.metrics = ValidationMetrics::default();
     }
 }

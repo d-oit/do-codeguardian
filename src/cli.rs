@@ -20,6 +20,9 @@ pub mod retention;
 pub mod threshold_tuning;
 #[cfg(feature = "ml")]
 pub mod train;
+#[cfg(feature = "ml")]
+pub mod training_data;
+#[cfg(feature = "ml")]
 
 #[cfg(feature = "dashboard")]
 use dashboard::DashboardArgs;
@@ -27,6 +30,10 @@ use integrations::IntegrationsArgs;
 #[cfg(feature = "release-monitoring")]
 use release_monitoring::ReleaseMonitoringArgs;
 use remediation::RemediationArgs;
+#[cfg(feature = "ml")]
+use train::TrainArgs;
+#[cfg(feature = "ml")]
+use training_data::TrainingDataArgs;
 
 #[derive(Parser)]
 #[command(
@@ -86,6 +93,9 @@ pub enum Commands {
     /// Train machine learning model for false positive reduction
     #[cfg(feature = "ml")]
     Train(TrainArgs),
+    /// Collect and manage training data
+#[cfg(feature = "ml")]
+    TrainingData(TrainingDataArgs),
 
     /// Analyze ML model performance metrics
     #[cfg(feature = "ml")]
@@ -456,10 +466,61 @@ pub struct TurboArgs {
 }
 
 #[cfg(feature = "ml")]
-#[derive(Parser)]
+/// Training data collection arguments
+#[derive(Parser, Debug)]
+pub struct TrainingDataArgs {
+    /// Input file containing findings (JSON format)
+    #[clap(long, short = 'i')]
+    pub input_file: Option<PathBuf>,
+
+    /// Source path to analyze (alternative to input file)
+    #[clap(long, short = 's')]
+    pub source_path: Option<PathBuf>,
+
+    /// Output directory for training data
+    #[clap(long, short = 'o', default_value = "data/training")]
+    pub output_dir: PathBuf,
+
+    /// Configuration file for collection pipeline
+    #[clap(long, short = 'c')]
+    pub config_file: Option<PathBuf>,
+
+    /// Minimum number of examples to collect
+    #[clap(long, default_value = "100")]
+    pub min_examples: usize,
+
+    /// Target balance ratio (true_positives / false_positives)
+    #[clap(long, default_value = "1.0")]
+    pub target_balance: f64,
+
+    /// Include low-confidence labels
+    #[clap(long)]
+    pub include_low_confidence: bool,
+
+    /// Skip manual review requirement
+    #[clap(long)]
+    pub skip_manual_review: bool,
+
+    /// Export formats (comma-separated: json,csv,tfrecord)
+    #[clap(long, default_value = "json,csv")]
+    pub export_formats: String,
+
+    /// Labeling strategies to use (comma-separated)
+    #[clap(long, default_value = "heuristic,severity_based,file_type_based")]
+    pub labeling_strategies: String,
+
+    /// Enable interactive labeling mode
+    #[clap(long)]
+    pub interactive: bool,
+
+    /// Validate existing training data
+    #[clap(long)]
+    pub validate_only: bool,
+}
+
+#[derive(Parser, Debug)]
 pub struct TrainArgs {
     /// Path to save the trained model
-    #[arg(long, default_value = "codeguardian-model.fann")]
     pub model_path: PathBuf,
 
     /// Number of training epochs

@@ -15,6 +15,8 @@ pub mod multi_language_ast_analyzer;
 pub mod pattern_recognition;
 pub mod training_data;
 pub mod unified_feature_extractor;
+pub mod advanced_feature_extractor;
+pub mod production_validation;
 
 #[cfg(test)]
 mod tests;

@@ -531,7 +531,9 @@ fn test() {
     fn test_invalid_custom_pattern() {
         let invalid_patterns = vec!["[invalid regex(".to_string()];
 
-        let result = AiContentAnalyzer::new().unwrap().with_custom_patterns(invalid_patterns);
+        let result = AiContentAnalyzer::new()
+            .unwrap()
+            .with_custom_patterns(invalid_patterns);
 
         assert!(result.is_err(), "Should reject invalid regex patterns");
     }
@@ -687,7 +689,10 @@ fn do_something() {
     #[test]
     fn test_custom_patterns() {
         let custom_patterns = vec!["custom placeholder".to_string(), "fix me later".to_string()];
-        let analyzer = AiContentAnalyzer::new().unwrap().with_custom_patterns(custom_patterns).unwrap();
+        let analyzer = AiContentAnalyzer::new()
+            .unwrap()
+            .with_custom_patterns(custom_patterns)
+            .unwrap();
 
         let content = r#"
 fn main() {

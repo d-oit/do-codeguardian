@@ -1,9 +1,11 @@
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
-use std::hint::black_box;
 use do_do_codeguardian::cache::memory_pool::{FindingPool, MemoryPoolManager, StringPool};
-use do_do_codeguardian::cache::unified_cache::{CacheStrategyType, UnifiedCache, UnifiedCacheConfig};
+use do_do_codeguardian::cache::unified_cache::{
+    CacheStrategyType, UnifiedCache, UnifiedCacheConfig,
+};
 use do_do_codeguardian::ml::enhanced_feature_extractor::EnhancedFeatureExtractor;
 use do_do_codeguardian::types::{Finding, Severity};
+use std::hint::black_box;
 use std::path::PathBuf;
 use std::sync::Arc;
 use std::thread;

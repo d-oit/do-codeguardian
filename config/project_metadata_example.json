@@ -1,0 +1,21 @@
+{
+  "project_type": "WebApplication",
+  "security_level": "High",
+  "compliance_requirements": [
+    "GDPR",
+    "SOC2",
+    "ISO27001"
+  ],
+  "tech_stack": [
+    "Rust",
+    "JavaScript",
+    "PostgreSQL",
+    "Redis"
+  ],
+  "sensitive_directories": [
+    "src/auth",
+    "src/crypto",
+    "src/payments",
+    "config/production"
+  ]
+}

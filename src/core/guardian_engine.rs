@@ -13,9 +13,9 @@ use anyhow::Result;
 
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
-use tokio::sync::Mutex;
 use std::time::Instant;
 use tokio::fs;
+use tokio::sync::Mutex;
 use walkdir::WalkDir;
 
 pub struct GuardianEngine {
@@ -270,9 +270,7 @@ impl GuardianEngine {
 
         let cache_guard = self.cache.lock().await;
         for file_path in files {
-            if let Some(cached_findings) =
-                cache_guard.get_cached_findings(file_path, config_hash)
-            {
+            if let Some(cached_findings) = cache_guard.get_cached_findings(file_path, config_hash) {
                 cached_files.push((file_path.clone(), cached_findings));
             } else {
                 uncached_files.push(file_path.clone());

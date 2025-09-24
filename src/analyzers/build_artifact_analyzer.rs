@@ -56,6 +56,7 @@ pub enum ConflictLevel {
     Critical,
 }
 
+#[derive(Debug)]
 pub struct ConflictResolver {
     resolution_strategies: Vec<ResolutionStrategy>,
 }

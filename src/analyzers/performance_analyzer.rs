@@ -229,7 +229,11 @@ impl PerformanceAnalyzer {
     }
 
     /// Detects inefficient string operations, particularly concatenation in loops.
-    pub fn detect_inefficient_strings(&self, content: &str, file_path: &Path) -> Result<Vec<Finding>> {
+    pub fn detect_inefficient_strings(
+        &self,
+        content: &str,
+        file_path: &Path,
+    ) -> Result<Vec<Finding>> {
         let mut findings = Vec::new();
 
         // Get pooled objects

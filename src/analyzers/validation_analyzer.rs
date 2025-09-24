@@ -1,8 +1,7 @@
 use crate::analyzers::Analyzer;
-use crate::config::checklist::SecurityChecklist;
+
 use crate::core::{
-    ConfidenceFactorsBuilder, ConfidenceScorer, ManualReviewWorkflow, ReviewConfig,
-    ValidationConfig, ValidationPipeline,
+    ConfidenceScorer, ManualReviewWorkflow, ReviewConfig, ValidationConfig, ValidationPipeline,
 };
 use crate::types::{Finding, Severity};
 use anyhow::Result;
@@ -53,14 +52,6 @@ impl ValidationAnalyzer {
         }
     }
 
-    /// Add security checklist for enhanced validation
-    pub async fn with_checklist(self, checklist: SecurityChecklist) -> Self {
-        let mut pipeline = self.validation_pipeline.lock().await;
-        *pipeline = std::mem::take(&mut *pipeline).with_checklist(checklist);
-        drop(pipeline);
-        self
-    }
-
     /// Enable or disable validation
     pub fn set_enabled(&mut self, enabled: bool) {
         self.enabled = enabled;
@@ -73,14 +64,24 @@ impl ValidationAnalyzer {
         }
 
         let mut pipeline = self.validation_pipeline.lock().await;
-        let validation_results = pipeline.validate_findings(findings).await?;
+        let mut validation_results = Vec::new();
+        for finding in findings {
+            let context = crate::core::ValidationContext {
+                file_path: finding.file.clone(),
+                project_type: "unknown".to_string(),
+                codebase_size: 0,
+                validation_history: std::collections::HashMap::new(),
+            };
+            let result = pipeline.validate_finding(finding, context).await;
+            validation_results.push(result);
+        }
         drop(pipeline);
 
         let mut validated_findings = Vec::new();
         let mut review_candidates = Vec::new();
 
         for result in validation_results {
-            match result.validation_status {
+            match result.status {
                 crate::core::ValidationStatus::Validated => {
                     // High confidence - include finding
                     let enhanced_finding = self.enhance_finding_with_validation(result);
@@ -100,7 +101,7 @@ impl ValidationAnalyzer {
                 }
                 crate::core::ValidationStatus::RequiresReview => {
                     // Uncertain - send for manual review
-                    review_candidates.push(result);
+                    review_candidates.push(result.finding);
                 }
                 crate::core::ValidationStatus::Failed => {
                     // Validation failed - include original finding with warning
@@ -144,7 +145,7 @@ impl ValidationAnalyzer {
         // Add confidence score to description
         let confidence_info = format!(
             " (Confidence: {:.1}%)",
-            validation_result.confidence_score * 100.0
+            validation_result.confidence * 100.0
         );
         finding.description = Some(format!(
             "{}{}",
@@ -152,14 +153,8 @@ impl ValidationAnalyzer {
             confidence_info
         ));
 
-        // Add validation recommendations as suggestions
-        if !validation_result.recommendations.is_empty() {
-            let recommendations = validation_result.recommendations.join("; ");
-            finding.suggestion = Some(recommendations);
-        }
-
         // Adjust severity based on confidence
-        if validation_result.confidence_score < 0.5 {
+        if validation_result.confidence < 0.5 {
             finding.severity = match finding.severity {
                 Severity::Critical => Severity::High,
                 Severity::High => Severity::Medium,
@@ -191,7 +186,8 @@ impl ValidationAnalyzer {
 
     /// Update confidence scorer with feedback
     pub fn update_confidence_baseline(&mut self, category: &str, accuracy: f64) {
-        self.confidence_scorer.update_baseline(category, accuracy);
+        self.confidence_scorer
+            .update_baseline(category.to_string(), accuracy);
     }
 
     /// Get confidence threshold recommendations
@@ -242,12 +238,6 @@ impl ValidatedAnalyzerRegistry {
             validation_analyzer: ValidationAnalyzer::new(),
             validation_enabled: true,
         }
-    }
-
-    /// Add security checklist for validation
-    pub async fn with_checklist(mut self, checklist: SecurityChecklist) -> Self {
-        self.validation_analyzer = self.validation_analyzer.with_checklist(checklist).await;
-        self
     }
 
     /// Enable or disable validation
@@ -345,11 +335,10 @@ mod tests {
                 10,
                 "Original message".to_string(),
             ),
-            confidence_score: 0.85,
-            validation_status: crate::core::ValidationStatus::Enhanced,
-            layer_results: Vec::new(),
-            recommendations: vec!["Use secure coding practices".to_string()],
-            requires_manual_review: false,
+            status: crate::core::ValidationStatus::Enhanced,
+            confidence: 0.85,
+            validation_time_ms: 100,
+            layers_applied: 2,
         };
 
         let enhanced = analyzer.enhance_finding_with_validation(validation_result);

@@ -95,12 +95,13 @@ num_cpus = "1.16"
 serde_yaml = "0.9"
 is-terminal = "0.4"
 base64 = "0.22"
-async-trait = "0.1"
 urlencoding = "2.1"
 html-escape = "0.2"
 flate2 = "1.0"
 tempfile = "3.10"
 uuid = { version = "1.6", features = ["v4", "serde"] }
+crossterm = "0.27"
+async-trait = "0.1"
 
 # System information for benchmarks
 sysinfo = "0.30"
@@ -234,3 +235,4 @@ incremental = true
 [package.metadata.docs.rs]
 all-features = true
 rustdoc-args = ["--cfg", "docsrs"]
+async-trait = "0.1"
