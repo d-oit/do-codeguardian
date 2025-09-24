@@ -115,7 +115,7 @@ impl PerformanceAnalyzer {
     }
 
     /// Detects nested loops that may indicate algorithmic inefficiencies.
-    fn detect_nested_loops(&self, content: &str, file_path: &Path) -> Result<Vec<Finding>> {
+    pub fn detect_nested_loops(&self, content: &str, file_path: &Path) -> Result<Vec<Finding>> {
         let mut findings = Vec::new();
 
         // Get pooled objects
@@ -229,7 +229,7 @@ impl PerformanceAnalyzer {
     }
 
     /// Detects inefficient string operations, particularly concatenation in loops.
-    fn detect_inefficient_strings(&self, content: &str, file_path: &Path) -> Result<Vec<Finding>> {
+    pub fn detect_inefficient_strings(&self, content: &str, file_path: &Path) -> Result<Vec<Finding>> {
         let mut findings = Vec::new();
 
         // Get pooled objects
@@ -290,7 +290,7 @@ impl PerformanceAnalyzer {
     }
 
     /// Detects blocking I/O operations that should be asynchronous.
-    fn detect_blocking_io(&self, content: &str, file_path: &Path) -> Result<Vec<Finding>> {
+    pub fn detect_blocking_io(&self, content: &str, file_path: &Path) -> Result<Vec<Finding>> {
         let mut findings = Vec::new();
 
         // Get pooled objects
@@ -355,7 +355,7 @@ impl PerformanceAnalyzer {
     }
 
     /// Detects potential algorithmic inefficiencies.
-    fn detect_algorithmic_inefficiencies(
+    pub fn detect_algorithmic_inefficiencies(
         &self,
         content: &str,
         file_path: &Path,

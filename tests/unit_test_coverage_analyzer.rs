@@ -286,7 +286,7 @@ mod ai_content_analyzer_tests {
     #[test]
     fn test_ai_analyzer_creation() {
         let analyzer = AiContentAnalyzer::new();
-        assert_eq!(analyzer.name(), "ai-content");
+        assert_eq!(analyzer.unwrap().name(), "ai-content");
     }
 
     #[test]
@@ -349,7 +349,7 @@ mod ai_content_analyzer_tests {
         ];
 
         for (content, description) in test_cases {
-            let result = analyzer.analyze(Path::new("test.txt"), content.as_bytes());
+            let result = analyzer.as_ref().unwrap().analyze(Path::new("test.txt"), content.as_bytes());
             assert!(result.is_ok(), "Should handle {}", description);
             let findings = result.unwrap();
             assert_eq!(
@@ -407,11 +407,11 @@ mod analyzer_performance_tests {
 
         let handles: Vec<_> = (0..10)
             .map(|i| {
-                let analyzer = Arc::clone(&analyzer);
+                let analyzer: Arc<ai_content_analyzer::AiContentAnalyzer> = Arc::clone(&analyzer.unwrap());
                 let content = content.to_string();
                 thread::spawn(move || {
                     let result =
-                        analyzer.analyze(Path::new(&format!("test_{}.rs", i)), content.as_bytes());
+                        analyzer.analyze(Path::new(&format!("test_{}.rs", i)), content.as_bytes()).unwrap();
                     assert!(result.is_ok());
                     result.unwrap()
                 })
@@ -566,7 +566,7 @@ mod performance_analyzer_tests {
         ];
 
         for (content, should_detect, description) in test_cases {
-            let findings = analyzer.detect_nested_loops(content, Path::new("test.rs"));
+            let findings = analyzer.detect_nested_loops(content, Path::new("test.rs")).unwrap();
             if should_detect {
                 assert!(
                     !findings.is_empty(),
@@ -678,7 +678,7 @@ mod performance_analyzer_tests {
         ];
 
         for (content, should_detect, description) in test_cases {
-            let findings = analyzer.detect_blocking_io(content, Path::new("test.rs"));
+            let findings = analyzer.detect_blocking_io(content, Path::new("test.rs")).unwrap();
             if should_detect {
                 assert!(
                     !findings.is_empty(),
@@ -721,7 +721,7 @@ mod performance_analyzer_tests {
 
         for (content, should_detect, description) in test_cases {
             let findings =
-                analyzer.detect_algorithmic_inefficiencies(content, Path::new("test.rs"));
+                  analyzer.detect_algorithmic_inefficiencies(content, Path::new("test.rs")).unwrap();
             if should_detect {
                 assert!(
                     !findings.is_empty(),
@@ -1780,14 +1780,14 @@ edition = "2021"
 /// Comprehensive tests for ValidationAnalyzer
 mod validation_analyzer_tests {
     use super::*;
-    use do_codeguardian::analyzers::validation_analyzer::*;
+    use do_codeguardian::analyzers::validation_analyzer::ValidationAnalyzer;
     use do_codeguardian::config::checklist::SecurityChecklist;
     use do_codeguardian::core::{ValidationConfig, ValidationStatus};
     use std::path::PathBuf;
 
-    #[test]
-    fn test_validation_analyzer_creation() {
-        let analyzer = ValidationAnalyzer::new();
+    #[tokio::test]
+    async fn test_validation_analyzer_creation() {
+        let analyzer = ValidationAnalyzer::new().await;
         assert_eq!(analyzer.name(), "validation");
         assert!(analyzer.enabled);
     }

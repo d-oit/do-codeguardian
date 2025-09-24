@@ -10,6 +10,7 @@ pub mod non_production;
 pub mod performance_analyzer;
 pub mod security;
 pub mod security_analyzer;
+pub mod validation_analyzer;
 
 use crate::config::Config;
 use crate::types::Finding;

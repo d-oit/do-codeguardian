@@ -1,0 +1,90 @@
+# CodeGuardian Enhanced Release Manager Configuration
+# This file contains configuration options for the enhanced release manager
+
+# GitHub repository settings
+github_repo = "d-oit/do-codeguardian"
+
+# Changelog generation settings
+changelog_include_authors = true
+changelog_include_pr_info = true
+
+# Pre-release version support
+enable_pre_release = true
+
+# Validation and testing settings
+enable_validation = true
+
+# GitHub CLI integration
+enable_github_integration = true
+
+# Custom workflow settings
+custom_workflow = ""
+
+# Rollback settings
+rollback_on_failure = true
+
+# Logging settings
+verbose_logging = false
+
+# Release workflow customization
+[workflow]
+# Skip individual steps if needed
+skip_validation = false
+skip_build = false
+skip_publish = false
+skip_github_release = false
+
+# Custom pre-release validation
+pre_release_validation = true
+
+# Custom post-release actions
+post_release_actions = []
+
+# Integration settings
+[integrations]
+# Enable/disable specific integrations
+github_issues = true
+github_projects = false
+slack_notifications = false
+
+# Notification settings
+[notifications]
+# Slack webhook URL (if enabled)
+slack_webhook = ""
+
+# Email notifications
+email_enabled = false
+email_recipients = []
+
+# Release validation settings
+[validation]
+# Additional validation steps
+security_audit = true
+performance_regression = true
+compatibility_check = true
+
+# Custom validation scripts
+custom_validators = []
+
+# Release notes customization
+[release_notes]
+# Template for release notes
+template = "default"
+
+# Include additional sections
+include_contributors = true
+include_breaking_changes = true
+include_deprecation_warnings = true
+
+# GitHub release settings
+[github]
+# Auto-create GitHub projects for releases
+create_project = false
+
+# Label management
+auto_label_prs = true
+auto_close_issues = false
+
+# Release automation
+draft_releases = false
+pre_release_drafts = true
