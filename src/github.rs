@@ -11,7 +11,7 @@ pub async fn create_or_update_issue(
 ) -> Result<()> {
     // This is a convenience wrapper that creates GhIssueArgs and calls the gh_issue module
     let args = crate::cli::GhIssueArgs {
-        from: "results.json".into(),
+        from: "results/results.json".into(),
         repo: repo.to_string(),
         mode: mode.clone(),
         title: "CodeGuardian: ".to_string(),

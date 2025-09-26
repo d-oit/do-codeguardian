@@ -1,6 +1,6 @@
 [package]
 name = "do-codeguardian"
-version = "0.2.1-alpha.3"
+version = "0.2.1-alpha.4"
 edition = "2021"
 authors = ["d.o. <6849456+d-oit@users.noreply.github.com>"]
 description = "d.o.CodeGuardian is a cutting-edge, security-first code analysis tool that combines machine learning, advanced static analysis, and seamless GitHub integration to help developers identify vulnerabilities, optimize performance, and maintain high code quality standards. Built with Rust for speed and reliability, it empowers teams to ship secure software faster."
@@ -222,6 +222,34 @@ harness = false
 
 [[bench]]
 name = "optimization_recommendations_benchmark"
+harness = false
+
+[[bench]]
+name = "chaos_engineering_benchmark"
+harness = false
+
+[[bench]]
+name = "comparative_analysis_benchmark"
+harness = false
+
+[[bench]]
+name = "comprehensive_performance_benchmark"
+harness = false
+
+[[bench]]
+name = "enhanced_features_benchmark"
+harness = false
+
+[[bench]]
+name = "optimization_tracking_benchmark"
+harness = false
+
+[[bench]]
+name = "release_monitoring_benchmark"
+harness = false
+
+[[bench]]
+name = "test_benchmark"
 harness = false
 
 [[bin]]

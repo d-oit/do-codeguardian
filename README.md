@@ -163,12 +163,11 @@ codeguardian gh-issue \
   --title "Security Analysis Results" \
   --summary-auto "Weekly security scan results"
 
-# Update existing issues instead of creating duplicates
+# Update existing issues automatically (duplicate prevention)
 codeguardian gh-issue \
   --from results.json \
   --repo myorg/myrepo \
-  --mode checklist \
-  --update-existing
+  --mode checklist
 ```
 
 ### ML Model Training & Optimization

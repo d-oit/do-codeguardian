@@ -66,6 +66,7 @@ build/analysis-results/validation-results.sarif
 analysis-results/
 build/
 benchmark_results/
+results/
 
 # Cargo local config
 .cargo/

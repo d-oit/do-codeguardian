@@ -94,7 +94,7 @@ impl EnhancedOptimizedCache {
             .memory_pools
             .string_pool()
             .lock()
-            .unwrap()
+            .map_err(|e| anyhow!("Mutex poisoned: {}", e))?
             .get(config_hash);
 
         let entry = super::PooledCacheEntry::new(
@@ -117,7 +117,6 @@ impl EnhancedOptimizedCache {
         }
 
         // Use pooled PathBuf for key
-        let _path_key = self.memory_pools.path_pool().lock().unwrap().get();
         let path_key = file_path.to_path_buf(); // For now, keep original logic
 
         // Add new entry

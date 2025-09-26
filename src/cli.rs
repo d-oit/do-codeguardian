@@ -11,6 +11,8 @@ pub mod gh_issue;
 pub mod init;
 pub mod integrations;
 #[cfg(feature = "ml")]
+pub mod interactive_labeling;
+#[cfg(feature = "ml")]
 pub mod metrics;
 pub mod ml_enhancements;
 #[cfg(feature = "ml")]
@@ -31,10 +33,6 @@ use integrations::IntegrationsArgs;
 #[cfg(feature = "release-monitoring")]
 use release_monitoring::ReleaseMonitoringArgs;
 use remediation::RemediationArgs;
-#[cfg(feature = "ml")]
-use train::TrainArgs;
-#[cfg(feature = "ml")]
-use training_data::TrainingDataArgs;
 
 #[derive(Parser)]
 #[command(
@@ -102,6 +100,10 @@ pub enum Commands {
     #[cfg(feature = "ml")]
     Metrics(MetricsArgs),
 
+    /// Validate ML model performance and accuracy
+    #[cfg(feature = "ml")]
+    ModelValidation(ModelValidationArgs),
+
     /// Update and maintain documentation
     UpdateDocs(UpdateDocsArgs),
 
@@ -148,7 +150,7 @@ pub struct CheckArgs {
     pub format: OutputFormat,
 
     /// Output file for results (legacy flat file mode)
-    #[arg(long, default_value = "results.json")]
+    #[arg(long, default_value = "results/results.json")]
     pub out: PathBuf,
 
     /// Emit markdown report
@@ -236,11 +238,11 @@ pub struct CheckArgs {
     pub ai_enhance: bool,
 
     /// Use hierarchical storage organization (default: true)
-    #[arg(long, default_value = "true")]
+    #[arg(long, default_value = "false")]
     pub hierarchical_storage: bool,
 
     /// Storage base directory for hierarchical organization
-    #[arg(long, default_value = "analysis-results")]
+    #[arg(long, default_value = "results")]
     pub storage_dir: PathBuf,
 
     /// Storage organization strategy (by_date, by_project, hybrid, hierarchical_time_based)
@@ -263,7 +265,7 @@ pub struct CheckArgs {
 #[derive(Parser)]
 pub struct ReportArgs {
     /// Input results file (legacy flat file mode)
-    #[arg(long, default_value = "results.json")]
+    #[arg(long, default_value = "results/results.json")]
     pub from: PathBuf,
 
     /// Output markdown file
@@ -279,11 +281,11 @@ pub struct ReportArgs {
     pub ai_enhance: bool,
 
     /// Use hierarchical storage organization (default: true)
-    #[arg(long, default_value = "true")]
+    #[arg(long, default_value = "false")]
     pub hierarchical_storage: bool,
 
     /// Storage base directory for hierarchical organization
-    #[arg(long, default_value = "analysis-results")]
+    #[arg(long, default_value = "results")]
     pub storage_dir: PathBuf,
 
     /// Query results by project name
@@ -314,7 +316,7 @@ pub struct ReportArgs {
 #[derive(Parser)]
 pub struct GhIssueArgs {
     /// Input results file
-    #[arg(long, default_value = "results.json")]
+    #[arg(long, default_value = "results/results.json")]
     pub from: PathBuf,
 
     /// GitHub repository (owner/repo)
@@ -438,7 +440,7 @@ pub struct TurboArgs {
     pub format: OutputFormat,
 
     /// Output file for results
-    #[arg(long, default_value = "turbo-results.json")]
+    #[arg(long, default_value = "results/turbo-results.json")]
     pub output: PathBuf,
 
     /// Enable metrics output
@@ -590,7 +592,8 @@ pub struct ModelValidationArgs {
 #[derive(Parser, Debug)]
 pub struct TrainArgs {
     /// Path to save the trained model
-    pub model_path: PathBuf,
+    #[arg(default_value = "codeguardian-model.fann")]
+    pub model_path: Option<PathBuf>,
 
     /// Number of training epochs
     #[arg(long, default_value = "1000")]

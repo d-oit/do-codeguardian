@@ -384,7 +384,7 @@ impl Default for FileConfig {
                 ".ps1".to_string(),
             ],
             skip_binaries: true,
-            max_file_size_bytes: 10485760, // 10MB
+            max_file_size_bytes: 1048576, // 1MB
             skip_large_files: true,
         }
     }
@@ -605,8 +605,8 @@ impl Default for OptimizationConfig {
             enable_optimized_analyzers: true,
             enable_file_caching: true,
             max_parallel_workers: 4,
-            max_memory_file_size: 10485760, // 10MB
-            streaming_chunk_size: 65536,    // 64KB
+            max_memory_file_size: 1048576, // 1MB
+            streaming_chunk_size: 65536,   // 64KB
             max_findings_per_file: 50,
             pattern_cache_size: 1000,
             cache_cleanup: CacheCleanupConfig::default(),

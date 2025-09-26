@@ -1,6 +1,7 @@
 use crate::ml::cross_validation::{Classifier, ClassifierFactory};
 use crate::ml::training_data::TrainingDataset;
 use anyhow::{anyhow, Result};
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
 use tracing::{debug, info, warn};
@@ -83,7 +84,7 @@ pub struct EnsembleClassifier<T: Classifier + Clone + Send + Sync> {
     /// Ensemble configuration
     config: EnsembleConfig,
     /// Meta-learner for stacking (if applicable)
-    meta_learner: Option<Box<dyn Classifier + Send + Sync>>,
+    meta_learner: Option<Box<dyn Classifier>>,
     /// Training history and metrics
     training_history: EnsembleTrainingHistory,
 }
@@ -147,12 +148,17 @@ impl<T: Classifier + Clone + Send + Sync> EnsembleClassifier<T> {
         self.calculate_model_weights(dataset).await?;
 
         // Train meta-learner if using stacking
-        if let EnsembleStrategy::Stacking {
+        let meta_config = if let EnsembleStrategy::Stacking {
             meta_learner_config,
         } = &self.config.strategy
         {
-            self.train_meta_learner(meta_learner_config, dataset)
-                .await?;
+            Some(meta_learner_config.clone())
+        } else {
+            None
+        };
+
+        if let Some(meta_config) = meta_config {
+            self.train_meta_learner(&meta_config, dataset).await?;
         }
 
         // Calculate diversity metrics
@@ -382,7 +388,7 @@ impl<T: Classifier + Clone + Send + Sync> EnsembleClassifier<T> {
             recall,
             f1_score,
             training_time,
-            feature_importance: vec![1.0 / features.len() as f64; features.len()], // Simplified
+            feature_importance: vec![1.0; 8], // Simplified default
         })
     }
 
@@ -549,10 +555,7 @@ impl<T: Classifier + Clone + Send + Sync> EnsembleClassifier<T> {
     }
 
     /// Create meta-learner based on configuration
-    fn create_meta_learner(
-        &self,
-        config: &MetaLearnerConfig,
-    ) -> Result<Box<dyn Classifier + Send + Sync>> {
+    fn create_meta_learner(&self, config: &MetaLearnerConfig) -> Result<Box<dyn Classifier>> {
         match config.learner_type {
             MetaLearnerType::LinearRegression => Ok(Box::new(SimpleLinearRegression::new())),
             MetaLearnerType::LogisticRegression => Ok(Box::new(SimpleLogisticRegression::new())),

@@ -17,13 +17,13 @@ async fn main() {
 
     // Test 3: Algorithmic Complexity Reduction
     println!("\n3. Testing Algorithmic Complexity Reduction");
-    test_algorithmic_optimization();
+    let _ = test_algorithmic_optimization();
 
     println!("\nBenchmarking complete!");
 }
 
-async fn test_parallel_io() -> Result<(), Box<dyn std::error::Error>> {
-    let temp_dir = tempdir()?;
+async fn test_parallel_io() {
+    let temp_dir = tempdir().unwrap();
     let processor =
         do_codeguardian::core::parallel_file_processor::ParallelFileProcessor::new(Some(4));
 
@@ -32,12 +32,12 @@ async fn test_parallel_io() -> Result<(), Box<dyn std::error::Error>> {
     for i in 0..10 {
         let file_path = temp_dir.path().join(format!("test_{}.txt", i));
         let content = format!("Test content for file {} with some data\n", i).repeat(1000);
-        tokio::fs::write(&file_path, content).await?;
+        tokio::fs::write(&file_path, content).await.unwrap();
         files.push(file_path);
     }
 
     let start = Instant::now();
-    let results = processor.batch_read_files(&files).await?;
+    let results = processor.batch_read_files(&files).await.unwrap();
     let duration = start.elapsed();
 
     println!("  - Processed {} files in {:?}", results.len(), duration);
@@ -49,22 +49,21 @@ async fn test_parallel_io() -> Result<(), Box<dyn std::error::Error>> {
         "  - Throughput: {:.1} files/second",
         results.len() as f64 / duration.as_secs_f64()
     );
-    Ok(())
 }
 
-async fn test_memory_mapping() -> Result<(), Box<dyn std::error::Error>> {
-    let temp_dir = tempdir()?;
+async fn test_memory_mapping() {
+    let temp_dir = tempdir().unwrap();
 
     // Create a large file (>10MB) to trigger memory mapping
     let large_file = temp_dir.path().join("large_test.txt");
     let large_content = "Large file content for memory mapping test\n".repeat(200000); // ~4MB
-    tokio::fs::write(&large_file, &large_content).await?;
+    tokio::fs::write(&large_file, &large_content).await.unwrap();
 
     let processor =
         do_codeguardian::core::parallel_file_processor::ParallelFileProcessor::new(Some(1));
 
     let start = Instant::now();
-    let results = processor.batch_read_files(&[large_file]).await?;
+    let results = processor.batch_read_files(&[large_file]).await.unwrap();
     let duration = start.elapsed();
 
     println!(
@@ -73,7 +72,6 @@ async fn test_memory_mapping() -> Result<(), Box<dyn std::error::Error>> {
         duration
     );
     assert_eq!(results[0].1, large_content.as_bytes());
-    Ok(())
 }
 
 fn test_algorithmic_optimization() -> Result<(), Box<dyn std::error::Error>> {

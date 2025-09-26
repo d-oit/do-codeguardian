@@ -326,10 +326,12 @@ mod tests {
     use std::time::Instant;
     use tempfile::tempdir;
 
-    #[tokio::test]
-    async fn test_parallel_file_processor_creation() -> Result<(), Box<dyn std::error::Error>> {
+    #[test]
+    fn test_parallel_file_processor_creation() -> Result<(), Box<dyn std::error::Error>> {
         let processor = ParallelFileProcessor::new(Some(4));
         assert_eq!(processor.max_concurrent_files, 4);
+
+        Ok(())
     }
 
     #[tokio::test]
@@ -414,5 +416,7 @@ mod tests {
         let report = stats.report();
         assert!(report.contains("100"));
         assert!(report.contains("50.0 files/second"));
+
+        Ok(())
     }
 }

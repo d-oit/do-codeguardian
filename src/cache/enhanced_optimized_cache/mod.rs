@@ -53,7 +53,7 @@
 use crate::cache::memory_pool::MemoryPoolManager;
 use crate::cache::optimized_cache::{CacheStats, CacheUtilization};
 use crate::types::Finding;
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 use blake3::Hasher;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;

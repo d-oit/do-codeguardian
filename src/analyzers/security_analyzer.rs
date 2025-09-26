@@ -24,6 +24,10 @@ impl Default for SecurityAnalyzer {
 }
 
 impl SecurityAnalyzer {
+    /// Creates a new security analyzer with default configuration
+    ///
+    /// Initializes all specialized analyzers (SQL injection, XSS, command injection,
+    /// secrets, and general vulnerabilities) with their default settings.
     pub fn new() -> Self {
         Self {
             sql_analyzer: SqlInjectionAnalyzer::new(),
@@ -34,6 +38,14 @@ impl SecurityAnalyzer {
         }
     }
 
+    /// Creates a new security analyzer with custom performance configuration
+    ///
+    /// This method allows configuring memory pools and performance settings
+    /// for optimized analysis of large codebases.
+    ///
+    /// # Arguments
+    ///
+    /// * `config` - Performance configuration including memory pool sizes
     pub fn with_config(config: &PerformanceConfig) -> Self {
         use crate::cache::memory_pool::MemoryPoolManager;
         use std::sync::Arc;
@@ -81,6 +93,19 @@ impl SecurityAnalyzer {
         false
     }
 
+    /// Performs comprehensive security analysis on file content
+    ///
+    /// Delegates to all specialized analyzers (SQL injection, XSS, command injection,
+    /// secrets, and general vulnerabilities) and aggregates their findings.
+    ///
+    /// # Arguments
+    ///
+    /// * `file_path` - Path to the file being analyzed
+    /// * `content` - File content as bytes
+    ///
+    /// # Returns
+    ///
+    /// Returns a vector of security findings from all analyzers
     fn perform_security_checks(&self, file_path: &Path, content: &[u8]) -> Result<Vec<Finding>> {
         let mut all_findings = Vec::new();
 
@@ -119,12 +144,8 @@ impl Analyzer for SecurityAnalyzer {
         self.perform_security_checks(file_path, content)
     }
 
-    fn supports_file(&self, file_path: &Path) -> bool {
-        // Support all file types that any of the individual analyzers support
-        self.sql_analyzer.supports_file(file_path)
-            || self.xss_analyzer.supports_file(file_path)
-            || self.command_analyzer.supports_file(file_path)
-            || self.secret_analyzer.supports_file(file_path)
-            || self.vulnerability_analyzer.supports_file(file_path)
+    fn supports_file(&self, _file_path: &Path) -> bool {
+        // Support all file types - individual analyzers will filter
+        true
     }
 }

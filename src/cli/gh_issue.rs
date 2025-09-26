@@ -13,7 +13,7 @@ const GITHUB_ISSUE_MAX_BODY_SIZE: usize = 60000; // GitHub's approximate limit
 
 pub async fn run(mut args: GhIssueArgs, config: &Config) -> Result<()> {
     // Resolve input path using consolidated utility
-    args.from = resolve_input_path(&args.from, "results.json", config);
+    args.from = resolve_input_path(&args.from, "results/results.json", config);
 
     // Load results from JSON file
     let json_content = fs::read_to_string(&args.from).await?;

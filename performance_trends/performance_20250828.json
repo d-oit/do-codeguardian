@@ -1,0 +1,27 @@
+{
+  "date": "20250828",
+  "timestamp": "1756393783",
+  "metrics": {
+    "memory_usage_mb": 192,
+    "processing_time_ms": 960,
+    "cache_hit_rate_percent": 78,
+    "files_processed_per_second": 62,
+    "error_rate_percent": 1
+  },
+  "benchmarks": {
+    "baseline_analysis": {
+      "mean_time_ms": 494,
+      "standard_deviation": 28
+    },
+    "memory_regression_detection": {
+      "mean_memory_mb": 51,
+      "peak_memory_mb": 73
+    }
+  },
+  "system_info": {
+    "rust_version": "1.70.0",
+    "os": "ubuntu-latest",
+    "cpu_cores": 4,
+    "memory_total_gb": 16
+  }
+}

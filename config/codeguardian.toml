@@ -2,7 +2,9 @@
 # This configuration matches the expected schema in the codebase
 
 [output]
-directory = "build/analysis-results"
+directory = "results"
+# Disable hierarchical storage for simple, predictable output paths
+hierarchical_storage = false
 format = "json"
 verbose = false
 generate_summary = true

@@ -669,6 +669,8 @@ mod tests {
 
         assert!(result.is_some());
         assert_eq!(cache.strategy_name(), "BasicCache");
+
+        Ok(())
     }
 
     #[test]
@@ -692,6 +694,8 @@ mod tests {
         // Check memory pool stats
         let pool_stats = cache.memory_pool_stats();
         assert!(pool_stats.is_some());
+
+        Ok(())
     }
 
     #[tokio::test]
@@ -710,6 +714,8 @@ mod tests {
 
         cache.switch_strategy(new_config)?;
         assert_eq!(cache.strategy_name(), "PooledCache");
+
+        Ok(())
     }
 }
 

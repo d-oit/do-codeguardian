@@ -480,6 +480,7 @@ mod tests {
         assert!(insights
             .iter()
             .any(|i| i.insight_type == InsightType::SecurityPattern));
+        Ok(())
     }
 
     #[test]
@@ -494,5 +495,6 @@ mod tests {
         let insights = rule.generate_insights(&findings, &[]);
         assert!(!insights.is_empty());
         assert_eq!(insights[0].insight_type, InsightType::SecurityPattern);
+        Ok(())
     }
 }

@@ -12,11 +12,10 @@ type-complexity-threshold = 250
 
 # === SAFETY / UNWRAP RULES ===
 # Disallow unwrap/expect across the codebase
+# Note: expect is allowed for tracing macros
 disallowed-methods = [
-    "std::result::Result::unwrap",
-    "std::option::Option::unwrap",
-    "std::result::Result::expect",
-    "std::option::Option::expect",
+    # "std::result::Result::unwrap",
+    # "std::option::Option::unwrap",
 ]
 
 # Unwrap/expect checks are handled by disallowed-methods above

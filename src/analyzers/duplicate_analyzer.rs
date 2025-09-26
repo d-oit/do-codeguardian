@@ -51,7 +51,7 @@ pub struct DuplicateResult {
 
 /// Code block representation for duplicate analysis
 #[derive(Debug, Clone, PartialEq)]
-pub(crate) struct CodeBlock {
+pub struct CodeBlock {
     pub lines: Vec<String>,
     pub start_line: usize,
     pub end_line: usize,

@@ -581,6 +581,8 @@ mod tests {
         assert!(!checklist.categories.is_empty());
         assert!(!checklist.global_rules.is_empty());
         assert_eq!(checklist.version, "1.0.0");
+
+        Ok(())
     }
 
     #[test]
@@ -609,6 +611,8 @@ mod tests {
         // Remove rule
         assert!(checklist.remove_rule("TEST_001")?);
         assert!(!checklist.global_rules.iter().any(|r| r.id == "TEST_001"));
+
+        Ok(())
     }
 
     #[test]
@@ -629,6 +633,8 @@ mod tests {
             checklist.global_rules.len(),
             loaded_checklist.global_rules.len()
         );
+
+        Ok(())
     }
 
     #[test]
@@ -646,6 +652,8 @@ mod tests {
         // Test file type filtering
         let rust_rules = checklist.get_rules_for_file_type("rs");
         assert!(!rust_rules.is_empty());
+
+        Ok(())
     }
 
     #[test]
@@ -655,5 +663,7 @@ mod tests {
 
         let result = checklist.validate_for_repository(temp_dir.path())?;
         assert!(result.valid);
+
+        Ok(())
     }
 }

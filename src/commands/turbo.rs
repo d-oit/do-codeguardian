@@ -57,7 +57,7 @@ pub async fn execute_turbo(mut args: TurboArgs, config: Config) -> Result<()> {
     let output_dir = config.output.directory.clone();
 
     // Use configured output directory if default output path is used
-    if args.output == PathBuf::from("turbo-results.json") {
+    if args.output == PathBuf::from("results/turbo-results.json") {
         args.output = PathBuf::from(&output_dir).join("turbo-results.json");
         // Ensure output directory exists
         if let Some(parent) = args.output.parent() {

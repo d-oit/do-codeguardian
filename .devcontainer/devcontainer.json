@@ -5,10 +5,7 @@
   "postCreateCommand": "cargo build",
   "customizations": {
     "vscode": {
-      "extensions": [
-        "rust-lang.rust-analyzer",
-        "serayuzgur.crates"
-      ]
+      "extensions": []
     }
   }
 }

@@ -357,7 +357,7 @@ mod tests {
         assert!(result.is_err());
         let err_msg = result.unwrap_err().to_string();
         assert!(err_msg.contains("too large"));
-        assert!(err_msg.contains("10485760")); // 10MB in bytes
+        assert!(err_msg.contains("1048576")); // 1MB in bytes
     }
 
     #[cfg(feature = "ast")]

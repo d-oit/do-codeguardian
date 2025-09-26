@@ -25,7 +25,7 @@ codeguardian train [OPTIONS]
 ## Examples
 ```bash
 # Train new model with default settings
-codeguardian train
+codeguardian train codeguardian-model.fann
 
 # Bootstrap training for new installation
 codeguardian train --bootstrap --epochs 2000

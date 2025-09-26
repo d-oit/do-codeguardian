@@ -10,7 +10,7 @@ use do_codeguardian::analyzers::*;
 use std::path::Path;
 
 #[test]
-fn test_git_conflict_analyzer_ignores_test_modules() -> Result<(), Box<dyn std::error::Error>> {
+fn test_git_conflict_analyzer_ignores_test_modules() {
     let analyzer = GitConflictAnalyzer::new().unwrap();
 
     // Test content with conflict markers in test module
@@ -44,7 +44,6 @@ flag3
         0,
         "Should not detect git conflicts in test modules"
     );
-    Ok(())
 }
 
 #[test]

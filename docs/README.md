@@ -13,6 +13,9 @@ Welcome to the CodeGuardian documentation! This directory contains comprehensive
 - **[Basic Usage](user-guide/basic-usage.md)** - Learn the fundamental commands and workflows
 - **[Dashboard Guide](user-guide/dashboard.md)** - Web-based monitoring and reporting
 - **[ML Guide](user-guide/ml.md)** - Machine learning configuration and training
+- **[ML Enhancements](user-guide/ml-enhancements.md)** - Advanced machine learning features and tuning
+- **[Feature Engineering](user-guide/feature-engineering.md)** - Feature extraction and engineering techniques
+- **[Tune Thresholds](user-guide/tune-thresholds.md)** - Threshold tuning and optimization
 - **[Integrations Guide](user-guide/integrations.md)** - External system integrations
 - **[CI/CD Integration](user-guide/ci-cd-setup.md)** - Integrate with your development pipeline
 - **[GitHub Integration](user-guide/github-integration.md)** - Set up automated issue creation and management

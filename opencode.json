@@ -11,13 +11,7 @@
     "ml-training-specialist": {
       "model": "nvidia/deepseek-ai/deepseek-v3.1"
     },
-    "github-push-monitor": {
-      "model": "nvidia/deepseek-ai/deepseek-v3.1"
-    },
     "debug-findings-analyst": {
-      "model": "chutes/zai-org/GLM-4.5-FP8"
-    },
-    "security-auditor": {
       "model": "chutes/zai-org/GLM-4.5-FP8"
     }
   },
@@ -26,20 +20,6 @@
       "type": "remote",
       "url": "https://mcp.context7.com/mcp",
       "enabled": true
-    }
-  },
-  "provider": {
-    "nvidia": {
-      "npm": "@ai-sdk/openai-compatible",
-      "name": "NVIDIA NGC",
-      "options": {
-        "baseURL": "https://integrate.api.nvidia.com/v1"
-      },
-      "models": {
-        "deepseek-ai/deepseek-v3.1": {
-          "name": "DeepSeek v3.1"
-        }
-      }
     }
   }
 }

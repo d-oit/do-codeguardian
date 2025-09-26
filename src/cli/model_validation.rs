@@ -4,15 +4,14 @@
 //! including accuracy testing, performance benchmarking, and deployment readiness assessment.
 
 use crate::cli::ModelValidationArgs;
-use crate::ml::fann_classifier::FannClassifier;
 use crate::ml::production_validation::{
-    DeploymentReadiness, ExpectedPerformance, ProductionValidationFramework, TestCase,
-    TestCategory, TestCriticality, TestSuite, TestSuiteMetadata, ValidationConfig,
-    ValidationStatus,
+    ExpectedPerformance, ProductionValidationFramework, TestCase, TestCategory, TestCriticality,
+    TestSuite, TestSuiteMetadata, ValidationConfig, ValidationStatus,
 };
 use crate::types::{AnalysisResults, Finding, Severity};
 use crate::Config;
 use anyhow::Result;
+use chrono::{DateTime, Utc};
 use std::path::PathBuf;
 use std::time::SystemTime;
 use tokio::fs;
@@ -285,7 +284,7 @@ fn generate_markdown_summary(
     md.push_str(&format!("**Model:** {}\n", args.model_path.display()));
     md.push_str(&format!(
         "**Validation Date:** {}\n",
-        chrono::DateTime::<chrono::Utc>::from(result.timestamp).format("%Y-%m-%d %H:%M:%S UTC")
+        DateTime::<Utc>::from(result.timestamp).format("%Y-%m-%d %H:%M:%S UTC")
     ));
     md.push_str(&format!("**Status:** {:?}\n\n", result.validation_status));
 
@@ -644,7 +643,7 @@ fn generate_edge_case_test_suite(findings: &[Finding]) -> Result<TestSuite> {
         .map(|(i, finding)| TestCase {
             id: format!("edge_test_{}", i),
             finding: (*finding).clone(),
-            expected_classification: !f.file.to_string_lossy().contains("test"), // Test files often false positives
+            expected_classification: !finding.file.to_string_lossy().contains("test"), // Test files often false positives
             confidence_threshold: 0.5,
             category: TestCategory::EdgeCase,
             criticality: TestCriticality::Low,

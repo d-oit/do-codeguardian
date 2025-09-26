@@ -337,6 +337,8 @@ mod tests {
         wait_future.await;
 
         resume();
+
+        Ok(())
     }
 
     #[test]
@@ -350,5 +352,7 @@ mod tests {
         // Should cap at max_delay
         let long_delay = client.calculate_backoff_delay(10);
         assert!(long_delay <= client.retry_config.max_delay);
+
+        Ok(())
     }
 }

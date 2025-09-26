@@ -36,9 +36,10 @@ pub async fn run(args: TrainArgs, _config: &Config) -> Result<()> {
     }
 
     // Create or load neural network
-    let mut classifier = if args.continue_training && args.model_path.exists() {
-        info!("Loading existing model from: {}", args.model_path.display());
-        FannClassifier::load(&args.model_path)?
+    let model_path = args.model_path.as_ref().unwrap();
+    let mut classifier = if args.continue_training && model_path.exists() {
+        info!("Loading existing model from: {}", model_path.display());
+        FannClassifier::load(model_path)?
     } else {
         info!("Creating new neural network...");
         let config = if args.enhanced && cfg!(feature = "ast") {
@@ -90,8 +91,8 @@ pub async fn run(args: TrainArgs, _config: &Config) -> Result<()> {
     info!("{}", network_stats);
 
     // Save the trained model
-    info!("Saving model to: {}", args.model_path.display());
-    classifier.save(&args.model_path)?;
+    info!("Saving model to: {}", model_path.display());
+    classifier.save(model_path)?;
 
     // Validate model performance if requested
     if args.validate {
@@ -99,7 +100,7 @@ pub async fn run(args: TrainArgs, _config: &Config) -> Result<()> {
         validate_model(&classifier, &training_pairs)?;
 
         // Run cross-validation if enabled
-        if args.cross_validate.unwrap_or(false) {
+        if args.cross_validate {
             info!("Running cross-validation...");
             run_cross_validation(&dataset, &args).await?;
         }
@@ -108,7 +109,7 @@ pub async fn run(args: TrainArgs, _config: &Config) -> Result<()> {
     info!("Model training completed successfully!");
     info!(
         "Use the model with: codeguardian check . --ml-model {}",
-        args.model_path.display()
+        model_path.display()
     );
 
     Ok(())
@@ -201,8 +202,8 @@ async fn run_cross_validation(dataset: &TrainingDataset, args: &TrainArgs) -> Re
 
     // Configure cross-validation
     let mut cv_config = CrossValidationConfig::default();
-    cv_config.k_folds = args.cv_folds.unwrap_or(5);
-    cv_config.strategy = if args.stratified.unwrap_or(true) {
+    cv_config.k_folds = args.cv_folds as usize;
+    cv_config.strategy = if args.stratified {
         ValidationStrategy::StratifiedKFold
     } else {
         ValidationStrategy::KFold

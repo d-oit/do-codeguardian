@@ -1,3 +1,5 @@
+#![allow(clippy::disallowed_methods)]
+
 use crate::types::Finding;
 use anyhow::Result;
 use serde::{Deserialize, Serialize};

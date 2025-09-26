@@ -136,6 +136,8 @@ mod tests {
         let config = Arc::new(create_test_config());
         let processor = AIProcessor::new(config);
         assert!(processor.is_ok());
+
+        Ok(())
     }
 
     #[test]
@@ -144,18 +146,20 @@ mod tests {
         let processor = AIProcessor::new(config)?;
         let capabilities = processor.get_capabilities();
         assert!(!capabilities.is_empty());
+
+        Ok(())
     }
 
     #[tokio::test]
     async fn test_ai_processing() -> Result<(), Box<dyn std::error::Error>> {
         let config = Arc::new(create_test_config());
-        let processor = AIProcessor::new(config)?;
+        let processor = AIProcessor::new(config).unwrap();
         let results = create_test_results();
 
         let enhanced = processor.process_results(&results).await;
         assert!(enhanced.is_ok());
 
-        let enhanced_results = enhanced?;
+        let enhanced_results = enhanced.unwrap();
         assert_eq!(enhanced_results.base_results.findings.len(), 2);
 
         // Debug: Print the enhanced results to see what's populated
@@ -179,5 +183,7 @@ mod tests {
             !enhanced_results.relationships.is_empty(),
             "Relationships should not be empty for multiple findings"
         );
+
+        Ok(())
     }
 }

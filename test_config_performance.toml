@@ -1,0 +1,21 @@
+[analysis]
+parallel_processing = true
+max_workers = 16
+
+[performance]
+enabled = true
+max_memory_usage_mb = 4096
+max_complexity = 15
+
+[analyzers.performance_analyzer]
+enabled = true
+check_allocations = true
+check_nested_loops = true
+max_complexity = 15
+
+[analyzers.security_analyzer]
+enabled = false
+
+[optimization]
+enable_optimized_analyzers = true
+max_parallel_workers = 16

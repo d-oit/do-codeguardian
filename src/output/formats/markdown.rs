@@ -456,6 +456,7 @@ mod tests {
         assert!(output.content.contains("# CodeGuardian Analysis Report"));
         assert!(output.content.contains("## Table of Contents"));
         assert!(output.content.contains("## 📊 Analysis Summary"));
+        Ok(())
     }
 
     #[test]
@@ -467,6 +468,7 @@ mod tests {
 
         // Minimal format should not contain TOC
         assert!(!output.content.contains("## Table of Contents"));
+        Ok(())
     }
 
     #[test]
@@ -476,16 +478,17 @@ mod tests {
 
         let output = formatter.format(&results)?;
         assert!(output.content.contains("No Issues Found"));
+        Ok(())
     }
 
     #[test]
-    fn test_markdown_formatter_content_type() -> Result<(), Box<dyn std::error::Error>> {
+    fn test_markdown_formatter_content_type() {
         let formatter = MarkdownFormatter::new();
         assert_eq!(formatter.content_type(), "text/markdown");
     }
 
     #[test]
-    fn test_markdown_formatter_validation() -> Result<(), Box<dyn std::error::Error>> {
+    fn test_markdown_formatter_validation() {
         let formatter = MarkdownFormatter::new();
 
         // Valid markdown should pass

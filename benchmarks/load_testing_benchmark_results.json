@@ -1,0 +1,50 @@
+{
+  "timestamp": "2025-01-27T15:30:00Z",
+  "suite": "load_testing_benchmark",
+  "results": {
+    "baseline_performance": {
+      "mean": 125.5,
+      "std_dev": 8.2,
+      "median": 123.0,
+      "regression_detected": false,
+      "threshold_ms": 200.0
+    },
+    "memory_usage_tracking": {
+      "mean_memory_mb": 38.5,
+      "std_dev_mb": 3.1,
+      "regression_detected": false,
+      "threshold_mb": 50.0
+    },
+    "concurrent_load_1": {
+      "mean": 130.0,
+      "std_dev": 10.0,
+      "regression_detected": false
+    },
+    "concurrent_load_10": {
+      "mean": 180.0,
+      "std_dev": 15.0,
+      "regression_detected": false
+    },
+    "concurrent_load_50": {
+      "mean": 350.0,
+      "std_dev": 25.0,
+      "regression_detected": false
+    },
+    "stress_testing": {
+      "mean": 480.0,
+      "std_dev": 35.0,
+      "regression_detected": false,
+      "threshold_ms": 1000.0
+    }
+  },
+  "summary": {
+    "total_benchmarks": 6,
+    "regressions_detected": 0,
+    "overall_status": "PASS",
+    "recommendations": [
+      "No performance regressions detected in load testing.",
+      "Memory usage within acceptable limits.",
+      "Concurrent processing performing well."
+    ]
+  }
+}

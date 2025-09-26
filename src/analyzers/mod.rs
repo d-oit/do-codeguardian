@@ -1,3 +1,27 @@
+//! # Analyzers Module
+//!
+//! This module contains all the security and code quality analyzers used by CodeGuardian.
+//! Each analyzer implements the `Analyzer` trait and focuses on detecting specific types
+//! of issues in code files.
+//!
+//! ## Available Analyzers
+//!
+//! - `IntegrityAnalyzer`: Checks file integrity and git history validation
+//! - `LintDriftAnalyzer`: Detects drift from linting standards
+//! - `NonProductionAnalyzer`: Identifies non-production code markers
+//! - `PerformanceAnalyzer`: Analyzes code performance and optimization opportunities
+//! - `SecurityAnalyzer`: Performs comprehensive security vulnerability detection
+//! - `DependencyAnalyzer`: Scans for dependency-related issues and license compliance
+//! - `BuildArtifactAnalyzer`: Detects build artifacts that shouldn't be committed
+//! - `GitConflictAnalyzer`: Finds unresolved git merge conflicts
+//! - `AiContentAnalyzer`: Detects AI-generated placeholder content
+//! - `DuplicateAnalyzer`: Identifies duplicate code blocks
+//!
+//! ## Usage
+//!
+//! Analyzers are registered with the `AnalyzerRegistry` which manages their execution
+//! and coordinates analysis across multiple analyzers for comprehensive coverage.
+
 pub mod ai_content_analyzer;
 pub mod build_artifact_analyzer;
 pub mod cross_file_duplicate_analyzer;
@@ -17,12 +41,23 @@ use crate::types::Finding;
 use anyhow::Result;
 use std::path::Path;
 
+/// Core trait for all code analyzers
+///
+/// This trait defines the interface that all analyzers must implement.
+/// Analyzers are responsible for examining code files and detecting specific
+/// types of issues or vulnerabilities.
 pub trait Analyzer {
     fn name(&self) -> &str;
     fn analyze(&self, file_path: &Path, content: &[u8]) -> Result<Vec<Finding>>;
     fn supports_file(&self, file_path: &Path) -> bool;
 }
 
+/// Registry for managing and coordinating multiple code analyzers
+///
+/// The `AnalyzerRegistry` is responsible for registering analyzers, configuring them
+/// based on the provided configuration, and coordinating their execution across files.
+/// It implements a plugin-like architecture where analyzers can be added or removed
+/// dynamically.
 pub struct AnalyzerRegistry {
     analyzers: Vec<Box<dyn Analyzer + Send + Sync>>,
 }
@@ -42,6 +77,15 @@ impl Clone for AnalyzerRegistry {
 }
 
 impl AnalyzerRegistry {
+    /// Creates a new analyzer registry with default configuration
+    ///
+    /// This method initializes the registry with all default analyzers enabled
+    /// using the default configuration. It's suitable for basic usage scenarios.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the default configuration cannot be loaded or if any analyzer
+    /// fails to initialize.
     pub fn new() -> Self {
         match Self::with_config(&Config::default()) {
             Ok(s) => s,
@@ -49,6 +93,27 @@ impl AnalyzerRegistry {
         }
     }
 
+    /// Creates a new analyzer registry with custom configuration
+    ///
+    /// This method allows for fine-grained control over which analyzers are enabled
+    /// and how they are configured. Analyzers are registered based on the provided
+    /// configuration settings.
+    ///
+    /// # Arguments
+    ///
+    /// * `config` - The configuration object specifying which analyzers to enable
+    ///   and their settings
+    ///
+    /// # Returns
+    ///
+    /// Returns a `Result` containing the configured registry or an error if
+    /// any analyzer fails to initialize.
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - An analyzer cannot be initialized with the provided configuration
+    /// - Required configuration values are missing or invalid
     pub fn with_config(config: &Config) -> Result<Self> {
         let mut registry = Self {
             analyzers: Vec::new(),

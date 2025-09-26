@@ -466,6 +466,8 @@ mod tests {
         assert_eq!(format_metric_value(&MetricValue::Float(0.995)), "0.995");
         assert_eq!(format_metric_value(&MetricValue::Float(4.2)), "4.2");
         assert_eq!(format_metric_value(&MetricValue::Boolean(true)), "true");
+
+        Ok(())
     }
 
     #[test]
@@ -475,5 +477,7 @@ mod tests {
             truncate_string("this is a very long string", 10),
             "this is..."
         );
+
+        Ok(())
     }
 }

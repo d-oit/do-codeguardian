@@ -319,6 +319,7 @@ mod tests {
         // Verify it's valid JSON
         let sarif: Value = serde_json::from_str(&output.content)?;
         assert!(sarif.is_object());
+        Ok(())
     }
 
     #[test]
@@ -334,16 +335,17 @@ mod tests {
         assert!(sarif.get("version").is_some());
         assert!(sarif.get("runs").is_some());
 
-        let runs = sarif.get("runs")?.as_array()?;
+        let runs = sarif.get("runs").unwrap().as_array().unwrap();
         assert_eq!(runs.len(), 1);
 
         let run = &runs[0];
         assert!(run.get("tool").is_some());
         assert!(run.get("results").is_some());
+        Ok(())
     }
 
     #[test]
-    fn test_sarif_content_type() -> Result<(), Box<dyn std::error::Error>> {
+    fn test_sarif_content_type() {
         let formatter = SarifFormatter::new();
         assert_eq!(formatter.content_type(), "application/sarif+json");
     }

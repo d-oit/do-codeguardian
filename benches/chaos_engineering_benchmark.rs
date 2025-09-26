@@ -15,11 +15,12 @@ fn generate_chaos_test_files(count: usize) -> Vec<(NamedTempFile, String, usize)
         // Create files with potential security issues for testing
         let content = format!(
             r#"fn main() {{
-    let password = "hardcoded_password_{}";
-    let api_key = "sk-1234567890abcdef";
-    println!("Password: {{}}", password);
-    println!("API Key: {{}}", api_key);
-}}
+     // NOTE: These are test data for security analysis benchmarks - not real secrets
+     let password = "hardcoded_password_{}"; // TEST DATA: Fake password for benchmark testing only
+     let api_key = "sk-1234567890abcdef"; // TEST DATA: Fake API key for benchmark testing only
+     println!("Password: {{}}", password);
+     println!("API Key: {{}}", api_key);
+ }}
 
 pub fn insecure_function() {{
     let mut data = vec![];

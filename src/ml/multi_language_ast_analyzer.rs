@@ -310,9 +310,18 @@ impl RustAstAnalyzer {
 
 impl LanguageAstAnalyzer for RustAstAnalyzer {
     fn analyze(&self, content: &str) -> Result<LanguageAstFeatures> {
-        // Use existing Rust AST analyzer
-        let rust_analyzer = crate::ml::ast_analyzer::AstAnalyzer::new();
-        let ast_features = rust_analyzer.extract_ast_features(Path::new("temp.rs"), content)?;
+        // Get AST features if available
+        let ast_features = if cfg!(feature = "ast") {
+            #[cfg(feature = "ast")]
+            {
+                let rust_analyzer = crate::ml::ast_analyzer::AstAnalyzer::new();
+                Some(rust_analyzer.extract_ast_features(Path::new("temp.rs"), content)?)
+            }
+            #[cfg(not(feature = "ast"))]
+            None
+        } else {
+            None
+        };
 
         let mut token_frequencies = HashMap::new();
         // Basic tokenization for Rust
@@ -331,16 +340,37 @@ impl LanguageAstAnalyzer for RustAstAnalyzer {
             }
         }
 
+        // Extract features from AST if available, otherwise use defaults
+        let (
+            complexity_score,
+            function_count,
+            type_definition_count,
+            control_flow_count,
+            comment_density,
+            max_nesting_depth,
+        ) = if let Some(ast) = ast_features {
+            (
+                ast.cyclomatic_complexity,
+                ast.function_count,
+                ast.struct_count + ast.enum_count,
+                ast.panic_call_count + ast.unwrap_call_count,
+                ast.comment_density,
+                ast.nesting_depth,
+            )
+        } else {
+            (0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
+        };
+
         Ok(LanguageAstFeatures {
             language: "rust".to_string(),
-            complexity_score: ast_features.cyclomatic_complexity,
-            function_count: ast_features.function_count,
-            type_definition_count: ast_features.struct_count + ast_features.enum_count,
-            control_flow_count: ast_features.panic_call_count + ast_features.unwrap_call_count,
+            complexity_score,
+            function_count,
+            type_definition_count,
+            control_flow_count,
             variable_count: 0.0, // Not available in current AST features
             import_count: 0.0,   // Not available in current AST features
-            comment_density: ast_features.comment_density,
-            max_nesting_depth: ast_features.nesting_depth,
+            comment_density,
+            max_nesting_depth,
             token_frequencies,
             semantic_patterns: vec![
                 "fn ".to_string(),

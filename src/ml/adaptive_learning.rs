@@ -795,7 +795,7 @@ impl ActiveLearner {
     ) -> Result<Vec<Finding>> {
         // In a real implementation, we'd calculate uncertainty for each candidate
         // For now, we'll simulate by selecting a subset
-        let selected = candidates.iter().take(num_samples).cloned().collect();
+        let selected: Vec<_> = candidates.iter().take(num_samples).cloned().collect();
 
         // Record the selection event
         let mut history = self.selection_history.write().await;

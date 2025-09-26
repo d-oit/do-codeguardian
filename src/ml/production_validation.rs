@@ -3,6 +3,7 @@
 //! This module provides comprehensive validation, testing, and monitoring
 //! capabilities for ML models in production environments.
 
+#[cfg(feature = "ast")]
 use crate::ml::advanced_feature_extractor::AdvancedFeatureExtractor;
 use crate::ml::fann_classifier::FannClassifier;
 use crate::ml::training_data::TrainingDataset;
@@ -777,11 +778,13 @@ impl Default for PerformanceBenchmarks {
 
 // Validator Implementations
 
+#[cfg(feature = "ast")]
 /// Accuracy validator - tests overall model accuracy
 pub struct AccuracyValidator {
     feature_extractor: AdvancedFeatureExtractor,
 }
 
+#[cfg(feature = "ast")]
 impl AccuracyValidator {
     pub fn new() -> Self {
         Self {
@@ -790,6 +793,7 @@ impl AccuracyValidator {
     }
 }
 
+#[cfg(feature = "ast")]
 #[async_trait::async_trait]
 impl ModelValidator for AccuracyValidator {
     fn name(&self) -> &str {

@@ -3,7 +3,7 @@ use anyhow::Result;
 use serde::{Deserialize, Serialize};
 
 /// Training data management for the ML classifier
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TrainingDataset {
     pub examples: Vec<TrainingExample>,
     pub version: String,

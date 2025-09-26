@@ -1,7 +1,8 @@
-use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
+use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
 use do_codeguardian::{
     cache::FileCache, config::Config, core::GuardianEngine, utils::progress::ProgressReporter,
 };
+use std::path::PathBuf;
 
 use std::sync::Arc;
 use std::time::{Duration, Instant};

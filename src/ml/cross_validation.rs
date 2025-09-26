@@ -6,6 +6,7 @@
 use crate::ml::training_data::TrainingDataset;
 use crate::types::{Finding, Severity};
 use anyhow::{anyhow, Result};
+use async_trait::async_trait;
 use rand::seq::SliceRandom;
 use rand::{thread_rng, Rng};
 use serde::{Deserialize, Serialize};
@@ -244,7 +245,7 @@ impl CrossValidator {
         dataset: &TrainingDataset,
     ) -> Result<CrossValidationResults>
     where
-        T: Classifier + Clone + Send + Sync,
+        T: Classifier + Clone,
     {
         let start_time = Instant::now();
         info!(
@@ -990,6 +991,7 @@ impl CrossValidator {
 }
 
 /// Trait for classifiers that can be cross-validated
+#[async_trait::async_trait(?Send)]
 pub trait Classifier {
     async fn train(&mut self, data: &[(Vec<f32>, f32)]) -> Result<()>;
     async fn predict(&self, features: &[f32]) -> Result<f32>;

@@ -3,12 +3,15 @@ use std::time::Duration;
 
 pub struct ProgressReporter {
     enabled: bool,
-    bar: Option<ProgressBar>,
+    progress_bar: Option<ProgressBar>,
 }
 
 impl ProgressReporter {
     pub fn new(enabled: bool) -> Self {
-        Self { enabled, bar: None }
+        Self {
+            enabled,
+            progress_bar: None,
+        }
     }
 
     pub fn start_scan(&mut self, total_files: usize) {
@@ -16,28 +19,28 @@ impl ProgressReporter {
             return;
         }
 
-        let bar = ProgressBar::new(total_files as u64);
-        bar.set_style(
+        let progress_bar = ProgressBar::new(total_files as u64);
+        progress_bar.set_style(
             ProgressStyle::default_bar()
                 .template("{spinner:.green} [{elapsed_precise}] [{bar:40.cyan/blue}] {pos}/{len} files ({eta})")
                 .unwrap()
                 .progress_chars("#>-"),
         );
-        bar.enable_steady_tick(Duration::from_millis(100));
+        progress_bar.enable_steady_tick(Duration::from_millis(100));
 
-        self.bar = Some(bar);
+        self.progress_bar = Some(progress_bar);
     }
 
     pub fn update(&self, message: &str) {
-        if let Some(bar) = &self.bar {
-            bar.set_message(message.to_string());
-            bar.inc(1);
+        if let Some(progress_bar) = &self.progress_bar {
+            progress_bar.set_message(message.to_string());
+            progress_bar.inc(1);
         }
     }
 
     pub fn finish(&self, message: &str) {
-        if let Some(bar) = &self.bar {
-            bar.finish_with_message(message.to_string());
+        if let Some(progress_bar) = &self.progress_bar {
+            progress_bar.finish_with_message(message.to_string());
         }
     }
 }

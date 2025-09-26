@@ -1,4 +1,23 @@
 use crate::cli::{CheckArgs, OutputFormat};
+// Check command implementation
+//
+// This module implements the `check` command for CodeGuardian, which performs
+// security analysis on files and directories. It handles configuration loading,
+// analysis execution, result formatting, and output storage.
+//
+// The check command supports various options including:
+// - File/directory analysis
+// - Output format selection (JSON, SARIF, human-readable)
+// - ML-powered false positive reduction
+// - Parallel processing
+// - Baseline comparison
+// - Broken files detection
+
+// Check command implementation
+//
+// This module implements the `check` command for CodeGuardian, which performs
+// security analysis on files and directories.
+
 use crate::config::Config;
 use crate::core::GuardianEngine;
 use crate::output::formatter::OutputFormatter;
@@ -22,12 +41,10 @@ use std::path::PathBuf;
 use std::time::Instant;
 use tokio::fs;
 
-// Helper functions
-
 async fn apply_config_overrides(
     args: &mut CheckArgs,
     config: &mut Config,
-    output_dir: &str,
+    _output_dir: &str,
 ) -> Result<()> {
     // Override config with CLI options using consolidated utilities
     if let Some(baseline_path) = &args.baseline {
@@ -48,7 +65,13 @@ async fn apply_config_overrides(
     set_parallel_workers(config, args.parallel);
 
     // Resolve output path using consolidated utility
-    args.out = resolve_output_path(&args.out, "results.json", config, Some("check"), None);
+    args.out = resolve_output_path(
+        &args.out,
+        "results/results.json",
+        config,
+        Some("check"),
+        None,
+    );
     ensure_output_directory(&args.out).await?;
 
     // Override broken files detection settings using consolidated utilities
@@ -72,9 +95,9 @@ async fn apply_config_overrides(
         set_fail_on_conflicts(config, true);
     }
 
-    // Use configured output directory if default output path is used
-    if args.out == PathBuf::from("results.json") {
-        args.out = PathBuf::from(output_dir).join("results.json");
+    // Use results directory for default output path
+    if args.out == PathBuf::from("results/results.json") {
+        args.out = PathBuf::from("results").join("results.json");
         // Ensure output directory exists
         if let Some(parent) = args.out.parent() {
             tokio::fs::create_dir_all(parent).await?;
@@ -158,7 +181,7 @@ async fn run_analysis_and_filter(
     let results = if ml_threshold.is_some() {
         #[cfg(feature = "ml")]
         {
-            let threshold = ml_threshold?;
+            let threshold = ml_threshold.unwrap();
             let model_path_str = args
                 .ml_model
                 .as_ref()
@@ -296,12 +319,10 @@ async fn handle_hierarchical_output(
         tracing::info!("Storage directory: {}", args.storage_dir.display());
     }
 
-    // For backward compatibility, also save to the specified output path if it's not the default
-    if args.out != PathBuf::from("results.json") {
-        fs::write(&args.out, json_content).await?;
-        if !args.quiet {
-            tracing::info!("Results also saved to legacy path: {}", args.out.display());
-        }
+    // Always save to the specified output path (legacy + new structure)
+    fs::write(&args.out, json_content).await?;
+    if !args.quiet {
+        tracing::info!("Results saved to: {}", args.out.display());
     }
 
     // Emit markdown report if requested

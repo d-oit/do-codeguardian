@@ -3,16 +3,16 @@
 //! Provides a terminal-based interface for manually labeling findings
 //! to create high-quality training datasets.
 
-use crate::ml::training_data::{TrainingDataset, TrainingExample, FeedbackSource};
 use crate::ml::feature_extractor::FeatureExtractor;
+use crate::ml::training_data::{FeedbackSource, TrainingDataset, TrainingExample};
 use crate::types::{Finding, Severity};
 use anyhow::Result;
-use std::io::{self, Write};
 use crossterm::{
     cursor, execute, queue,
     style::{Color, Print, ResetColor, SetForegroundColor},
     terminal::{self, Clear, ClearType},
 };
+use std::io::{self, Write};
 
 /// Interactive labeling session
 pub struct InteractiveLabelingSession {
@@ -52,7 +52,7 @@ impl InteractiveLabelingSession {
     /// Start the interactive labeling session
     pub async fn run(&mut self) -> Result<TrainingDataset> {
         let start_time = std::time::Instant::now();
-        
+
         // Setup terminal
         terminal::enable_raw_mode()?;
         let mut stdout = io::stdout();
@@ -69,14 +69,14 @@ impl InteractiveLabelingSession {
         println!("  [q] - Quit and save progress");
         println!();
         println!("Press any key to start...");
-        
+
         // Wait for user to start
         self.wait_for_key()?;
 
         // Main labeling loop
         while self.current_index < self.findings.len() {
             let finding = &self.findings[self.current_index];
-            
+
             // Clear screen and show current finding
             execute!(stdout, terminal::Clear(ClearType::All))?;
             self.display_finding(finding)?;
@@ -133,7 +133,14 @@ impl InteractiveLabelingSession {
 
         // Header
         queue!(stdout, SetForegroundColor(Color::Cyan))?;
-        queue!(stdout, Print(format!("Finding {}/{}\n", self.current_index + 1, self.findings.len())))?;
+        queue!(
+            stdout,
+            Print(format!(
+                "Finding {}/{}\n",
+                self.current_index + 1,
+                self.findings.len()
+            ))
+        )?;
         queue!(stdout, ResetColor)?;
         queue!(stdout, Print("─".repeat(50)))?;
         queue!(stdout, Print("\n\n"))?;
@@ -146,7 +153,7 @@ impl InteractiveLabelingSession {
             Severity::Low => Color::Blue,
             Severity::Info => Color::Grey,
         };
-        
+
         queue!(stdout, SetForegroundColor(severity_color))?;
         queue!(stdout, Print(format!("Severity: {:?}\n", finding.severity)))?;
         queue!(stdout, ResetColor)?;
@@ -190,35 +197,47 @@ impl InteractiveLabelingSession {
     /// Display progress information
     fn display_progress(&self) -> Result<()> {
         let mut stdout = io::stdout();
-        
+
         queue!(stdout, Print("─".repeat(50)))?;
         queue!(stdout, Print("\n"))?;
-        
+
         let progress_percent = (self.current_index as f64 / self.findings.len() as f64) * 100.0;
-        queue!(stdout, Print(format!("Progress: {:.1}% ", progress_percent)))?;
-        
+        queue!(
+            stdout,
+            Print(format!("Progress: {:.1}% ", progress_percent))
+        )?;
+
         // Progress bar
         let bar_width = 20;
-        let filled = ((self.current_index as f64 / self.findings.len() as f64) * bar_width as f64) as usize;
+        let filled =
+            ((self.current_index as f64 / self.findings.len() as f64) * bar_width as f64) as usize;
         queue!(stdout, Print("["))?;
         queue!(stdout, SetForegroundColor(Color::Green))?;
         queue!(stdout, Print("█".repeat(filled)))?;
         queue!(stdout, ResetColor)?;
         queue!(stdout, Print("░".repeat(bar_width - filled)))?;
         queue!(stdout, Print("]\n"))?;
-        
-        queue!(stdout, Print(format!("Labeled: {} | Skipped: {} | TP: {} | FP: {}\n", 
-                                   self.stats.labeled, 
-                                   self.stats.skipped,
-                                   self.stats.true_positives,
-                                   self.stats.false_positives)))?;
+
+        queue!(
+            stdout,
+            Print(format!(
+                "Labeled: {} | Skipped: {} | TP: {} | FP: {}\n",
+                self.stats.labeled,
+                self.stats.skipped,
+                self.stats.true_positives,
+                self.stats.false_positives
+            ))
+        )?;
         queue!(stdout, Print("\n"))?;
 
         // Action prompt
         queue!(stdout, SetForegroundColor(Color::Yellow))?;
-        queue!(stdout, Print("Is this a real issue? [y]es / [n]o / [s]kip / [?]help / [q]uit: "))?;
+        queue!(
+            stdout,
+            Print("Is this a real issue? [y]es / [n]o / [s]kip / [?]help / [q]uit: ")
+        )?;
         queue!(stdout, ResetColor)?;
-        
+
         stdout.flush()?;
         Ok(())
     }
@@ -229,22 +248,27 @@ impl InteractiveLabelingSession {
             if let Ok(event) = crossterm::event::read() {
                 if let crossterm::event::Event::Key(key_event) = event {
                     match key_event.code {
-                        crossterm::event::KeyCode::Char('y') | crossterm::event::KeyCode::Char('Y') => {
+                        crossterm::event::KeyCode::Char('y')
+                        | crossterm::event::KeyCode::Char('Y') => {
                             return Ok(UserAction::TruePositive);
                         }
-                        crossterm::event::KeyCode::Char('n') | crossterm::event::KeyCode::Char('N') => {
+                        crossterm::event::KeyCode::Char('n')
+                        | crossterm::event::KeyCode::Char('N') => {
                             return Ok(UserAction::FalsePositive);
                         }
-                        crossterm::event::KeyCode::Char('s') | crossterm::event::KeyCode::Char('S') => {
+                        crossterm::event::KeyCode::Char('s')
+                        | crossterm::event::KeyCode::Char('S') => {
                             return Ok(UserAction::Skip);
                         }
                         crossterm::event::KeyCode::Char('?') => {
                             return Ok(UserAction::Help);
                         }
-                        crossterm::event::KeyCode::Char('q') | crossterm::event::KeyCode::Char('Q') => {
+                        crossterm::event::KeyCode::Char('q')
+                        | crossterm::event::KeyCode::Char('Q') => {
                             return Ok(UserAction::Quit);
                         }
-                        crossterm::event::KeyCode::Char('p') | crossterm::event::KeyCode::Char('P') => {
+                        crossterm::event::KeyCode::Char('p')
+                        | crossterm::event::KeyCode::Char('P') => {
                             return Ok(UserAction::Previous);
                         }
                         crossterm::event::KeyCode::Esc => {
@@ -282,8 +306,14 @@ impl InteractiveLabelingSession {
         queue!(stdout, Print("True Positive (y)"))?;
         queue!(stdout, ResetColor)?;
         queue!(stdout, Print(" - Mark if:\n"))?;
-        queue!(stdout, Print("  • Finding represents a real security issue\n"))?;
-        queue!(stdout, Print("  • Code quality problem that should be fixed\n"))?;
+        queue!(
+            stdout,
+            Print("  • Finding represents a real security issue\n")
+        )?;
+        queue!(
+            stdout,
+            Print("  • Code quality problem that should be fixed\n")
+        )?;
         queue!(stdout, Print("  • Performance issue with impact\n"))?;
         queue!(stdout, Print("  • Compliance violation\n\n"))?;
 
@@ -319,7 +349,7 @@ impl InteractiveLabelingSession {
     /// Label a finding and add to dataset
     async fn label_finding(&mut self, finding: &Finding, is_true_positive: bool) -> Result<()> {
         let features = self.feature_extractor.extract_features(finding)?;
-        
+
         let example = TrainingExample {
             finding_id: finding.id.clone(),
             features,
@@ -343,27 +373,32 @@ impl InteractiveLabelingSession {
         println!("  • Skipped: {}", self.stats.skipped);
         println!("  • True positives: {}", self.stats.true_positives);
         println!("  • False positives: {}", self.stats.false_positives);
-        
+
         if self.stats.labeled > 0 {
             let accuracy_estimate = self.stats.true_positives as f64 / self.stats.labeled as f64;
             println!("  • True positive rate: {:.1}%", accuracy_estimate * 100.0);
         }
-        
-        println!("  • Session time: {:.1} minutes", self.stats.session_time.as_secs_f64() / 60.0);
-        
+
+        println!(
+            "  • Session time: {:.1} minutes",
+            self.stats.session_time.as_secs_f64() / 60.0
+        );
+
         if self.stats.labeled > 0 {
-            let labels_per_minute = self.stats.labeled as f64 / (self.stats.session_time.as_secs_f64() / 60.0);
+            let labels_per_minute =
+                self.stats.labeled as f64 / (self.stats.session_time.as_secs_f64() / 60.0);
             println!("  • Labeling rate: {:.1} labels/minute", labels_per_minute);
         }
-        
+
         println!();
-        
+
         // Data quality assessment
         if self.stats.labeled >= 10 {
-            let balance_ratio = self.stats.true_positives as f64 / self.stats.false_positives.max(1) as f64;
+            let balance_ratio =
+                self.stats.true_positives as f64 / self.stats.false_positives.max(1) as f64;
             println!("📈 Data Quality:");
             println!("  • Balance ratio: {:.2}", balance_ratio);
-            
+
             if balance_ratio > 0.3 && balance_ratio < 3.0 {
                 println!("  • ✅ Well-balanced dataset");
             } else if balance_ratio > 10.0 || balance_ratio < 0.1 {
@@ -372,7 +407,7 @@ impl InteractiveLabelingSession {
                 println!("  • ⚠️  Moderately imbalanced - could benefit from more examples");
             }
         }
-        
+
         println!();
         Ok(())
     }
@@ -396,16 +431,14 @@ mod tests {
 
     #[test]
     fn test_labeling_session_creation() -> Result<(), Box<dyn std::error::Error>> {
-        let findings = vec![
-            Finding::new(
-                "test_analyzer",
-                "test_rule",
-                Severity::Medium,
-                PathBuf::from("test.rs"),
-                42,
-                "Test finding".to_string(),
-            )
-        ];
+        let findings = vec![Finding::new(
+            "test_analyzer",
+            "test_rule",
+            Severity::Medium,
+            PathBuf::from("test.rs"),
+            42,
+            "Test finding".to_string(),
+        )];
 
         let session = InteractiveLabelingSession::new(findings);
         assert_eq!(session.stats.total_findings, 1);

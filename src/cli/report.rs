@@ -165,7 +165,7 @@ async fn load_results_from_flat_files(
     args: &ReportArgs,
 ) -> Result<(AnalysisResults, Option<EnhancedAnalysisResults>)> {
     // Resolve input path using consolidated utility
-    let input_path = resolve_input_path(&args.from, "results.json", &Config::default());
+    let input_path = resolve_input_path(&args.from, "results/results.json", &Config::default());
 
     // Load results from JSON file
     let json_content = fs::read_to_string(&input_path).await?;

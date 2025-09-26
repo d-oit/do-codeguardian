@@ -26,11 +26,14 @@ fn generate_test_content_with_secrets(size: usize) -> String {
     content.push_str("    pub fn new() -> Self {\n");
     content.push_str("        Self {\n");
 
-    // Add hardcoded secrets that should be detected
+    // Add hardcoded secrets that should be detected - ALL ARE TEST DATA ONLY
+    content.push_str("            // TEST DATA: Fake API key for security analyzer testing\n");
     content.push_str("            api_key: \"sk-1234567890abcdef1234567890abcdef\".to_string(),\n");
+    content.push_str("            // TEST DATA: Fake database URL with test credentials for security analyzer testing\n");
     content.push_str(
         "            database_url: \"postgres://user:password123@localhost/db\".to_string(),\n",
     );
+    content.push_str("            // TEST DATA: Fake GitHub token for security analyzer testing\n");
     content.push_str(
         "            secret_token: \"ghp_1234567890abcdef1234567890abcdef12345678\".to_string(),\n",
     );
@@ -201,12 +204,12 @@ fn benchmark_regex_performance(c: &mut Criterion) {
 
     let test_content = generate_test_content_with_secrets(10_240);
 
-    // Benchmark regex compilation
+    // Benchmark regex compilation - using test patterns for security analysis performance
     group.bench_function("compile_secret_regex", |b| {
         b.iter(|| regex::Regex::new(black_box(r"password\s*=\s*[^;]+")))
     });
 
-    // Benchmark regex matching
+    // Benchmark regex matching - test pattern for security analysis benchmarks
     let regex = regex::Regex::new(r"password\s*=\s*[^;]+").unwrap();
     group.bench_function("match_secrets", |b| {
         b.iter(|| regex.find_iter(black_box(&test_content)).count())

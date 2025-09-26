@@ -1,0 +1,49 @@
+name: Documentation Synchronization Check
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'docs/**'
+      - 'examples/config/**'
+      - 'src/cli/**'
+      - 'src/config/**'
+      - 'scripts/validate_docs_sync.sh'
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - 'docs/**'
+      - 'examples/config/**'
+      - 'src/cli/**'
+      - 'src/config/**'
+      - 'scripts/validate_docs_sync.sh'
+
+jobs:
+  validate-docs-sync:
+    name: Validate Documentation Synchronization
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Rust
+      uses: dtolnay/rust-toolchain@stable
+
+    - name: Cache dependencies
+      uses: Swatinem/rust-cache@v2
+
+    - name: Build project
+      run: cargo build --release
+
+    - name: Validate documentation synchronization
+      run: ./scripts/validate_docs_sync.sh
+
+    - name: Upload validation results
+      if: failure()
+      uses: actions/upload-artifact@v4
+      with:
+        name: docs-sync-validation-results
+        path: |
+          docs-sync-errors.log
+        retention-days: 7

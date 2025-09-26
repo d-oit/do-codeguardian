@@ -1,0 +1,1 @@
+# Reports Directory\n\nThis directory contains generated reports and metrics.\n\n## Structure\n- metrics.json - Performance and analysis metrics\n- Various report outputs from CodeGuardian\n\nThis directory is git-ignored to keep the repository clean.

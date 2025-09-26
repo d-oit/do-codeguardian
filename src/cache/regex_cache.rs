@@ -404,6 +404,8 @@ mod tests {
         assert!(regex3.is_match("hello789"));
         assert_eq!(cache.stats().cache_misses, 2);
         assert_eq!(cache.stats().cache_hits, 1);
+
+        Ok(())
     }
 
     #[test]
@@ -419,6 +421,8 @@ mod tests {
         cache.get_or_compile(r"pattern3")?;
         assert_eq!(cache.entries.len(), 2);
         assert_eq!(cache.stats().entries_evicted, 1);
+
+        Ok(())
     }
 
     #[test]
@@ -435,6 +439,8 @@ mod tests {
         let removed = cache.cleanup();
         assert_eq!(removed, 1);
         assert_eq!(cache.entries.len(), 0);
+
+        Ok(())
     }
 
     #[test]
@@ -442,7 +448,7 @@ mod tests {
         let cache = SharedRegexCache::new(10, 3600, "lru".to_string());
 
         let cache_clone = cache.clone();
-        let handle = thread::spawn(move || cache_clone.get_or_compile(r"thread\d+")?);
+        let handle = thread::spawn(move || cache_clone.get_or_compile(r"thread\d+").unwrap());
 
         let regex = cache.get_or_compile(r"main\d+")?;
         let thread_regex = handle
@@ -451,6 +457,8 @@ mod tests {
 
         assert!(regex.is_match("main123"));
         assert!(thread_regex.is_match("thread456"));
+
+        Ok(())
     }
 
     #[test]
@@ -461,6 +469,8 @@ mod tests {
         let result = cache.get_or_compile(r"[invalid");
         assert!(result.is_err());
         assert_eq!(cache.stats().total_requests, 1); // Invalid patterns do count as requests
+
+        Ok(())
     }
 
     #[test]
@@ -476,5 +486,7 @@ mod tests {
         // Accessing preloaded patterns should hit cache
         cache.get_or_compile(r"test\d+")?;
         assert_eq!(cache.stats().cache_hits, 1);
+
+        Ok(())
     }
 }

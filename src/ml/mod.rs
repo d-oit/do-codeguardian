@@ -1,5 +1,6 @@
 pub mod adaptive_learning;
 pub mod advanced_feature_engineering;
+#[cfg(feature = "ast")]
 pub mod advanced_feature_extractor;
 #[cfg(feature = "ast")]
 pub mod ast_analyzer;

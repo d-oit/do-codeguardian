@@ -355,6 +355,7 @@ mod tests {
 
         assert!(!context.project_context.languages.is_empty());
         assert!(context.project_context.project_type.is_some());
+        Ok(())
     }
 
     #[test]
@@ -367,5 +368,6 @@ mod tests {
 
         let project_type = analyzer.infer_project_type(&findings);
         assert_eq!(project_type, Some("web".to_string()));
+        Ok(())
     }
 }

@@ -548,7 +548,7 @@ mod tests {
         // Add entries that exceed capacity
         for i in 0..3 {
             let test_file = temp_dir.path().join(format!("test_{}.rs", i));
-        std::fs::write(&test_file, "fn test() {}").unwrap();
+            std::fs::write(&test_file, "fn test() {}").unwrap();
 
             let findings = vec![];
             cache.put(&test_file, findings, "config", 100)?;
@@ -557,6 +557,7 @@ mod tests {
         // Should have evicted some entries
         assert!(cache.stats().entries_evicted > 0);
         assert!(cache.entries.len() <= 2);
+        Ok(())
     }
 
     #[test]
@@ -574,6 +575,7 @@ mod tests {
         let removed = cache.cleanup(0);
         assert_eq!(removed, 1);
         assert!(cache.entries.is_empty());
+        Ok(())
     }
 
     #[tokio::test]
@@ -582,23 +584,22 @@ mod tests {
         let cache_file = temp_dir.path().join("cache.json");
         let test_file = temp_dir.path().join("test.rs");
 
-        std::fs::write(&test_file, "fn test() {}")?;
+        std::fs::write(&test_file, "fn test() {}").unwrap();
 
         // Create and populate cache
         let mut cache = OptimizedCache::new(10, 10);
         let findings = vec![];
-        cache.put(&test_file, findings, "config", 100)?;
+        cache.put(&test_file, findings, "config", 100).unwrap();
 
         // Save to disk
-        cache.save_to_disk(&cache_file).await?;
+        cache.save_to_disk(&cache_file).await.unwrap();
         assert!(cache_file.exists());
 
         // Load into new cache
         let mut new_cache = OptimizedCache::new(10, 10);
-        new_cache.load_from_disk(&cache_file).await?;
+        new_cache.load_from_disk(&cache_file).await.unwrap();
 
         // Should have loaded the entry
         assert!(!new_cache.entries.is_empty());
-        Ok(())
     }
 }

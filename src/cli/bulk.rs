@@ -754,7 +754,7 @@ mod tests {
     #[tokio::test]
     async fn test_bulk_scan_basic() -> Result<(), Box<dyn std::error::Error>> {
         let config = Config::default();
-        let _temp_dir = TempDir::new()?;
+        let _temp_dir = TempDir::new().unwrap();
 
         // Test basic bulk scan functionality
         let repos = vec!["test_repo_1".to_string(), "test_repo_2".to_string()];
@@ -773,6 +773,8 @@ mod tests {
 
         // Should handle errors gracefully with skip_errors = true
         assert!(result.is_ok());
+
+        Ok(())
     }
 
     #[test]
@@ -789,6 +791,8 @@ mod tests {
         assert_eq!(progress.total_operations, 10);
         assert_eq!(progress.completed_operations, 5);
         assert_eq!(progress.failed_operations, 1);
+
+        Ok(())
     }
 
     #[test]
@@ -821,5 +825,7 @@ mod tests {
 
         // Test deserialization
         let _deserialized: BulkResults = serde_json::from_str(&json)?;
+
+        Ok(())
     }
 }

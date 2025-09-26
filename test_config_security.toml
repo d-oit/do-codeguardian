@@ -1,0 +1,101 @@
+[output]
+directory = "build/analysis-results"
+format = "json"
+verbose = false
+generate_summary = true
+compress_output = true
+max_reports_kept = 10
+
+[analysis]
+enabled = true
+analyze_binaries = false
+timeout_seconds = 300
+parallel_processing = true
+max_workers = 8
+enable_caching = true
+cache_dir = ".codeguardian/cache"
+cache_expiration_days = 7
+enable_ai_enhancement = false
+
+[security]
+enabled = true
+fail_on_issues = true
+min_severity = "medium"
+entropy_threshold = 4.0
+
+[git]
+conventional_commits = true
+commit_template = "{type}({scope}): {description}"
+require_signed_commits = false
+
+[performance]
+enabled = true
+
+[analyzers.security_analyzer]
+enabled = true
+check_sql_injection = true
+check_xss = true
+check_command_injection = true
+check_hardcoded_secrets = true
+check_vulnerabilities = true
+check_permissions = true
+check_secrets = true
+min_entropy_threshold = 3.5
+
+[analyzers.performance_analyzer]
+enabled = false
+check_nested_loops = true
+check_string_operations = true
+check_blocking_io = true
+check_algorithms = true
+check_memory_usage = true
+check_io_operations = true
+max_complexity = 10
+max_function_length = 50
+max_loop_depth = 3
+
+[files]
+include_patterns = []
+exclude_patterns = ["*.log", "*.tmp", "target/", "node_modules/", ".git/", "dist/", "build/"]
+analyze_extensions = [".rs", ".js", ".ts", ".py", ".java", ".cpp", ".c", ".h", ".go", ".php", ".rb", ".cs", ".swift", ".kt", ".scala", ".html", ".css", ".json", ".xml", ".yaml", ".yml", ".toml", ".md", ".txt", ".sh", ".bat", ".ps1"]
+skip_binaries = true
+max_file_size_bytes = 10485760
+skip_large_files = true
+
+[severity]
+custom_levels = ["info", "low", "medium", "high", "critical"]
+enable_escalation = true
+escalation_threshold = 5
+
+[ai]
+enabled = true
+enable_semantic_enrichment = true
+enable_relationship_detection = true
+enable_insight_generation = true
+enable_context_analysis = false
+min_confidence_threshold = 0.8
+max_processing_time = 300
+enable_historical_analysis = false
+model_cache_directory = "build/.codeguardian/models"
+
+[retention]
+enabled = true
+results_dir = "build/analysis-results"
+max_age_days = 30
+max_size_mb = 1000
+min_results_to_keep = 10
+enable_integrity_check = true
+integrity_check_frequency_days = 7
+enable_auto_repair = false
+backup_corrupted_files = true
+backup_dir = "build/analysis-results/backup"
+enable_integrity_reporting = true
+integrity_report_path = "build/analysis-results/integrity-report.json"
+
+[integrations.github]
+enabled = true
+repository = "owner/repo"
+token = "${CODEGUARDIAN_GITHUB_TOKEN}"
+create_issues = true
+issue_labels = ["security", "codeguardian", "critical"]
+min_severity = "high"

@@ -201,6 +201,315 @@ codeguardian ml metrics --model current-model.fann
 codeguardian ml metrics --false-positive-rate
 ```
 
+### Model Validation
+
+CodeGuardian provides comprehensive model validation capabilities to ensure models meet quality and performance standards before deployment.
+
+#### Basic Model Validation
+
+```bash
+# Validate a trained model against test suites
+codeguardian model-validation --model-path trained-model.fann --test-suites-dir test-suites/
+
+# Validate with baseline comparison
+codeguardian model-validation \
+  --model-path new-model.fann \
+  --baseline-model baseline-model.fann \
+  --output-dir validation-reports/
+```
+
+#### Comprehensive Validation
+
+```bash
+# Full validation with all features enabled
+codeguardian model-validation \
+  --model-path production-model.fann \
+  --test-suites-dir comprehensive-tests/ \
+  --config-file validation-config.toml \
+  --export-metrics \
+  --enable-bias-detection \
+  --enable-robustness-testing \
+  --verbose
+```
+
+#### Validation Configuration
+
+```toml
+# validation-config.toml
+[validation]
+min_accuracy = 0.90
+max_false_positive_rate = 0.10
+max_inference_time_ms = 50.0
+
+[validation.thresholds]
+critical_severity = 0.95
+high_severity = 0.85
+medium_severity = 0.75
+low_severity = 0.60
+
+[validation.bias_detection]
+enabled = true
+protected_attributes = ["file_type", "project_size"]
+fairness_metrics = ["demographic_parity", "equalized_odds"]
+
+[validation.robustness]
+enabled = true
+noise_levels = [0.01, 0.05, 0.10]
+adversarial_examples = true
+```
+
+#### Test Suite Generation
+
+Generate test suites from existing findings:
+
+```bash
+# Generate comprehensive test suites
+codeguardian model-validation \
+  --findings-file analysis-results.json \
+  --generate-test-suites \
+  --output-dir generated-test-suites/
+```
+
+#### Detailed Process Explanation
+
+The model validation process follows a comprehensive workflow to ensure model quality and reliability:
+
+1. **Model Loading**: Load the specified FANN model and validate its structure
+2. **Test Suite Preparation**: Load and preprocess test cases from the provided test suites directory
+3. **Feature Extraction**: Apply the same feature extraction pipeline used in training
+4. **Inference Execution**: Run model predictions on test data with performance monitoring
+5. **Metrics Calculation**: Compute accuracy, precision, recall, F1-score, and false positive rates
+6. **Bias Detection** (optional): Analyze predictions for bias across protected attributes
+7. **Robustness Testing** (optional): Test model stability under various noise conditions
+8. **Report Generation**: Produce detailed validation reports in specified formats
+9. **Threshold Validation**: Compare results against configured quality thresholds
+
+#### Output Formats
+
+Model validation generates multiple output formats for different use cases:
+
+- **JSON Report**: Comprehensive metrics and detailed results (`validation-report.json`)
+- **Markdown Summary**: Human-readable summary with key findings (`validation-summary.md`)
+- **CSV Metrics**: Tabular data for analysis and visualization (`validation-metrics.csv`)
+- **HTML Dashboard**: Interactive web report with charts (`validation-dashboard.html`)
+- **Log Files**: Detailed execution logs (`validation.log`)
+
+#### Results Interpretation
+
+Understanding validation results is crucial for model deployment decisions:
+
+- **Accuracy**: Overall correctness rate (target: >90%)
+- **Precision**: True positive rate among predicted positives (minimizes false alarms)
+- **Recall**: True positive rate among actual positives (minimizes missed issues)
+- **F1-Score**: Harmonic mean of precision and recall (balanced metric)
+- **False Positive Rate**: Rate of incorrect positive predictions (target: <10%)
+- **Bias Metrics**: Fairness scores across protected attributes (demographic parity, equalized odds)
+- **Robustness Scores**: Performance stability under noise/adversarial conditions
+
+#### Advanced Features
+
+##### Bias Detection
+
+Bias detection analyzes model fairness across protected attributes:
+
+- **Protected Attributes**: File type, project size, language, severity levels
+- **Fairness Metrics**:
+  - Demographic Parity: Equal positive prediction rates across groups
+  - Equalized Odds: Equal true positive and false positive rates
+  - Predictive Parity: Equal precision across groups
+- **Reporting**: Identifies biased predictions with confidence intervals
+
+##### Robustness Testing
+
+Robustness testing evaluates model stability:
+
+- **Noise Injection**: Add random noise to input features at specified levels
+- **Adversarial Examples**: Generate inputs designed to fool the model
+- **Perturbation Analysis**: Test sensitivity to small input changes
+- **Stress Testing**: Evaluate performance under high load conditions
+
+#### CLI Options Coverage
+
+Complete list of options for the `model-validation` command:
+
+```bash
+codeguardian model-validation [OPTIONS]
+
+Options:
+  -m, --model-path <PATH>          Path to the FANN model file
+  -t, --test-suites-dir <DIR>      Directory containing test suites
+  -b, --baseline-model <PATH>      Baseline model for comparison
+  -o, --output-dir <DIR>           Output directory for reports [default: validation-reports/]
+  -c, --config-file <FILE>         Validation configuration file
+  -f, --findings-file <FILE>       Findings file for test suite generation
+      --generate-test-suites       Generate test suites from findings
+      --export-metrics             Export detailed metrics
+      --enable-bias-detection      Enable bias detection analysis
+      --enable-robustness-testing  Enable robustness testing
+      --auto-deploy                Automatically deploy model if validation passes
+      --fail-on-issues             Fail command if validation issues are found
+      --min-accuracy <FLOAT>       Minimum required accuracy threshold
+      --max-false-positive-rate <FLOAT> Maximum allowed false positive rate
+      --max-inference-time-ms <FLOAT> Maximum allowed inference time in milliseconds
+      --verbose                    Enable verbose output
+  -h, --help                       Print help information
+```
+
+#### Test Suite Details
+
+Test suites are structured collections of labeled examples for validation:
+
+- **Directory Structure**:
+  ```
+  test-suites/
+  ├── positive/           # True positive examples
+  │   ├── finding1.json
+  │   └── finding2.json
+  ├── negative/           # True negative examples
+  │   ├── clean1.json
+  │   └── clean2.json
+  └── metadata.json       # Suite metadata and labels
+  ```
+
+- **Finding Format**: JSON representation of analysis findings with ground truth labels
+- **Coverage Requirements**: Test suites should cover various code patterns, languages, and severity levels
+- **Size Recommendations**: Minimum 1000 examples per suite for reliable validation
+
+#### Programmatic Usage
+
+Use model validation programmatically in Rust applications:
+
+```rust
+use codeguardian::ml::validation::{ModelValidator, ValidationConfig, ValidationReport};
+
+let config = ValidationConfig {
+    model_path: "production-model.fann".into(),
+    test_suites_dir: "test-suites/".into(),
+    enable_bias_detection: true,
+    enable_robustness_testing: true,
+    output_formats: vec!["json".into(), "markdown".into()],
+    ..Default::default()
+};
+
+let validator = ModelValidator::new(config)?;
+let report: ValidationReport = validator.validate().await?;
+
+println!("Accuracy: {:.2}%", report.metrics.accuracy * 100.0);
+println!("False Positive Rate: {:.2}%", report.metrics.false_positive_rate * 100.0);
+
+// Access detailed results
+for result in &report.detailed_results {
+    println!("Test case {}: predicted={}, actual={}",
+             result.test_case_id, result.prediction, result.ground_truth);
+}
+```
+
+#### Best Practices
+
+- **Regular Validation**: Validate models before each deployment
+- **Comprehensive Test Suites**: Use diverse, representative test data
+- **Threshold Setting**: Set appropriate quality thresholds for your use case
+- **Bias Monitoring**: Regularly check for bias in model predictions
+- **Version Control**: Keep validation reports with model versions
+- **Automated Validation**: Integrate validation into CI/CD pipelines
+- **Performance Benchmarking**: Compare against baseline models
+- **Incremental Testing**: Validate changes incrementally during development
+
+#### Troubleshooting
+
+**Validation fails to load model**
+- Ensure model file exists and is readable
+- Check FANN library compatibility
+- Verify model was trained with current CodeGuardian version
+
+**Poor validation metrics**
+- Review test suite quality and diversity
+- Check for overfitting during training
+- Adjust confidence thresholds
+- Enable enhanced feature extraction
+
+**Bias detection shows high bias scores**
+- Analyze protected attributes in training data
+- Balance training data across groups
+- Consider debiasing techniques
+- Review feature extraction for bias introduction
+
+**Robustness testing failures**
+- Increase training data diversity
+- Use data augmentation techniques
+- Implement regularization during training
+- Consider ensemble methods for stability
+
+**Performance issues during validation**
+- Reduce test suite size for quick checks
+- Enable parallel processing
+- Increase timeout values for large models
+- Use streaming validation for memory efficiency
+
+#### Examples
+
+##### Basic Validation with Custom Thresholds
+
+```bash
+codeguardian model-validation \
+  --model-path my-model.fann \
+  --test-suites-dir validation-tests/ \
+  --config-file strict-validation.toml \
+  --output-dir reports/ \
+  --min-accuracy 0.95 \
+  --max-false-positive-rate 0.05 \
+  --max-inference-time-ms 50.0
+```
+
+##### Bias Detection Analysis
+
+```bash
+codeguardian model-validation \
+  --model-path production-model.fann \
+  --enable-bias-detection \
+  --protected-attributes file_type project_size language \
+  --fairness-metrics demographic_parity equalized_odds \
+  --output-dir bias-reports/
+```
+
+##### Robustness Testing Suite
+
+```bash
+codeguardian model-validation \
+  --model-path robust-model.fann \
+  --enable-robustness-testing \
+  --noise-levels 0.01 0.05 0.10 \
+  --adversarial-examples \
+  --stress-test \
+  --max-inference-time-ms 100.0 \
+  --fail-on-issues
+```
+
+##### CI/CD Integration
+
+```yaml
+- name: Model Validation
+  run: |
+    codeguardian model-validation \
+      --model-path models/current.fann \
+      --test-suites-dir tests/validation/ \
+      --baseline-model models/baseline.fann \
+      --enable-bias-detection \
+      --enable-robustness-testing \
+      --export-metrics \
+      --output-dir validation-results/ \
+      --auto-deploy \
+      --fail-on-issues \
+      --min-accuracy 0.90 \
+      --max-false-positive-rate 0.10
+
+    # Fail pipeline if validation fails
+    if [ $? -ne 0 ]; then
+      echo "Model validation failed"
+      exit 1
+    fi
+```
+
 ### Training Progress
 
 ```bash

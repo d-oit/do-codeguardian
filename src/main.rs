@@ -20,6 +20,8 @@ use do_codeguardian::cli::gh_issue;
 use do_codeguardian::cli::init;
 #[cfg(feature = "ml")]
 use do_codeguardian::cli::metrics;
+#[cfg(feature = "ml")]
+use do_codeguardian::cli::model_validation;
 #[cfg(feature = "release-monitoring")]
 use do_codeguardian::cli::release_monitoring;
 use do_codeguardian::cli::report;
@@ -118,6 +120,10 @@ async fn main() -> Result<()> {
         #[cfg(feature = "ml")]
         Commands::Metrics(args) => {
             metrics::run(args)?;
+        }
+        #[cfg(feature = "ml")]
+        Commands::ModelValidation(args) => {
+            model_validation::run(args, &config).await?;
         }
         #[cfg(feature = "dashboard")]
         Commands::Dashboard(args) => {
