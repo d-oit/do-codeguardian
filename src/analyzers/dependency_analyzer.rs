@@ -5,7 +5,6 @@ use cargo_metadata::MetadataCommand;
 use serde_json;
 use std::path::{Path, PathBuf};
 use std::process::Command;
-use tracing::warn;
 
 // Use cargo-audit crate for direct integration
 #[cfg(feature = "cargo-audit")]
@@ -159,10 +158,10 @@ impl DependencyAnalyzer {
             // Check if cargo-audit is installed
             let stderr = String::from_utf8_lossy(&output.stderr);
             if stderr.contains("cargo-audit") || stderr.contains("not found") {
-                warn!("cargo-audit not found. Install with: cargo install cargo-audit");
-                warn!("Alternatively, enable the 'cargo-audit' feature in Cargo.toml for direct integration");
+                eprintln!("cargo-audit not found. Install with: cargo install cargo-audit");
+                eprintln!("Alternatively, enable the 'cargo-audit' feature in Cargo.toml for direct integration");
             } else {
-                warn!("Failed to run vulnerability audit: {}", stderr);
+                eprintln!("Failed to run vulnerability audit: {}", stderr);
             }
         }
 
@@ -213,28 +212,31 @@ mod tests {
     use tempfile::tempdir;
 
     #[test]
-    fn test_dependency_analyzer_creation() {
-        let temp_dir = tempdir().unwrap();
+    fn test_dependency_analyzer_creation() -> Result<(), Box<dyn std::error::Error>> {
+        let temp_dir = tempdir()?;
         let analyzer = DependencyAnalyzer::new(temp_dir.path().to_path_buf());
         assert_eq!(analyzer.project_root, temp_dir.path());
+        Ok(())
     }
 
     #[test]
-    fn test_analyze_dependencies_no_cargo_toml() {
-        let temp_dir = tempdir().unwrap();
+    fn test_analyze_dependencies_no_cargo_toml() -> Result<(), Box<dyn std::error::Error>> {
+        let temp_dir = tempdir()?;
         let analyzer = DependencyAnalyzer::new(temp_dir.path().to_path_buf());
-        let findings = analyzer.analyze_dependencies().unwrap();
+        let findings = analyzer.analyze_dependencies()?;
         assert!(findings.is_empty());
+        Ok(())
     }
 
     #[test]
-    fn test_is_problematic_license() {
-        let temp_dir = tempdir().unwrap();
+    fn test_is_problematic_license() -> Result<(), Box<dyn std::error::Error>> {
+        let temp_dir = tempdir()?;
         let analyzer = DependencyAnalyzer::new(temp_dir.path().to_path_buf());
 
         assert!(analyzer.is_problematic_license("GPL-3.0"));
         assert!(analyzer.is_problematic_license("LGPL-2.1"));
         assert!(!analyzer.is_problematic_license("MIT"));
         assert!(!analyzer.is_problematic_license("Apache-2.0"));
+        Ok(())
     }
 }

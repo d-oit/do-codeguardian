@@ -344,8 +344,8 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_simd_pattern_matching() {
-        let matcher = SIMDPatternMatcher::new().unwrap();
+    fn test_simd_pattern_matching() -> Result<(), Box<dyn std::error::Error>> {
+        let matcher = SIMDPatternMatcher::new()?;
         let content = b"const API_KEY = 'sk-test123456789'; SELECT * FROM users;";
 
         let matches = matcher.find_all(content);
@@ -356,8 +356,8 @@ mod tests {
     }
 
     #[test]
-    fn test_line_number_calculation() {
-        let matcher = SIMDPatternMatcher::new().unwrap();
+    fn test_line_number_calculation() -> Result<(), Box<dyn std::error::Error>> {
+        let matcher = SIMDPatternMatcher::new()?;
         let content = b"line 1\nline 2\nsk-secret\nline 4";
 
         let line_num = matcher.calculate_line_number(content, 14); // Position of "sk-secret"
@@ -365,8 +365,8 @@ mod tests {
     }
 
     #[test]
-    fn test_character_search_optimization() {
-        let matcher = SIMDPatternMatcher::new().unwrap();
+    fn test_character_search_optimization() -> Result<(), Box<dyn std::error::Error>> {
+        let matcher = SIMDPatternMatcher::new()?;
         let content = b"hello <script> world";
 
         let positions = matcher.find_chars(content, &[b'<', b'>']);
@@ -374,16 +374,16 @@ mod tests {
     }
 
     #[test]
-    fn test_suspicious_content_detection() {
-        let matcher = SIMDPatternMatcher::new().unwrap();
+    fn test_suspicious_content_detection() -> Result<(), Box<dyn std::error::Error>> {
+        let matcher = SIMDPatternMatcher::new()?;
 
         assert!(matcher.has_suspicious_content(b"<script>alert('xss')</script>"));
         assert!(!matcher.has_suspicious_content(b"normal text content"));
     }
 
     #[test]
-    fn test_parallel_content_analysis() {
-        let analyzer = SIMDContentAnalyzer::new().unwrap();
+    fn test_parallel_content_analysis() -> Result<(), Box<dyn std::error::Error>> {
+        let analyzer = SIMDContentAnalyzer::new()?;
         let large_content = b"normal content ".repeat(10000);
         let mut content_with_pattern = large_content.clone();
         content_with_pattern.extend_from_slice(b" sk-secret123456789 ");

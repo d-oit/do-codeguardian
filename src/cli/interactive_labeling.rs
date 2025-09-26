@@ -395,7 +395,7 @@ mod tests {
     use std::path::PathBuf;
 
     #[test]
-    fn test_labeling_session_creation() {
+    fn test_labeling_session_creation() -> Result<(), Box<dyn std::error::Error>> {
         let findings = vec![
             Finding::new(
                 "test_analyzer",

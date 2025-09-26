@@ -163,7 +163,7 @@ mod tests {
     use std::path::PathBuf;
 
     #[test]
-    fn test_feature_extraction() {
+    fn test_feature_extraction() -> Result<(), Box<dyn std::error::Error>> {
         let extractor = FeatureExtractor::new();
 
         let finding = Finding::new(
@@ -177,7 +177,7 @@ mod tests {
         .with_description("File appears to contain corruption indicators".to_string())
         .with_suggestion("Verify file integrity".to_string());
 
-        let features = extractor.extract_features(&finding).unwrap();
+        let features = extractor.extract_features(&finding)?;
 
         assert_eq!(features.len(), 8);
         assert!(features[0] > 0.7); // High severity
@@ -188,7 +188,7 @@ mod tests {
     }
 
     #[test]
-    fn test_severity_scoring() {
+    fn test_severity_scoring() -> Result<(), Box<dyn std::error::Error>> {
         let extractor = FeatureExtractor::new();
 
         assert_eq!(extractor.severity_to_score(&Severity::Critical), 1.0);

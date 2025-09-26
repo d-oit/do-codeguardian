@@ -11,9 +11,11 @@ PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 # Configuration
 METRICS_FILE="$PROJECT_ROOT/performance_metrics.json"
 REPORT_DIR="$PROJECT_ROOT/performance_reports"
+HISTORY_DIR="$PROJECT_ROOT/performance_history"
 
 # Create directories
 mkdir -p "$REPORT_DIR"
+mkdir -p "$HISTORY_DIR"
 
 echo "🚀 CodeGuardian Performance Monitoring"
 echo "====================================="
@@ -69,6 +71,13 @@ generate_performance_report() {
 update_metrics_file() {
     echo "💾 Updating performance metrics file..."
 
+    # Archive previous metrics file if it exists
+    if [ -f "$METRICS_FILE" ]; then
+        local archive_file="$HISTORY_DIR/performance_metrics_$(date +%Y%m%d_%H%M%S).json"
+        cp "$METRICS_FILE" "$archive_file"
+        echo "📦 Archived previous metrics to $archive_file"
+    fi
+
     # Create or update metrics file
     echo "{" > "$METRICS_FILE"
     echo "  \"timestamp\": \"$(date -Iseconds)\"," >> "$METRICS_FILE"
@@ -78,6 +87,9 @@ update_metrics_file() {
     echo "  \"memory_pool_utilization\": 0.75," >> "$METRICS_FILE"
     echo "  \"build_time_seconds\": 30" >> "$METRICS_FILE"
     echo "}" >> "$METRICS_FILE"
+
+    # Clean up old archived metrics (keep last 50 files)
+    find "$HISTORY_DIR" -name "performance_metrics_*.json" -type f -printf '%T@ %p\n' | sort -n | head -n -50 | cut -d' ' -f2- | xargs -r rm -f
 }
 
 # Main execution

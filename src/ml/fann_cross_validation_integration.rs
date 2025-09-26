@@ -67,7 +67,7 @@ mod tests {
     use crate::ml::cross_validation::{CrossValidationConfig, ValidationStrategy};
 
     #[tokio::test]
-    async fn test_fann_cross_validation_integration() {
+    async fn test_fann_cross_validation_integration() -> Result<(), Box<dyn std::error::Error>> {
         // Create test dataset
         let mut dataset = TrainingDataset::new();
         for i in 0..50 {
@@ -88,7 +88,7 @@ mod tests {
         let results = validate_fann_model(network_config, cv_config, &dataset).await;
 
         assert!(results.is_ok());
-        let results = results.unwrap();
+        let results = results?;
         assert_eq!(results.fold_results.len(), 3);
 
         println!("FANN Cross-Validation Results:");

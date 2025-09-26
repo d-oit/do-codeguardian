@@ -158,7 +158,7 @@ async fn run_analysis_and_filter(
     let results = if ml_threshold.is_some() {
         #[cfg(feature = "ml")]
         {
-            let threshold = ml_threshold.unwrap();
+            let threshold = ml_threshold?;
             let model_path_str = args
                 .ml_model
                 .as_ref()

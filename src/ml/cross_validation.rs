@@ -794,14 +794,14 @@ impl CrossValidator {
         let best_fold = fold_results
             .iter()
             .enumerate()
-            .max_by(|(_, a), (_, b)| a.metrics.f1_score.partial_cmp(&b.metrics.f1_score).unwrap())
+            .max_by(|(_, a), (_, b)| a.metrics.f1_score.partial_cmp(&b.metrics.f1_score)?)
             .map(|(i, _)| i)
             .unwrap_or(0);
 
         let worst_fold = fold_results
             .iter()
             .enumerate()
-            .min_by(|(_, a), (_, b)| a.metrics.f1_score.partial_cmp(&b.metrics.f1_score).unwrap())
+            .min_by(|(_, a), (_, b)| a.metrics.f1_score.partial_cmp(&b.metrics.f1_score)?)
             .map(|(i, _)| i)
             .unwrap_or(0);
 
@@ -1262,7 +1262,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_kfold_cross_validation() {
+    async fn test_kfold_cross_validation() -> Result<(), Box<dyn std::error::Error>> {
         let mut config = CrossValidationConfig::default();
         config.k_folds = 3;
         config.strategy = ValidationStrategy::KFold;
@@ -1271,7 +1271,7 @@ mod tests {
         let dataset = create_test_dataset(30);
         let factory = MockClassifierFactory::new(0.8);
 
-        let results = validator.validate(&factory, &dataset).await.unwrap();
+        let results = validator.validate(&factory, &dataset).await?;
 
         assert_eq!(results.fold_results.len(), 3);
         assert!(results.aggregated_metrics.mean_metrics.accuracy > 0.0);
@@ -1279,7 +1279,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_stratified_cross_validation() {
+    async fn test_stratified_cross_validation() -> Result<(), Box<dyn std::error::Error>> {
         let mut config = CrossValidationConfig::default();
         config.k_folds = 5;
         config.strategy = ValidationStrategy::StratifiedKFold;
@@ -1288,7 +1288,7 @@ mod tests {
         let dataset = create_test_dataset(50);
         let factory = MockClassifierFactory::new(0.85);
 
-        let results = validator.validate(&factory, &dataset).await.unwrap();
+        let results = validator.validate(&factory, &dataset).await?;
 
         assert_eq!(results.fold_results.len(), 5);
         assert!(results.aggregated_metrics.mean_metrics.accuracy > 0.0);
@@ -1301,7 +1301,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_timeseries_validation() {
+    async fn test_timeseries_validation() -> Result<(), Box<dyn std::error::Error>> {
         let mut config = CrossValidationConfig::default();
         config.k_folds = 3;
         config.strategy = ValidationStrategy::TimeSeriesSplit { gap: 2 };
@@ -1310,7 +1310,7 @@ mod tests {
         let dataset = create_test_dataset(100);
         let factory = MockClassifierFactory::new(0.75);
 
-        let results = validator.validate(&factory, &dataset).await.unwrap();
+        let results = validator.validate(&factory, &dataset).await?;
 
         assert!(!results.fold_results.is_empty());
 
@@ -1322,7 +1322,7 @@ mod tests {
     }
 
     #[test]
-    fn test_confusion_matrix() {
+    fn test_confusion_matrix() -> Result<(), Box<dyn std::error::Error>> {
         let mut cm = ConfusionMatrix::new();
 
         cm.add_prediction(true, true); // TP
@@ -1338,7 +1338,7 @@ mod tests {
     }
 
     #[test]
-    fn test_validation_config() {
+    fn test_validation_config() -> Result<(), Box<dyn std::error::Error>> {
         let config = CrossValidationConfig::default();
 
         assert_eq!(config.k_folds, 5);
@@ -1348,7 +1348,7 @@ mod tests {
     }
 
     #[test]
-    fn test_assessment_levels() {
+    fn test_assessment_levels() -> Result<(), Box<dyn std::error::Error>> {
         let config = CrossValidationConfig::default();
         let validator = CrossValidator::new(config);
 

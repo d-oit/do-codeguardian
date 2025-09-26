@@ -444,11 +444,11 @@ mod tests {
     }
 
     #[test]
-    fn test_markdown_formatter_basic() {
+    fn test_markdown_formatter_basic() -> Result<(), Box<dyn std::error::Error>> {
         let formatter = MarkdownFormatter::new();
         let results = create_test_results();
 
-        let output = formatter.format(&results).unwrap();
+        let output = formatter.format(&results)?;
         assert!(!output.content.is_empty());
         assert_eq!(output.metadata.format, "markdown");
 
@@ -459,33 +459,33 @@ mod tests {
     }
 
     #[test]
-    fn test_markdown_formatter_minimal() {
+    fn test_markdown_formatter_minimal() -> Result<(), Box<dyn std::error::Error>> {
         let formatter = MarkdownFormatter::minimal();
         let results = create_test_results();
 
-        let output = formatter.format(&results).unwrap();
+        let output = formatter.format(&results)?;
 
         // Minimal format should not contain TOC
         assert!(!output.content.contains("## Table of Contents"));
     }
 
     #[test]
-    fn test_markdown_formatter_empty_results() {
+    fn test_markdown_formatter_empty_results() -> Result<(), Box<dyn std::error::Error>> {
         let formatter = MarkdownFormatter::new();
         let results = AnalysisResults::new("test_config".to_string());
 
-        let output = formatter.format(&results).unwrap();
+        let output = formatter.format(&results)?;
         assert!(output.content.contains("No Issues Found"));
     }
 
     #[test]
-    fn test_markdown_formatter_content_type() {
+    fn test_markdown_formatter_content_type() -> Result<(), Box<dyn std::error::Error>> {
         let formatter = MarkdownFormatter::new();
         assert_eq!(formatter.content_type(), "text/markdown");
     }
 
     #[test]
-    fn test_markdown_formatter_validation() {
+    fn test_markdown_formatter_validation() -> Result<(), Box<dyn std::error::Error>> {
         let formatter = MarkdownFormatter::new();
 
         // Valid markdown should pass

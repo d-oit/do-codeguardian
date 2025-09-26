@@ -1,5 +1,5 @@
 use criterion::{criterion_group, criterion_main, Criterion};
-use do_do_codeguardian::Config;
+use do_codeguardian::{config::Config, core::GuardianEngine, utils::progress::ProgressReporter};
 use std::io::Write;
 use std::path::PathBuf;
 use std::time::Duration;
@@ -75,7 +75,10 @@ fn bench_network_chaos(c: &mut Criterion) {
         b.iter(|| {
             rt.block_on(async {
                 let config = Config::default();
-                let result = analyze_files(&file_paths, &config).await;
+                let mut engine = GuardianEngine::new(config, ProgressReporter::new(false))
+                    .await
+                    .unwrap();
+                let result = engine.analyze_files(&file_paths, 1).await;
                 std::hint::black_box(result.unwrap());
             });
         });
@@ -86,7 +89,10 @@ fn bench_network_chaos(c: &mut Criterion) {
             rt.block_on(async {
                 simulate_network_delay(50).await;
                 let config = Config::default();
-                let result = analyze_files(&file_paths, &config).await;
+                let mut engine = GuardianEngine::new(config, ProgressReporter::new(false))
+                    .await
+                    .unwrap();
+                let result = engine.analyze_files(&file_paths, 1).await;
                 std::hint::black_box(result.unwrap());
             });
         });
@@ -97,7 +103,10 @@ fn bench_network_chaos(c: &mut Criterion) {
             rt.block_on(async {
                 simulate_network_delay(200).await;
                 let config = Config::default();
-                let result = analyze_files(&file_paths, &config).await;
+                let mut engine = GuardianEngine::new(config, ProgressReporter::new(false))
+                    .await
+                    .unwrap();
+                let result = engine.analyze_files(&file_paths, 1).await;
                 std::hint::black_box(result.unwrap());
             });
         });
@@ -122,7 +131,10 @@ fn bench_cpu_chaos(c: &mut Criterion) {
         b.iter(|| {
             rt.block_on(async {
                 let config = Config::default();
-                let result = analyze_files(&file_paths, &config).await;
+                let mut engine = GuardianEngine::new(config, ProgressReporter::new(false))
+                    .await
+                    .unwrap();
+                let result = engine.analyze_files(&file_paths, 1).await;
                 std::hint::black_box(result.unwrap());
             });
         });
@@ -134,7 +146,10 @@ fn bench_cpu_chaos(c: &mut Criterion) {
             std::hint::black_box(simulate_cpu_intensive_work(100000));
             rt.block_on(async {
                 let config = Config::default();
-                let result = analyze_files(&file_paths, &config).await;
+                let mut engine = GuardianEngine::new(config, ProgressReporter::new(false))
+                    .await
+                    .unwrap();
+                let result = engine.analyze_files(&file_paths, 1).await;
                 std::hint::black_box(result.unwrap());
             });
         });
@@ -146,7 +161,10 @@ fn bench_cpu_chaos(c: &mut Criterion) {
             std::hint::black_box(simulate_cpu_intensive_work(1000000));
             rt.block_on(async {
                 let config = Config::default();
-                let result = analyze_files(&file_paths, &config).await;
+                let mut engine = GuardianEngine::new(config, ProgressReporter::new(false))
+                    .await
+                    .unwrap();
+                let result = engine.analyze_files(&file_paths, 1).await;
                 std::hint::black_box(result.unwrap());
             });
         });
@@ -171,7 +189,10 @@ fn bench_memory_chaos(c: &mut Criterion) {
         b.iter(|| {
             rt.block_on(async {
                 let config = Config::default();
-                let result = analyze_files(&file_paths, &config).await;
+                let mut engine = GuardianEngine::new(config, ProgressReporter::new(false))
+                    .await
+                    .unwrap();
+                let result = engine.analyze_files(&file_paths, 1).await;
                 std::hint::black_box(result.unwrap());
             });
         });
@@ -183,7 +204,10 @@ fn bench_memory_chaos(c: &mut Criterion) {
             let _memory_hog = simulate_memory_pressure(50);
             rt.block_on(async {
                 let config = Config::default();
-                let result = analyze_files(&file_paths, &config).await;
+                let mut engine = GuardianEngine::new(config, ProgressReporter::new(false))
+                    .await
+                    .unwrap();
+                let result = engine.analyze_files(&file_paths, 1).await;
                 std::hint::black_box(result.unwrap());
             });
             drop(_memory_hog);
@@ -196,7 +220,10 @@ fn bench_memory_chaos(c: &mut Criterion) {
             let _memory_hog = simulate_memory_pressure(100);
             rt.block_on(async {
                 let config = Config::default();
-                let result = analyze_files(&file_paths, &config).await;
+                let mut engine = GuardianEngine::new(config, ProgressReporter::new(false))
+                    .await
+                    .unwrap();
+                let result = engine.analyze_files(&file_paths, 1).await;
                 std::hint::black_box(result.unwrap());
             });
             drop(_memory_hog);
@@ -222,7 +249,10 @@ fn bench_combined_chaos(c: &mut Criterion) {
         b.iter(|| {
             rt.block_on(async {
                 let config = Config::default();
-                let result = analyze_files(&file_paths, &config).await;
+                let mut engine = GuardianEngine::new(config, ProgressReporter::new(false))
+                    .await
+                    .unwrap();
+                let result = engine.analyze_files(&file_paths, 1).await;
                 std::hint::black_box(result.unwrap());
             });
         });
@@ -235,7 +265,10 @@ fn bench_combined_chaos(c: &mut Criterion) {
                 simulate_network_delay(100).await;
                 std::hint::black_box(simulate_cpu_intensive_work(500000));
                 let config = Config::default();
-                let result = analyze_files(&file_paths, &config).await;
+                let mut engine = GuardianEngine::new(config, ProgressReporter::new(false))
+                    .await
+                    .unwrap();
+                let result = engine.analyze_files(&file_paths, 1).await;
                 std::hint::black_box(result.unwrap());
             });
         });
@@ -248,7 +281,10 @@ fn bench_combined_chaos(c: &mut Criterion) {
                 let _memory_hog = simulate_memory_pressure(75);
                 simulate_network_delay(150).await;
                 let config = Config::default();
-                let result = analyze_files(&file_paths, &config).await;
+                let mut engine = GuardianEngine::new(config, ProgressReporter::new(false))
+                    .await
+                    .unwrap();
+                let result = engine.analyze_files(&file_paths, 1).await;
                 std::hint::black_box(result.unwrap());
                 drop(_memory_hog);
             });
@@ -263,52 +299,12 @@ fn bench_combined_chaos(c: &mut Criterion) {
                 simulate_network_delay(75).await;
                 std::hint::black_box(simulate_cpu_intensive_work(250000));
                 let config = Config::default();
-                let result = analyze_files(&file_paths, &config).await;
+                let mut engine = GuardianEngine::new(config, ProgressReporter::new(false))
+                    .await
+                    .unwrap();
+                let result = engine.analyze_files(&file_paths, 1).await;
                 std::hint::black_box(result.unwrap());
                 drop(_memory_hog);
-            });
-        });
-    });
-
-    group.finish();
-}
-
-/// Benchmark adaptive parallelism under chaos
-fn bench_adaptive_parallelism_chaos(c: &mut Criterion) {
-    let rt = Runtime::new().unwrap();
-    let test_files = generate_chaos_test_files(20);
-    let file_paths: Vec<PathBuf> = test_files
-        .iter()
-        .map(|(file, _, _)| file.path().to_path_buf())
-        .collect();
-
-    let mut group = c.benchmark_group("adaptive_parallelism_chaos");
-    group.measurement_time(Duration::from_secs(20));
-
-    group.bench_function("adaptive_parallelism_normal", |b| {
-        let controller = AdaptiveParallelismController::new(1, 8, 4);
-        b.iter(|| {
-            rt.block_on(async {
-                let config = Config::default();
-                let result = analyze_files(&file_paths, &config).await;
-                std::hint::black_box(result.unwrap());
-                // Simulate adaptive adjustment
-                std::hint::black_box(controller.adjust_parallelism().await.unwrap());
-            });
-        });
-    });
-
-    group.bench_function("adaptive_parallelism_under_load", |b| {
-        let controller = AdaptiveParallelismController::new(1, 8, 4);
-        b.iter(|| {
-            rt.block_on(async {
-                // Simulate system under load
-                std::hint::black_box(simulate_cpu_intensive_work(200000));
-                let config = Config::default();
-                let result = analyze_files(&file_paths, &config).await;
-                std::hint::black_box(result.unwrap());
-                // Adaptive adjustment under load
-                std::hint::black_box(controller.adjust_parallelism().await.unwrap());
             });
         });
     });
@@ -321,7 +317,6 @@ criterion_group!(
     bench_network_chaos,
     bench_cpu_chaos,
     bench_memory_chaos,
-    bench_combined_chaos,
-    bench_adaptive_parallelism_chaos
+    bench_combined_chaos
 );
 criterion_main!(chaos_benches);

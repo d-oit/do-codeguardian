@@ -324,21 +324,21 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_ast_analyzer_creation() {
+    fn test_ast_analyzer_creation() -> Result<(), Box<dyn std::error::Error>> {
         let analyzer = AstAnalyzer::new();
         assert_eq!(analyzer.enabled, cfg!(feature = "ast"));
     }
 
     #[cfg(feature = "ast")]
     #[test]
-    fn test_rust_ast_analysis() {
+    fn test_rust_ast_analysis() -> Result<(), Box<dyn std::error::Error>> {
         let analyzer = AstAnalyzer::new();
         let code = r#"
             /// A test function
             #[test]
-            fn test_example() {
+            fn test_example() -> Result<(), Box<dyn std::error::Error>> {
                 let x = "hello".to_string();
-                let y = x.unwrap();
+                let y = x?;
                 if y.len() > 0 {
                     println!("Not empty");
                 }
@@ -353,9 +353,7 @@ mod tests {
             }
         "#;
 
-        let features = analyzer
-            .extract_ast_features(Path::new("test.rs"), code)
-            .unwrap();
+        let features = analyzer.extract_ast_features(Path::new("test.rs"), code)?;
 
         assert!(features.function_count > 0.0);
         assert!(features.struct_count > 0.0);
@@ -367,7 +365,7 @@ mod tests {
     }
 
     #[test]
-    fn test_feature_vector_normalization() {
+    fn test_feature_vector_normalization() -> Result<(), Box<dyn std::error::Error>> {
         let features = AstFeatures {
             cyclomatic_complexity: 25.0, // Should be clamped to 1.0
             function_count: 100.0,       // Should be clamped to 1.0

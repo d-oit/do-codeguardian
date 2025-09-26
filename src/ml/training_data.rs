@@ -305,7 +305,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_training_dataset() {
+    fn test_training_dataset() -> Result<(), Box<dyn std::error::Error>> {
         let mut dataset = TrainingDataset::new();
 
         // Add some examples
@@ -319,7 +319,7 @@ mod tests {
     }
 
     #[test]
-    fn test_balanced_dataset() {
+    fn test_balanced_dataset() -> Result<(), Box<dyn std::error::Error>> {
         let mut dataset = TrainingDataset::new();
 
         // Add unbalanced data

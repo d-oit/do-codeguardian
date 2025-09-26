@@ -1,6 +1,6 @@
 # Usage Guide
 
-> **Note**: Command examples in this guide are based on actual CI/CD workflows from `.github/workflows/`. For local development, you may need to adjust paths (e.g., use `do-codeguardian` instead of `./target/release/do-codeguardian` if installed via `cargo install`).
+> **Note**: Command examples in this guide are based on actual CI/CD workflows from `.github/workflows/`. For local development, you may need to adjust paths (e.g., use `codeguardian` instead of `./target/release/codeguardian` if installed via `cargo install`).
 
 ## Quick Start
 
@@ -11,32 +11,32 @@
 cargo install do-codeguardian
 
 # 2. Initialize configuration with security template
-do-codeguardian init --template security
+codeguardian init --template security
 
 # 3. Run analysis with ML filtering (results auto-placed in build/analysis-results/check/{date}/results.json)
-./target/release/do-codeguardian check . --format json --out results.json --ml-model enhanced-model.fann
+./target/release/codeguardian check . --format json --out results.json --ml-model enhanced-model.fann
 
 # 4. Generate comprehensive report
-./target/release/do-codeguardian report --from results.json --md report.md --html report.html
+./target/release/codeguardian report --from results.json --md report.md --html report.html
 
 # 5. Create GitHub issues with checklist format
-./target/release/do-codeguardian gh-issue --from results.json --repo owner/repo --mode checklist
+./target/release/codeguardian gh-issue --from results.json --repo owner/repo --mode checklist
 ```
 
 ### One-Liner Analysis
 
 ```bash
 # Quick security scan with GitHub integration (from CI workflows)
-./target/release/do-codeguardian check . --emit-gh --repo ${{ github.repository }}
+./target/release/codeguardian check . --emit-gh --repo ${{ github.repository }}
 
 # Fast PR analysis with ML filtering (from turbo-pr-analysis.yml)
-./target/release/do-codeguardian check . --diff origin/main..HEAD --ml-model enhanced-model.fann --emit-gh --repo ${{ github.repository }}
+./target/release/codeguardian check . --diff origin/main..HEAD --ml-model enhanced-model.fann --emit-gh --repo ${{ github.repository }}
 
 # High-performance analysis (from turbo-security-analysis.yml) (results auto-placed in build/analysis-results/turbo/{date}/results.json)
-./target/release/do-codeguardian turbo . --max-parallel 16 --metrics --format json --output results.json
+./target/release/codeguardian turbo . --max-parallel 16 --metrics --format json --output results.json
 
-# Security audit with comprehensive reporting (from do-codeguardian-ci.yml) (results auto-placed in build/analysis-results/check/{date}/audit.json)
-./target/release/do-codeguardian check . --config security-config.toml --format json --out audit.json --emit-md audit-report.md --emit-gh --repo ${{ github.repository }} --fail-on-issues
+# Security audit with comprehensive reporting (from codeguardian-ci.yml) (results auto-placed in build/analysis-results/check/{date}/audit.json)
+./target/release/codeguardian check . --config security-config.toml --format json --out audit.json --emit-md audit-report.md --emit-gh --repo ${{ github.repository }} --fail-on-issues
 ```
 
 ## Commands
@@ -73,8 +73,8 @@ do-codeguardian init --template security
 ### PR Analysis (Fast, Focused)
 
 ```bash
-# From do-codeguardian-ci.yml (PR diff-only mode)
-./target/release/do-codeguardian check . \
+# From codeguardian-ci.yml (PR diff-only mode)
+./target/release/codeguardian check . \
   --diff origin/main..HEAD \
   --format json \
   --out pr-results.json \
@@ -82,29 +82,29 @@ do-codeguardian init --template security
   --emit-gh \
   --repo ${{ github.repository }} \
   --gh-mode checklist \
-  --labels "do-codeguardian,automated,pr-${{ github.event.number }}"
+  --labels "codeguardian,automated,pr-${{ github.event.number }}"
 ```
 
 ### Full Repository Scan
 
 ```bash
-# From do-codeguardian-ci.yml (full scan for main branch)
-./target/release/do-codeguardian check . \
+# From codeguardian-ci.yml (full scan for main branch)
+./target/release/codeguardian check . \
   --format json \
   --out full-results.json \
   --emit-md full-report.md \
   --emit-gh \
   --repo ${{ github.repository }} \
   --gh-mode checklist \
-  --labels "do-codeguardian,automated,full-scan" \
+  --labels "codeguardian,automated,full-scan" \
   --fail-on-issues
 ```
 
 ### Security Audit
 
 ```bash
-# From do-codeguardian-ci.yml (full scan with security focus)
-./target/release/do-codeguardian check . \
+# From codeguardian-ci.yml (full scan with security focus)
+./target/release/codeguardian check . \
   --config security-config.toml \
   --format json \
   --out security-audit.json \
@@ -112,7 +112,7 @@ do-codeguardian init --template security
   --emit-gh \
   --repo ${{ github.repository }} \
   --gh-mode checklist \
-  --labels "do-codeguardian,automated,full-scan" \
+  --labels "codeguardian,automated,full-scan" \
   --fail-on-issues
 ```
 
@@ -120,7 +120,7 @@ do-codeguardian init --template security
 
 ```bash
 # From turbo-security-analysis.yml (comprehensive mode)
-./target/release/do-codeguardian turbo . \
+./target/release/codeguardian turbo . \
   --aggressive \
   --max-parallel 8 \
   --memory-limit 1024 \
@@ -133,7 +133,7 @@ do-codeguardian init --template security
 
 ```bash
 # From turbo-security-analysis.yml (comprehensive mode with aggressive)
-./target/release/do-codeguardian turbo . \
+./target/release/codeguardian turbo . \
   --aggressive \
   --max-parallel 8 \
   --memory-limit 1024 \
@@ -146,7 +146,7 @@ do-codeguardian init --template security
 
 ```bash
 # From turbo-pr-analysis.yml (with ML model)
-./target/release/do-codeguardian check . \
+./target/release/codeguardian check . \
   --diff origin/main..HEAD \
   --ml-model enhanced-model.fann \
   --format json \
@@ -160,7 +160,7 @@ do-codeguardian init --template security
 
 ```bash
 # From turbo-security-analysis.yml (comprehensive mode scaled up)
-./target/release/do-codeguardian turbo . \
+./target/release/codeguardian turbo . \
   --aggressive \
   --max-parallel 8 \
   --memory-limit 1024 \
@@ -172,8 +172,8 @@ do-codeguardian init --template security
 ### Custom Security Rules
 
 ```bash
-# From do-codeguardian-ci.yml (with config)
-./target/release/do-codeguardian check . \
+# From codeguardian-ci.yml (with config)
+./target/release/codeguardian check . \
   --config security-config.toml \
   --format json \
   --out custom-results.json \
@@ -188,19 +188,19 @@ do-codeguardian init --template security
 #### Basic Usage with Different Output Formats
 ```bash
 # JSON output for machine processing
-./target/release/do-codeguardian check . --format json --out results.json
+./target/release/codeguardian check . --format json --out results.json
 
 # Human-readable output for manual review
-./target/release/do-codeguardian check . --format human
+./target/release/codeguardian check . --format human
 
 # SARIF output for security tools integration
-./target/release/do-codeguardian check . --format sarif --out security.sarif
+./target/release/codeguardian check . --format sarif --out security.sarif
 ```
 
 #### CI/CD Integration with GitHub
 ```bash
 # PR analysis with GitHub issue creation
-./target/release/do-codeguardian check . \
+./target/release/codeguardian check . \
   --diff origin/main..HEAD \
   --format json \
   --out pr-results.json \
@@ -210,7 +210,7 @@ do-codeguardian init --template security
   --labels "codeguardian,pr-analysis"
 
 # Scheduled security scan
-./target/release/do-codeguardian check . \
+./target/release/codeguardian check . \
   --config security-config.toml \
   --format json \
   --out nightly-scan.json \
@@ -221,7 +221,7 @@ do-codeguardian init --template security
 #### Performance-Optimized Analysis for Large Codebases
 ```bash
 # High-parallel analysis with streaming
-./target/release/do-codeguardian check . \
+./target/release/codeguardian check . \
   --parallel 8 \
   --streaming \
   --memory-limit 2048 \
@@ -229,7 +229,7 @@ do-codeguardian init --template security
   --out large-repo-results.json
 
 # Turbo mode for enterprise scale
-./target/release/do-codeguardian turbo . \
+./target/release/codeguardian turbo . \
   --max-parallel 16 \
   --aggressive \
   --format json \
@@ -239,7 +239,7 @@ do-codeguardian init --template security
 #### Security-Focused Analysis with Broken Files Detection
 ```bash
 # Comprehensive security audit
-./target/release/do-codeguardian check . \
+./target/release/codeguardian check . \
   --detect-broken-files \
   --config security-config.toml \
   --format json \
@@ -248,7 +248,7 @@ do-codeguardian init --template security
   --fail-on-issues
 
 # Focused conflict detection
-./target/release/do-codeguardian check . \
+./target/release/codeguardian check . \
   --detect-conflicts \
   --fail-on-conflicts \
   --format human
@@ -257,12 +257,12 @@ do-codeguardian init --template security
 #### Baseline Comparison and Drift Analysis
 ```bash
 # Establish baseline
-./target/release/do-codeguardian check . \
+./target/release/codeguardian check . \
   --format json \
   --out baseline.json
 
 # Compare against baseline
-./target/release/do-codeguardian check . \
+./target/release/codeguardian check . \
   --baseline baseline.json \
   --only-new \
   --format json \
@@ -272,14 +272,14 @@ do-codeguardian init --template security
 #### ML-Enhanced Analysis with Threshold Tuning
 ```bash
 # Balanced ML filtering
-./target/release/do-codeguardian check . \
+./target/release/codeguardian check . \
   --ml-model enhanced-model.fann \
   --ml-threshold 0.5 \
   --format json \
   --out ml-results.json
 
 # High-precision mode (fewer false positives)
-./target/release/do-codeguardian check . \
+./target/release/codeguardian check . \
   --ml-model enhanced-model.fann \
   --ml-threshold 0.8 \
   --format json \
@@ -389,7 +389,7 @@ do-codeguardian init --template security
 
 ```bash
 # From examples/ml-training-example.rs (training command)
-./target/release/do-codeguardian train --model-path enhanced-model.fann --epochs 2000 --bootstrap
+./target/release/codeguardian train --model-path enhanced-model.fann --epochs 2000 --bootstrap
 ```
 
 ### CI/CD Integration
@@ -397,10 +397,10 @@ do-codeguardian init --template security
 #### GitHub Actions
 
 ```yaml
-# From do-codeguardian-ci.yml (PR analysis job)
+# From codeguardian-ci.yml (PR analysis job)
 - name: Run CodeGuardian (PR diff-only)
   run: |
-    ./target/release/do-codeguardian check . \
+    ./target/release/codeguardian check . \
       --diff origin/main..HEAD \
       --format json \
       --out results.json \
@@ -408,7 +408,7 @@ do-codeguardian init --template security
       --emit-gh \
       --repo ${{ github.repository }} \
       --gh-mode checklist \
-      --labels "do-codeguardian,automated,pr-${{ github.event.number }}"
+      --labels "codeguardian,automated,pr-${{ github.event.number }}"
   env:
     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     GITHUB_REPOSITORY: ${{ github.repository }}
@@ -418,19 +418,19 @@ do-codeguardian init --template security
 
 ```yaml
 # From README.md (GitLab CI example)
-do-codeguardian:
+codeguardian:
   stage: security
   image: do-codeguardian/do-codeguardian:latest
   script:
     - |
       if [ -n "$CI_MERGE_REQUEST_TARGET_BRANCH_NAME" ]; then
-        ./target/release/do-codeguardian check . \
+        ./target/release/codeguardian check . \
           --diff origin/$CI_MERGE_REQUEST_TARGET_BRANCH_NAME..HEAD \
           --format json \
           --out results.json \
           --emit-md report.md
       else
-        ./target/release/do-codeguardian check . \
+        ./target/release/codeguardian check . \
           --format json \
           --out results.json \
           --emit-md report.md
@@ -458,7 +458,7 @@ pipeline {
         stage('CodeGuardian Analysis') {
             steps {
                 sh '''
-                    ./target/release/do-codeguardian check . \
+                    ./target/release/codeguardian check . \
                       --format json \
                       --out results.json \
                       --emit-md report.md \
@@ -473,14 +473,14 @@ pipeline {
 ### Complex Diff Analysis with Multiple Branches
 ```bash
 # Compare feature branch against multiple bases
-./target/release/do-codeguardian check . \
+./target/release/codeguardian check . \
   --diff origin/develop..feature-branch \
   --baseline main-baseline.json \
   --format json \
   --out multi-branch-analysis.json
 
 # Analyze merge conflicts before merging
-./target/release/do-codeguardian check . \
+./target/release/codeguardian check . \
   --detect-conflicts \
   --fail-on-conflicts \
   --diff origin/main..HEAD \
@@ -490,13 +490,13 @@ pipeline {
 ### Custom Baseline Workflows
 ```bash
 # Create baseline from specific commit
-./target/release/do-codeguardian check . \
+./target/release/codeguardian check . \
   --diff v1.0.0..HEAD \
   --format json \
   --out release-baseline.json
 
 # Drift analysis with custom thresholds
-./target/release/do-codeguardian check . \
+./target/release/codeguardian check . \
   --baseline release-baseline.json \
   --only-new \
   --ml-threshold 0.7 \
@@ -507,12 +507,12 @@ pipeline {
 ### Integration with External Tools
 ```bash
 # SARIF output for security scanners
-./target/release/do-codeguardian check . \
+./target/release/codeguardian check . \
   --format sarif \
   --out codeguardian-results.sarif
 
 # JSON output for custom dashboards
-./target/release/do-codeguardian check . \
+./target/release/codeguardian check . \
   --format json \
   --out analysis-data.json \
   --emit-md dashboard-report.md
@@ -521,12 +521,12 @@ pipeline {
 ### Automated Remediation Workflows
 ```bash
 # Generate fix scripts from analysis
-./target/release/do-codeguardian check . \
+./target/release/codeguardian check . \
   --format json \
   --out issues.json
 
 # Apply automated fixes (future feature)
-# ./target/release/do-codeguardian fix \
+# ./target/release/codeguardian fix \
 #   --from issues.json \
 #   --auto-apply
 ```
@@ -538,18 +538,18 @@ pipeline {
 # Install pre-commit hook
 cat > .git/hooks/pre-commit << 'EOF'
 #!/bin/bash
-./target/release/do-codeguardian check . --diff HEAD --fail-on-issues --quiet
+./target/release/codeguardian check . --diff HEAD --fail-on-issues --quiet
 EOF
 chmod +x .git/hooks/pre-commit
 
 # For staged files only
-./target/release/do-codeguardian check . --only-changed --fail-on-issues
+./target/release/codeguardian check . --only-changed --fail-on-issues
 ```
 
 ### Scheduled Security Scans
 ```bash
 # Cron job for nightly scans
-0 2 * * * /path/to/do-codeguardian check . \
+0 2 * * * /path/to/codeguardian check . \
   --config security-config.toml \
   --format json \
   --out /var/log/codeguardian/nightly-$(date +\%Y\%m\%d).json \
@@ -557,7 +557,7 @@ chmod +x .git/hooks/pre-commit
   --fail-on-issues
 
 # Weekly comprehensive audit
-0 3 * * 0 /path/to/do-codeguardian check . \
+0 3 * * 0 /path/to/codeguardian check . \
   --detect-broken-files \
   --format json \
   --out /var/log/codeguardian/weekly-audit.json
@@ -568,7 +568,7 @@ chmod +x .git/hooks/pre-commit
 # Standardize across repositories
 for repo in repo1 repo2 repo3; do
   cd $repo
-  ../do-codeguardian check . \
+  ../codeguardian check . \
     --config ../shared-config.toml \
     --format json \
     --out ../results/$repo.json \
@@ -577,7 +577,7 @@ for repo in repo1 repo2 repo3; do
 done
 
 # Centralized reporting
-./do-codeguardian report \
+./codeguardian report \
   --from results/*.json \
   --consolidated-report multi-repo-report.md
 ```
@@ -586,7 +586,7 @@ done
 ```bash
 # Archive results with timestamps
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
-./target/release/do-codeguardian check . \
+./target/release/codeguardian check . \
   --format json \
   --out archive/results_$TIMESTAMP.json
 
@@ -594,7 +594,7 @@ TIMESTAMP=$(date +%Y%m%d_%H%M%S)
 #!/bin/bash
 # Compare last 7 days
 find archive/ -name "results_*.json" -mtime -7 | \
-  xargs ./target/release/do-codeguardian report \
+  xargs ./target/release/codeguardian report \
     --trend-analysis \
     --output trend-report.md
 ```
@@ -612,7 +612,7 @@ find archive/ -name "results_*.json" -mtime -7 | \
 - **Missing Files**: Ensure `codeguardian.toml` exists and is readable
 - **Invalid Syntax**: Check for YAML/TOML syntax errors in config files
 - **Permission Issues**: Verify read/write permissions for output directories
-- **Recovery**: Use `do-codeguardian validate` to check configuration before analysis
+- **Recovery**: Use `codeguardian validate` to check configuration before analysis
 
 ### Network Connectivity Issues with GitHub
 - **Token Validation**: Verify `GITHUB_TOKEN` is set and valid

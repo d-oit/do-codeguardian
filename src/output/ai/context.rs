@@ -344,21 +344,21 @@ mod tests {
     }
 
     #[test]
-    fn test_context_analyzer() {
+    fn test_context_analyzer() -> Result<(), Box<dyn std::error::Error>> {
         let mut analyzer = ContextAnalyzer::new();
         let mut results = crate::types::AnalysisResults::new("test_config".to_string());
 
         results.add_finding(create_test_finding("src/main.rs"));
         results.add_finding(create_test_finding("src/controller.py"));
 
-        let context = analyzer.analyze_context(&results).unwrap();
+        let context = analyzer.analyze_context(&results)?;
 
         assert!(!context.project_context.languages.is_empty());
         assert!(context.project_context.project_type.is_some());
     }
 
     #[test]
-    fn test_project_type_inference() {
+    fn test_project_type_inference() -> Result<(), Box<dyn std::error::Error>> {
         let analyzer = ContextAnalyzer::new();
         let findings = vec![
             create_test_finding("src/controller/user.rs"),

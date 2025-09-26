@@ -72,7 +72,7 @@ fn func2() {
 fn test_cross_file_duplicate_optimization() {
     use do_codeguardian::analyzers::cross_file_duplicate_analyzer::CrossFileDuplicateAnalyzer;
 
-    let mut analyzer = CrossFileDuplicateAnalyzer::new();
+    let mut analyzer = CrossFileDuplicateAnalyzer::new().unwrap();
 
     // Analyze files with similar content
     let content1 = r#"

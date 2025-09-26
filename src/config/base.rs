@@ -69,7 +69,7 @@ impl Config {
     /// Process environment variable substitution in configuration content
     pub fn process_env_vars(content: &str) -> anyhow::Result<String> {
         let mut result = content.to_string();
-        let env_var_pattern = regex::Regex::new(r"\$\{([^}]+)\}").unwrap();
+        let env_var_pattern = regex::Regex::new(r"\$\{([^}]+)\}")?;
 
         for capture in env_var_pattern.captures_iter(content) {
             let placeholder = &capture[0];

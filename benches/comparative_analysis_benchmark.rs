@@ -1,5 +1,5 @@
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
-use do_do_codeguardian::{
+use do_codeguardian::{
     analyzers::{performance_analyzer::PerformanceAnalyzer, security_analyzer::SecurityAnalyzer},
     cache::{CacheConfig, FileCache},
     config::{Config, PerformanceConfig},
@@ -7,6 +7,7 @@ use do_do_codeguardian::{
 };
 use std::collections::HashMap;
 use std::hint::black_box;
+use std::io::Write;
 use std::path::PathBuf;
 use std::sync::Arc;
 use std::time::Instant;
@@ -95,8 +96,8 @@ fn bench_comparative_performance_analysis(c: &mut Criterion) {
     let rt = Runtime::new().unwrap();
     let test_files = generate_comparative_test_data();
     let configs = vec![
-        BenchmarkConfig::default(),
         BenchmarkConfig::standard(),
+        BenchmarkConfig::minimal(),
         BenchmarkConfig::optimized(),
     ];
 

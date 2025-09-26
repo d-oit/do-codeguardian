@@ -10,7 +10,7 @@ PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 # Configuration
 TREND_DATA_DIR="$PROJECT_ROOT/performance_trends"
 REPORT_DIR="$PROJECT_ROOT/performance_reports"
-THRESHOLD_CONFIG="$PROJECT_ROOT/performance_thresholds.json"
+THRESHOLD_CONFIG="$PROJECT_ROOT/config/performance_thresholds.json"
 
 # Colors for output
 RED='\033[0;31m'

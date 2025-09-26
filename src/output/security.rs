@@ -251,33 +251,33 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_sanitize_html_removes_scripts() {
+    fn test_sanitize_html_removes_scripts() -> Result<(), Box<dyn std::error::Error>> {
         let html = r#"<div>Safe content</div><script>alert('xss')</script>"#;
-        let result = sanitize_html(html, None).unwrap();
+        let result = sanitize_html(html, None)?;
         assert!(!result.contains("script"));
         assert!(result.contains("Safe content"));
     }
 
     #[test]
-    fn test_sanitize_html_removes_event_handlers() {
+    fn test_sanitize_html_removes_event_handlers() -> Result<(), Box<dyn std::error::Error>> {
         let html = r#"<div onclick="alert('xss')">Click me</div>"#;
-        let result = sanitize_html(html, None).unwrap();
+        let result = sanitize_html(html, None)?;
         assert!(!result.contains("onclick"));
         assert!(result.contains("Click me"));
     }
 
     #[test]
-    fn test_validate_content_security_detects_scripts() {
+    fn test_validate_content_security_detects_scripts() -> Result<(), Box<dyn std::error::Error>> {
         let content = r#"<html><script>alert('test')</script></html>"#;
-        let warnings = validate_content_security(content, "text/html").unwrap();
+        let warnings = validate_content_security(content, "text/html")?;
         assert!(!warnings.is_empty());
         assert!(warnings.iter().any(|w| w.contains("script tags")));
     }
 
     #[test]
-    fn test_sanitize_file_path_removes_traversal() {
+    fn test_sanitize_file_path_removes_traversal() -> Result<(), Box<dyn std::error::Error>> {
         let path = "../../../etc/passwd";
-        let result = sanitize_file_path(path).unwrap();
+        let result = sanitize_file_path(path)?;
         assert_eq!(result, "etc/passwd");
     }
 }

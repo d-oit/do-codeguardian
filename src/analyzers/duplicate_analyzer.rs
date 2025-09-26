@@ -49,10 +49,20 @@ pub struct DuplicateResult {
     pub shared_lines: Vec<String>,
 }
 
+/// Code block representation for duplicate analysis
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct CodeBlock {
+    pub lines: Vec<String>,
+    pub start_line: usize,
+    pub end_line: usize,
+}
+
 impl Default for DuplicateAnalyzer {
     fn default() -> Self {
-        Self::with_config(DuplicateAnalyzerConfig::default())
-            .expect("Failed to create default DuplicateAnalyzer")
+        match Self::with_config(DuplicateAnalyzerConfig::default()) {
+            Ok(s) => s,
+            Err(e) => panic!("Failed to create default DuplicateAnalyzer: {}", e),
+        }
     }
 }
 
@@ -607,13 +617,6 @@ impl DuplicateAnalyzer {
     }
 }
 
-#[derive(Debug, Clone)]
-pub struct CodeBlock {
-    pub lines: Vec<String>,
-    pub start_line: usize,
-    pub end_line: usize,
-}
-
 impl Analyzer for DuplicateAnalyzer {
     fn name(&self) -> &str {
         "duplicate"
@@ -790,7 +793,7 @@ fn authenticate_admin(username: &str, password: &str) -> bool {
     }
 
     #[test]
-    fn test_ml_similarity_calculation() {
+    fn test_ml_similarity_calculation() -> Result<(), Box<dyn std::error::Error>> {
         let analyzer = DuplicateAnalyzer::new().expect("Failed to create analyzer for test");
         let block1 = CodeBlock {
             lines: vec![
@@ -811,6 +814,7 @@ fn authenticate_admin(username: &str, password: &str) -> bool {
 
         // Without ML classifier, should return None
         assert!(analyzer.calculate_ml_similarity(&block1, &block2).is_none());
+        Ok(())
     }
 
     #[test]

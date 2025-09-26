@@ -140,10 +140,12 @@ impl FileCache {
         format!("{:x}", hasher.finalize())[..16].to_string()
     }
 
-    pub fn cleanup_stale_entries(&mut self, max_age_days: u64) {
+    pub fn cleanup_stale_entries(
+        &mut self,
+        max_age_days: u64,
+    ) -> Result<(), Box<dyn std::error::Error>> {
         let cutoff = SystemTime::now()
-            .duration_since(SystemTime::UNIX_EPOCH)
-            .unwrap()
+            .duration_since(SystemTime::UNIX_EPOCH)?
             .as_secs()
             - (max_age_days * 24 * 60 * 60);
 
@@ -154,6 +156,7 @@ impl FileCache {
                 .map(|d| d.as_secs() > cutoff)
                 .unwrap_or(false)
         });
+        Ok(())
     }
 
     pub fn stats(&self) -> CacheStats {

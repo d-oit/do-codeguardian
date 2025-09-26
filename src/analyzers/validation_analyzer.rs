@@ -295,7 +295,7 @@ mod tests {
     use std::path::PathBuf;
 
     #[tokio::test]
-    async fn test_validation_analyzer() {
+    async fn test_validation_analyzer() -> Result<(), Box<dyn std::error::Error>> {
         let analyzer = ValidationAnalyzer::new();
 
         let findings = vec![Finding::new(
@@ -307,10 +307,11 @@ mod tests {
             "Test security finding".to_string(),
         )];
 
-        let validated = analyzer.validate_findings(findings).await.unwrap();
+        let validated = analyzer.validate_findings(findings).await?;
 
         // Should have some findings (either validated or enhanced)
         assert!(!validated.is_empty());
+        Ok(())
     }
 
     #[tokio::test]
@@ -323,7 +324,7 @@ mod tests {
     }
 
     #[test]
-    fn test_finding_enhancement() {
+    fn test_finding_enhancement() -> Result<(), Box<dyn std::error::Error>> {
         let analyzer = ValidationAnalyzer::new();
 
         let validation_result = crate::core::ValidationResult {
@@ -345,5 +346,6 @@ mod tests {
 
         assert!(enhanced.description.unwrap().contains("Confidence: 85"));
         assert!(enhanced.suggestion.is_some());
+        Ok(())
     }
 }

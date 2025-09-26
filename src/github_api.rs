@@ -313,7 +313,7 @@ mod tests {
     use tokio::time::{advance, pause, resume};
 
     #[tokio::test]
-    async fn test_rate_limiter() {
+    async fn test_rate_limiter() -> Result<(), Box<dyn std::error::Error>> {
         pause();
 
         let mut limiter = RateLimiter::new(2); // Very low limit for testing
@@ -340,7 +340,7 @@ mod tests {
     }
 
     #[test]
-    fn test_backoff_calculation() {
+    fn test_backoff_calculation() -> Result<(), Box<dyn std::error::Error>> {
         let client = GitHubApiClient::new();
 
         assert_eq!(client.calculate_backoff_delay(1), Duration::from_secs(1));

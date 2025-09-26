@@ -1,10 +1,10 @@
-use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
-use do_do_codeguardian::{
+use criterion::{criterion_group, criterion_main, Criterion};
+use do_codeguardian::{
     config::Config,
     core::GuardianEngine,
     performance::{PerformanceAnalyzer as PerfAnalyzer, PerformanceMetrics, PerformanceProfiler},
+    utils::progress::ProgressReporter,
 };
-use std::hint::black_box;
 use std::path::PathBuf;
 use std::sync::Arc;
 use std::time::{Duration, Instant};
@@ -111,10 +111,18 @@ fn bench_comprehensive_metrics_collection(c: &mut Criterion) {
     group.bench_function("full_metrics_collection_run", |b| {
         let config = Config::default();
         let mut engine = rt.block_on(async {
-            GuardianEngine::new(config, Default::default())
+            GuardianEngine::new(config, ProgressReporter::new(false))
                 .await
                 .unwrap()
         });
+
+        let file_paths: Vec<PathBuf> = vec![
+            test_dir.path().join("small.rs"),
+            test_dir.path().join("medium.rs"),
+            test_dir.path().join("large.rs"),
+            test_dir.path().join("config.toml"),
+            test_dir.path().join("data.json"),
+        ];
 
         b.iter(|| {
             rt.block_on(async {
@@ -122,15 +130,13 @@ fn bench_comprehensive_metrics_collection(c: &mut Criterion) {
 
                 // Profile the analysis with comprehensive metrics
                 let result = profiler
-                    .profile_file_analysis(|| async {
-                        engine.analyze_path(test_dir.path(), 4).await
-                    })
+                    .profile_file_analysis(|| async { engine.analyze_files(&file_paths, 4).await })
                     .await;
 
                 let duration = start.elapsed();
 
                 // Update additional metrics
-                metrics.update_memory_usage(get_memory_usage().unwrap_or(0));
+                metrics.update_memory_usage(get_memory_usage().unwrap_or(0) as usize);
 
                 // Simulate cache operations
                 for _ in 0..10 {
@@ -239,15 +245,23 @@ fn bench_regression_detection(c: &mut Criterion) {
     group.bench_function("performance_baseline_comparison", |b| {
         let config = Config::default();
         let mut engine = rt.block_on(async {
-            GuardianEngine::new(config, Default::default())
+            GuardianEngine::new(config, ProgressReporter::new(false))
                 .await
                 .unwrap()
         });
 
+        let file_paths: Vec<PathBuf> = vec![
+            test_dir.path().join("small.rs"),
+            test_dir.path().join("medium.rs"),
+            test_dir.path().join("large.rs"),
+            test_dir.path().join("config.toml"),
+            test_dir.path().join("data.json"),
+        ];
+
         b.iter(|| {
             rt.block_on(async {
                 let start = Instant::now();
-                let result = engine.analyze_path(test_dir.path(), 4).await;
+                let result = engine.analyze_files(&file_paths, 4).await;
                 let duration = start.elapsed();
 
                 // Baseline comparison (in real implementation, compare against stored baselines)

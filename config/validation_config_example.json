@@ -1,0 +1,12 @@
+{
+  "required_accuracy": 0.85,
+  "required_precision": 0.80,
+  "required_recall": 0.80,
+  "required_f1_score": 0.80,
+  "max_false_positive_rate": 0.15,
+  "max_inference_time_ms": 100.0,
+  "min_test_coverage": 0.90,
+  "enable_performance_regression_check": true,
+  "enable_bias_detection": true,
+  "enable_robustness_testing": true
+}

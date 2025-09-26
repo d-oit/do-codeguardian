@@ -9,7 +9,7 @@ This roadmap outlines a comprehensive 6-12 month strategy to enhance CodeGuardia
 ### Existing Capabilities ✅
 - **13 benchmark files** covering regression detection, load testing, metrics collection, and optimization recommendations
 - **CI/CD integration** with GitHub Actions for automated performance monitoring
-- **Performance thresholds** configuration via `performance_thresholds.json`
+- **Performance thresholds** configuration via `config/performance_thresholds.json`
 - **Automated regression detection** with issue creation
 - **Multiple workflows** for different monitoring scenarios
 - **Performance analysis scripts** for automated checks

@@ -1,15 +1,24 @@
 [package]
 name = "do-codeguardian"
-version = "0.2.1-alpha.2"
+version = "0.2.1-alpha.3"
 edition = "2021"
-authors = ["Dominik Oswald <6849456+d-oit@users.noreply.github.com>"]
-description = "CodeGuardian is a cutting-edge, security-first code analysis tool that combines machine learning, advanced static analysis, and seamless GitHub integration to help developers identify vulnerabilities, optimize performance, and maintain high code quality standards. Built with Rust for speed and reliability, it empowers teams to ship secure software faster."
+authors = ["d.o. <6849456+d-oit@users.noreply.github.com>"]
+description = "d.o.CodeGuardian is a cutting-edge, security-first code analysis tool that combines machine learning, advanced static analysis, and seamless GitHub integration to help developers identify vulnerabilities, optimize performance, and maintain high code quality standards. Built with Rust for speed and reliability, it empowers teams to ship secure software faster."
 license = "MIT"
 repository = "https://github.com/d-oit/do-codeguardian"
 homepage = "https://github.com/d-oit/do-codeguardian"
 documentation = "https://github.com/d-oit/do-codeguardian/docs"
 readme = "README.md"
-keywords = ["security", "analysis", "git", "cli", "code-quality", "ai", "validation", "production"]
+keywords = [
+    "security",
+    "analysis",
+    "git",
+    "cli",
+    "code-quality",
+    "ai",
+    "validation",
+    "production",
+]
 categories = ["command-line-utilities", "development-tools", "security"]
 exclude = ["target/", "benches/", "build/", "uat_test_files/", "scripts/"]
 build = "build.rs"
@@ -37,7 +46,12 @@ full = ["git", "security", "logging", "hashing", "cargo-audit", "ml", "ast"]
 [dependencies]
 # CLI and async runtime - use minimal features for faster builds
 clap = { version = "4.5", features = ["derive"] }
-tokio = { version = "1.40.0", features = ["rt-multi-thread", "macros", "fs", "process"] }
+tokio = { version = "1.40.0", features = [
+    "rt-multi-thread",
+    "macros",
+    "fs",
+    "process",
+] }
 futures = "0.3"
 futures-util = "0.3"
 
@@ -57,7 +71,9 @@ git2 = { version = "0.20", optional = true }
 
 # Logging - minimal features
 tracing = { version = "0.1", optional = true }
-tracing-subscriber = { version = "0.3", optional = true, features = ["env-filter"] }
+tracing-subscriber = { version = "0.3", optional = true, features = [
+    "env-filter",
+] }
 
 # HTTP client - minimal features for faster builds
 reqwest = { version = "0.12", features = ["json", "rustls-tls"] }
@@ -116,7 +132,12 @@ fann = { version = "0.1", optional = true }
 rand = "0.8"
 
 # AST Analysis - full features for AST parsing and visiting
-syn = { version = "2.0", features = ["parsing", "printing", "full", "visit"], optional = true }
+syn = { version = "2.0", features = [
+    "parsing",
+    "printing",
+    "full",
+    "visit",
+], optional = true }
 quote = { version = "1.0", optional = true }
 proc-macro2 = { version = "1.0", optional = true }
 
@@ -140,14 +161,17 @@ mockito = { version = "1.5", default-features = false }
 fake = { version = "4.4", default-features = false }
 
 # Development tools
-cargo-husky = { version = "1", default-features = false, features = ["precommit-hook", "run-cargo-clippy", "run-cargo-fmt"] }
+cargo-husky = { version = "1", default-features = false, features = [
+    "precommit-hook",
+    "run-cargo-clippy",
+    "run-cargo-fmt",
+] }
 
 # Property-based testing
 proptest = "1.5"
 
 # Futures utilities for async testing
 futures = "0.3"
-
 
 
 # Additional testing utilities for comprehensive coverage
@@ -158,7 +182,11 @@ serial_test = "3.1"
 divan = "0.1"
 
 # Tokio with test utilities for testing - optimized features
-tokio = { version = "1.40.0", features = ["test-util", "fs", "rt-multi-thread"] }
+tokio = { version = "1.40.0", features = [
+    "test-util",
+    "fs",
+    "rt-multi-thread",
+] }
 
 [[bench]]
 name = "hashing_benchmark"
@@ -180,6 +208,10 @@ harness = false
 name = "performance_regression_suite"
 harness = false
 
+[[bin]]
+name = "test_duplicate_detector"
+required-features = ["ast"]
+
 [[bench]]
 name = "load_testing_benchmark"
 harness = false
@@ -193,8 +225,8 @@ name = "optimization_recommendations_benchmark"
 harness = false
 
 [[bin]]
-name = "test_duplicate_detector"
-required-features = ["ast"]
+name = "codeguardian"
+path = "src/main.rs"
 
 [profile.release]
 opt-level = 3

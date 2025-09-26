@@ -576,7 +576,7 @@ mod tests {
     use tempfile::TempDir;
 
     #[test]
-    fn test_checklist_creation() {
+    fn test_checklist_creation() -> Result<(), Box<dyn std::error::Error>> {
         let checklist = SecurityChecklist::new();
         assert!(!checklist.categories.is_empty());
         assert!(!checklist.global_rules.is_empty());
@@ -584,7 +584,7 @@ mod tests {
     }
 
     #[test]
-    fn test_rule_management() {
+    fn test_rule_management() -> Result<(), Box<dyn std::error::Error>> {
         let mut checklist = SecurityChecklist::new();
 
         let rule = ChecklistRule {
@@ -607,13 +607,13 @@ mod tests {
         assert!(checklist.global_rules.iter().any(|r| r.id == "TEST_001"));
 
         // Remove rule
-        assert!(checklist.remove_rule("TEST_001").unwrap());
+        assert!(checklist.remove_rule("TEST_001")?);
         assert!(!checklist.global_rules.iter().any(|r| r.id == "TEST_001"));
     }
 
     #[test]
-    fn test_file_operations() {
-        let temp_dir = TempDir::new().unwrap();
+    fn test_file_operations() -> Result<(), Box<dyn std::error::Error>> {
+        let temp_dir = TempDir::new()?;
         let file_path = temp_dir.path().join("checklist.toml");
 
         let checklist = SecurityChecklist::new();
@@ -623,7 +623,7 @@ mod tests {
         assert!(file_path.exists());
 
         // Load from file
-        let loaded_checklist = SecurityChecklist::load_from_file(&file_path).unwrap();
+        let loaded_checklist = SecurityChecklist::load_from_file(&file_path)?;
         assert_eq!(checklist.version, loaded_checklist.version);
         assert_eq!(
             checklist.global_rules.len(),
@@ -632,7 +632,7 @@ mod tests {
     }
 
     #[test]
-    fn test_rule_filtering() {
+    fn test_rule_filtering() -> Result<(), Box<dyn std::error::Error>> {
         let checklist = SecurityChecklist::new();
 
         // Test category filtering
@@ -649,11 +649,11 @@ mod tests {
     }
 
     #[test]
-    fn test_validation() {
+    fn test_validation() -> Result<(), Box<dyn std::error::Error>> {
         let checklist = SecurityChecklist::new();
-        let temp_dir = TempDir::new().unwrap();
+        let temp_dir = TempDir::new()?;
 
-        let result = checklist.validate_for_repository(temp_dir.path()).unwrap();
+        let result = checklist.validate_for_repository(temp_dir.path())?;
         assert!(result.valid);
     }
 }

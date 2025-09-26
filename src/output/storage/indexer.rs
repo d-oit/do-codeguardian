@@ -698,13 +698,13 @@ mod tests {
     }
 
     #[test]
-    fn test_indexer_creation() {
+    fn test_indexer_creation() -> Result<(), Box<dyn std::error::Error>> {
         let indexer = StorageIndexer::new();
         assert_eq!(indexer.search_index.version, "1.0.0");
     }
 
     #[test]
-    fn test_index_and_search() {
+    fn test_index_and_search() -> Result<(), Box<dyn std::error::Error>> {
         let mut indexer = StorageIndexer::new();
         let results = create_test_results();
         let metadata = ResultMetadata {
@@ -721,22 +721,20 @@ mod tests {
             tags: vec!["test".to_string()],
         };
 
-        indexer
-            .index_results("test_1", &results, &metadata)
-            .unwrap();
+        indexer.index_results("test_1", &results, &metadata)?;
 
         let query = SearchQuery {
             text_terms: vec!["security".to_string()],
             ..Default::default()
         };
 
-        let search_results = indexer.search(&query).unwrap();
+        let search_results = indexer.search(&query)?;
         assert_eq!(search_results.len(), 1);
         assert_eq!(search_results[0].id, "test_1");
     }
 
     #[test]
-    fn test_faceted_search() {
+    fn test_faceted_search() -> Result<(), Box<dyn std::error::Error>> {
         let mut indexer = StorageIndexer::new();
         let results = create_test_results();
         let metadata = ResultMetadata {
@@ -753,9 +751,7 @@ mod tests {
             tags: vec!["test".to_string()],
         };
 
-        indexer
-            .index_results("test_1", &results, &metadata)
-            .unwrap();
+        indexer.index_results("test_1", &results, &metadata)?;
 
         let mut required_facets = HashMap::new();
         required_facets.insert("severity".to_string(), vec!["high".to_string()]);
@@ -765,12 +761,12 @@ mod tests {
             ..Default::default()
         };
 
-        let search_results = indexer.search(&query).unwrap();
+        let search_results = indexer.search(&query)?;
         assert_eq!(search_results.len(), 1);
     }
 
     #[test]
-    fn test_suggestions() {
+    fn test_suggestions() -> Result<(), Box<dyn std::error::Error>> {
         let mut indexer = StorageIndexer::new();
         let results = create_test_results();
         let metadata = ResultMetadata {
@@ -787,9 +783,7 @@ mod tests {
             tags: vec!["test".to_string()],
         };
 
-        indexer
-            .index_results("test_1", &results, &metadata)
-            .unwrap();
+        indexer.index_results("test_1", &results, &metadata)?;
 
         let suggestions = indexer.get_suggestions("sec", 5);
         assert!(suggestions.iter().any(|s| s.contains("security")));

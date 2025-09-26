@@ -433,30 +433,27 @@ impl PatternBasedGenerator {
         let patterns = vec![
             Pattern {
                 name: "security_keywords".to_string(),
-                regex: regex::Regex::new(r"(?i)(password|secret|key|token|auth|login|admin)")
-                    .unwrap(),
+                regex: regex::Regex::new(r"(?i)(password|secret|key|token|auth|login|admin)")?,
                 weight: 2.0,
             },
             Pattern {
                 name: "sql_patterns".to_string(),
-                regex: regex::Regex::new(r"(?i)(select|insert|update|delete|drop|union)").unwrap(),
+                regex: regex::Regex::new(r"(?i)(select|insert|update|delete|drop|union)")?,
                 weight: 1.5,
             },
             Pattern {
                 name: "file_operations".to_string(),
-                regex: regex::Regex::new(r"(?i)(file|read|write|open|close|delete)").unwrap(),
+                regex: regex::Regex::new(r"(?i)(file|read|write|open|close|delete)")?,
                 weight: 1.2,
             },
             Pattern {
                 name: "network_operations".to_string(),
-                regex: regex::Regex::new(r"(?i)(http|url|socket|connect|request|response)")
-                    .unwrap(),
+                regex: regex::Regex::new(r"(?i)(http|url|socket|connect|request|response)")?,
                 weight: 1.3,
             },
             Pattern {
                 name: "crypto_operations".to_string(),
-                regex: regex::Regex::new(r"(?i)(encrypt|decrypt|hash|cipher|crypto|ssl|tls)")
-                    .unwrap(),
+                regex: regex::Regex::new(r"(?i)(encrypt|decrypt|hash|cipher|crypto|ssl|tls)")?,
                 weight: 1.8,
             },
         ];

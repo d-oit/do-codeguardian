@@ -274,8 +274,7 @@ impl PatternRecognitionEngine {
         if !results.is_empty() {
             let best_result = results
                 .iter()
-                .max_by(|a, b| a.confidence.partial_cmp(&b.confidence).unwrap())
-                .unwrap();
+                .max_by(|a, b| a.confidence.partial_cmp(&b.confidence)?)?;
             self.pattern_cache.insert(cache_key, best_result.clone());
         }
 

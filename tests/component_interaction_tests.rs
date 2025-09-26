@@ -2,11 +2,7 @@
 //!
 //! End-to-end workflows and error handling tests for CodeGuardian components.
 
-use do_codeguardian::cache::UnifiedCache;
 use do_codeguardian::core::GuardianEngine;
-use do_codeguardian::ml::feature_extractor::FeatureExtractor;
-use do_codeguardian::output::formatter::OutputFormatter;
-use do_codeguardian::performance::monitoring::PerformanceMonitor;
 use do_codeguardian::utils::progress::ProgressReporter;
 use do_codeguardian::Config;
 use std::path::PathBuf;

@@ -1,10 +1,10 @@
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
-use do_do_codeguardian::{
+use do_codeguardian::{
     analyzers::{performance_analyzer::PerformanceAnalyzer, security_analyzer::SecurityAnalyzer},
     cache::FileCache,
     config::{Config, PerformanceConfig},
     core::GuardianEngine,
-    performance::{OptimizationTracker, PerformanceMetrics},
+    performance::PerformanceMetrics,
 };
 use std::collections::HashMap;
 use std::hint::black_box;
@@ -329,12 +329,6 @@ fn bench_optimization_effectiveness(c: &mut Criterion) {
     group.finish();
 }
 
-/// Helper function to get current memory usage
-fn get_memory_usage() -> Option<u64> {
-    // Simplified implementation - in production, use proper memory profiling
-    Some(1024 * 1024 * 100) // Return 100MB as example
-}
-
 /// Optimization tracking structure
 pub struct OptimizationTracker {
     metrics: Arc<std::sync::Mutex<HashMap<String, HashMap<String, Vec<f64>>>>>,
@@ -407,6 +401,12 @@ impl OptimizationTracker {
             cache_hit_rate * 100.0
         );
     }
+}
+
+/// Helper function to get current memory usage
+fn get_memory_usage() -> Option<u64> {
+    // Simplified implementation - in production, use proper memory profiling
+    Some(1024 * 1024 * 100) // Return 100MB as example
 }
 
 criterion_group!(

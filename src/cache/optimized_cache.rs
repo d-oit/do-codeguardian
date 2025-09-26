@@ -496,62 +496,62 @@ mod tests {
     use tempfile::tempdir;
 
     #[test]
-    fn test_cache_basic_operations() {
+    fn test_cache_basic_operations() -> Result<(), Box<dyn std::error::Error>> {
         let mut cache = OptimizedCache::new(10, 10);
-        let temp_dir = tempdir().unwrap();
+        let temp_dir = tempdir()?;
         let test_file = temp_dir.path().join("test.rs");
 
-        std::fs::write(&test_file, "fn test() {}").unwrap();
+        std::fs::write(&test_file, "fn test() {}")?;
 
         let findings = vec![];
         let config_hash = "test_config";
 
         // Put and get
-        cache
-            .put(&test_file, findings.clone(), config_hash, 100)
-            .unwrap();
-        let result = cache.get(&test_file, config_hash).unwrap();
+        cache.put(&test_file, findings.clone(), config_hash, 100)?;
+        let result = cache.get(&test_file, config_hash)?;
 
         assert!(result.is_some());
         assert_eq!(cache.stats().hits, 1);
         assert_eq!(cache.stats().hit_rate(), 1.0);
+        Ok(())
     }
 
     #[test]
-    fn test_cache_invalidation_on_file_change() {
+    fn test_cache_invalidation_on_file_change() -> Result<(), Box<dyn std::error::Error>> {
         let mut cache = OptimizedCache::new(10, 10);
-        let temp_dir = tempdir().unwrap();
+        let temp_dir = tempdir()?;
         let test_file = temp_dir.path().join("test.rs");
 
-        std::fs::write(&test_file, "fn test() {}").unwrap();
+        std::fs::write(&test_file, "fn test() {}")?;
 
         let findings = vec![];
         let config_hash = "test_config";
 
-        cache.put(&test_file, findings, config_hash, 100).unwrap();
+        cache.put(&test_file, findings, config_hash, 100)?;
 
         // Modify file
         std::thread::sleep(Duration::from_millis(10));
-        std::fs::write(&test_file, "fn test() { println!(); }").unwrap();
+        std::fs::write(&test_file, "fn test() { println!(); }")?;
 
         // Should miss due to file change
-        let result = cache.get(&test_file, config_hash).unwrap();
+        let result = cache.get(&test_file, config_hash)?;
         assert!(result.is_none());
         assert_eq!(cache.stats().file_changed_misses, 1);
+        Ok(())
     }
 
     #[test]
-    fn test_cache_eviction() {
+    fn test_cache_eviction() -> Result<(), Box<dyn std::error::Error>> {
         let mut cache = OptimizedCache::new(2, 1); // Very small cache
-        let temp_dir = tempdir().unwrap();
+        let temp_dir = tempdir()?;
 
         // Add entries that exceed capacity
         for i in 0..3 {
             let test_file = temp_dir.path().join(format!("test_{}.rs", i));
-            std::fs::write(&test_file, "fn test() {}").unwrap();
+        std::fs::write(&test_file, "fn test() {}").unwrap();
 
             let findings = vec![];
-            cache.put(&test_file, findings, "config", 100).unwrap();
+            cache.put(&test_file, findings, "config", 100)?;
         }
 
         // Should have evicted some entries
@@ -560,15 +560,15 @@ mod tests {
     }
 
     #[test]
-    fn test_cache_cleanup() {
+    fn test_cache_cleanup() -> Result<(), Box<dyn std::error::Error>> {
         let mut cache = OptimizedCache::new(10, 10);
-        let temp_dir = tempdir().unwrap();
+        let temp_dir = tempdir()?;
         let test_file = temp_dir.path().join("test.rs");
 
-        std::fs::write(&test_file, "fn test() {}").unwrap();
+        std::fs::write(&test_file, "fn test() {}")?;
 
         let findings = vec![];
-        cache.put(&test_file, findings, "config", 100).unwrap();
+        cache.put(&test_file, findings, "config", 100)?;
 
         // Cleanup with 0 max age should remove all entries
         let removed = cache.cleanup(0);
@@ -582,22 +582,23 @@ mod tests {
         let cache_file = temp_dir.path().join("cache.json");
         let test_file = temp_dir.path().join("test.rs");
 
-        std::fs::write(&test_file, "fn test() {}").unwrap();
+        std::fs::write(&test_file, "fn test() {}")?;
 
         // Create and populate cache
         let mut cache = OptimizedCache::new(10, 10);
         let findings = vec![];
-        cache.put(&test_file, findings, "config", 100).unwrap();
+        cache.put(&test_file, findings, "config", 100)?;
 
         // Save to disk
-        cache.save_to_disk(&cache_file).await.unwrap();
+        cache.save_to_disk(&cache_file).await?;
         assert!(cache_file.exists());
 
         // Load into new cache
         let mut new_cache = OptimizedCache::new(10, 10);
-        new_cache.load_from_disk(&cache_file).await.unwrap();
+        new_cache.load_from_disk(&cache_file).await?;
 
         // Should have loaded the entry
         assert!(!new_cache.entries.is_empty());
+        Ok(())
     }
 }

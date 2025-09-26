@@ -613,14 +613,14 @@ impl PredictionCache {
             .predictions
             .iter()
             .map(|(key, prediction)| {
-                let access_info = self.access_frequency.get(key).unwrap();
+                let access_info = self.access_frequency.get(key)?;
                 let score = self.calculate_cache_score(prediction, access_info);
                 (key.clone(), score)
             })
             .collect();
 
         // Sort by score (ascending - lower scores get evicted first)
-        scored_entries.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap());
+        scored_entries.sort_by(|a, b| a.1.partial_cmp(&b.1)?);
 
         // Evict lowest scoring entries
         for (key, _) in scored_entries.into_iter().take(count) {

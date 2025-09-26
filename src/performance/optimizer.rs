@@ -164,7 +164,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_optimal_worker_count() {
+    fn test_optimal_worker_count() -> Result<(), Box<dyn std::error::Error>> {
         let metrics = Arc::new(PerformanceMetrics::new());
         let optimizer = PerformanceOptimizer::new(metrics, OptimizationLevel::Balanced);
 
@@ -174,7 +174,7 @@ mod tests {
     }
 
     #[test]
-    fn test_optimization_recommendations() {
+    fn test_optimization_recommendations() -> Result<(), Box<dyn std::error::Error>> {
         let metrics = Arc::new(PerformanceMetrics::new());
         let mut optimizer = PerformanceOptimizer::new(metrics, OptimizationLevel::Balanced);
 

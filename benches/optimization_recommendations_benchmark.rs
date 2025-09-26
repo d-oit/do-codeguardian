@@ -1,5 +1,5 @@
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
-use do_do_codeguardian::{
+use do_codeguardian::{
     config::Config,
     core::GuardianEngine,
     performance::{
@@ -7,7 +7,6 @@ use do_do_codeguardian::{
     },
     utils::progress::ProgressReporter,
 };
-use std::hint::black_box;
 use std::path::PathBuf;
 use std::sync::Arc;
 use std::time::Duration;
@@ -235,10 +234,10 @@ fn bench_recommendation_prioritization(c: &mut Criterion) {
 
             for rec in recommendations {
                 match rec.priority {
-                    do_do_codeguardian::performance::Priority::Critical => critical.push(rec),
-                    do_do_codeguardian::performance::Priority::High => high.push(rec),
-                    do_do_codeguardian::performance::Priority::Medium => medium.push(rec),
-                    do_do_codeguardian::performance::Priority::Low => low.push(rec),
+                    do_codeguardian::performance::Priority::Critical => critical.push(rec),
+                    do_codeguardian::performance::Priority::High => high.push(rec),
+                    do_codeguardian::performance::Priority::Medium => medium.push(rec),
+                    do_codeguardian::performance::Priority::Low => low.push(rec),
                 }
             }
 
@@ -273,13 +272,11 @@ fn bench_implementation_effort_analysis(c: &mut Criterion) {
 
             for rec in recommendations {
                 match rec.implementation_effort {
-                    do_do_codeguardian::performance::ImplementationEffort::Low => {
-                        low_effort.push(rec)
-                    }
-                    do_do_codeguardian::performance::ImplementationEffort::Medium => {
+                    do_codeguardian::performance::ImplementationEffort::Low => low_effort.push(rec),
+                    do_codeguardian::performance::ImplementationEffort::Medium => {
                         medium_effort.push(rec)
                     }
-                    do_do_codeguardian::performance::ImplementationEffort::High => {
+                    do_codeguardian::performance::ImplementationEffort::High => {
                         high_effort.push(rec)
                     }
                 }

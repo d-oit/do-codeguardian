@@ -132,30 +132,30 @@ mod tests {
     }
 
     #[test]
-    fn test_ai_processor_creation() {
+    fn test_ai_processor_creation() -> Result<(), Box<dyn std::error::Error>> {
         let config = Arc::new(create_test_config());
         let processor = AIProcessor::new(config);
         assert!(processor.is_ok());
     }
 
     #[test]
-    fn test_ai_processor_capabilities() {
+    fn test_ai_processor_capabilities() -> Result<(), Box<dyn std::error::Error>> {
         let config = Arc::new(create_test_config());
-        let processor = AIProcessor::new(config).unwrap();
+        let processor = AIProcessor::new(config)?;
         let capabilities = processor.get_capabilities();
         assert!(!capabilities.is_empty());
     }
 
     #[tokio::test]
-    async fn test_ai_processing() {
+    async fn test_ai_processing() -> Result<(), Box<dyn std::error::Error>> {
         let config = Arc::new(create_test_config());
-        let processor = AIProcessor::new(config).unwrap();
+        let processor = AIProcessor::new(config)?;
         let results = create_test_results();
 
         let enhanced = processor.process_results(&results).await;
         assert!(enhanced.is_ok());
 
-        let enhanced_results = enhanced.unwrap();
+        let enhanced_results = enhanced?;
         assert_eq!(enhanced_results.base_results.findings.len(), 2);
 
         // Debug: Print the enhanced results to see what's populated

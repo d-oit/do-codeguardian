@@ -568,15 +568,15 @@ mod tests {
     use tempfile::TempDir;
 
     #[tokio::test]
-    async fn test_audit_logger_creation() {
+    async fn test_audit_logger_creation() -> Result<(), Box<dyn std::error::Error>> {
         let config = EnterpriseConfig::default();
         let logger = AuditLogger::new(&config);
         assert!(logger.is_ok());
     }
 
     #[tokio::test]
-    async fn test_file_audit_storage() {
-        let temp_dir = TempDir::new().unwrap();
+    async fn test_file_audit_storage() -> Result<(), Box<dyn std::error::Error>> {
+        let temp_dir = TempDir::new()?;
         let mut storage = FileAuditStorage::new(temp_dir.path().to_path_buf(), false);
 
         let entry = AuditLogEntry {
@@ -599,9 +599,9 @@ mod tests {
     }
 
     #[test]
-    fn test_risk_level_assessment() {
+    fn test_risk_level_assessment() -> Result<(), Box<dyn std::error::Error>> {
         let config = EnterpriseConfig::default();
-        let logger = AuditLogger::new(&config).unwrap();
+        let logger = AuditLogger::new(&config)?;
 
         assert_eq!(logger.assess_risk_level("delete_user"), RiskLevel::Critical);
         assert_eq!(logger.assess_risk_level("create_tenant"), RiskLevel::High);
@@ -610,9 +610,9 @@ mod tests {
     }
 
     #[test]
-    fn test_integrity_hash_calculation() {
+    fn test_integrity_hash_calculation() -> Result<(), Box<dyn std::error::Error>> {
         let config = EnterpriseConfig::default();
-        let logger = AuditLogger::new(&config).unwrap();
+        let logger = AuditLogger::new(&config)?;
 
         let entry = AuditLogEntry {
             id: Uuid::new_v4(),
@@ -631,6 +631,6 @@ mod tests {
 
         let hash = logger.calculate_integrity_hash(&entry);
         assert!(hash.is_ok());
-        assert!(!hash.unwrap().is_empty());
+        assert!(!hash?.is_empty());
     }
 }

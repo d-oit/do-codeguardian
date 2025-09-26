@@ -5,6 +5,33 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.1-alpha.3] - 2025-09-25
+
+### Added
+- **Testing Framework Enhancements**: Improved analyzers and comprehensive integration tests for better code quality assurance
+- **CI/CD Improvements**: Added comprehensive CI workflow with parallel jobs, security scanning, cross-platform support, performance optimization, and monitoring
+- **Development Environment**: Created and updated DOCKERFILE and devcontainer.json for enhanced development setup
+
+### Changed
+- **Development Configuration**: Updated DOCKERFILE and devcontainer.json to support latest development practices
+
+### Fixed
+- **Code Quality**: Resolved clippy warnings by making CodeBlock struct public and fixed compilation errors
+- **Linting and Quality**: Completed code quality audit and linting improvements across the codebase
+- **Workflow Configurations**: Updated CI workflow configurations and resolved pending changes from codespace
+
+### Technical Details
+- **CI/CD Enhancements**: Consolidated workflows with parallel processing, security scanning, and performance monitoring
+- **Code Quality**: Comprehensive linting fixes and quality improvements
+- **Development Tools**: Enhanced devcontainer setup for better developer experience
+
+**Note**: This alpha release focuses on improving testing frameworks, CI/CD pipelines, and development environment setup for enhanced reliability and performance.
+
+### Contributors
+- Dominik Oswald (@d-oit)
+
+---
+
 ## [0.2.1-alpha.2] - 2025-09-20
 
 ### Added

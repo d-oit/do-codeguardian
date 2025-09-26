@@ -549,7 +549,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_tenant_creation() {
+    fn test_tenant_creation() -> Result<(), Box<dyn std::error::Error>> {
         let tenant = Tenant::new(
             "Test Tenant".to_string(),
             "Test Organization".to_string(),
@@ -563,7 +563,7 @@ mod tests {
     }
 
     #[test]
-    fn test_enterprise_context_creation() {
+    fn test_enterprise_context_creation() -> Result<(), Box<dyn std::error::Error>> {
         let context = EnterpriseContext::new("test_operation".to_string());
         assert_eq!(context.operation, "test_operation");
         assert!(context.tenant.is_none());
@@ -571,7 +571,7 @@ mod tests {
     }
 
     #[test]
-    fn test_tenant_feature_check() {
+    fn test_tenant_feature_check() -> Result<(), Box<dyn std::error::Error>> {
         let mut tenant = Tenant::new(
             "Test Tenant".to_string(),
             "Test Org".to_string(),
@@ -588,7 +588,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_enterprise_manager_creation() {
+    async fn test_enterprise_manager_creation() -> Result<(), Box<dyn std::error::Error>> {
         let config = EnterpriseConfig::default();
         let manager = EnterpriseManager::new(config);
         assert!(manager.is_ok());

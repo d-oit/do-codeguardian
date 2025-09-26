@@ -291,13 +291,13 @@ mod tests {
     use tokio::fs;
 
     #[test]
-    fn test_enhanced_feature_extractor_creation() {
+    fn test_enhanced_feature_extractor_creation() -> Result<(), Box<dyn std::error::Error>> {
         let extractor = EnhancedFeatureExtractor::new();
         assert_eq!(extractor.file_cache.len(), 0);
     }
 
     #[test]
-    fn test_feature_names() {
+    fn test_feature_names() -> Result<(), Box<dyn std::error::Error>> {
         let names = EnhancedFeatureExtractor::get_feature_names();
         assert_eq!(names.len(), 24); // 8 base + 16 AST
         assert!(names[0].contains("severity"));
@@ -305,7 +305,7 @@ mod tests {
     }
 
     #[test]
-    fn test_enhanced_features_extraction() {
+    fn test_enhanced_features_extraction() -> Result<(), Box<dyn std::error::Error>> {
         let mut extractor = EnhancedFeatureExtractor::new();
 
         let finding = Finding::new(
@@ -317,14 +317,13 @@ mod tests {
             "Test finding".to_string(),
         );
 
-        let features = tokio::runtime::Runtime::new()
-            .unwrap()
-            .block_on(async { extractor.extract_enhanced_features(&finding).await.unwrap() });
+        let features = tokio::runtime::Runtime::new()?
+            .block_on(async { extractor.extract_enhanced_features(&finding).await? });
         assert_eq!(features.len(), 24); // 8 base + 16 AST features
     }
 
     #[test]
-    fn test_feature_importance_analysis() {
+    fn test_feature_importance_analysis() -> Result<(), Box<dyn std::error::Error>> {
         let mut extractor = EnhancedFeatureExtractor::new();
 
         let finding = Finding::new(
@@ -336,12 +335,8 @@ mod tests {
             "Critical test finding".to_string(),
         );
 
-        let analysis = tokio::runtime::Runtime::new().unwrap().block_on(async {
-            extractor
-                .analyze_feature_importance(&finding)
-                .await
-                .unwrap()
-        });
+        let analysis = tokio::runtime::Runtime::new()?
+            .block_on(async { extractor.analyze_feature_importance(&finding).await? });
         assert_eq!(analysis.total_features, 24);
         assert!(analysis.base_feature_contribution >= 0.0);
         assert!(analysis.ast_feature_contribution >= 0.0);
@@ -350,13 +345,13 @@ mod tests {
 
     #[cfg(feature = "ast")]
     #[tokio::test]
-    async fn test_file_size_limit() {
+    async fn test_file_size_limit() -> Result<(), Box<dyn std::error::Error>> {
         let mut extractor = EnhancedFeatureExtractor::new();
 
         // Create a temporary file larger than 10MB
-        let temp_file = NamedTempFile::new().unwrap();
+        let temp_file = NamedTempFile::new()?;
         let large_content = vec![b'a'; 15 * 1024 * 1024]; // 15MB
-        fs::write(&temp_file, &large_content).await.unwrap();
+        fs::write(&temp_file, &large_content).await?;
 
         let result = extractor.get_ast_features_async(temp_file.path()).await;
         assert!(result.is_err());
@@ -367,13 +362,13 @@ mod tests {
 
     #[cfg(feature = "ast")]
     #[tokio::test]
-    async fn test_valid_file_size() {
+    async fn test_valid_file_size() -> Result<(), Box<dyn std::error::Error>> {
         let mut extractor = EnhancedFeatureExtractor::new();
 
         // Create a temporary file smaller than 10MB
-        let temp_file = NamedTempFile::new().unwrap();
+        let temp_file = NamedTempFile::new()?;
         let content = b"fn main() { println!(\"Hello\"); }";
-        fs::write(&temp_file, content).await.unwrap();
+        fs::write(&temp_file, content).await?;
 
         let result = extractor.get_ast_features_async(temp_file.path()).await;
         // Should succeed or fail based on AST parsing, but not due to size
@@ -385,15 +380,15 @@ mod tests {
 
     #[cfg(feature = "ast")]
     #[tokio::test]
-    async fn test_cache_size_limit() {
+    async fn test_cache_size_limit() -> Result<(), Box<dyn std::error::Error>> {
         let mut extractor = EnhancedFeatureExtractor::new();
 
         // Create multiple small files to fill cache
         for i in 0..1100 {
             // More than MAX_CACHE_SIZE
-            let temp_file = NamedTempFile::new().unwrap();
+            let temp_file = NamedTempFile::new()?;
             let content = format!("fn func_{}() {{}}", i);
-            fs::write(&temp_file, content).await.unwrap();
+            fs::write(&temp_file, content).await?;
 
             let _ = extractor.get_ast_features_async(temp_file.path()).await;
         }

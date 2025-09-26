@@ -533,15 +533,15 @@ mod tests {
     use crate::output::TestStatus;
 
     #[tokio::test]
-    async fn test_security_test_runner_creation() {
+    async fn test_security_test_runner_creation() -> Result<(), Box<dyn std::error::Error>> {
         let runner = SecurityTestRunner::new();
         assert!(!runner.test_cases.is_empty());
     }
 
     #[tokio::test]
-    async fn test_security_tests_execution() {
+    async fn test_security_tests_execution() -> Result<(), Box<dyn std::error::Error>> {
         let runner = SecurityTestRunner::new();
-        let results = runner.run_all_tests().await.unwrap();
+        let results = runner.run_all_tests().await?;
         assert!(!results.is_empty());
 
         // All tests should pass
@@ -557,12 +557,12 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_xss_prevention_in_html_formatter() {
+    async fn test_xss_prevention_in_html_formatter() -> Result<(), Box<dyn std::error::Error>> {
         let _runner = SecurityTestRunner::new();
         let malicious_results = create_malicious_results();
 
         let formatter = HtmlFormatter::new();
-        let output = formatter.format(&malicious_results).unwrap();
+        let output = formatter.format(&malicious_results)?;
 
         // Should not contain script tags after sanitization
         assert!(!output.content.contains("<script"));
@@ -573,7 +573,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_csp_header_security() {
+    async fn test_csp_header_security() -> Result<(), Box<dyn std::error::Error>> {
         let csp = generate_csp_header();
 
         // Should be restrictive
@@ -583,9 +583,9 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_file_path_sanitization_security() {
+    async fn test_file_path_sanitization_security() -> Result<(), Box<dyn std::error::Error>> {
         // Should prevent directory traversal
-        let result = sanitize_file_path("../../../etc/passwd").unwrap();
+        let result = sanitize_file_path("../../../etc/passwd")?;
         assert_eq!(result, "etc/passwd");
 
         // Should handle empty results

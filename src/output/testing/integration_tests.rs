@@ -852,21 +852,21 @@ mod tests {
     use super::*;
 
     #[tokio::test]
-    async fn test_integration_test_runner_creation() {
+    async fn test_integration_test_runner_creation() -> Result<(), Box<dyn std::error::Error>> {
         let runner = IntegrationTestRunner::new();
         assert!(!runner.test_scenarios.is_empty());
     }
 
     #[tokio::test]
-    async fn test_create_integration_test_data() {
+    async fn test_create_integration_test_data() -> Result<(), Box<dyn std::error::Error>> {
         let runner = IntegrationTestRunner::new();
-        let data = runner.create_integration_test_data(50).await.unwrap();
+        let data = runner.create_integration_test_data(50).await?;
         assert_eq!(data.findings.len(), 50);
     }
 
     #[tokio::test]
-    async fn test_concurrent_data_creation() {
-        let data = create_test_data_for_concurrency(10).await.unwrap();
+    async fn test_concurrent_data_creation() -> Result<(), Box<dyn std::error::Error>> {
+        let data = create_test_data_for_concurrency(10).await?;
         assert_eq!(data.findings.len(), 10);
         assert!(data.config_hash.contains("concurrent_config_10"));
     }

@@ -598,8 +598,8 @@ mod tests {
     use tempfile::TempDir;
 
     #[tokio::test]
-    async fn test_init_checklist() {
-        let temp_dir = TempDir::new().unwrap();
+    async fn test_init_checklist() -> Result<(), Box<dyn std::error::Error>> {
+        let temp_dir = TempDir::new()?;
         let output_path = temp_dir.path().join("test_checklist.toml");
 
         let result = init_checklist(output_path.clone(), true).await;
@@ -607,18 +607,18 @@ mod tests {
         assert!(output_path.exists());
 
         // Verify the checklist was created correctly
-        let checklist = SecurityChecklist::load_from_file(&output_path).unwrap();
+        let checklist = SecurityChecklist::load_from_file(&output_path)?;
         assert!(!checklist.categories.is_empty());
         assert!(!checklist.global_rules.is_empty());
     }
 
     #[tokio::test]
-    async fn test_add_and_remove_rule() {
-        let temp_dir = TempDir::new().unwrap();
+    async fn test_add_and_remove_rule() -> Result<(), Box<dyn std::error::Error>> {
+        let temp_dir = TempDir::new()?;
         let checklist_path = temp_dir.path().join("test_checklist.toml");
 
         // Initialize checklist
-        init_checklist(checklist_path.clone(), true).await.unwrap();
+        init_checklist(checklist_path.clone(), true).await?;
 
         // Add a rule
         let result = add_rule(
@@ -636,7 +636,7 @@ mod tests {
         assert!(result.is_ok());
 
         // Verify rule was added
-        let checklist = SecurityChecklist::load_from_file(&checklist_path).unwrap();
+        let checklist = SecurityChecklist::load_from_file(&checklist_path)?;
         assert!(checklist.global_rules.iter().any(|r| r.id == "TEST_001"));
 
         // Remove the rule
@@ -644,7 +644,7 @@ mod tests {
         assert!(result.is_ok());
 
         // Verify rule was removed
-        let checklist = SecurityChecklist::load_from_file(&checklist_path).unwrap();
+        let checklist = SecurityChecklist::load_from_file(&checklist_path)?;
         assert!(!checklist.global_rules.iter().any(|r| r.id == "TEST_001"));
     }
 }

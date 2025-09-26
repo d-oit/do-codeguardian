@@ -53,27 +53,29 @@ pub struct CrossFileDuplicate {
 
 impl Default for CrossFileDuplicateAnalyzer {
     fn default() -> Self {
-        Self::new()
+        match Self::new() {
+            Ok(s) => s,
+            Err(e) => panic!("Failed to create default CrossFileDuplicateAnalyzer: {}", e),
+        }
     }
 }
 
 impl CrossFileDuplicateAnalyzer {
-    pub fn new() -> Self {
+    pub fn new() -> Result<Self> {
         let security_patterns = vec![
             // Authentication and authorization patterns
-            Regex::new(r"(?i)(authenticate|login|signin|verify|validate|authorize|permission)")
-                .unwrap(),
+            Regex::new(r"(?i)(authenticate|login|signin|verify|validate|authorize|permission)")?,
             // Cryptographic operations
-            Regex::new(r"(?i)(encrypt|decrypt|hash|crypto|cipher|key|token|secret)").unwrap(),
+            Regex::new(r"(?i)(encrypt|decrypt|hash|crypto|cipher|key|token|secret)")?,
             // Input validation and sanitization
-            Regex::new(r"(?i)(validate|sanitize|escape|filter|clean|normalize)").unwrap(),
+            Regex::new(r"(?i)(validate|sanitize|escape|filter|clean|normalize)")?,
             // Error handling and security checks
-            Regex::new(r"(?i)(error|exception|panic|fail|abort|security|vulnerability)").unwrap(),
+            Regex::new(r"(?i)(error|exception|panic|fail|abort|security|vulnerability)")?,
             // Sensitive data handling
-            Regex::new(r"(?i)(password|credential|session|cookie|jwt|oauth)").unwrap(),
+            Regex::new(r"(?i)(password|credential|session|cookie|jwt|oauth)")?,
         ];
 
-        Self {
+        Ok(Self {
             min_lines: 10,
             similarity_threshold: 0.8,
             max_files_to_compare: 1000,
@@ -81,7 +83,7 @@ impl CrossFileDuplicateAnalyzer {
             focus_security: true,
             security_patterns,
             file_cache: HashMap::new(),
-        }
+        })
     }
 
     pub fn with_min_lines(mut self, min_lines: usize) -> Self {
@@ -615,6 +617,7 @@ mod tests {
     #[test]
     fn test_cross_file_duplicate_detection() {
         let mut analyzer = CrossFileDuplicateAnalyzer::new()
+            .expect("Failed to create CrossFileDuplicateAnalyzer")
             .with_min_lines(3)
             .with_similarity_threshold(0.8);
 
@@ -636,19 +639,21 @@ fn authenticate_admin(username: &str, password: &str) -> bool {
 
         let _ = analyzer
             .analyze_file(Path::new("auth1.rs"), content1)
-            .unwrap();
+            .expect("Failed to analyze file");
         let _ = analyzer
             .analyze_file(Path::new("auth2.rs"), content2)
-            .unwrap();
+            .expect("Failed to analyze file");
 
-        let duplicates = analyzer.find_cross_file_duplicates().unwrap();
+        let duplicates = analyzer
+            .find_cross_file_duplicates()
+            .expect("Failed to find duplicates");
         assert!(!duplicates.is_empty());
         assert!(duplicates[0].similarity_score > 0.8);
     }
 
     #[test]
     fn test_security_score_calculation() {
-        let analyzer = CrossFileDuplicateAnalyzer::new();
+        let analyzer = CrossFileDuplicateAnalyzer::default();
         let security_lines = vec![
             "authenticate_user".to_string(),
             "hash_password".to_string(),
@@ -665,7 +670,7 @@ fn authenticate_admin(username: &str, password: &str) -> bool {
 
     #[test]
     fn test_function_signature_extraction() {
-        let analyzer = CrossFileDuplicateAnalyzer::new();
+        let analyzer = CrossFileDuplicateAnalyzer::new().expect("Failed to create analyzer");
         let lines = vec![
             "fn authenticate_user(username: &str, password: &str) -> bool {".to_string(),
             "    let hashed = hash_password(password);".to_string(),
@@ -673,6 +678,8 @@ fn authenticate_admin(username: &str, password: &str) -> bool {
 
         let signature = analyzer.extract_function_signature(&lines);
         assert!(signature.is_some());
-        assert!(signature.unwrap().contains("authenticate_user"));
+        assert!(signature
+            .expect("Signature should be some")
+            .contains("authenticate_user"));
     }
 }

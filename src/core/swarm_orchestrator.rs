@@ -217,8 +217,18 @@ impl SwarmOrchestrator {
             return self.execute_tasks_simple_parallel(tasks).await;
         }
 
-        let resource_manager = self.resource_manager.as_ref().unwrap();
-        let scheduler = self.scheduler.as_ref().unwrap();
+        let resource_manager =
+            self.resource_manager
+                .as_ref()
+                .ok_or(SwarmError::ConfigurationError(
+                    "Resource manager not available".to_string(),
+                ))?;
+        let scheduler = self
+            .scheduler
+            .as_ref()
+            .ok_or(SwarmError::ConfigurationError(
+                "Scheduler not available".to_string(),
+            ))?;
 
         let mut handles = Vec::new();
         let mut pending_tasks = Vec::new();

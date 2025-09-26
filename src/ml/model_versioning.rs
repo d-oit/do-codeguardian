@@ -517,8 +517,8 @@ impl ModelVersionManager {
         }
 
         let best_model = models.iter()
-            .max_by(|a, b| a.performance_metrics.accuracy.partial_cmp(&b.performance_metrics.accuracy).unwrap())
-            .unwrap();
+            .max_by(|a, b| a.performance_metrics.accuracy.partial_cmp(&b.performance_metrics.accuracy)?)
+            ?;
 
         format!("Recommended model: {} (v{}) with {:.2}% accuracy",
                 best_model.name, best_model.version, best_model.performance_metrics.accuracy * 100.0)
@@ -600,7 +600,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_model_registration() {
+    fn test_model_registration() -> Result<(), Box<dyn std::error::Error>> {
         let config = VersioningConfig::default();
         let mut manager = ModelVersionManager::new(config);
 
@@ -612,7 +612,7 @@ mod tests {
     }
 
     #[test]
-    fn test_ab_test_creation() {
+    fn test_ab_test_creation() -> Result<(), Box<dyn std::error::Error>> {
         let config = VersioningConfig::default();
         let mut manager = ModelVersionManager::new(config);
 
@@ -620,8 +620,8 @@ mod tests {
         let model_a = create_test_model("test_model", "1.0.0");
         let model_b = create_test_model("test_model", "2.0.0");
 
-        manager.register_model(model_a.clone()).unwrap();
-        manager.register_model(model_b.clone()).unwrap();
+        manager.register_model(model_a.clone())?;
+        manager.register_model(model_b.clone())?;
 
         let experiment = create_test_experiment(&model_a.id, &model_b.id);
         let result = manager.start_ab_test(experiment);

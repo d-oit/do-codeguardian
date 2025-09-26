@@ -1158,19 +1158,19 @@ mod tests {
     }
 
     #[test]
-    fn test_organizer_creation() {
-        let temp_dir = TempDir::new().unwrap();
+    fn test_organizer_creation() -> Result<(), Box<dyn std::error::Error>> {
+        let temp_dir = TempDir::new()?;
         let config = create_test_config(&temp_dir);
 
-        let _organizer = ResultsOrganizer::new(config).unwrap();
+        let _organizer = ResultsOrganizer::new(config)?;
         assert!(temp_dir.path().join("index").exists());
     }
 
     #[test]
-    fn test_store_and_retrieve_results() {
-        let temp_dir = TempDir::new().unwrap();
+    fn test_store_and_retrieve_results() -> Result<(), Box<dyn std::error::Error>> {
+        let temp_dir = TempDir::new()?;
         let config = create_test_config(&temp_dir);
-        let mut organizer = ResultsOrganizer::new(config).unwrap();
+        let mut organizer = ResultsOrganizer::new(config)?;
 
         let results = create_test_results();
         let outputs = vec![(
@@ -1182,41 +1182,37 @@ mod tests {
             ),
         )];
 
-        let result_id = organizer
-            .store_results(
-                &results,
-                &outputs,
-                "test_project",
-                Some("test/repo"),
-                vec!["test".to_string()],
-            )
-            .unwrap();
+        let result_id = organizer.store_results(
+            &results,
+            &outputs,
+            "test_project",
+            Some("test/repo"),
+            vec!["test".to_string()],
+        )?;
 
         assert!(!result_id.is_empty());
 
         // Retrieve and verify
-        let retrieved = organizer.retrieve_results(&result_id).unwrap();
+        let retrieved = organizer.retrieve_results(&result_id)?;
         assert!(retrieved.is_some());
 
-        let (retrieved_results, retrieved_outputs) = retrieved.unwrap();
+        let (retrieved_results, retrieved_outputs) = retrieved?;
         assert_eq!(retrieved_results.config_hash, results.config_hash);
         assert_eq!(retrieved_outputs.len(), 1);
     }
 
     #[test]
-    fn test_organization_strategies() {
-        let temp_dir = TempDir::new().unwrap();
+    fn test_organization_strategies() -> Result<(), Box<dyn std::error::Error>> {
+        let temp_dir = TempDir::new()?;
         let organizer = ResultsOrganizer::new(StorageConfig {
             base_directory: temp_dir.path().to_path_buf(),
             organization_strategy: OrganizationStrategy::ByDate,
             ..Default::default()
-        })
-        .unwrap();
+        })?;
 
         let timestamp = Utc::now();
-        let path = organizer
-            .determine_storage_path("test_project", Some("test/repo"), &timestamp)
-            .unwrap();
+        let path =
+            organizer.determine_storage_path("test_project", Some("test/repo"), &timestamp)?;
 
         assert!(path
             .to_string_lossy()
@@ -1224,19 +1220,17 @@ mod tests {
     }
 
     #[test]
-    fn test_hierarchical_time_based_organization() {
-        let temp_dir = TempDir::new().unwrap();
+    fn test_hierarchical_time_based_organization() -> Result<(), Box<dyn std::error::Error>> {
+        let temp_dir = TempDir::new()?;
         let organizer = ResultsOrganizer::new(StorageConfig {
             base_directory: temp_dir.path().to_path_buf(),
             organization_strategy: OrganizationStrategy::HierarchicalTimeBased,
             ..Default::default()
-        })
-        .unwrap();
+        })?;
 
         let timestamp = Utc::now();
-        let path = organizer
-            .determine_storage_path("test_project", Some("test/repo"), &timestamp)
-            .unwrap();
+        let path =
+            organizer.determine_storage_path("test_project", Some("test/repo"), &timestamp)?;
 
         let path_str = path.to_string_lossy();
         assert!(path_str.contains(&timestamp.year().to_string()));
@@ -1250,14 +1244,13 @@ mod tests {
     }
 
     #[test]
-    fn test_path_validation() {
-        let temp_dir = TempDir::new().unwrap();
+    fn test_path_validation() -> Result<(), Box<dyn std::error::Error>> {
+        let temp_dir = TempDir::new()?;
         let organizer = ResultsOrganizer::new(StorageConfig {
             base_directory: temp_dir.path().to_path_buf(),
             organization_strategy: OrganizationStrategy::ByDate,
             ..Default::default()
-        })
-        .unwrap();
+        })?;
 
         // Valid path
         let valid_path = PathBuf::from("2024/01/01");
@@ -1273,10 +1266,10 @@ mod tests {
     }
 
     #[test]
-    fn test_query_results() {
-        let temp_dir = TempDir::new().unwrap();
+    fn test_query_results() -> Result<(), Box<dyn std::error::Error>> {
+        let temp_dir = TempDir::new()?;
         let config = create_test_config(&temp_dir);
-        let mut organizer = ResultsOrganizer::new(config).unwrap();
+        let mut organizer = ResultsOrganizer::new(config)?;
 
         let results = create_test_results();
         let outputs = vec![(
@@ -1288,15 +1281,13 @@ mod tests {
             ),
         )];
 
-        organizer
-            .store_results(
-                &results,
-                &outputs,
-                "test_project",
-                Some("test/repo"),
-                vec!["test".to_string()],
-            )
-            .unwrap();
+        organizer.store_results(
+            &results,
+            &outputs,
+            "test_project",
+            Some("test/repo"),
+            vec!["test".to_string()],
+        )?;
 
         let criteria = super::super::QueryCriteria {
             project: Some("test_project".to_string()),

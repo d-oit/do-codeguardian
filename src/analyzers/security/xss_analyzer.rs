@@ -93,26 +93,36 @@ impl XssAnalyzer {
 
                 if pattern.is_match(line) {
                     // Use pooled objects for finding creation
-                    let mut finding = finding_pool.lock().unwrap().get();
+                    let mut finding = finding_pool.lock().unwrap_or_else(|e| e.into_inner()).get();
 
                     // Use pooled strings
-                    let analyzer_name = string_pool.lock().unwrap().get("security");
-                    let rule_name = string_pool.lock().unwrap().get("xss");
+                    let analyzer_name = string_pool
+                        .lock()
+                        .unwrap_or_else(|e| e.into_inner())
+                        .get("security");
+                    let rule_name = string_pool
+                        .lock()
+                        .unwrap_or_else(|e| e.into_inner())
+                        .get("xss");
                     let message = string_pool
                         .lock()
-                        .unwrap()
+                        .unwrap_or_else(|e| e.into_inner())
                         .get("Potential XSS vulnerability detected");
-                    let description = string_pool.lock().unwrap().get(&format!(
-                        "Line contains pattern that may indicate XSS: {}",
-                        pattern_str
-                    ));
-                    let suggestion = string_pool.lock().unwrap().get(
+                    let description =
+                        string_pool
+                            .lock()
+                            .unwrap_or_else(|e| e.into_inner())
+                            .get(&format!(
+                                "Line contains pattern that may indicate XSS: {}",
+                                pattern_str
+                            ));
+                    let suggestion = string_pool.lock().unwrap_or_else(|e| e.into_inner()).get(
                         "Sanitize user input and use Content Security Policy (CSP) to prevent XSS",
                     );
 
                     // Use pooled path
                     let file_path_pooled = {
-                        let mut path_pool = path_pool.lock().unwrap();
+                        let mut path_pool = path_pool.lock().unwrap_or_else(|e| e.into_inner());
                         let mut pooled_path = path_pool.get();
                         pooled_path.push(file_path);
                         pooled_path

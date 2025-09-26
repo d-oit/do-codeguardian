@@ -742,11 +742,12 @@ impl Analyzer for BuildArtifactAnalyzer {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use anyhow::Result;
     use std::fs;
     use tempfile::TempDir;
 
     #[test]
-    fn test_build_artifact_detection() {
+    fn test_build_artifact_detection() -> Result<()> {
         let analyzer = BuildArtifactAnalyzer::new();
 
         // Test various file types
@@ -754,10 +755,11 @@ mod tests {
         assert!(analyzer.is_build_artifact(Path::new("libtest.so")));
         assert!(analyzer.is_build_artifact(Path::new("Cargo.toml")));
         assert!(!analyzer.is_build_artifact(Path::new("README.md")));
+        Ok(())
     }
 
     #[test]
-    fn test_artifact_type_detection() {
+    fn test_artifact_type_detection() -> Result<()> {
         let analyzer = BuildArtifactAnalyzer::new();
 
         assert_eq!(
@@ -776,10 +778,11 @@ mod tests {
             analyzer.determine_artifact_type(Path::new("app.exe")),
             ArtifactType::Binary
         );
+        Ok(())
     }
 
     #[test]
-    fn test_conflict_assessment() {
+    fn test_conflict_assessment() -> Result<()> {
         let analyzer = BuildArtifactAnalyzer::new();
 
         let artifacts = vec![
@@ -801,10 +804,11 @@ mod tests {
 
         let conflict_level = analyzer.assess_conflict_level(&artifacts);
         assert_eq!(conflict_level, ConflictLevel::Low);
+        Ok(())
     }
 
     #[test]
-    fn test_duplicate_detection() -> Result<()> {
+    fn test_duplicate_detection() -> Result<(), Box<dyn std::error::Error>> {
         let temp_dir = TempDir::new()?;
         let mut analyzer = BuildArtifactAnalyzer::new();
 

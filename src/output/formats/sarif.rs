@@ -105,7 +105,9 @@ impl OutputFormatter for SarifFormatter {
             return Err(anyhow::anyhow!("SARIF must be a JSON object"));
         }
 
-        let obj = sarif.as_object().unwrap();
+        let obj = sarif
+            .as_object()
+            .ok_or_else(|| anyhow::anyhow!("SARIF is not an object"))?;
 
         // Check required fields
         if !obj.contains_key("version") {
@@ -152,7 +154,10 @@ impl SarifFormatter {
         });
 
         let run = self.create_run(results)?;
-        sarif["runs"].as_array_mut().unwrap().push(run);
+        sarif["runs"]
+            .as_array_mut()
+            .ok_or_else(|| anyhow::anyhow!("runs is not an array"))?
+            .push(run);
 
         Ok(sarif)
     }
@@ -303,33 +308,33 @@ mod tests {
     }
 
     #[test]
-    fn test_sarif_formatter_basic() {
+    fn test_sarif_formatter_basic() -> Result<(), Box<dyn std::error::Error>> {
         let formatter = SarifFormatter::new();
         let results = create_test_results();
 
-        let output = formatter.format(&results).unwrap();
+        let output = formatter.format(&results)?;
         assert!(!output.content.is_empty());
         assert_eq!(output.metadata.format, "sarif");
 
         // Verify it's valid JSON
-        let sarif: Value = serde_json::from_str(&output.content).unwrap();
+        let sarif: Value = serde_json::from_str(&output.content)?;
         assert!(sarif.is_object());
     }
 
     #[test]
-    fn test_sarif_structure() {
+    fn test_sarif_structure() -> Result<(), Box<dyn std::error::Error>> {
         let formatter = SarifFormatter::new();
         let results = create_test_results();
 
-        let output = formatter.format(&results).unwrap();
-        let sarif: Value = serde_json::from_str(&output.content).unwrap();
+        let output = formatter.format(&results)?;
+        let sarif: Value = serde_json::from_str(&output.content)?;
 
         // Check required SARIF fields
         assert!(sarif.get("$schema").is_some());
         assert!(sarif.get("version").is_some());
         assert!(sarif.get("runs").is_some());
 
-        let runs = sarif.get("runs").unwrap().as_array().unwrap();
+        let runs = sarif.get("runs")?.as_array()?;
         assert_eq!(runs.len(), 1);
 
         let run = &runs[0];
@@ -338,7 +343,7 @@ mod tests {
     }
 
     #[test]
-    fn test_sarif_content_type() {
+    fn test_sarif_content_type() -> Result<(), Box<dyn std::error::Error>> {
         let formatter = SarifFormatter::new();
         assert_eq!(formatter.content_type(), "application/sarif+json");
     }

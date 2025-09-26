@@ -166,20 +166,20 @@ mod tests {
     use super::*;
 
     #[tokio::test]
-    async fn test_metrics_processor() {
+    async fn test_metrics_processor() -> Result<(), Box<dyn std::error::Error>> {
         let processor = MetricsEnabledOutputProcessor::new();
 
         // Test health status
-        let health = processor.get_health_status().await.unwrap();
+        let health = processor.get_health_status().await?;
         assert_eq!(health.overall_status, HealthStatus::Unknown); // No data yet
 
         // Test report generation
-        let report = processor.generate_report().await.unwrap();
+        let report = processor.generate_report().await?;
         assert!(report.summary.total_operations == 0); // No operations recorded yet
     }
 
     #[tokio::test]
-    async fn test_metrics_middleware() {
+    async fn test_metrics_middleware() -> Result<(), Box<dyn std::error::Error>> {
         let middleware = MetricsMiddleware::new();
 
         // Simulate an operation
@@ -191,7 +191,7 @@ mod tests {
             },
             &results,
             OutputFormat::Json,
-        ).await.unwrap();
+        ).await?;
 
         assert_eq!(output_result.content, "test output");
     }

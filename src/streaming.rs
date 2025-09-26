@@ -213,12 +213,12 @@ mod tests {
     use tempfile::NamedTempFile;
 
     #[tokio::test]
-    async fn test_streaming_analysis() {
-        let mut temp_file = NamedTempFile::new().unwrap();
+    async fn test_streaming_analysis() -> Result<(), Box<dyn std::error::Error>> {
+        let mut temp_file = NamedTempFile::new()?;
 
         // Write test content
         let content = "line 1\nline 2\nline 3\n".repeat(1000);
-        temp_file.write_all(content.as_bytes()).unwrap();
+        temp_file.write_all(content.as_bytes())?;
 
         let analyzer = StreamingAnalyzer::new();
         let findings = analyzer
@@ -236,14 +236,13 @@ mod tests {
                     Ok(vec![])
                 }
             })
-            .await
-            .unwrap();
+            .await?;
 
         assert_eq!(findings.len(), 1000); // Should find "line 2" in each repetition
     }
 
     #[test]
-    fn test_adaptive_chunking() {
+    fn test_adaptive_chunking() -> Result<(), Box<dyn std::error::Error>> {
         let chunking = AdaptiveChunking::new();
 
         // Small file should use base chunk size

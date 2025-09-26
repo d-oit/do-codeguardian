@@ -155,7 +155,7 @@ impl AlertNotificationService {
         // In a real implementation, you would send an HTTP POST to the webhook URL
         println!("Slack notification would be sent:");
         println!("Webhook: {}", config.webhook_url);
-        println!("Payload: {}", serde_json::to_string_pretty(&payload).unwrap());
+        println!("Payload: {}", serde_json::to_string_pretty(&payload)?);
 
         Ok(())
     }
@@ -177,7 +177,7 @@ impl AlertNotificationService {
         println!("Webhook notification would be sent:");
         println!("URL: {}", config.url);
         println!("Headers: {:?}", config.headers);
-        println!("Payload: {}", serde_json::to_string_pretty(&payload).unwrap());
+        println!("Payload: {}", serde_json::to_string_pretty(&payload)?);
 
         Ok(())
     }
@@ -287,7 +287,7 @@ mod tests {
     use crate::performance::monitoring::{AlertType, AlertSeverity, AlertEscalation};
 
     #[test]
-    fn test_notification_config_default() {
+    fn test_notification_config_default() -> Result<(), Box<dyn std::error::Error>> {
         let config = crate::config::NotificationConfig::default();
         assert!(!config.enabled);
         assert!(config.email.is_none());
@@ -296,7 +296,7 @@ mod tests {
     }
 
     #[test]
-    fn test_alert_key_generation() {
+    fn test_alert_key_generation() -> Result<(), Box<dyn std::error::Error>> {
         let service = AlertNotificationService::new(crate::config::NotificationConfig::default());
 
         let alert = PerformanceAlert {
@@ -317,7 +317,7 @@ mod tests {
     }
 
     #[test]
-    fn test_severity_color_mapping() {
+    fn test_severity_color_mapping() -> Result<(), Box<dyn std::error::Error>> {
         let service = AlertNotificationService::new(crate::config::NotificationConfig::default());
 
         assert_eq!(service.get_severity_color(&AlertSeverity::Critical), "danger");

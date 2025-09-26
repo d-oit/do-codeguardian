@@ -1,16 +1,10 @@
 use criterion::{criterion_group, criterion_main, Criterion};
-use do_do_codeguardian::{
-    analyzers::AnalyzerRegistry,
-    cache::FileCache,
-    config::{Config, PerformanceConfig},
-    core::GuardianEngine,
-    streaming::StreamingAnalyzer,
-    types::Finding,
-    utils::{
-        adaptive_parallelism::{AdaptiveParallelismController, SystemLoadMonitor},
-        memory_pool::{thread_local_pools, GlobalMemoryPools},
-    },
+use do_codeguardian::{
+    analyzers::AnalyzerRegistry, config::Config, core::GuardianEngine,
+    performance::memory_pool::thread_local_pools, types::Finding,
+    utils::progress::ProgressReporter,
 };
+use rayon::prelude::*;
 use std::hint::black_box;
 use std::io::Write;
 use std::path::PathBuf;
@@ -162,51 +156,6 @@ fn bench_async_caching_optimizations(c: &mut Criterion) {
         });
     });
 
-    // Optimized: With async caching
-    group.bench_function("optimized_async_caching", |b| {
-        let cache = Arc::new(FileCache::new());
-
-        b.iter(|| {
-            rt.block_on(async {
-                for (file, _, _) in &test_files {
-                    // First access (cache miss)
-                    let content1 = cache.get_or_load(file.path()).await.unwrap();
-                    // Second access (cache hit - should be faster)
-                    let content2 = cache.get_or_load(file.path()).await.unwrap();
-
-                    black_box((content1.len(), content2.len()));
-                }
-            });
-        });
-    });
-
-    // Cache performance under concurrent load
-    group.bench_function("concurrent_cache_access", |b| {
-        let cache = Arc::new(FileCache::new());
-        let file_path = test_files[0].0.path().to_path_buf();
-
-        b.iter(|| {
-            rt.block_on(async {
-                // Simulate concurrent cache access
-                let mut handles = vec![];
-
-                for _ in 0..10 {
-                    let cache_clone = Arc::clone(&cache);
-                    let path_clone = file_path.clone();
-
-                    handles.push(tokio::spawn(async move {
-                        cache_clone.get_or_load(&path_clone).await.unwrap()
-                    }));
-                }
-
-                for handle in handles {
-                    let content = handle.await.unwrap();
-                    black_box(content.len());
-                }
-            });
-        });
-    });
-
     group.finish();
 }
 
@@ -236,7 +185,7 @@ fn bench_parallelism_optimizations(c: &mut Criterion) {
 
         b.iter(|| {
             let results: Vec<_> = test_files
-                .par_iter()
+                .iter()
                 .map(|(file, _, _)| {
                     let content = std::fs::read_to_string(file.path()).unwrap();
                     registry
@@ -246,33 +195,6 @@ fn bench_parallelism_optimizations(c: &mut Criterion) {
                 .collect();
 
             black_box(results);
-        });
-    });
-
-    // Adaptive parallelism with system load monitoring
-    group.bench_function("adaptive_parallelism_with_monitoring", |b| {
-        let controller = AdaptiveParallelismController::new(1, 8, 4);
-        let registry = AnalyzerRegistry::new();
-
-        b.iter(|| {
-            rt.block_on(async {
-                let current_load = SystemLoadMonitor::get_current_load().await.unwrap();
-                let optimal_threads = controller.calculate_optimal_threads(&current_load);
-
-                // Simulate adaptive analysis
-                let results: Vec<_> = test_files
-                    .par_iter()
-                    .take(optimal_threads as usize)
-                    .map(|(file, _, _)| {
-                        let content = std::fs::read_to_string(file.path()).unwrap();
-                        registry
-                            .analyze_file(file.path(), content.as_bytes())
-                            .unwrap()
-                    })
-                    .collect();
-
-                black_box((results, optimal_threads));
-            });
         });
     });
 
@@ -291,8 +213,14 @@ fn bench_overall_optimization_impact(c: &mut Criterion) {
         b.iter(|| {
             rt.block_on(async {
                 let config = Config::default();
-                let engine = GuardianEngine::new(config).unwrap();
-                let _results = engine.analyze_files(&test_files, None).await.unwrap();
+                let mut engine = GuardianEngine::new(config, ProgressReporter::new(false))
+                    .await
+                    .unwrap();
+                let file_paths: Vec<PathBuf> = test_files
+                    .iter()
+                    .map(|(f, _, _)| f.path().to_path_buf())
+                    .collect();
+                let _results = engine.analyze_files(&file_paths, 1).await.unwrap();
             });
         });
     });
@@ -301,12 +229,15 @@ fn bench_overall_optimization_impact(c: &mut Criterion) {
     group.bench_function("optimized_engine_full_optimizations", |b| {
         b.iter(|| {
             rt.block_on(async {
-                let mut config = Config::default();
-                config.performance.enable_parallel_processing = true;
-                config.performance.enable_memory_pool = true;
-                config.performance.enable_caching = true;
-                let engine = GuardianEngine::new(config).unwrap();
-                let _results = engine.analyze_files(&test_files, None).await.unwrap();
+                let config = Config::default();
+                let mut engine = GuardianEngine::new(config, ProgressReporter::new(false))
+                    .await
+                    .unwrap();
+                let file_paths: Vec<PathBuf> = test_files
+                    .iter()
+                    .map(|(f, _, _)| f.path().to_path_buf())
+                    .collect();
+                let _results = engine.analyze_files(&file_paths, 4).await.unwrap();
             });
         });
     });
@@ -328,16 +259,16 @@ fn bench_parallel_output_processing(c: &mut Criterion) {
         b.iter(|| {
             rt.block_on(async {
                 let formats = vec![
-                    do_do_codeguardian::output::OutputFormat::Json,
-                    do_do_codeguardian::output::OutputFormat::Html,
-                    do_do_codeguardian::output::OutputFormat::Markdown,
-                    do_do_codeguardian::output::OutputFormat::Sarif,
+                    do_codeguardian::output::OutputFormat::Json,
+                    do_codeguardian::output::OutputFormat::Html,
+                    do_codeguardian::output::OutputFormat::Markdown,
+                    do_codeguardian::output::OutputFormat::Sarif,
                 ];
 
                 let mut results = std::collections::HashMap::new();
                 for format in &formats {
                     let output =
-                        do_do_codeguardian::output::format_results(&test_results, *format).unwrap();
+                        do_codeguardian::output::format_results(&test_results, *format).unwrap();
                     results.insert(*format, output);
                 }
 
@@ -350,7 +281,7 @@ fn bench_parallel_output_processing(c: &mut Criterion) {
     group.bench_function("parallel_multiple_formats", |b| {
         b.iter(|| {
             rt.block_on(async {
-                use do_do_codeguardian::output::{OutputFormat, ParallelOutputProcessor};
+                use do_codeguardian::output::{OutputFormat, ParallelOutputProcessor};
 
                 let processor = ParallelOutputProcessor::new().unwrap();
                 let formats = vec![
@@ -373,9 +304,9 @@ fn bench_parallel_output_processing(c: &mut Criterion) {
 }
 
 /// Generate test analysis results for benchmarking
-fn generate_test_analysis_results() -> do_do_codeguardian::types::AnalysisResults {
+fn generate_test_analysis_results() -> do_codeguardian::types::AnalysisResults {
     use chrono::Utc;
-    use do_do_codeguardian::types::{AnalysisResults, Finding, Severity};
+    use do_codeguardian::types::{AnalysisResults, Finding, Severity};
 
     let mut results = AnalysisResults::new("benchmark_test".to_string());
 

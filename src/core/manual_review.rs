@@ -116,10 +116,7 @@ impl ManualReviewWorkflow {
 
     async fn create_review_item(&mut self, finding: Finding) -> Result<String, anyhow::Error> {
         let review_id = format!("review_{}", uuid::Uuid::new_v4());
-        let now = SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .unwrap()
-            .as_secs();
+        let now = SystemTime::now().duration_since(UNIX_EPOCH)?.as_secs();
 
         let priority = match finding.severity {
             crate::types::Severity::Critical => ReviewPriority::Critical,

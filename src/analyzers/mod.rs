@@ -43,7 +43,10 @@ impl Clone for AnalyzerRegistry {
 
 impl AnalyzerRegistry {
     pub fn new() -> Self {
-        Self::with_config(&Config::default()).expect("Failed to create default analyzer registry")
+        match Self::with_config(&Config::default()) {
+            Ok(s) => s,
+            Err(e) => panic!("Failed to create default analyzer registry: {}", e),
+        }
     }
 
     pub fn with_config(config: &Config) -> Result<Self> {
@@ -56,7 +59,7 @@ impl AnalyzerRegistry {
         registry.register(Box::new(lint_drift::LintDriftAnalyzer::new()));
         registry.register(Box::new(non_production::NonProductionAnalyzer::new(
             &config.analyzers.non_production,
-        )));
+        )?));
         registry.register(Box::new(
             performance_analyzer::PerformanceAnalyzer::with_config(&config.performance)?,
         ));
@@ -74,7 +77,7 @@ impl AnalyzerRegistry {
         // Register broken files detection analyzers based on configuration
         if config.analyzers.broken_files.enabled {
             if config.analyzers.broken_files.detect_merge_conflicts {
-                let conflict_analyzer = git_conflict_analyzer::GitConflictAnalyzer::new()
+                let conflict_analyzer = git_conflict_analyzer::GitConflictAnalyzer::new()?
                     .with_syntax_validation(
                         config.analyzers.broken_files.conflicts.validate_syntax,
                     );

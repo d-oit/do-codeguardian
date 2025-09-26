@@ -653,42 +653,38 @@ mod tests {
     use tempfile::tempdir;
 
     #[test]
-    fn test_unified_cache_basic() {
-        let mut cache = UnifiedCache::basic(10, 10).unwrap();
-        let temp_dir = tempdir().unwrap();
+    fn test_unified_cache_basic() -> Result<(), Box<dyn std::error::Error>> {
+        let mut cache = UnifiedCache::basic(10, 10)?;
+        let temp_dir = tempdir()?;
         let test_file = temp_dir.path().join("test.rs");
 
-        std::fs::write(&test_file, "fn test() {}").unwrap();
+        std::fs::write(&test_file, "fn test() {}")?;
 
         let findings = vec![];
         let config_hash = "test_config";
 
         // Put and get
-        cache
-            .put(&test_file, findings.clone(), config_hash, 100)
-            .unwrap();
-        let result = cache.get(&test_file, config_hash).unwrap();
+        cache.put(&test_file, findings.clone(), config_hash, 100)?;
+        let result = cache.get(&test_file, config_hash)?;
 
         assert!(result.is_some());
         assert_eq!(cache.strategy_name(), "BasicCache");
     }
 
     #[test]
-    fn test_unified_cache_pooled() {
-        let mut cache = UnifiedCache::pooled(10, 10).unwrap();
-        let temp_dir = tempdir().unwrap();
+    fn test_unified_cache_pooled() -> Result<(), Box<dyn std::error::Error>> {
+        let mut cache = UnifiedCache::pooled(10, 10)?;
+        let temp_dir = tempdir()?;
         let test_file = temp_dir.path().join("test.rs");
 
-        std::fs::write(&test_file, "fn test() {}").unwrap();
+        std::fs::write(&test_file, "fn test() {}")?;
 
         let findings = vec![];
         let config_hash = "test_config";
 
         // Put and get
-        cache
-            .put(&test_file, findings.clone(), config_hash, 100)
-            .unwrap();
-        let result = cache.get(&test_file, config_hash).unwrap();
+        cache.put(&test_file, findings.clone(), config_hash, 100)?;
+        let result = cache.get(&test_file, config_hash)?;
 
         assert!(result.is_some());
         assert_eq!(cache.strategy_name(), "PooledCache");
@@ -699,8 +695,8 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_strategy_switching() {
-        let mut cache = UnifiedCache::basic(10, 10).unwrap();
+    async fn test_strategy_switching() -> Result<(), Box<dyn std::error::Error>> {
+        let mut cache = UnifiedCache::basic(10, 10)?;
         assert_eq!(cache.strategy_name(), "BasicCache");
 
         // Switch to pooled
@@ -712,7 +708,7 @@ mod tests {
             pool_sizes: Some(MemoryPoolSizes::default()),
         };
 
-        cache.switch_strategy(new_config).unwrap();
+        cache.switch_strategy(new_config)?;
         assert_eq!(cache.strategy_name(), "PooledCache");
     }
 }

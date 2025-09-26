@@ -6,7 +6,7 @@
 //! ## Usage
 //!
 //! ```bash
-//! codeguardian analyze <files...>
+//! codeguardian check <files...>
 //! codeguardian git-commit [--message <msg>]
 //! ```
 
@@ -114,6 +114,7 @@ async fn main() -> Result<()> {
         Commands::TrainingData(args) => {
             do_codeguardian::cli::training_data::run(args, &config).await?;
         }
+
         #[cfg(feature = "ml")]
         Commands::Metrics(args) => {
             metrics::run(args)?;

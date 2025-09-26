@@ -403,32 +403,32 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_validate_empty_content() {
-        let result = validate_output("", "json").unwrap();
+    fn test_validate_empty_content() -> Result<(), Box<dyn std::error::Error>> {
+        let result = validate_output("", "json")?;
         assert!(!result.is_valid);
         assert!(!result.errors.is_empty());
         assert_eq!(result.errors[0].code, "EMPTY_CONTENT");
     }
 
     #[test]
-    fn test_validate_valid_json() {
+    fn test_validate_valid_json() -> Result<(), Box<dyn std::error::Error>> {
         let json = r#"{"schema_version": "1.0.0", "tool_metadata": {}, "findings": [], "summary": {}, "timestamp": "2023-01-01T00:00:00Z"}"#;
-        let result = validate_output(json, "json").unwrap();
+        let result = validate_output(json, "json")?;
         assert!(result.is_valid);
     }
 
     #[test]
-    fn test_validate_invalid_json() {
+    fn test_validate_invalid_json() -> Result<(), Box<dyn std::error::Error>> {
         let invalid_json = r#"{"invalid": json}"#;
-        let result = validate_output(invalid_json, "json").unwrap();
+        let result = validate_output(invalid_json, "json")?;
         assert!(!result.is_valid);
         assert!(!result.errors.is_empty());
     }
 
     #[test]
-    fn test_validate_html_xss() {
+    fn test_validate_html_xss() -> Result<(), Box<dyn std::error::Error>> {
         let html = r#"<html><script>alert('xss')</script></html>"#;
-        let result = validate_output(html, "html").unwrap();
+        let result = validate_output(html, "html")?;
         assert!(!result.is_valid);
         assert!(result.errors.iter().any(|e| e.code == "POTENTIAL_XSS"));
     }

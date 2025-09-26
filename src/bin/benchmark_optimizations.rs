@@ -22,8 +22,8 @@ async fn main() {
     println!("\nBenchmarking complete!");
 }
 
-async fn test_parallel_io() {
-    let temp_dir = tempdir().unwrap();
+async fn test_parallel_io() -> Result<(), Box<dyn std::error::Error>> {
+    let temp_dir = tempdir()?;
     let processor =
         do_codeguardian::core::parallel_file_processor::ParallelFileProcessor::new(Some(4));
 
@@ -32,12 +32,12 @@ async fn test_parallel_io() {
     for i in 0..10 {
         let file_path = temp_dir.path().join(format!("test_{}.txt", i));
         let content = format!("Test content for file {} with some data\n", i).repeat(1000);
-        tokio::fs::write(&file_path, content).await.unwrap();
+        tokio::fs::write(&file_path, content).await?;
         files.push(file_path);
     }
 
     let start = Instant::now();
-    let results = processor.batch_read_files(&files).await.unwrap();
+    let results = processor.batch_read_files(&files).await?;
     let duration = start.elapsed();
 
     println!("  - Processed {} files in {:?}", results.len(), duration);
@@ -49,21 +49,22 @@ async fn test_parallel_io() {
         "  - Throughput: {:.1} files/second",
         results.len() as f64 / duration.as_secs_f64()
     );
+    Ok(())
 }
 
-async fn test_memory_mapping() {
-    let temp_dir = tempdir().unwrap();
+async fn test_memory_mapping() -> Result<(), Box<dyn std::error::Error>> {
+    let temp_dir = tempdir()?;
 
     // Create a large file (>10MB) to trigger memory mapping
     let large_file = temp_dir.path().join("large_test.txt");
     let large_content = "Large file content for memory mapping test\n".repeat(200000); // ~4MB
-    tokio::fs::write(&large_file, &large_content).await.unwrap();
+    tokio::fs::write(&large_file, &large_content).await?;
 
     let processor =
         do_codeguardian::core::parallel_file_processor::ParallelFileProcessor::new(Some(1));
 
     let start = Instant::now();
-    let results = processor.batch_read_files(&[large_file]).await.unwrap();
+    let results = processor.batch_read_files(&[large_file]).await?;
     let duration = start.elapsed();
 
     println!(
@@ -72,12 +73,13 @@ async fn test_memory_mapping() {
         duration
     );
     assert_eq!(results[0].1, large_content.as_bytes());
+    Ok(())
 }
 
-fn test_algorithmic_optimization() {
+fn test_algorithmic_optimization() -> Result<(), Box<dyn std::error::Error>> {
     use do_codeguardian::analyzers::{duplicate_analyzer::DuplicateAnalyzer, Analyzer};
 
-    let analyzer = DuplicateAnalyzer::new().unwrap();
+    let analyzer = DuplicateAnalyzer::new()?;
 
     // Create content with many similar blocks to test O(n²) -> O(n) optimization
     let mut content = String::new();
@@ -96,12 +98,11 @@ fn function_{}() {{
     }
 
     let start = Instant::now();
-    let findings = analyzer
-        .analyze(Path::new("test.rs"), content.as_bytes())
-        .unwrap();
+    let findings = analyzer.analyze(Path::new("test.rs"), content.as_bytes())?;
     let duration = start.elapsed();
 
     println!("  - Analyzed {} functions in {:?}", 20, duration);
     println!("  - Found {} findings", findings.len());
     println!("  - Analysis completed in {:?}", duration);
+    Ok(())
 }

@@ -13,6 +13,8 @@ pub mod integrations;
 #[cfg(feature = "ml")]
 pub mod metrics;
 pub mod ml_enhancements;
+#[cfg(feature = "ml")]
+pub mod model_validation;
 pub mod release_monitoring;
 pub mod remediation;
 pub mod report;
@@ -23,7 +25,6 @@ pub mod train;
 #[cfg(feature = "ml")]
 pub mod training_data;
 #[cfg(feature = "ml")]
-
 #[cfg(feature = "dashboard")]
 use dashboard::DashboardArgs;
 use integrations::IntegrationsArgs;
@@ -94,7 +95,7 @@ pub enum Commands {
     #[cfg(feature = "ml")]
     Train(TrainArgs),
     /// Collect and manage training data
-#[cfg(feature = "ml")]
+    #[cfg(feature = "ml")]
     TrainingData(TrainingDataArgs),
 
     /// Analyze ML model performance metrics
@@ -516,6 +517,74 @@ pub struct TrainingDataArgs {
     /// Validate existing training data
     #[clap(long)]
     pub validate_only: bool,
+}
+
+/// Model validation arguments
+#[derive(Parser, Debug)]
+pub struct ModelValidationArgs {
+    /// Path to the ML model file to validate
+    #[clap(long, short = 'm')]
+    pub model_path: PathBuf,
+
+    /// Path to baseline model for comparison
+    #[clap(long, short = 'b')]
+    pub baseline_model: Option<PathBuf>,
+
+    /// Directory containing test suites (JSON files)
+    #[clap(long, short = 't')]
+    pub test_suites_dir: Option<PathBuf>,
+
+    /// Validation configuration file
+    #[clap(long, short = 'c')]
+    pub config_file: Option<PathBuf>,
+
+    /// Output directory for validation reports
+    #[clap(long, short = 'o')]
+    pub output_dir: Option<PathBuf>,
+
+    /// Input findings file for test suite generation
+    #[clap(long, short = 'f')]
+    pub findings_file: Option<PathBuf>,
+
+    /// Generate test suites from findings instead of running validation
+    #[clap(long)]
+    pub generate_test_suites: bool,
+
+    /// Export detailed metrics to CSV
+    #[clap(long)]
+    pub export_metrics: bool,
+
+    /// Automatically deploy if validation passes
+    #[clap(long)]
+    pub auto_deploy: bool,
+
+    /// Fail with non-zero exit code if validation fails
+    #[clap(long)]
+    pub fail_on_issues: bool,
+
+    /// Minimum accuracy threshold for deployment
+    #[clap(long, default_value = "0.85")]
+    pub min_accuracy: f32,
+
+    /// Maximum false positive rate threshold
+    #[clap(long, default_value = "0.15")]
+    pub max_false_positive_rate: f32,
+
+    /// Maximum inference time threshold in milliseconds
+    #[clap(long, default_value = "100.0")]
+    pub max_inference_time_ms: f32,
+
+    /// Enable bias detection testing
+    #[clap(long)]
+    pub enable_bias_detection: bool,
+
+    /// Enable robustness testing with edge cases
+    #[clap(long)]
+    pub enable_robustness_testing: bool,
+
+    /// Verbose output with detailed metrics
+    #[clap(long)]
+    pub verbose: bool,
 }
 
 #[derive(Parser, Debug)]

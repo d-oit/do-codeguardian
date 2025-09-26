@@ -760,13 +760,13 @@ mod tests {
     use tokio::fs;
 
     #[test]
-    fn test_unified_extractor_creation() {
+    fn test_unified_extractor_creation() -> Result<(), Box<dyn std::error::Error>> {
         let extractor = UnifiedFeatureExtractor::new();
         assert_eq!(extractor.config.mode, ExtractionMode::Enhanced);
     }
 
     #[test]
-    fn test_basic_feature_extraction() {
+    fn test_basic_feature_extraction() -> Result<(), Box<dyn std::error::Error>> {
         let mut extractor = UnifiedFeatureExtractor::with_config(FeatureConfig {
             mode: ExtractionMode::Basic,
             ..Default::default()
@@ -781,15 +781,14 @@ mod tests {
             "Test finding".to_string(),
         );
 
-        let features = tokio::runtime::Runtime::new()
-            .unwrap()
-            .block_on(async { extractor.extract_features(&finding).await.unwrap() });
+        let features = tokio::runtime::Runtime::new()?
+            .block_on(async { extractor.extract_features(&finding).await? });
 
         assert_eq!(features.len(), 8); // Basic features only
     }
 
     #[test]
-    fn test_enhanced_feature_extraction() {
+    fn test_enhanced_feature_extraction() -> Result<(), Box<dyn std::error::Error>> {
         let mut extractor = UnifiedFeatureExtractor::with_config(FeatureConfig {
             mode: ExtractionMode::Enhanced,
             ..Default::default()
@@ -804,15 +803,14 @@ mod tests {
             "Test finding".to_string(),
         );
 
-        let features = tokio::runtime::Runtime::new()
-            .unwrap()
-            .block_on(async { extractor.extract_features(&finding).await.unwrap() });
+        let features = tokio::runtime::Runtime::new()?
+            .block_on(async { extractor.extract_features(&finding).await? });
 
         assert_eq!(features.len(), 24); // Base + AST features
     }
 
     #[test]
-    fn test_custom_feature_extraction() {
+    fn test_custom_feature_extraction() -> Result<(), Box<dyn std::error::Error>> {
         let mut extractor = UnifiedFeatureExtractor::with_config(FeatureConfig {
             mode: ExtractionMode::Custom,
             feature_sets: vec![FeatureSet::Base],
@@ -828,15 +826,14 @@ mod tests {
             "Test".to_string(),
         );
 
-        let features = tokio::runtime::Runtime::new()
-            .unwrap()
-            .block_on(async { extractor.extract_features(&finding).await.unwrap() });
+        let features = tokio::runtime::Runtime::new()?
+            .block_on(async { extractor.extract_features(&finding).await? });
 
         assert_eq!(features.len(), 8); // Only base features
     }
 
     #[test]
-    fn test_feature_names() {
+    fn test_feature_names() -> Result<(), Box<dyn std::error::Error>> {
         let extractor = UnifiedFeatureExtractor::with_config(FeatureConfig {
             mode: ExtractionMode::Basic,
             ..Default::default()
@@ -848,7 +845,7 @@ mod tests {
     }
 
     #[test]
-    fn test_configuration_validation() {
+    fn test_configuration_validation() -> Result<(), Box<dyn std::error::Error>> {
         let extractor = UnifiedFeatureExtractor::new();
 
         // Test invalid custom config (no feature sets)
@@ -863,13 +860,13 @@ mod tests {
 
     #[cfg(feature = "ast")]
     #[tokio::test]
-    async fn test_file_size_limit() {
+    async fn test_file_size_limit() -> Result<(), Box<dyn std::error::Error>> {
         let mut extractor = UnifiedFeatureExtractor::new();
 
         // Create a large file
-        let temp_file = NamedTempFile::new().unwrap();
+        let temp_file = NamedTempFile::new()?;
         let large_content = vec![b'a'; 15 * 1024 * 1024]; // 15MB
-        fs::write(&temp_file, &large_content).await.unwrap();
+        fs::write(&temp_file, &large_content).await?;
 
         let finding = Finding::new(
             "test",
@@ -887,7 +884,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_cache_functionality() {
+    async fn test_cache_functionality() -> Result<(), Box<dyn std::error::Error>> {
         let mut extractor = UnifiedFeatureExtractor::new();
 
         let finding = Finding::new(
@@ -900,11 +897,11 @@ mod tests {
         );
 
         // First extraction (cache miss)
-        let _ = extractor.extract_features(&finding).await.unwrap();
+        let _ = extractor.extract_features(&finding).await?;
         let initial_misses = extractor.metrics.cache_misses;
 
         // Second extraction (should be cache hit)
-        let _ = extractor.extract_features(&finding).await.unwrap();
+        let _ = extractor.extract_features(&finding).await?;
         let final_hits = extractor.metrics.cache_hits;
 
         // Note: Cache hits may not occur if AST is disabled or file doesn't exist
@@ -912,7 +909,7 @@ mod tests {
     }
 
     #[test]
-    fn test_feature_importance_analysis() {
+    fn test_feature_importance_analysis() -> Result<(), Box<dyn std::error::Error>> {
         let mut extractor = UnifiedFeatureExtractor::with_config(FeatureConfig {
             mode: ExtractionMode::Basic,
             ..Default::default()
@@ -927,12 +924,8 @@ mod tests {
             "Critical test finding".to_string(),
         );
 
-        let analysis = tokio::runtime::Runtime::new().unwrap().block_on(async {
-            extractor
-                .analyze_feature_importance(&finding)
-                .await
-                .unwrap()
-        });
+        let analysis = tokio::runtime::Runtime::new()?
+            .block_on(async { extractor.analyze_feature_importance(&finding).await? });
 
         assert_eq!(analysis.total_features, 8);
         assert_eq!(analysis.mode, ExtractionMode::Basic);

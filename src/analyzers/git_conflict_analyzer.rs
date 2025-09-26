@@ -14,18 +14,21 @@ pub struct GitConflictAnalyzer {
 
 impl Default for GitConflictAnalyzer {
     fn default() -> Self {
-        Self::new()
+        match Self::new() {
+            Ok(s) => s,
+            Err(e) => panic!("Failed to create default GitConflictAnalyzer: {}", e),
+        }
     }
 }
 
 impl GitConflictAnalyzer {
-    pub fn new() -> Self {
-        Self {
-            conflict_start_pattern: Regex::new(r"^<{7}").unwrap(), // 7 < chars
-            conflict_separator_pattern: Regex::new(r"^={7}$").unwrap(), // exactly 7 = chars
-            conflict_end_pattern: Regex::new(r"^>{7}").unwrap(),   // 7 > chars
+    pub fn new() -> Result<Self> {
+        Ok(Self {
+            conflict_start_pattern: Regex::new(r"^<{7}")?, // 7 < chars
+            conflict_separator_pattern: Regex::new(r"^={7}$")?, // exactly 7 = chars
+            conflict_end_pattern: Regex::new(r"^>{7}")?,   // 7 > chars
             validate_syntax: true,
-        }
+        })
     }
 
     pub fn with_syntax_validation(mut self, validate: bool) -> Self {
@@ -414,8 +417,9 @@ mod tests {
     use super::*;
 
     #[test]
+    #[allow(clippy::disallowed_methods)]
     fn test_detect_complete_conflict() {
-        let analyzer = GitConflictAnalyzer::new();
+        let analyzer = GitConflictAnalyzer::default();
         let content = r#"
 some code
 <<<<<<< HEAD
@@ -427,7 +431,7 @@ more code
 "#;
         let findings = analyzer
             .analyze(Path::new("test.rs"), content.as_bytes())
-            .unwrap();
+            .expect("Failed to analyze");
         assert_eq!(findings.len(), 3); // start, separator, end
         assert!(findings.iter().any(|f| f.rule == "merge_conflict_start"));
         assert!(findings
@@ -437,8 +441,10 @@ more code
     }
 
     #[test]
-    fn test_detect_malformed_conflict() {
-        let analyzer = GitConflictAnalyzer::new();
+    #[allow(clippy::disallowed_methods)]
+    #[allow(clippy::disallowed_methods)]
+    fn test_detect_malformed_conflict() -> Result<(), Box<dyn std::error::Error>> {
+        let analyzer = GitConflictAnalyzer::new()?;
         let content = r#"
 some code
 <<<<<<< HEAD
@@ -447,48 +453,51 @@ version 1
 version 2
 more code without end marker
 "#;
-        let findings = analyzer
-            .analyze(Path::new("test.rs"), content.as_bytes())
-            .unwrap();
+        let findings = analyzer.analyze(Path::new("test.rs"), content.as_bytes())?;
         assert!(findings.iter().any(|f| f.rule == "malformed_conflict"));
+        Ok(())
     }
 
     #[test]
-    fn test_no_conflicts() {
-        let analyzer = GitConflictAnalyzer::new();
+    #[allow(clippy::disallowed_methods)]
+    #[allow(clippy::disallowed_methods)]
+    fn test_no_conflicts() -> Result<(), Box<dyn std::error::Error>> {
+        let analyzer = GitConflictAnalyzer::new()?;
         let content = r#"
 normal code
 no conflicts here
 "#;
-        let findings = analyzer
-            .analyze(Path::new("test.rs"), content.as_bytes())
-            .unwrap();
+        let findings = analyzer.analyze(Path::new("test.rs"), content.as_bytes())?;
         assert_eq!(findings.len(), 0);
+        Ok(())
     }
 
     #[test]
-    fn test_json_syntax_validation() {
-        let analyzer = GitConflictAnalyzer::new();
+    #[allow(clippy::disallowed_methods)]
+    fn test_json_syntax_validation() -> Result<(), Box<dyn std::error::Error>> {
+        let analyzer = GitConflictAnalyzer::new()?;
         let invalid_json = r#"{"key": "value"#; // Missing closing brace
-        let findings = analyzer
-            .analyze(Path::new("test.json"), invalid_json.as_bytes())
-            .unwrap();
+        let findings = analyzer.analyze(Path::new("test.json"), invalid_json.as_bytes())?;
         assert!(findings.iter().any(|f| f.rule == "syntax_error"));
+        Ok(())
     }
 
     #[test]
-    fn test_supports_file() {
-        let analyzer = GitConflictAnalyzer::new();
+    #[allow(clippy::disallowed_methods)]
+    fn test_supports_file() -> Result<(), Box<dyn std::error::Error>> {
+        let analyzer = GitConflictAnalyzer::new()?;
         assert!(analyzer.supports_file(Path::new("test.rs")));
         assert!(analyzer.supports_file(Path::new("test.json")));
         assert!(analyzer.supports_file(Path::new("test.toml")));
         assert!(!analyzer.supports_file(Path::new("test.exe")));
         assert!(!analyzer.supports_file(Path::new("test.png")));
+        Ok(())
     }
 
     #[test]
-    fn test_real_file_with_conflict() {
-        let analyzer = GitConflictAnalyzer::new();
+    #[allow(clippy::disallowed_methods)]
+    fn test_real_file_with_conflict() -> Result<(), Box<dyn std::error::Error>> {
+        let analyzer = GitConflictAnalyzer::new()?;
         let content = r#"fn main() {
     println!("Hello world!");
 <<<<<<< HEAD
@@ -498,9 +507,7 @@ no conflicts here
 >>>>>>> feature-branch
     println!("End of program");
 }"#;
-        let findings = analyzer
-            .analyze(Path::new("test_conflict.rs"), content.as_bytes())
-            .unwrap();
+        let findings = analyzer.analyze(Path::new("test_conflict.rs"), content.as_bytes())?;
 
         // Should detect all three conflict markers
         assert_eq!(findings.len(), 3);
@@ -509,22 +516,23 @@ no conflicts here
             .iter()
             .any(|f| f.rule == "merge_conflict_separator"));
         assert!(findings.iter().any(|f| f.rule == "merge_conflict_end"));
+        Ok(())
     }
 
     #[test]
-    fn test_real_file_no_false_positives() {
-        let analyzer = GitConflictAnalyzer::new();
+    #[allow(clippy::disallowed_methods)]
+    fn test_real_file_no_false_positives() -> Result<(), Box<dyn std::error::Error>> {
+        let analyzer = GitConflictAnalyzer::new()?;
         let content = r#"fn main() {
     println!("Hello world!");
     println!("This is normal code");
     println!("No conflicts here");
     println!("End of program");
 }"#;
-        let findings = analyzer
-            .analyze(Path::new("clean.rs"), content.as_bytes())
-            .unwrap();
+        let findings = analyzer.analyze(Path::new("clean.rs"), content.as_bytes())?;
 
         // Should not detect any conflicts in clean code
         assert_eq!(findings.len(), 0);
+        Ok(())
     }
 }

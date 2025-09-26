@@ -46,7 +46,7 @@ pub fn validate_git_branch_name(branch_name: &str) -> Result<()> {
     }
 
     // Only allow alphanumeric, hyphens, underscores, and forward slashes
-    let valid_pattern = Regex::new(r"^[a-zA-Z0-9/_-]+$").unwrap();
+    let valid_pattern = Regex::new(r"^[a-zA-Z0-9/_-]+$")?;
     if !valid_pattern.is_match(branch_name) {
         return Err(anyhow!("Branch name contains invalid characters"));
     }
@@ -102,12 +102,12 @@ pub fn validate_git_diff_spec(diff_spec: &str) -> Result<()> {
 
     // Allow only safe git diff specs: commit hashes, branch names, HEAD~N, etc.
     let valid_patterns = [
-        Regex::new(r"^[a-fA-F0-9]{7,40}$").unwrap(), // Commit hash
-        Regex::new(r"^HEAD~\d+$").unwrap(),          // HEAD~N
-        Regex::new(r"^HEAD\^\d*$").unwrap(),         // HEAD^N
-        Regex::new(r"^[a-zA-Z0-9/_-]+$").unwrap(),   // Branch name
-        Regex::new(r"^[a-fA-F0-9]{7,40}\.\.[a-fA-F0-9]{7,40}$").unwrap(), // Range with dots
-        Regex::new(r"^[a-zA-Z0-9/_-]+\.\.[a-zA-Z0-9/_-]+$").unwrap(), // Branch range
+        Regex::new(r"^[a-fA-F0-9]{7,40}$")?, // Commit hash
+        Regex::new(r"^HEAD~\d+$")?,          // HEAD~N
+        Regex::new(r"^HEAD\^\d*$")?,         // HEAD^N
+        Regex::new(r"^[a-zA-Z0-9/_-]+$")?,   // Branch name
+        Regex::new(r"^[a-fA-F0-9]{7,40}\.\.[a-fA-F0-9]{7,40}$")?, // Range with dots
+        Regex::new(r"^[a-zA-Z0-9/_-]+\.\.[a-zA-Z0-9/_-]+$")?, // Branch range
     ];
 
     if !valid_patterns
@@ -204,7 +204,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_validate_git_branch_name() {
+    fn test_validate_git_branch_name() -> Result<(), Box<dyn std::error::Error>> {
         assert!(validate_git_branch_name("feature/fix-bug").is_ok());
         assert!(validate_git_branch_name("main").is_ok());
         assert!(validate_git_branch_name("user/feature-123").is_ok());
@@ -219,7 +219,7 @@ mod tests {
     }
 
     #[test]
-    fn test_validate_file_path() {
+    fn test_validate_file_path() -> Result<(), Box<dyn std::error::Error>> {
         assert!(validate_file_path("src/main.rs").is_ok());
         assert!(validate_file_path("docs/README.md").is_ok());
 
@@ -231,7 +231,7 @@ mod tests {
     }
 
     #[test]
-    fn test_validate_git_diff_spec() {
+    fn test_validate_git_diff_spec() -> Result<(), Box<dyn std::error::Error>> {
         assert!(validate_git_diff_spec("HEAD~1").is_ok());
         assert!(validate_git_diff_spec("abc123def").is_ok());
         assert!(validate_git_diff_spec("main").is_ok());
@@ -243,12 +243,12 @@ mod tests {
     }
 
     #[test]
-    fn test_sanitize_commit_message() {
+    fn test_sanitize_commit_message() -> Result<(), Box<dyn std::error::Error>> {
         assert_eq!(
-            sanitize_commit_message("Fix bug in parser").unwrap(),
+            sanitize_commit_message("Fix bug in parser")?,
             "Fix bug in parser"
         );
-        assert_eq!(sanitize_commit_message("  Fix bug  ").unwrap(), "Fix bug");
+        assert_eq!(sanitize_commit_message("  Fix bug  ")?, "Fix bug");
 
         assert!(sanitize_commit_message("").is_err());
         assert!(sanitize_commit_message("Fix`ls`").is_err());

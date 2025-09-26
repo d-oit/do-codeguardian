@@ -279,7 +279,7 @@ mod tests {
     use std::time::Duration;
 
     #[test]
-    fn test_performance_metrics() {
+    fn test_performance_metrics() -> Result<(), Box<dyn std::error::Error>> {
         let metrics = PerformanceMetrics::new();
 
         // Record some operations
@@ -293,10 +293,11 @@ mod tests {
         assert_eq!(metrics.cache_hits.load(Ordering::Relaxed), 1);
         assert_eq!(metrics.cache_misses.load(Ordering::Relaxed), 1);
         assert_eq!(metrics.get_cache_hit_rate(), 0.5);
+        Ok(())
     }
 
     #[test]
-    fn test_performance_profiler() {
+    fn test_performance_profiler() -> Result<(), Box<dyn std::error::Error>> {
         let metrics = Arc::new(PerformanceMetrics::new());
         let profiler = PerformanceProfiler::new(Arc::clone(&metrics));
 
@@ -308,10 +309,11 @@ mod tests {
 
         assert_eq!(result, 42);
         assert_eq!(metrics.total_files_processed.load(Ordering::Relaxed), 1);
+        Ok(())
     }
 
     #[test]
-    fn test_performance_analyzer() {
+    fn test_performance_analyzer() -> Result<(), Box<dyn std::error::Error>> {
         let metrics = Arc::new(PerformanceMetrics::new());
         let analyzer = PerformanceAnalyzer::new(Arc::clone(&metrics));
 
@@ -327,5 +329,6 @@ mod tests {
         let report = analyzer.generate_performance_report();
         assert!(report.contains("Performance Report"));
         assert!(report.contains("Optimization Recommendations"));
+        Ok(())
     }
 }

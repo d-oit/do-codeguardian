@@ -701,7 +701,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_sample_generation() {
+    fn test_sample_generation() -> Result<(), Box<dyn std::error::Error>> {
         let findings = generate_sample_findings(5);
         assert_eq!(findings.len(), 5);
 
@@ -712,7 +712,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_validation_config() {
+    async fn test_validation_config() -> Result<(), Box<dyn std::error::Error>> {
         let result = configure_validation(
             true,
             Some(0.8),
@@ -728,7 +728,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_invalid_thresholds() {
+    async fn test_invalid_thresholds() -> Result<(), Box<dyn std::error::Error>> {
         let result = configure_validation(
             true,
             Some(1.5), // Invalid threshold > 1.0

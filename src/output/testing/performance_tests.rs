@@ -11,6 +11,7 @@ use crate::output::storage::organizer::ResultsOrganizer;
 use crate::output::storage::{OrganizationStrategy, StorageConfig};
 use crate::types::{AnalysisResults, Finding, Severity};
 use anyhow::Result;
+use std::cmp::Ordering;
 use std::collections::HashMap;
 use std::path::PathBuf;
 use std::sync::Arc;
@@ -223,7 +224,7 @@ impl PerformanceTestRunner {
             0.0
         };
 
-        latencies.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        latencies.sort_by(|a, b| a.partial_cmp(b).unwrap_or(Ordering::Equal));
         let p95_latency_ms = if !latencies.is_empty() {
             latencies[(latencies.len() * 95 / 100).min(latencies.len() - 1)]
         } else {
@@ -414,7 +415,7 @@ impl PerformanceTestRunner {
                     let sem = semaphore.clone();
 
                     let handle = tokio::spawn(async move {
-                        let _permit = sem.acquire().await.unwrap();
+                        let _permit = sem.acquire().await?;
 
                         let formatter = match i % 5 {
                             0 => Box::new(JsonFormatter::new()) as Box<dyn OutputFormatter>,
@@ -670,28 +671,29 @@ mod tests {
     use super::*;
 
     #[tokio::test]
-    async fn test_performance_test_runner_creation() {
+    async fn test_performance_test_runner_creation() -> Result<(), Box<dyn std::error::Error>> {
         let config = TestConfig::default();
         let runner = PerformanceTestRunner::new(&config);
         assert!(!runner.baselines.is_empty());
     }
 
     #[tokio::test]
-    async fn test_generate_performance_test_data() {
+    async fn test_generate_performance_test_data() -> Result<(), Box<dyn std::error::Error>> {
         let config = TestConfig::default();
         let runner = PerformanceTestRunner::new(&config);
 
-        let test_data = runner.generate_performance_test_data(100).await.unwrap();
+        let test_data = runner.generate_performance_test_data(100).await?;
         assert_eq!(test_data.findings.len(), 100);
     }
 
     #[test]
-    fn test_memory_tracker() {
+    fn test_memory_tracker() -> Result<(), Box<dyn std::error::Error>> {
         let mut tracker = MemoryTracker::new();
         tracker.sample_memory();
         tracker.sample_memory();
 
         let stats = tracker.calculate_stats();
         assert!(stats.peak_memory_mb >= 0.0);
+        Ok(())
     }
 }

@@ -298,7 +298,7 @@ mod tests {
     use axum_test::TestServer;
 
     #[tokio::test]
-    async fn test_health_check() {
+    async fn test_health_check() -> Result<(), Box<dyn std::error::Error>> {
         let config = DashboardConfig::default();
         let service = DashboardService::new(config.clone());
         let state = Arc::new(DashboardState {
@@ -307,14 +307,14 @@ mod tests {
         });
 
         let app = create_router(state);
-        let server = TestServer::new(app).unwrap();
+        let server = TestServer::new(app)?;
 
         let response = server.get("/api/health").await;
         assert_eq!(response.status_code(), StatusCode::OK);
     }
 
     #[tokio::test]
-    async fn test_get_views() {
+    async fn test_get_views() -> Result<(), Box<dyn std::error::Error>> {
         let config = DashboardConfig::default();
         let service = DashboardService::new(config.clone());
         let state = Arc::new(DashboardState {
@@ -323,14 +323,14 @@ mod tests {
         });
 
         let app = create_router(state);
-        let server = TestServer::new(app).unwrap();
+        let server = TestServer::new(app)?;
 
         let response = server.get("/api/views").await;
         assert_eq!(response.status_code(), StatusCode::OK);
     }
 
     #[test]
-    fn test_parse_time_range() {
+    fn test_parse_time_range() -> Result<(), Box<dyn std::error::Error>> {
         assert!(matches!(
             parse_time_range("24h"),
             Some(super::super::TimeRange::Last24Hours)

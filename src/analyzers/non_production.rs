@@ -20,12 +20,15 @@ pub struct NonProductionAnalyzer {
 
 impl Default for NonProductionAnalyzer {
     fn default() -> Self {
-        Self::new(&NonProductionConfig::default())
+        match Self::new(&NonProductionConfig::default()) {
+            Ok(s) => s,
+            Err(e) => panic!("Failed to create default NonProductionAnalyzer: {}", e),
+        }
     }
 }
 
 impl NonProductionAnalyzer {
-    pub fn new(config: &NonProductionConfig) -> Self {
+    pub fn new(config: &NonProductionConfig) -> Result<Self> {
         let test_directory_patterns = config
             .custom_test_directories
             .iter()
@@ -44,23 +47,21 @@ impl NonProductionAnalyzer {
             .filter_map(|pattern| Regex::new(pattern).ok())
             .collect();
 
-        Self {
+        Ok(Self {
             config: config.clone(),
             // Enhanced pattern to catch TODO/FIXME in comments with proper delimiters
             todo_pattern: Regex::new(
                 r"(?://|#|/\*)\s*(TODO|FIXME|HACK|XXX|BUG|NOTE|REVIEW)(?:\s*:|\s+)",
-            )
-            .unwrap(),
+            )?,
             // Enhanced debug pattern for multiple languages and contexts
             debug_pattern: Regex::new(
                 r"(?i)(debug|debugger|console\.log|print\(|println!|dbg!|log\.|logger\.)",
-            )
-            .unwrap(),
-            console_pattern: Regex::new(r"console\.(log|debug|info|warn|error)").unwrap(),
+            )?,
+            console_pattern: Regex::new(r"console\.(log|debug|info|warn|error)")?,
             test_directory_patterns,
             test_extension_patterns,
             fuzzy_test_patterns,
-        }
+        })
     }
 
     fn check_non_production_code(&self, file_path: &Path, content: &[u8]) -> Result<Vec<Finding>> {

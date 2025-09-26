@@ -591,41 +591,37 @@ mod tests {
     use super::*;
 
     #[tokio::test]
-    async fn test_unit_test_runner_creation() {
+    async fn test_unit_test_runner_creation() -> Result<(), Box<dyn std::error::Error>> {
         let runner = UnitTestRunner::new();
         assert!(!runner.test_cases.is_empty());
     }
 
     #[tokio::test]
-    async fn test_generate_test_data() {
+    async fn test_generate_test_data() -> Result<(), Box<dyn std::error::Error>> {
         let runner = UnitTestRunner::new();
 
         let empty_results = runner
             .generate_test_data(&TestInputData::EmptyResults)
-            .await
-            .unwrap();
+            .await?;
         assert_eq!(empty_results.findings.len(), 0);
 
         let single_finding = runner
             .generate_test_data(&TestInputData::SingleFinding)
-            .await
-            .unwrap();
+            .await?;
         assert_eq!(single_finding.findings.len(), 1);
 
         let multiple_severities = runner
             .generate_test_data(&TestInputData::MultipleSeverities)
-            .await
-            .unwrap();
+            .await?;
         assert_eq!(multiple_severities.findings.len(), 5);
     }
 
     #[tokio::test]
-    async fn test_large_dataset_generation() {
+    async fn test_large_dataset_generation() -> Result<(), Box<dyn std::error::Error>> {
         let runner = UnitTestRunner::new();
         let large_dataset = runner
             .generate_test_data(&TestInputData::LargeDataset(1000))
-            .await
-            .unwrap();
+            .await?;
         assert_eq!(large_dataset.findings.len(), 1000);
     }
 }

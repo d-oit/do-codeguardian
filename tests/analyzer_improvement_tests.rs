@@ -4,14 +4,14 @@ const TEST_FILE: &str = "strings.rs";
 // These tests specifically validate the improvements made to reduce
 // false positives in the git conflict and AI content analyzers.
 
-use do_codeguardian::analyzers::ai_content_analyzer::AiContentAnalyzer;
-use do_codeguardian::analyzers::git_conflict_analyzer::GitConflictAnalyzer;
+use anyhow::Result;
 use do_codeguardian::analyzers::Analyzer;
+use do_codeguardian::analyzers::*;
 use std::path::Path;
 
 #[test]
-fn test_git_conflict_analyzer_ignores_test_modules() {
-    let analyzer = GitConflictAnalyzer::new();
+fn test_git_conflict_analyzer_ignores_test_modules() -> Result<(), Box<dyn std::error::Error>> {
+    let analyzer = GitConflictAnalyzer::new().unwrap();
 
     // Test content with conflict markers in test module
     let test_content = r##"
@@ -20,7 +20,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_conflict_detection() {
+    fn test_conflict_detection() -> Result<(), Box<dyn std::error::Error>> {
         let content = r#"
 flag1
 version 1
@@ -44,11 +44,12 @@ flag3
         0,
         "Should not detect git conflicts in test modules"
     );
+    Ok(())
 }
 
 #[test]
-fn test_git_conflict_analyzer_detects_real_conflicts() {
-    let analyzer = GitConflictAnalyzer::new();
+fn test_git_conflict_analyzer_detects_real_conflicts() -> Result<(), Box<dyn std::error::Error>> {
+    let analyzer = GitConflictAnalyzer::new().unwrap();
 
     // Real conflict markers outside of test context
     let conflict_content = r#"
@@ -76,11 +77,12 @@ fn main() {
         .iter()
         .any(|f| f.rule == "merge_conflict_separator"));
     assert!(findings.iter().any(|f| f.rule == "merge_conflict_end"));
+    Ok(())
 }
 
 #[test]
-fn test_git_conflict_analyzer_ignores_test_files() {
-    let analyzer = GitConflictAnalyzer::new();
+fn test_git_conflict_analyzer_ignores_test_files() -> Result<(), Box<dyn std::error::Error>> {
+    let analyzer = GitConflictAnalyzer::new().unwrap();
 
     let conflict_content = r#"
 <<<<<<< HEAD
@@ -115,7 +117,8 @@ test content 2
 }
 
 #[test]
-fn test_ai_content_analyzer_ignores_documentation_comments() {
+fn test_ai_content_analyzer_ignores_documentation_comments(
+) -> Result<(), Box<dyn std::error::Error>> {
     let analyzer = AiContentAnalyzer::new().unwrap();
 
     let doc_content = r#"
@@ -161,14 +164,14 @@ fn validate_input(input: &str) -> bool {
 }
 
 #[test]
-fn test_ai_content_analyzer_ignores_test_content() {
+fn test_ai_content_analyzer_ignores_test_content() -> Result<(), Box<dyn std::error::Error>> {
     let analyzer = AiContentAnalyzer::new().unwrap();
 
     let test_content = r#"
 #[cfg(test)]
 mod tests {
     #[test]
-    fn test_incomplete_detection() {
+    fn test_incomplete_detection() -> Result<(), Box<dyn std::error::Error>> {
         let content = "TODO: implement this";
         let content2 = "unimplemented!()";
         assert!(content.contains("TODO"));
@@ -210,7 +213,7 @@ fn main() {
 }
 
 #[test]
-fn test_ai_content_analyzer_ignores_string_literals() {
+fn test_ai_content_analyzer_ignores_string_literals() -> Result<(), Box<dyn std::error::Error>> {
     let analyzer = AiContentAnalyzer::new().unwrap();
 
     let string_content = r#"
@@ -255,7 +258,8 @@ fn main() {
 }
 
 #[test]
-fn test_ai_content_analyzer_detects_real_incomplete_code() {
+fn test_ai_content_analyzer_detects_real_incomplete_code() -> Result<(), Box<dyn std::error::Error>>
+{
     let analyzer = AiContentAnalyzer::new().unwrap();
 
     let incomplete_content = r#"
@@ -294,8 +298,9 @@ fn validate_input() {
 }
 
 #[test]
-fn test_git_conflict_analyzer_handles_malformed_conflicts() {
-    let analyzer = GitConflictAnalyzer::new();
+fn test_git_conflict_analyzer_handles_malformed_conflicts() -> Result<(), Box<dyn std::error::Error>>
+{
+    let analyzer = GitConflictAnalyzer::new().unwrap();
 
     // Malformed conflict (missing end marker)
     let malformed_content = r#"
@@ -320,7 +325,7 @@ fn main() {
 }
 
 #[test]
-fn test_performance_regression_file_processing() {
+fn test_performance_regression_file_processing() -> Result<(), Box<dyn std::error::Error>> {
     use std::time::Instant;
 
     let analyzer = GitConflictAnalyzer::new();
@@ -368,7 +373,7 @@ mod tests {
 }
 
 #[test]
-fn test_analyzer_memory_usage_stability() {
+fn test_analyzer_memory_usage_stability() -> Result<(), Box<dyn std::error::Error>> {
     let git_analyzer = GitConflictAnalyzer::new();
     let ai_analyzer = AiContentAnalyzer::new().unwrap();
 

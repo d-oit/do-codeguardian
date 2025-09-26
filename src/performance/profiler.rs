@@ -139,20 +139,20 @@ mod tests {
     use std::thread;
 
     #[test]
-    fn test_profiler_basic_operations() {
+    fn test_profiler_basic_operations() -> Result<(), Box<dyn std::error::Error>> {
         let mut profiler = DetailedProfiler::new();
 
         profiler.time_operation("test_op", || {
             thread::sleep(Duration::from_millis(10));
         });
 
-        let stats = profiler.get_stats("test_op").unwrap();
+        let stats = profiler.get_stats("test_op")?;
         assert_eq!(stats.call_count, 1);
         assert!(stats.total_time >= Duration::from_millis(10));
     }
 
     #[test]
-    fn test_profiler_report_generation() {
+    fn test_profiler_report_generation() -> Result<(), Box<dyn std::error::Error>> {
         let mut profiler = DetailedProfiler::new();
 
         profiler.time_operation("fast_op", || {
@@ -170,7 +170,7 @@ mod tests {
     }
 
     #[test]
-    fn test_bottleneck_identification() {
+    fn test_bottleneck_identification() -> Result<(), Box<dyn std::error::Error>> {
         let mut profiler = DetailedProfiler::new();
 
         // Create a clear bottleneck

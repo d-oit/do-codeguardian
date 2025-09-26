@@ -341,11 +341,12 @@ pub struct RepairReport {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use anyhow::Result;
     use tempfile::TempDir;
 
     #[tokio::test]
-    async fn test_cleanup_by_age() {
-        let temp_dir = TempDir::new().unwrap();
+    async fn test_cleanup_by_age() -> Result<()> {
+        let temp_dir = TempDir::new()?;
         let config = RetentionConfig {
             enabled: true,
             results_dir: temp_dir.path().to_string_lossy().to_string(),
@@ -359,24 +360,26 @@ mod tests {
         // Create a mock old file
         let old_file = temp_dir.path().join("old_result.json");
         let content = r#"{"timestamp": "2020-01-01T00:00:00Z"}"#;
-        fs::write(&old_file, content).unwrap();
+        fs::write(&old_file, content)?;
 
-        let files = manager.collect_result_files().unwrap();
+        let files = manager.collect_result_files()?;
         assert_eq!(files.len(), 1);
 
-        let removed = manager.cleanup_by_age(&files).await.unwrap();
+        let removed = manager.cleanup_by_age(&files).await?;
 
         assert_eq!(removed.len(), 1);
         assert!(!old_file.exists());
+        Ok(())
     }
 
     #[test]
-    fn test_compute_checksum() {
+    fn test_compute_checksum() -> Result<()> {
         let manager = RetentionManager::new(RetentionConfig::default());
         let content = b"test content";
         let checksum = manager.compute_checksum(content);
         assert!(!checksum.is_empty());
         // BLAKE3 checksums are 64 characters hex
         assert_eq!(checksum.len(), 64);
+        Ok(())
     }
 }

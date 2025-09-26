@@ -114,7 +114,7 @@ The benchmark suite uses configurable performance thresholds:
 | Cache Hit Rate | 70% | Minimum cache efficiency |
 | Regression Threshold | 10% | Maximum allowed performance degradation |
 
-Thresholds can be customized via `performance_thresholds.json`:
+Thresholds can be customized via `config/performance_thresholds.json`:
 
 ```json
 {

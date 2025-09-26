@@ -97,7 +97,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_majority_voting_ensemble() {
+    async fn test_majority_voting_ensemble() -> Result<(), Box<dyn std::error::Error>> {
         let config = EnsembleConfig {
             strategy: EnsembleStrategy::MajorityVoting,
             n_models: 3,
@@ -117,13 +117,13 @@ mod tests {
         let prediction = ensemble.predict(&features).await;
         assert!(prediction.is_ok());
 
-        let pred_result = prediction.unwrap();
+        let pred_result = prediction?;
         assert_eq!(pred_result.individual_predictions.len(), 3);
         println!("{}", pred_result);
     }
 
     #[tokio::test]
-    async fn test_weighted_voting_ensemble() {
+    async fn test_weighted_voting_ensemble() -> Result<(), Box<dyn std::error::Error>> {
         let config = EnsembleConfig {
             strategy: EnsembleStrategy::WeightedVoting {
                 weights: vec![0.5, 0.3, 0.2],
@@ -145,7 +145,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_stacking_ensemble() {
+    async fn test_stacking_ensemble() -> Result<(), Box<dyn std::error::Error>> {
         let config = EnsembleConfig {
             strategy: EnsembleStrategy::Stacking {
                 meta_learner_config: MetaLearnerConfig {
@@ -170,12 +170,12 @@ mod tests {
         let prediction = ensemble.predict(&features).await;
         assert!(prediction.is_ok());
 
-        let pred_result = prediction.unwrap();
+        let pred_result = prediction?;
         println!("Stacking prediction: {}", pred_result);
     }
 
     #[tokio::test]
-    async fn test_simple_linear_regression() {
+    async fn test_simple_linear_regression() -> Result<(), Box<dyn std::error::Error>> {
         let mut model = SimpleLinearRegression::new();
 
         let training_data = vec![
@@ -191,12 +191,12 @@ mod tests {
         let prediction = model.predict(&[1.0, 2.0]).await;
         assert!(prediction.is_ok());
 
-        let pred_value = prediction.unwrap();
+        let pred_value = prediction?;
         assert!(pred_value >= 0.0 && pred_value <= 1.0);
     }
 
     #[tokio::test]
-    async fn test_simple_logistic_regression() {
+    async fn test_simple_logistic_regression() -> Result<(), Box<dyn std::error::Error>> {
         let mut model = SimpleLogisticRegression::new();
 
         let training_data = vec![
@@ -212,12 +212,12 @@ mod tests {
         let prediction = model.predict(&[0.7, 0.8]).await;
         assert!(prediction.is_ok());
 
-        let pred_value = prediction.unwrap();
+        let pred_value = prediction?;
         assert!(pred_value >= 0.0 && pred_value <= 1.0);
     }
 
     #[tokio::test]
-    async fn test_ensemble_diversity_metrics() {
+    async fn test_ensemble_diversity_metrics() -> Result<(), Box<dyn std::error::Error>> {
         let config = EnsembleConfig {
             strategy: EnsembleStrategy::MajorityVoting,
             n_models: 4,

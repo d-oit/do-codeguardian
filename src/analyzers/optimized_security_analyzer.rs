@@ -13,40 +13,40 @@ use std::path::Path;
 // Pre-compiled regex patterns for maximum performance
 lazy_static! {
     // SQL Injection patterns
-    static ref SQL_OR_PATTERN: Regex = Regex::new(r#"'?\s*OR\s+\d+\s*=\s*\d+"#).unwrap();
-    static ref SQL_AND_PATTERN: Regex = Regex::new(r#"'?\s*AND\s+\d+\s*=\s*\d+"#).unwrap();
-    static ref SQL_UNION_PATTERN: Regex = Regex::new(r#"UNION\s+SELECT"#).unwrap();
-    static ref SQL_COMMENT_PATTERN: Regex = Regex::new(r#"--\s*$"#).unwrap();
-    static ref SQL_DROP_PATTERN: Regex = Regex::new(r#";\s*DROP\s+TABLE"#).unwrap();
+    static ref SQL_OR_PATTERN: Regex = Regex::new(r#"'?\s*OR\s+\d+\s*=\s*\d+"#)?;
+    static ref SQL_AND_PATTERN: Regex = Regex::new(r#"'?\s*AND\s+\d+\s*=\s*\d+"#)?;
+    static ref SQL_UNION_PATTERN: Regex = Regex::new(r#"UNION\s+SELECT"#)?;
+    static ref SQL_COMMENT_PATTERN: Regex = Regex::new(r#"--\s*$"#)?;
+    static ref SQL_DROP_PATTERN: Regex = Regex::new(r#";\s*DROP\s+TABLE"#)?;
 
     // XSS patterns
-    static ref XSS_SCRIPT_PATTERN: Regex = Regex::new(r#"<script[^>]*>.*?</script>"#).unwrap();
-    static ref XSS_JAVASCRIPT_PATTERN: Regex = Regex::new(r#"javascript:\s*["'][^"']*["']"#).unwrap();
-    static ref XSS_EVENT_PATTERN: Regex = Regex::new(r#"\bon\w+\s*=\s*["'][^"']*["']"#).unwrap();
-    static ref XSS_IFRAME_PATTERN: Regex = Regex::new(r#"<iframe[^>]*src\s*=\s*["'][^"']*["'][^>]*>"#).unwrap();
-    static ref XSS_OBJECT_PATTERN: Regex = Regex::new(r#"<object[^>]*data\s*=\s*["'][^"']*["'][^>]*>"#).unwrap();
+    static ref XSS_SCRIPT_PATTERN: Regex = Regex::new(r#"<script[^>]*>.*?</script>"#)?;
+    static ref XSS_JAVASCRIPT_PATTERN: Regex = Regex::new(r#"javascript:\s*["'][^"']*["']"#)?;
+    static ref XSS_EVENT_PATTERN: Regex = Regex::new(r#"\bon\w+\s*=\s*["'][^"']*["']"#)?;
+    static ref XSS_IFRAME_PATTERN: Regex = Regex::new(r#"<iframe[^>]*src\s*=\s*["'][^"']*["'][^>]*>"#)?;
+    static ref XSS_OBJECT_PATTERN: Regex = Regex::new(r#"<object[^>]*data\s*=\s*["'][^"']*["'][^>]*>"#)?;
 
     // Command injection patterns
-    static ref CMD_DANGEROUS_PATTERN: Regex = Regex::new(r#";\s*(rm|del|format|shutdown)"#).unwrap();
-    static ref CMD_PIPE_PATTERN: Regex = Regex::new(r#"\|\s*(cat|ls|dir)"#).unwrap();
-    static ref CMD_BACKTICK_PATTERN: Regex = Regex::new(r#"`[^`]*`"#).unwrap();
-    static ref CMD_DOLLAR_PATTERN: Regex = Regex::new(r#"\$\([^)]*\)"#).unwrap();
-    static ref CMD_SYSTEM_PATTERN: Regex = Regex::new(r#"system\s*\("#).unwrap();
+    static ref CMD_DANGEROUS_PATTERN: Regex = Regex::new(r#";\s*(rm|del|format|shutdown)"#)?;
+    static ref CMD_PIPE_PATTERN: Regex = Regex::new(r#"\|\s*(cat|ls|dir)"#)?;
+    static ref CMD_BACKTICK_PATTERN: Regex = Regex::new(r#"`[^`]*`"#)?;
+    static ref CMD_DOLLAR_PATTERN: Regex = Regex::new(r#"\$\([^)]*\)"#)?;
+    static ref CMD_SYSTEM_PATTERN: Regex = Regex::new(r#"system\s*\("#)?;
 
     // Secret patterns
-    static ref SECRET_API_KEY_PATTERN: Regex = Regex::new(r#"API_KEY\s*=\s*["']sk-[^"']*["']"#).unwrap();
-    static ref SECRET_PASSWORD_PATTERN: Regex = Regex::new(r#"PASSWORD\s*=\s*["'][^"']*["']"#).unwrap();
-    static ref SECRET_SECRET_PATTERN: Regex = Regex::new(r#"SECRET\s*=\s*["'][^"']*["']"#).unwrap();
-    static ref SECRET_TOKEN_PATTERN: Regex = Regex::new(r#"TOKEN\s*=\s*["'][^"']*["']"#).unwrap();
-    static ref SECRET_AWS_ACCESS_PATTERN: Regex = Regex::new(r#"aws_access_key_id\s*=\s*["'][^"']*["']"#).unwrap();
-    static ref SECRET_AWS_SECRET_PATTERN: Regex = Regex::new(r#"aws_secret_access_key\s*=\s*["'][^"']*["']"#).unwrap();
+    static ref SECRET_API_KEY_PATTERN: Regex = Regex::new(r#"API_KEY\s*=\s*["']sk-[^"']*["']"#)?;
+    static ref SECRET_PASSWORD_PATTERN: Regex = Regex::new(r#"PASSWORD\s*=\s*["'][^"']*["']"#)?;
+    static ref SECRET_SECRET_PATTERN: Regex = Regex::new(r#"SECRET\s*=\s*["'][^"']*["']"#)?;
+    static ref SECRET_TOKEN_PATTERN: Regex = Regex::new(r#"TOKEN\s*=\s*["'][^"']*["']"#)?;
+    static ref SECRET_AWS_ACCESS_PATTERN: Regex = Regex::new(r#"aws_access_key_id\s*=\s*["'][^"']*["']"#)?;
+    static ref SECRET_AWS_SECRET_PATTERN: Regex = Regex::new(r#"aws_secret_access_key\s*=\s*["'][^"']*["']"#)?;
 
     // Vulnerability patterns
-    static ref VULN_UNSAFE_PATTERN: Regex = Regex::new(r#"unsafe\s*\{"#).unwrap();
-    static ref VULN_TRANSMUTE_PATTERN: Regex = Regex::new(r#"std::mem::transmute"#).unwrap();
-    static ref VULN_NULL_PATTERN: Regex = Regex::new(r#"std::ptr::null"#).unwrap();
-    static ref VULN_CSTR_PATTERN: Regex = Regex::new(r#"std::ffi::CStr::from_ptr"#).unwrap();
-    static ref VULN_EVAL_PATTERN: Regex = Regex::new(r#"eval\s*\("#).unwrap();
+    static ref VULN_UNSAFE_PATTERN: Regex = Regex::new(r#"unsafe\s*\{"#)?;
+    static ref VULN_TRANSMUTE_PATTERN: Regex = Regex::new(r#"std::mem::transmute"#)?;
+    static ref VULN_NULL_PATTERN: Regex = Regex::new(r#"std::ptr::null"#)?;
+    static ref VULN_CSTR_PATTERN: Regex = Regex::new(r#"std::ffi::CStr::from_ptr"#)?;
+    static ref VULN_EVAL_PATTERN: Regex = Regex::new(r#"eval\s*\("#)?;
 
     // Combined patterns for single-pass analysis
     static ref ALL_SQL_PATTERNS: Vec<&'static Regex> = vec![
@@ -415,13 +415,13 @@ mod tests {
     use std::path::PathBuf;
 
     #[test]
-    fn test_optimized_analyzer_creation() {
+    fn test_optimized_analyzer_creation() -> Result<(), Box<dyn std::error::Error>> {
         let analyzer = OptimizedSecurityAnalyzer::new();
         assert_eq!(analyzer.name(), "optimized-security");
     }
 
     #[test]
-    fn test_regex_patterns_compiled() {
+    fn test_regex_patterns_compiled() -> Result<(), Box<dyn std::error::Error>> {
         // Test that all patterns are properly compiled
         assert!(SQL_OR_PATTERN.is_match("' OR 1=1"));
         assert!(SECRET_API_KEY_PATTERN.is_match("API_KEY = \"sk-1234567890abcdef\""));
@@ -429,7 +429,7 @@ mod tests {
     }
 
     #[test]
-    fn test_performance_improvement() {
+    fn test_performance_improvement() -> Result<(), Box<dyn std::error::Error>> {
         use std::time::Instant;
 
         let analyzer = OptimizedSecurityAnalyzer::new();

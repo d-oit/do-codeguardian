@@ -183,43 +183,43 @@ mod tests {
     }
 
     #[test]
-    fn test_json_formatter_basic() {
+    fn test_json_formatter_basic() -> Result<(), Box<dyn std::error::Error>> {
         let formatter = JsonFormatter::new();
         let results = create_test_results();
 
-        let output = formatter.format(&results).unwrap();
+        let output = formatter.format(&results)?;
         assert!(!output.content.is_empty());
         assert_eq!(output.metadata.format, "json");
 
         // Verify it's valid JSON
-        let _: serde_json::Value = serde_json::from_str(&output.content).unwrap();
+        let _: serde_json::Value = serde_json::from_str(&output.content)?;
     }
 
     #[test]
-    fn test_json_formatter_compact() {
+    fn test_json_formatter_compact() -> Result<(), Box<dyn std::error::Error>> {
         let formatter = JsonFormatter::compact();
         let results = create_test_results();
 
-        let output = formatter.format(&results).unwrap();
+        let output = formatter.format(&results)?;
 
         // Compact format should not contain newlines
         assert!(!output.content.contains('\n'));
     }
 
     #[test]
-    fn test_json_formatter_content_type() {
+    fn test_json_formatter_content_type() -> Result<(), Box<dyn std::error::Error>> {
         let formatter = JsonFormatter::new();
         assert_eq!(formatter.content_type(), "application/json");
     }
 
     #[test]
-    fn test_json_formatter_supports_streaming() {
+    fn test_json_formatter_supports_streaming() -> Result<(), Box<dyn std::error::Error>> {
         let formatter = JsonFormatter::new();
         assert!(formatter.supports_streaming());
     }
 
     #[test]
-    fn test_json_formatter_validation() {
+    fn test_json_formatter_validation() -> Result<(), Box<dyn std::error::Error>> {
         let formatter = JsonFormatter::new();
 
         // Valid JSON should pass

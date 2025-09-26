@@ -616,12 +616,12 @@ mod tests {
     }
 
     #[test]
-    fn test_html_formatter_basic() {
+    fn test_html_formatter_basic() -> Result<(), Box<dyn std::error::Error>> {
         let mut formatter = HtmlFormatter::new();
         formatter.sanitize_content = false; // Disable sanitization for basic test
         let results = create_test_results();
 
-        let output = formatter.format(&results).unwrap();
+        let output = formatter.format(&results)?;
         assert!(!output.content.is_empty());
         assert_eq!(output.metadata.format, "html");
 
@@ -633,11 +633,11 @@ mod tests {
     }
 
     #[test]
-    fn test_html_formatter_security() {
+    fn test_html_formatter_security() -> Result<(), Box<dyn std::error::Error>> {
         let formatter = HtmlFormatter::new(); // sanitize_content is true by default
         let results = create_test_results();
 
-        let output = formatter.format(&results).unwrap();
+        let output = formatter.format(&results)?;
 
         // Should include CSP header
         assert!(output.content.contains("Content-Security-Policy"));
@@ -651,13 +651,13 @@ mod tests {
     }
 
     #[test]
-    fn test_html_formatter_content_type() {
+    fn test_html_formatter_content_type() -> Result<(), Box<dyn std::error::Error>> {
         let formatter = HtmlFormatter::new();
         assert_eq!(formatter.content_type(), "text/html");
     }
 
     #[test]
-    fn test_html_formatter_validation() {
+    fn test_html_formatter_validation() -> Result<(), Box<dyn std::error::Error>> {
         let formatter = HtmlFormatter::new();
 
         // Valid HTML should pass

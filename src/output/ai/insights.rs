@@ -451,7 +451,7 @@ mod tests {
     }
 
     #[test]
-    fn test_insight_generator() {
+    fn test_insight_generator() -> Result<(), Box<dyn std::error::Error>> {
         let generator = InsightGenerator::new();
         let findings = vec![
             create_test_finding("SQL injection vulnerability", Severity::Critical),
@@ -459,24 +459,22 @@ mod tests {
             create_test_finding("Authentication bypass", Severity::Critical),
         ];
 
-        let insights = generator
-            .generate_insights(
-                &crate::types::AnalysisResults {
-                    schema_version: "1.0.0".to_string(),
-                    tool_metadata: crate::types::ToolMetadata {
-                        name: "test".to_string(),
-                        version: "1.0.0".to_string(),
-                        config_hash: "test".to_string(),
-                        timestamp: chrono::Utc::now(),
-                    },
-                    findings,
-                    summary: Default::default(),
+        let insights = generator.generate_insights(
+            &crate::types::AnalysisResults {
+                schema_version: "1.0.0".to_string(),
+                tool_metadata: crate::types::ToolMetadata {
+                    name: "test".to_string(),
+                    version: "1.0.0".to_string(),
                     config_hash: "test".to_string(),
                     timestamp: chrono::Utc::now(),
                 },
-                &[],
-            )
-            .unwrap();
+                findings,
+                summary: Default::default(),
+                config_hash: "test".to_string(),
+                timestamp: chrono::Utc::now(),
+            },
+            &[],
+        )?;
 
         assert!(!insights.is_empty());
         assert!(insights
@@ -485,7 +483,7 @@ mod tests {
     }
 
     #[test]
-    fn test_security_pattern_rule() {
+    fn test_security_pattern_rule() -> Result<(), Box<dyn std::error::Error>> {
         let rule = SecurityPatternRule;
         let findings = vec![
             create_test_finding("SQL injection found", Severity::High),

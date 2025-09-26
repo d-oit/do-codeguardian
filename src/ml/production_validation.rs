@@ -3,9 +3,9 @@
 //! This module provides comprehensive validation, testing, and monitoring
 //! capabilities for ML models in production environments.
 
+use crate::ml::advanced_feature_extractor::AdvancedFeatureExtractor;
 use crate::ml::fann_classifier::FannClassifier;
 use crate::ml::training_data::TrainingDataset;
-use crate::ml::advanced_feature_extractor::AdvancedFeatureExtractor;
 use crate::types::{Finding, Severity};
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
@@ -28,10 +28,14 @@ pub struct ProductionValidationFramework {
 pub trait ModelValidator {
     /// Name of the validator
     fn name(&self) -> &str;
-    
+
     /// Validate model performance
-    async fn validate(&self, model: &FannClassifier, test_data: &TestSuite) -> Result<ValidationMetrics>;
-    
+    async fn validate(
+        &self,
+        model: &FannClassifier,
+        test_data: &TestSuite,
+    ) -> Result<ValidationMetrics>;
+
     /// Check if validation passes required thresholds
     fn passes_threshold(&self, metrics: &ValidationMetrics, config: &ValidationConfig) -> bool;
 }
@@ -71,10 +75,10 @@ pub enum TestCategory {
 /// Test criticality levels
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum TestCriticality {
-    Critical,   // Must pass for production deployment
-    High,       // Should pass, but warnings acceptable
-    Medium,     // Performance indicators
-    Low,        // Nice-to-have improvements
+    Critical, // Must pass for production deployment
+    High,     // Should pass, but warnings acceptable
+    Medium,   // Performance indicators
+    Low,      // Nice-to-have improvements
 }
 
 /// Expected performance thresholds
@@ -137,9 +141,9 @@ pub struct ValidationMetrics {
 /// Confidence score distribution
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ConfidenceDistribution {
-    pub high_confidence_count: u32,      // > 0.8
-    pub medium_confidence_count: u32,    // 0.5 - 0.8
-    pub low_confidence_count: u32,       // < 0.5
+    pub high_confidence_count: u32,   // > 0.8
+    pub medium_confidence_count: u32, // 0.5 - 0.8
+    pub low_confidence_count: u32,    // < 0.5
     pub avg_confidence: f32,
     pub confidence_variance: f32,
 }
@@ -280,7 +284,7 @@ impl ProductionValidationFramework {
     /// Load test suites from directory
     pub async fn load_test_suites(&mut self, test_suites_dir: &Path) -> Result<()> {
         let mut entries = fs::read_dir(test_suites_dir).await?;
-        
+
         while let Some(entry) = entries.next_entry().await? {
             let path = entry.path();
             if path.extension().and_then(|s| s.to_str()) == Some("json") {
@@ -297,7 +301,7 @@ impl ProductionValidationFramework {
     /// Set baseline model for comparison
     pub async fn set_baseline_model(&mut self, model_path: &Path) -> Result<()> {
         self.performance_benchmarks.baseline_model_path = Some(model_path.to_path_buf());
-        
+
         // Run baseline validation if test suites are available
         if !self.test_suites.is_empty() {
             let model = FannClassifier::load(model_path)?;
@@ -310,19 +314,26 @@ impl ProductionValidationFramework {
 
     /// Validate model for production deployment
     pub async fn validate_for_production(&mut self, model_path: &Path) -> Result<ValidationResult> {
-        tracing::info!("Starting production validation for model: {}", model_path.display());
-        
+        tracing::info!(
+            "Starting production validation for model: {}",
+            model_path.display()
+        );
+
         let model = FannClassifier::load(model_path)?;
         let validation_result = self.run_full_validation(&model).await?;
-        
+
         // Store result in history
         self.results_history.push(validation_result.clone());
-        
+
         // Save validation report
         let report_path = model_path.with_extension("validation_report.json");
-        self.save_validation_report(&validation_result, &report_path).await?;
-        
-        tracing::info!("Validation completed with status: {:?}", validation_result.validation_status);
+        self.save_validation_report(&validation_result, &report_path)
+            .await?;
+
+        tracing::info!(
+            "Validation completed with status: {:?}",
+            validation_result.validation_status
+        );
         Ok(validation_result)
     }
 
@@ -332,17 +343,17 @@ impl ProductionValidationFramework {
         let mut validator_results = HashMap::new();
         let mut test_suite_results = HashMap::new();
         let mut overall_metrics = ValidationMetrics::default();
-        
+
         // Run all validators
         for validator in &self.validators {
             let mut combined_metrics = ValidationMetrics::default();
             let mut test_count = 0;
-            
+
             for test_suite in &self.test_suites {
                 let metrics = validator.validate(model, test_suite).await?;
                 combined_metrics = combine_metrics(&combined_metrics, &metrics);
                 test_count += test_suite.test_cases.len();
-                
+
                 // Store test suite results
                 let suite_result = TestSuiteResult {
                     suite_name: test_suite.name.clone(),
@@ -354,11 +365,11 @@ impl ProductionValidationFramework {
                 };
                 test_suite_results.insert(test_suite.name.clone(), suite_result);
             }
-            
+
             if test_count > 0 {
                 combined_metrics = normalize_metrics(combined_metrics, test_count);
             }
-            
+
             validator_results.insert(validator.name().to_string(), combined_metrics.clone());
             overall_metrics = combine_metrics(&overall_metrics, &combined_metrics);
         }
@@ -370,20 +381,22 @@ impl ProductionValidationFramework {
 
         // Generate performance comparison
         let performance_comparison = self.generate_performance_comparison(&overall_metrics);
-        
+
         // Determine validation status
-        let validation_status = self.determine_validation_status(&overall_metrics, &validator_results);
-        
+        let validation_status =
+            self.determine_validation_status(&overall_metrics, &validator_results);
+
         // Generate recommendations
         let recommendations = self.generate_recommendations(&overall_metrics, &validator_results);
-        
+
         // Assess deployment readiness
-        let deployment_readiness = self.assess_deployment_readiness(&overall_metrics, &validation_status);
+        let deployment_readiness =
+            self.assess_deployment_readiness(&overall_metrics, &validation_status);
 
         Ok(ValidationResult {
             timestamp: start_time,
             model_path: PathBuf::from("model.fann"), // Would be passed in
-            model_version: "1.0.0".to_string(), // Would extract from metadata
+            model_version: "1.0.0".to_string(),      // Would extract from metadata
             overall_metrics,
             validator_results,
             test_suite_results,
@@ -405,8 +418,13 @@ impl ProductionValidationFramework {
     }
 
     /// Identify critical test failures
-    fn identify_critical_failures(&self, _metrics: &ValidationMetrics, test_suite: &TestSuite) -> Vec<String> {
-        test_suite.test_cases
+    fn identify_critical_failures(
+        &self,
+        _metrics: &ValidationMetrics,
+        test_suite: &TestSuite,
+    ) -> Vec<String> {
+        test_suite
+            .test_cases
             .iter()
             .filter(|tc| matches!(tc.criticality, TestCriticality::Critical))
             .map(|tc| tc.id.clone())
@@ -416,31 +434,41 @@ impl ProductionValidationFramework {
     /// Identify performance issues
     fn identify_performance_issues(&self, metrics: &ValidationMetrics) -> Vec<String> {
         let mut issues = Vec::new();
-        
+
         if metrics.avg_inference_time_ms > self.validation_config.max_inference_time_ms {
-            issues.push(format!("Average inference time too high: {:.2}ms", metrics.avg_inference_time_ms));
+            issues.push(format!(
+                "Average inference time too high: {:.2}ms",
+                metrics.avg_inference_time_ms
+            ));
         }
-        
+
         if metrics.false_positive_rate > self.validation_config.max_false_positive_rate {
-            issues.push(format!("False positive rate too high: {:.2}%", metrics.false_positive_rate * 100.0));
+            issues.push(format!(
+                "False positive rate too high: {:.2}%",
+                metrics.false_positive_rate * 100.0
+            ));
         }
-        
+
         issues
     }
 
     /// Generate performance comparison
-    fn generate_performance_comparison(&self, metrics: &ValidationMetrics) -> PerformanceComparison {
+    fn generate_performance_comparison(
+        &self,
+        metrics: &ValidationMetrics,
+    ) -> PerformanceComparison {
         let vs_baseline = if let Some(baseline) = &self.performance_benchmarks.baseline_metrics {
             Some(calculate_metrics_delta(metrics, baseline))
         } else {
             None
         };
 
-        let vs_production = if let Some(production) = &self.performance_benchmarks.production_metrics {
-            Some(calculate_metrics_delta(metrics, production))
-        } else {
-            None
-        };
+        let vs_production =
+            if let Some(production) = &self.performance_benchmarks.production_metrics {
+                Some(calculate_metrics_delta(metrics, production))
+            } else {
+                None
+            };
 
         let performance_trend = self.analyze_performance_trend();
 
@@ -458,7 +486,8 @@ impl ProductionValidationFramework {
             return PerformanceTrend::Stable;
         }
 
-        let recent_scores: Vec<f32> = self.results_history
+        let recent_scores: Vec<f32> = self
+            .results_history
             .iter()
             .rev()
             .take(5)
@@ -466,7 +495,8 @@ impl ProductionValidationFramework {
             .collect();
 
         let avg_recent = recent_scores.iter().sum::<f32>() / recent_scores.len() as f32;
-        let older_scores: Vec<f32> = self.results_history
+        let older_scores: Vec<f32> = self
+            .results_history
             .iter()
             .rev()
             .skip(5)
@@ -523,10 +553,13 @@ impl ProductionValidationFramework {
 
         // Check individual validator results
         for (validator_name, validator_metrics) in validator_results {
-            if !self.validators.iter()
+            if !self
+                .validators
+                .iter()
                 .find(|v| v.name() == validator_name)
                 .map(|v| v.passes_threshold(validator_metrics, &self.validation_config))
-                .unwrap_or(false) {
+                .unwrap_or(false)
+            {
                 critical_failures += 1;
             }
         }
@@ -590,8 +623,11 @@ impl ProductionValidationFramework {
         let mut warnings = Vec::new();
         let mut required_actions = Vec::new();
 
-        let ready_for_production = matches!(status, ValidationStatus::Passed | ValidationStatus::PassedWithWarnings);
-        
+        let ready_for_production = matches!(
+            status,
+            ValidationStatus::Passed | ValidationStatus::PassedWithWarnings
+        );
+
         let readiness_score = match status {
             ValidationStatus::Passed => 1.0,
             ValidationStatus::PassedWithWarnings => 0.8,
@@ -643,7 +679,7 @@ fn combine_metrics(a: &ValidationMetrics, b: &ValidationMetrics) -> ValidationMe
         max_inference_time_ms: a.max_inference_time_ms.max(b.max_inference_time_ms),
         min_inference_time_ms: a.min_inference_time_ms.min(b.min_inference_time_ms),
         confidence_distribution: ConfidenceDistribution::default(), // Would combine properly
-        category_performance: HashMap::new(), // Would merge properly
+        category_performance: HashMap::new(),                       // Would merge properly
     }
 }
 
@@ -661,7 +697,10 @@ fn normalize_metrics(mut metrics: ValidationMetrics, count: usize) -> Validation
     metrics
 }
 
-fn calculate_metrics_delta(current: &ValidationMetrics, baseline: &ValidationMetrics) -> MetricsDelta {
+fn calculate_metrics_delta(
+    current: &ValidationMetrics,
+    baseline: &ValidationMetrics,
+) -> MetricsDelta {
     MetricsDelta {
         accuracy_delta: current.accuracy - baseline.accuracy,
         precision_delta: current.precision - baseline.precision,
@@ -757,24 +796,31 @@ impl ModelValidator for AccuracyValidator {
         "AccuracyValidator"
     }
 
-    async fn validate(&self, model: &FannClassifier, test_suite: &TestSuite) -> Result<ValidationMetrics> {
+    async fn validate(
+        &self,
+        model: &FannClassifier,
+        test_suite: &TestSuite,
+    ) -> Result<ValidationMetrics> {
         let mut metrics = ValidationMetrics::default();
         let mut inference_times = Vec::new();
         let mut confidences = Vec::new();
 
         for test_case in &test_suite.test_cases {
             let start_time = std::time::Instant::now();
-            
+
             // Extract features (would use appropriate extractor based on model)
-            let features = self.feature_extractor.extract_advanced_features(&test_case.finding).await?;
-            
+            let features = self
+                .feature_extractor
+                .extract_advanced_features(&test_case.finding)
+                .await?;
+
             // Get model prediction
             let prediction = model.predict(&features)?;
             let inference_time = start_time.elapsed().as_millis() as f32;
-            
+
             inference_times.push(inference_time);
             confidences.push(prediction);
-            
+
             // Compare with expected classification
             let predicted_positive = prediction > test_case.confidence_threshold;
             let should_be_positive = test_case.expected_classification;
@@ -788,24 +834,28 @@ impl ModelValidator for AccuracyValidator {
         }
 
         // Calculate derived metrics
-        let total = metrics.true_positives + metrics.false_positives + metrics.true_negatives + metrics.false_negatives;
+        let total = metrics.true_positives
+            + metrics.false_positives
+            + metrics.true_negatives
+            + metrics.false_negatives;
         if total > 0 {
-            metrics.accuracy = (metrics.true_positives + metrics.true_negatives) as f32 / total as f32;
-            
+            metrics.accuracy =
+                (metrics.true_positives + metrics.true_negatives) as f32 / total as f32;
+
             let precision_denominator = metrics.true_positives + metrics.false_positives;
             metrics.precision = if precision_denominator > 0 {
                 metrics.true_positives as f32 / precision_denominator as f32
             } else {
                 1.0
             };
-            
+
             let recall_denominator = metrics.true_positives + metrics.false_negatives;
             metrics.recall = if recall_denominator > 0 {
                 metrics.true_positives as f32 / recall_denominator as f32
             } else {
                 1.0
             };
-            
+
             metrics.f1_score = if metrics.precision + metrics.recall > 0.0 {
                 2.0 * (metrics.precision * metrics.recall) / (metrics.precision + metrics.recall)
             } else {
@@ -818,9 +868,11 @@ impl ModelValidator for AccuracyValidator {
 
         // Calculate timing metrics
         if !inference_times.is_empty() {
-            metrics.avg_inference_time_ms = inference_times.iter().sum::<f32>() / inference_times.len() as f32;
+            metrics.avg_inference_time_ms =
+                inference_times.iter().sum::<f32>() / inference_times.len() as f32;
             metrics.max_inference_time_ms = inference_times.iter().cloned().fold(0.0, f32::max);
-            metrics.min_inference_time_ms = inference_times.iter().cloned().fold(f32::MAX, f32::min);
+            metrics.min_inference_time_ms =
+                inference_times.iter().cloned().fold(f32::MAX, f32::min);
         }
 
         // Calculate confidence distribution
@@ -830,11 +882,11 @@ impl ModelValidator for AccuracyValidator {
     }
 
     fn passes_threshold(&self, metrics: &ValidationMetrics, config: &ValidationConfig) -> bool {
-        metrics.accuracy >= config.required_accuracy &&
-        metrics.precision >= config.required_precision &&
-        metrics.recall >= config.required_recall &&
-        metrics.f1_score >= config.required_f1_score &&
-        metrics.false_positive_rate <= config.max_false_positive_rate
+        metrics.accuracy >= config.required_accuracy
+            && metrics.precision >= config.required_precision
+            && metrics.recall >= config.required_recall
+            && metrics.f1_score >= config.required_f1_score
+            && metrics.false_positive_rate <= config.max_false_positive_rate
     }
 }
 
@@ -853,33 +905,39 @@ impl ModelValidator for PerformanceValidator {
         "PerformanceValidator"
     }
 
-    async fn validate(&self, model: &FannClassifier, test_suite: &TestSuite) -> Result<ValidationMetrics> {
+    async fn validate(
+        &self,
+        model: &FannClassifier,
+        test_suite: &TestSuite,
+    ) -> Result<ValidationMetrics> {
         let mut metrics = ValidationMetrics::default();
         let mut inference_times = Vec::new();
-        
+
         // Performance stress test
         let stress_iterations = 100;
         let sample_test_cases = &test_suite.test_cases[..test_suite.test_cases.len().min(10)];
-        
+
         for _ in 0..stress_iterations {
             for test_case in sample_test_cases {
                 // Use basic features for performance testing (faster extraction)
                 let features = extract_basic_features(&test_case.finding)?;
-                
+
                 let start_time = std::time::Instant::now();
                 let _ = model.predict(&features)?;
                 let inference_time = start_time.elapsed().as_micros() as f32 / 1000.0; // Convert to ms
-                
+
                 inference_times.push(inference_time);
             }
         }
 
         // Calculate performance metrics
         if !inference_times.is_empty() {
-            metrics.avg_inference_time_ms = inference_times.iter().sum::<f32>() / inference_times.len() as f32;
+            metrics.avg_inference_time_ms =
+                inference_times.iter().sum::<f32>() / inference_times.len() as f32;
             metrics.max_inference_time_ms = inference_times.iter().cloned().fold(0.0, f32::max);
-            metrics.min_inference_time_ms = inference_times.iter().cloned().fold(f32::MAX, f32::min);
-            
+            metrics.min_inference_time_ms =
+                inference_times.iter().cloned().fold(f32::MAX, f32::min);
+
             // Performance score based on timing
             let target_time = 10.0; // 10ms target
             metrics.accuracy = if metrics.avg_inference_time_ms <= target_time {
@@ -912,7 +970,11 @@ impl ModelValidator for RobustnessValidator {
         "RobustnessValidator"
     }
 
-    async fn validate(&self, model: &FannClassifier, test_suite: &TestSuite) -> Result<ValidationMetrics> {
+    async fn validate(
+        &self,
+        model: &FannClassifier,
+        test_suite: &TestSuite,
+    ) -> Result<ValidationMetrics> {
         let mut metrics = ValidationMetrics::default();
         let mut robustness_score = 0.0;
         let mut edge_case_count = 0;
@@ -920,16 +982,16 @@ impl ModelValidator for RobustnessValidator {
         for test_case in &test_suite.test_cases {
             if matches!(test_case.category, TestCategory::EdgeCase) {
                 edge_case_count += 1;
-                
+
                 // Test with slightly perturbed features
                 let base_features = extract_basic_features(&test_case.finding)?;
                 let predictions = test_feature_perturbations(model, &base_features)?;
-                
+
                 // Calculate prediction stability
                 let variance = calculate_prediction_variance(&predictions);
                 let stability_score = (1.0 - variance).max(0.0);
                 robustness_score += stability_score;
-                
+
                 // Count as passed if stable enough
                 if stability_score > 0.8 {
                     metrics.true_positives += 1;
@@ -969,29 +1031,42 @@ impl ModelValidator for BiasValidator {
         "BiasValidator"
     }
 
-    async fn validate(&self, model: &FannClassifier, test_suite: &TestSuite) -> Result<ValidationMetrics> {
+    async fn validate(
+        &self,
+        model: &FannClassifier,
+        test_suite: &TestSuite,
+    ) -> Result<ValidationMetrics> {
         let mut metrics = ValidationMetrics::default();
-        
+
         // Group test cases by file type and analyzer
         let mut file_type_groups: HashMap<String, Vec<&TestCase>> = HashMap::new();
         let mut analyzer_groups: HashMap<String, Vec<&TestCase>> = HashMap::new();
-        
+
         for test_case in &test_suite.test_cases {
-            let file_ext = test_case.finding.file
+            let file_ext = test_case
+                .finding
+                .file
                 .extension()
                 .and_then(|ext| ext.to_str())
                 .unwrap_or("unknown")
                 .to_string();
-            
-            file_type_groups.entry(file_ext).or_default().push(test_case);
-            analyzer_groups.entry(test_case.finding.analyzer.clone()).or_default().push(test_case);
+
+            file_type_groups
+                .entry(file_ext)
+                .or_default()
+                .push(test_case);
+            analyzer_groups
+                .entry(test_case.finding.analyzer.clone())
+                .or_default()
+                .push(test_case);
         }
 
         // Check for performance disparities between groups
         let mut bias_scores = Vec::new();
-        
+
         for (file_type, cases) in file_type_groups {
-            if cases.len() >= 5 { // Minimum sample size
+            if cases.len() >= 5 {
+                // Minimum sample size
                 let group_accuracy = calculate_group_accuracy(model, &cases).await?;
                 bias_scores.push(group_accuracy);
             }
@@ -1009,7 +1084,7 @@ impl ModelValidator for BiasValidator {
             let min_accuracy = bias_scores.iter().cloned().fold(f32::MAX, f32::min);
             let max_accuracy = bias_scores.iter().cloned().fold(f32::MIN, f32::max);
             let fairness_score = min_accuracy / max_accuracy; // Closer to 1.0 = more fair
-            
+
             metrics.accuracy = fairness_score;
             metrics.precision = fairness_score;
             metrics.recall = fairness_score;
@@ -1042,7 +1117,11 @@ impl ModelValidator for RegressionValidator {
         "RegressionValidator"
     }
 
-    async fn validate(&self, _model: &FannClassifier, _test_suite: &TestSuite) -> Result<ValidationMetrics> {
+    async fn validate(
+        &self,
+        _model: &FannClassifier,
+        _test_suite: &TestSuite,
+    ) -> Result<ValidationMetrics> {
         // This would compare against baseline model performance
         // For now, return acceptable metrics
         let mut metrics = ValidationMetrics::default();
@@ -1089,9 +1168,7 @@ fn calculate_confidence_distribution(confidences: &[f32]) -> ConfidenceDistribut
     };
 
     let variance = if confidences.len() > 1 {
-        let variance_sum: f32 = confidences.iter()
-            .map(|&x| (x - avg).powi(2))
-            .sum();
+        let variance_sum: f32 = confidences.iter().map(|&x| (x - avg).powi(2)).sum();
         variance_sum / (confidences.len() - 1) as f32
     } else {
         0.0
@@ -1111,10 +1188,11 @@ fn test_feature_perturbations(model: &FannClassifier, base_features: &[f32]) -> 
     let perturbation_levels = [0.95, 0.98, 1.0, 1.02, 1.05];
 
     for &factor in &perturbation_levels {
-        let perturbed_features: Vec<f32> = base_features.iter()
+        let perturbed_features: Vec<f32> = base_features
+            .iter()
             .map(|&f| (f * factor).clamp(0.0, 1.0))
             .collect();
-        
+
         let prediction = model.predict(&perturbed_features)?;
         predictions.push(prediction);
     }
@@ -1128,10 +1206,8 @@ fn calculate_prediction_variance(predictions: &[f32]) -> f32 {
     }
 
     let mean = predictions.iter().sum::<f32>() / predictions.len() as f32;
-    let variance_sum: f32 = predictions.iter()
-        .map(|&x| (x - mean).powi(2))
-        .sum();
-    
+    let variance_sum: f32 = predictions.iter().map(|&x| (x - mean).powi(2)).sum();
+
     variance_sum / (predictions.len() - 1) as f32
 }
 
@@ -1143,7 +1219,7 @@ async fn calculate_group_accuracy(model: &FannClassifier, test_cases: &[&TestCas
         let features = extract_basic_features(&test_case.finding)?;
         let prediction = model.predict(&features)?;
         let predicted_positive = prediction > test_case.confidence_threshold;
-        
+
         if predicted_positive == test_case.expected_classification {
             correct += 1;
         }

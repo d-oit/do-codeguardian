@@ -646,7 +646,7 @@ mod tests {
     }
 
     #[test]
-    fn test_basic_enhancement_engine_creation() -> Result<()> {
+    fn test_basic_enhancement_engine_creation() -> Result<(), Box<dyn std::error::Error>> {
         let engine = BasicEnhancementEngine::new()?;
         assert!(engine.is_available());
         assert!(!engine.get_capabilities().is_empty());
@@ -654,7 +654,7 @@ mod tests {
     }
 
     #[test]
-    fn test_finding_classification() -> Result<()> {
+    fn test_finding_classification() -> Result<(), Box<dyn std::error::Error>> {
         let engine = BasicEnhancementEngine::new()?;
         let finding = create_test_finding("SQL injection vulnerability detected", Severity::High);
 
@@ -665,7 +665,7 @@ mod tests {
     }
 
     #[test]
-    fn test_relationship_detection() -> Result<()> {
+    fn test_relationship_detection() -> Result<(), Box<dyn std::error::Error>> {
         let engine = BasicEnhancementEngine::new()?;
         let findings = vec![
             create_test_finding("Issue in test.rs", Severity::High),
@@ -689,7 +689,7 @@ mod tests {
     }
 
     #[test]
-    fn test_enhancement_process() -> Result<()> {
+    fn test_enhancement_process() -> Result<(), Box<dyn std::error::Error>> {
         let engine = BasicEnhancementEngine::new()?;
         let mut results = AnalysisResults::new("test_config".to_string());
 

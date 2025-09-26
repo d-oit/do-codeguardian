@@ -697,7 +697,7 @@ pub fn generate_html(
     </div>
 </body>
 </html>"#,
-        markdown_to_html(&markdown_content),
+        markdown_to_html(&markdown_content)?,
         results.timestamp.format("%Y-%m-%d %H:%M:%S UTC"),
         results.tool_metadata.name,
         results.tool_metadata.version
@@ -816,20 +816,24 @@ pub fn generate_text(
 }
 
 /// Converts basic markdown to HTML with proper tag structure
-fn markdown_to_html(markdown: &str) -> String {
+fn markdown_to_html(markdown: &str) -> anyhow::Result<String> {
     use regex::Regex;
 
     let mut html = String::new();
     let lines: Vec<&str> = markdown.lines().collect();
 
     // Regex patterns for markdown elements
-    let header_regex = Regex::new(r"^(#{1,6})\s+(.+)$").unwrap();
-    let bold_regex = Regex::new(r"\*\*(.*?)\*\*").unwrap();
-    let italic_regex = Regex::new(r"\*(.*?)\*").unwrap();
-    let code_regex = Regex::new(r"`([^`]+)`").unwrap();
-    let list_regex = Regex::new(r"^\s*-\s+(.+)$").unwrap();
-    let table_row_regex = Regex::new(r"^\|(.+)\|$").unwrap();
-    let severity_header_regex = Regex::new(r"###\s+(🔴|🟠|🟡|🔵|ℹ️)\s+(\w+)\s+Issues").unwrap();
+    let header_regex =
+        Regex::new(r"^(#{1,6})\s+(.+)$").expect("Failed to compile regex for headers");
+    let bold_regex = Regex::new(r"\*\*(.*?)\*\*").expect("Failed to compile regex for bold text");
+    let italic_regex = Regex::new(r"\*(.*?)\*").expect("Failed to compile regex for italic text");
+    let code_regex = Regex::new(r"`([^`]+)`").expect("Failed to compile regex for code");
+    let list_regex = Regex::new(r"^\s*-\s+(.+)$").expect("Failed to compile regex for list items");
+    let table_row_regex =
+        Regex::new(r"^\|(.+)\|$").expect("Failed to compile regex for table rows");
+    let severity_header_regex =
+        Regex::new(r"###\s+(\u{1F534}|\u{1F7E0}|\u{1F7E1}|\u{1F535}|\u{2139})\s+(\w+)\s+Issues")
+            .expect("Failed to compile regex for severity headers");
 
     let mut in_list = false;
     let mut in_table = false;
@@ -1011,7 +1015,7 @@ fn markdown_to_html(markdown: &str) -> String {
         html.push_str("</div>\n");
     }
 
-    html
+    Ok(html)
 }
 
 /// Processes inline markdown elements like bold, italic, and code

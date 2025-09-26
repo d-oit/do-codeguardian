@@ -15,19 +15,21 @@ mod git_conflict_analyzer_tests {
 
     #[test]
     fn test_analyzer_creation() {
-        let analyzer = GitConflictAnalyzer::new();
+        let analyzer = GitConflictAnalyzer::new().unwrap();
         assert_eq!(analyzer.name(), "git_conflict");
     }
 
     #[test]
     fn test_analyzer_with_syntax_validation() {
-        let analyzer = GitConflictAnalyzer::new().with_syntax_validation(false);
+        let analyzer = GitConflictAnalyzer::new()
+            .unwrap()
+            .with_syntax_validation(false);
         assert_eq!(analyzer.name(), "git_conflict");
     }
 
     #[test]
     fn test_supports_file_extensions() {
-        let analyzer = GitConflictAnalyzer::new();
+        let analyzer = GitConflictAnalyzer::new().unwrap();
 
         // Should support common text files
         assert!(analyzer.supports_file(Path::new("test.rs")));
@@ -47,7 +49,7 @@ mod git_conflict_analyzer_tests {
 
     #[test]
     fn test_empty_file_analysis() {
-        let analyzer = GitConflictAnalyzer::new();
+        let analyzer = GitConflictAnalyzer::new().unwrap();
         let result = analyzer.analyze(Path::new("empty.rs"), b"");
         assert!(result.is_ok());
         assert_eq!(result.unwrap().len(), 0);
@@ -55,7 +57,7 @@ mod git_conflict_analyzer_tests {
 
     #[test]
     fn test_large_file_without_conflicts() {
-        let analyzer = GitConflictAnalyzer::new();
+        let analyzer = GitConflictAnalyzer::new().unwrap();
         let content = "fn main() { println!(\"Hello\"); }\n".repeat(1000);
         let result = analyzer.analyze(Path::new("large.rs"), content.as_bytes());
         assert!(result.is_ok());
@@ -64,7 +66,7 @@ mod git_conflict_analyzer_tests {
 
     #[test]
     fn test_malformed_conflict_markers() {
-        let analyzer = GitConflictAnalyzer::new();
+        let analyzer = GitConflictAnalyzer::new().unwrap();
 
         // Test incomplete conflict markers
         let test_cases = vec![
@@ -95,7 +97,7 @@ mod git_conflict_analyzer_tests {
 
     #[test]
     fn test_nested_conflict_markers() {
-        let analyzer = GitConflictAnalyzer::new();
+        let analyzer = GitConflictAnalyzer::new().unwrap();
         let content = r#"
 fn main() {
     <<<<<<< HEAD
@@ -115,7 +117,7 @@ fn main() {
     proptest! {
         #[test]
         fn test_arbitrary_text_without_conflicts(text in "[a-zA-Z0-9\n ]{0,1000}") {
-            let analyzer = GitConflictAnalyzer::new();
+            let analyzer = GitConflictAnalyzer::new().unwrap();
             if !text.contains("<<<<<<<") && !text.contains("=======") && !text.contains(">>>>>>>") {
                 let result = analyzer.analyze(Path::new("prop.rs"), text.as_bytes());
                 prop_assert!(result.is_ok());
@@ -291,7 +293,7 @@ mod ai_content_analyzer_tests {
 
     #[test]
     fn test_ai_analyzer_supports_files() {
-        let analyzer = AiContentAnalyzer::new();
+        let analyzer = AiContentAnalyzer::new().unwrap();
 
         // Should support text files
         assert!(analyzer.supports_file(Path::new("readme.md")));
@@ -1795,11 +1797,10 @@ mod validation_analyzer_tests {
     use do_codeguardian::core::{ValidationConfig, ValidationStatus};
     use std::path::PathBuf;
 
-    #[tokio::test]
-    async fn test_validation_analyzer_creation() {
-        let analyzer = ValidationAnalyzer::new().await;
+    #[test]
+    fn test_validation_analyzer_creation() {
+        let analyzer = ValidationAnalyzer::new();
         assert_eq!(analyzer.name(), "validation");
-        assert!(analyzer.enabled);
     }
 
     #[test]
@@ -1807,7 +1808,6 @@ mod validation_analyzer_tests {
         let config = ValidationConfig::default();
         let analyzer = ValidationAnalyzer::with_config(config);
         assert_eq!(analyzer.name(), "validation");
-        assert!(analyzer.enabled);
     }
 
     #[test]

@@ -81,7 +81,7 @@ mod security_analyzer_tests {
 #### Performance Tests
 - Located in `benches/` for benchmarking
 - Use `criterion` or `divan` for measurements
-- Test against thresholds defined in `performance_thresholds.json`
+- Test against thresholds defined in `config/performance_thresholds.json`
 
 ### Directory Structure
 ```
@@ -198,7 +198,7 @@ proptest! {
 - Tests must complete within defined time thresholds
 - Memory usage should not exceed configured limits
 - No flaky tests that fail intermittently
-- Performance tests must meet benchmarks in `performance_thresholds.json`
+- Performance tests must meet benchmarks in `config/performance_thresholds.json`
 
 ### Security Testing Standards
 - Test for common vulnerabilities (hardcoded secrets, injection, etc.)
@@ -313,7 +313,7 @@ cargo fmt
 
 ### Configuration Files
 - `Cargo.toml`: Test dependencies and features
-- `performance_thresholds.json`: Performance baselines
+- `config/performance_thresholds.json`: Performance baselines
 - `test_config.toml`: Test-specific configuration
 - `.rustfmt.toml`: Formatting standards
 

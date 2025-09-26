@@ -431,7 +431,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_string_pool_basic_operations() {
+    fn test_string_pool_basic_operations() -> Result<(), Box<dyn std::error::Error>> {
         let pool = StringPool::new(4, 64);
 
         {
@@ -452,7 +452,7 @@ mod tests {
     }
 
     #[test]
-    fn test_vec_pool_operations() {
+    fn test_vec_pool_operations() -> Result<(), Box<dyn std::error::Error>> {
         let pool: VecPool<i32> = VecPool::new(2, 8);
 
         {
@@ -471,7 +471,7 @@ mod tests {
     }
 
     #[test]
-    fn test_global_memory_pools() -> Result<()> {
+    fn test_global_memory_pools() -> Result<(), Box<dyn std::error::Error>> {
         let pools = GlobalMemoryPools::new();
 
         let formatted = pool_format!(pools, "Test {} {}", "string", 42)?;
@@ -484,7 +484,7 @@ mod tests {
     }
 
     #[test]
-    fn test_pool_stats() {
+    fn test_pool_stats() -> Result<(), Box<dyn std::error::Error>> {
         let pool = StringPool::new(10, 100);
         let stats = pool.stats();
 
@@ -494,7 +494,7 @@ mod tests {
     }
 
     #[test]
-    fn test_memory_efficiency() {
+    fn test_memory_efficiency() -> Result<(), Box<dyn std::error::Error>> {
         use std::time::Instant;
 
         let pool = StringPool::new(16, 256);
@@ -525,7 +525,7 @@ mod tests {
     }
 
     #[test]
-    fn test_memory_pool_basic_operations() {
+    fn test_memory_pool_basic_operations() -> Result<(), Box<dyn std::error::Error>> {
         let pool = GlobalMemoryPools::new();
 
         // Test getting different sized buffers
@@ -556,7 +556,7 @@ mod tests {
     }
 
     #[test]
-    fn test_memory_pool_statistics() {
+    fn test_memory_pool_statistics() -> Result<(), Box<dyn std::error::Error>> {
         let pool = GlobalMemoryPools::new();
         let initial_stats = pool.stats();
 
@@ -574,7 +574,7 @@ mod tests {
     }
 
     #[test]
-    fn test_memory_pool_edge_cases() {
+    fn test_memory_pool_edge_cases() -> Result<(), Box<dyn std::error::Error>> {
         let pool = GlobalMemoryPools::new();
 
         // Test zero-sized buffer (should still work)

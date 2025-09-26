@@ -1,6 +1,6 @@
 use chrono::{DateTime, Duration, Utc};
 use criterion::{criterion_group, criterion_main, Criterion};
-use do_do_codeguardian::release_monitoring::{
+use do_codeguardian::release_monitoring::{
     ReleaseData, ReleaseMonitoringConfig, ReleaseMonitoringService,
 };
 use std::hint::black_box;

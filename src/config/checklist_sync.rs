@@ -504,7 +504,7 @@ mod tests {
     use tempfile::TempDir;
 
     #[tokio::test]
-    async fn test_sync_service_creation() {
+    async fn test_sync_service_creation() -> Result<(), Box<dyn std::error::Error>> {
         let checklist = SecurityChecklist::new();
         let service = ChecklistSynchronizationService::new(checklist);
 
@@ -513,7 +513,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_sync_target_management() {
+    async fn test_sync_target_management() -> Result<(), Box<dyn std::error::Error>> {
         let checklist = SecurityChecklist::new();
         let mut service = ChecklistSynchronizationService::new(checklist);
 
@@ -534,8 +534,8 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_filesystem_sync() {
-        let temp_dir = TempDir::new().unwrap();
+    async fn test_filesystem_sync() -> Result<(), Box<dyn std::error::Error>> {
+        let temp_dir = TempDir::new()?;
         let checklist = SecurityChecklist::new();
         let mut service = ChecklistSynchronizationService::new(checklist);
 
@@ -551,7 +551,7 @@ mod tests {
         let result = service.sync_with_target(&target).await;
         assert!(result.is_ok());
 
-        let sync_result = result.unwrap();
+        let sync_result = result?;
         assert!(sync_result.success);
         assert_eq!(sync_result.changes_applied, 1); // Created new file
     }

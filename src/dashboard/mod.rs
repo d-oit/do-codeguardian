@@ -595,7 +595,7 @@ impl DashboardService {
                     serde_json::Value::Array(data)
                 }
                 DataSource::SystemMetrics => {
-                    let latest = metrics.last().unwrap();
+                    let latest = metrics.last()?;
                     serde_json::json!({
                         "api_success_rate": latest.system_health.api_success_rate,
                         "response_time": latest.system_health.average_response_time_ms,
@@ -786,7 +786,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_dashboard_config_default() {
+    fn test_dashboard_config_default() -> Result<(), Box<dyn std::error::Error>> {
         let config = DashboardConfig::default();
         assert!(!config.enabled);
         assert_eq!(config.host, "127.0.0.1");
@@ -794,14 +794,14 @@ mod tests {
     }
 
     #[test]
-    fn test_custom_view_creation() {
+    fn test_custom_view_creation() -> Result<(), Box<dyn std::error::Error>> {
         let view = CustomView::default_overview();
         assert_eq!(view.name, "Overview");
         assert_eq!(view.charts.len(), 3);
     }
 
     #[test]
-    fn test_release_monitoring_view() {
+    fn test_release_monitoring_view() -> Result<(), Box<dyn std::error::Error>> {
         let view = CustomView::default_releases();
         assert_eq!(view.name, "Release Monitoring");
         assert_eq!(view.charts.len(), 7); // Updated to include new charts
@@ -820,7 +820,7 @@ mod tests {
     }
 
     #[test]
-    fn test_chart_config_methods() {
+    fn test_chart_config_methods() -> Result<(), Box<dyn std::error::Error>> {
         let success_rate_gauge = ChartConfig::release_success_rate_gauge();
         assert_eq!(success_rate_gauge.title, "Current Release Success Rate");
         assert_eq!(success_rate_gauge.chart_type, ChartType::GaugeChart);
@@ -841,7 +841,7 @@ mod tests {
 
     #[cfg(feature = "release-monitoring")]
     #[test]
-    fn test_dashboard_metrics_with_release_data() {
+    fn test_dashboard_metrics_with_release_data() -> Result<(), Box<dyn std::error::Error>> {
         let metrics = DashboardMetrics {
             timestamp: Utc::now(),
             duplicate_stats: DuplicateStats::default(),
@@ -859,7 +859,7 @@ mod tests {
         };
 
         assert!(metrics.release_metrics.is_some());
-        let rm = metrics.release_metrics.as_ref().unwrap();
+        let rm = metrics.release_metrics.as_ref()?;
         assert_eq!(rm.overall_success_rate, 0.95);
         assert_eq!(rm.total_releases, 10);
     }

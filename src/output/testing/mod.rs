@@ -451,7 +451,7 @@ mod tests {
     use super::*;
 
     #[tokio::test]
-    async fn test_output_test_suite_creation() {
+    async fn test_output_test_suite_creation() -> Result<(), Box<dyn std::error::Error>> {
         let config = TestConfig::default();
         let test_suite = OutputTestSuite::new(config);
 
@@ -460,13 +460,12 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_measure_execution() {
+    async fn test_measure_execution() -> Result<(), Box<dyn std::error::Error>> {
         let result = measure_test_execution("test_execution", async {
             tokio::time::sleep(Duration::from_millis(10)).await;
             Ok(())
         })
-        .await
-        .unwrap();
+        .await?;
 
         assert_eq!(result.test_name, "test_execution");
         assert_eq!(result.status, TestStatus::Passed);
@@ -474,7 +473,7 @@ mod tests {
     }
 
     #[test]
-    fn test_performance_baseline_creation() {
+    fn test_performance_baseline_creation() -> Result<(), Box<dyn std::error::Error>> {
         let config = TestConfig::default();
 
         assert!(config.performance_baselines.contains_key("json_format"));

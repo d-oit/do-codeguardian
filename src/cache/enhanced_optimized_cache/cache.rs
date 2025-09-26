@@ -270,7 +270,7 @@ impl EnhancedOptimizedCache {
             self.entries.drain().collect();
 
         {
-            // let mut finding_pool = self.memory_pools.finding_pool().lock().unwrap();
+            // let mut finding_pool = self.memory_pools.finding_pool().lock()?;
             for (_, entry) in &entries_to_clear {
                 for _finding in entry.findings.clone() {
                     //     finding_pool.put(finding);

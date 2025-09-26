@@ -655,21 +655,21 @@ mod tests {
     }
 
     #[test]
-    fn test_same_component_rule() {
+    fn test_same_component_rule() -> Result<(), Box<dyn std::error::Error>> {
         let rule = SameComponentRule;
         let finding_a = create_test_finding("test_id_a", "First issue", "test.rs", 10);
         let finding_b = create_test_finding("test_id_b", "Second issue", "test.rs", 15);
 
         let confidence = rule.detect(&finding_a, &finding_b);
         assert!(confidence.is_some());
-        assert!(confidence.unwrap() > 0.9); // Same file, close lines
+        assert!(confidence? > 0.9); // Same file, close lines
 
         let evidence = rule.evidence(&finding_a, &finding_b);
         assert!(!evidence.is_empty());
     }
 
     #[test]
-    fn test_relationship_detector() {
+    fn test_relationship_detector() -> Result<(), Box<dyn std::error::Error>> {
         let mut detector = RelationshipDetector::new();
         let mut finding1 = create_test_finding("1", "authentication bypass", "auth.rs", 10);
         finding1.analyzer = "security".to_string();
@@ -681,7 +681,7 @@ mod tests {
 
         let findings = vec![finding1, finding2];
 
-        let relationships = detector.detect_relationships(&findings).unwrap();
+        let relationships = detector.detect_relationships(&findings)?;
         assert!(!relationships.is_empty());
 
         let stats = detector.get_relationship_stats(&relationships);
@@ -689,7 +689,7 @@ mod tests {
     }
 
     #[test]
-    fn test_duplicate_detection() {
+    fn test_duplicate_detection() -> Result<(), Box<dyn std::error::Error>> {
         let rule = DuplicateRule;
         let mut finding_a = create_test_finding("1", "Same message", "test.rs", 10);
         finding_a.analyzer = "test_analyzer".to_string();
@@ -699,7 +699,7 @@ mod tests {
         finding_b.analyzer = "test_analyzer".to_string();
         finding_b.rule = "test_rule".to_string();
 
-        let confidence = rule.detect(&finding_a, &finding_b).unwrap();
+        let confidence = rule.detect(&finding_a, &finding_b)?;
         assert!(confidence > 0.9);
     }
 }

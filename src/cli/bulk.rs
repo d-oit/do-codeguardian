@@ -288,8 +288,7 @@ async fn execute_bulk_scan(options: BulkScanOptions, config: &Config) -> Result<
     let main_progress = multi_progress.add(ProgressBar::new(options.repositories.len() as u64));
     main_progress.set_style(
         ProgressStyle::default_bar()
-            .template("[{elapsed_precise}] {bar:40.cyan/blue} {pos}/{len} {msg}")
-            .unwrap()
+            .template("[{elapsed_precise}] {bar:40.cyan/blue} {pos}/{len} {msg}")?
             .progress_chars("█▉▊▋▌▍▎▏ "),
     );
     main_progress.set_message("Scanning repositories");
@@ -753,9 +752,9 @@ mod tests {
     use tempfile::TempDir;
 
     #[tokio::test]
-    async fn test_bulk_scan_basic() {
+    async fn test_bulk_scan_basic() -> Result<(), Box<dyn std::error::Error>> {
         let config = Config::default();
-        let _temp_dir = TempDir::new().unwrap();
+        let _temp_dir = TempDir::new()?;
 
         // Test basic bulk scan functionality
         let repos = vec!["test_repo_1".to_string(), "test_repo_2".to_string()];
@@ -777,7 +776,7 @@ mod tests {
     }
 
     #[test]
-    fn test_bulk_progress_tracking() {
+    fn test_bulk_progress_tracking() -> Result<(), Box<dyn std::error::Error>> {
         let progress = BulkProgress {
             total_operations: 10,
             completed_operations: 5,
@@ -793,7 +792,7 @@ mod tests {
     }
 
     #[test]
-    fn test_bulk_results_serialization() {
+    fn test_bulk_results_serialization() -> Result<(), Box<dyn std::error::Error>> {
         let results = BulkResults {
             operation_type: "test".to_string(),
             total_processed: 5,
@@ -817,10 +816,10 @@ mod tests {
         };
 
         // Test serialization
-        let json = serde_json::to_string(&results).unwrap();
+        let json = serde_json::to_string(&results)?;
         assert!(json.contains("test"));
 
         // Test deserialization
-        let _deserialized: BulkResults = serde_json::from_str(&json).unwrap();
+        let _deserialized: BulkResults = serde_json::from_str(&json)?;
     }
 }

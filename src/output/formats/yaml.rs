@@ -160,24 +160,24 @@ mod tests {
     }
 
     #[test]
-    fn test_yaml_formatter_basic() {
+    fn test_yaml_formatter_basic() -> Result<(), Box<dyn std::error::Error>> {
         let formatter = YamlFormatter::new();
         let results = create_test_results();
 
-        let output = formatter.format(&results).unwrap();
+        let output = formatter.format(&results)?;
         assert!(!output.content.is_empty());
         assert_eq!(output.metadata.format, "yaml");
 
         // Verify it's valid YAML
-        let _: serde_yaml::Value = serde_yaml::from_str(&output.content).unwrap();
+        let _: serde_yaml::Value = serde_yaml::from_str(&output.content)?;
     }
 
     #[test]
-    fn test_yaml_formatter_with_comments() {
+    fn test_yaml_formatter_with_comments() -> Result<(), Box<dyn std::error::Error>> {
         let formatter = YamlFormatter::new();
         let results = create_test_results();
 
-        let output = formatter.format(&results).unwrap();
+        let output = formatter.format(&results)?;
 
         // Should contain comments
         assert!(output.content.contains("# CodeGuardian Analysis Report"));
@@ -185,18 +185,18 @@ mod tests {
     }
 
     #[test]
-    fn test_yaml_formatter_compact() {
+    fn test_yaml_formatter_compact() -> Result<(), Box<dyn std::error::Error>> {
         let formatter = YamlFormatter::compact();
         let results = create_test_results();
 
-        let output = formatter.format(&results).unwrap();
+        let output = formatter.format(&results)?;
 
         // Should not contain comments
         assert!(!output.content.contains("# CodeGuardian Analysis Report"));
     }
 
     #[test]
-    fn test_yaml_content_type() {
+    fn test_yaml_content_type() -> Result<(), Box<dyn std::error::Error>> {
         let formatter = YamlFormatter::new();
         assert_eq!(formatter.content_type(), "application/x-yaml");
     }

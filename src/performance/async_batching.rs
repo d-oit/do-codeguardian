@@ -296,7 +296,13 @@ impl WorkStealingScheduler {
     ) {
         tracing::debug!("Worker {} started", worker_id);
 
-        while !*shutdown_signal.lock().await {
+        loop {
+            // Check shutdown signal without holding lock across await
+            let should_shutdown = *shutdown_signal.lock().await;
+            if should_shutdown {
+                break;
+            }
+
             // Try to get work from own queue
             let batch = {
                 if let Ok(mut queue) = work_queue.lock().await {
@@ -313,7 +319,7 @@ impl WorkStealingScheduler {
                 Self::try_steal_work(&steal_targets).await.unwrap_or_else(|| {
                     // No work available, sleep briefly
                     tokio::time::sleep(Duration::from_millis(1)).await;
-                    return;
+                    continue;
                 })
             };
 
@@ -558,7 +564,7 @@ mod tests {
     use std::fs;
 
     #[tokio::test]
-    async fn test_file_batching() {
+    async fn test_file_batching() -> Result<(), Box<dyn std::error::Error>> {
         let config = BatchConfig::default();
         let batcher = FileBatcher::new(config);
 
@@ -578,13 +584,13 @@ mod tests {
             },
         ];
 
-        let batches = batcher.create_batches(files).await.unwrap();
+        let batches = batcher.create_batches(files).await?;
         assert!(!batches.is_empty());
         assert_eq!(batches[0].files.len(), 2);
     }
 
     #[test]
-    fn test_file_classification() {
+    fn test_file_classification() -> Result<(), Box<dyn std::error::Error>> {
         assert_eq!(
             WorkStealingScheduler::classify_file_type(Path::new("test.rs")),
             FileType::SourceCode
@@ -600,7 +606,7 @@ mod tests {
     }
 
     #[test]
-    fn test_complexity_estimation() {
+    fn test_complexity_estimation() -> Result<(), Box<dyn std::error::Error>> {
         let complexity = WorkStealingScheduler::estimate_complexity(Path::new("test.rs"), 2048);
         assert!(complexity > 1); // Should be greater than 1 due to Rust complexity multiplier
     }

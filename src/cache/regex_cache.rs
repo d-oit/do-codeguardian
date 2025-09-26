@@ -384,48 +384,48 @@ mod tests {
     use std::time::Duration;
 
     #[test]
-    fn test_regex_cache_basic_operations() {
+    fn test_regex_cache_basic_operations() -> Result<(), Box<dyn std::error::Error>> {
         let mut cache = RegexCache::new(10, 3600, "lru".to_string());
 
         // First access should compile
-        let regex1 = cache.get_or_compile(r"test\d+").unwrap();
+        let regex1 = cache.get_or_compile(r"test\d+")?;
         assert!(regex1.is_match("test123"));
         assert_eq!(cache.stats().cache_misses, 1);
         assert_eq!(cache.stats().cache_hits, 0);
 
         // Second access should hit cache
-        let regex2 = cache.get_or_compile(r"test\d+").unwrap();
+        let regex2 = cache.get_or_compile(r"test\d+")?;
         assert!(regex2.is_match("test456"));
         assert_eq!(cache.stats().cache_misses, 1);
         assert_eq!(cache.stats().cache_hits, 1);
 
         // Different pattern should miss
-        let regex3 = cache.get_or_compile(r"hello\d+").unwrap();
+        let regex3 = cache.get_or_compile(r"hello\d+")?;
         assert!(regex3.is_match("hello789"));
         assert_eq!(cache.stats().cache_misses, 2);
         assert_eq!(cache.stats().cache_hits, 1);
     }
 
     #[test]
-    fn test_regex_cache_eviction() {
+    fn test_regex_cache_eviction() -> Result<(), Box<dyn std::error::Error>> {
         let mut cache = RegexCache::new(2, 3600, "lru".to_string());
 
         // Fill cache
-        cache.get_or_compile(r"pattern1").unwrap();
-        cache.get_or_compile(r"pattern2").unwrap();
+        cache.get_or_compile(r"pattern1")?;
+        cache.get_or_compile(r"pattern2")?;
         assert_eq!(cache.entries.len(), 2);
 
         // Add third pattern should evict one
-        cache.get_or_compile(r"pattern3").unwrap();
+        cache.get_or_compile(r"pattern3")?;
         assert_eq!(cache.entries.len(), 2);
         assert_eq!(cache.stats().entries_evicted, 1);
     }
 
     #[test]
-    fn test_regex_cache_expiration() {
+    fn test_regex_cache_expiration() -> Result<(), Box<dyn std::error::Error>> {
         let mut cache = RegexCache::new(10, 1, "lru".to_string()); // 1 second max age
 
-        cache.get_or_compile(r"test").unwrap();
+        cache.get_or_compile(r"test")?;
         assert_eq!(cache.entries.len(), 1);
 
         // Wait for expiration
@@ -438,13 +438,13 @@ mod tests {
     }
 
     #[test]
-    fn test_shared_regex_cache_thread_safety() {
+    fn test_shared_regex_cache_thread_safety() -> Result<(), Box<dyn std::error::Error>> {
         let cache = SharedRegexCache::new(10, 3600, "lru".to_string());
 
         let cache_clone = cache.clone();
-        let handle = thread::spawn(move || cache_clone.get_or_compile(r"thread\d+").unwrap());
+        let handle = thread::spawn(move || cache_clone.get_or_compile(r"thread\d+")?);
 
-        let regex = cache.get_or_compile(r"main\d+").unwrap();
+        let regex = cache.get_or_compile(r"main\d+")?;
         let thread_regex = handle
             .join()
             .expect("Failed to join thread in test_shared_regex_cache_thread_safety");
@@ -454,7 +454,7 @@ mod tests {
     }
 
     #[test]
-    fn test_regex_cache_invalid_pattern() {
+    fn test_regex_cache_invalid_pattern() -> Result<(), Box<dyn std::error::Error>> {
         let mut cache = RegexCache::new(10, 3600, "lru".to_string());
 
         // Invalid regex should return error
@@ -464,17 +464,17 @@ mod tests {
     }
 
     #[test]
-    fn test_regex_cache_preload() {
+    fn test_regex_cache_preload() -> Result<(), Box<dyn std::error::Error>> {
         let mut cache = RegexCache::new(10, 3600, "lru".to_string());
 
         let patterns = vec![r"test\d+", r"hello\w+", r"world.*"];
-        cache.preload_patterns(&patterns).unwrap();
+        cache.preload_patterns(&patterns)?;
 
         assert_eq!(cache.entries.len(), 3);
         assert_eq!(cache.stats().cache_misses, 3);
 
         // Accessing preloaded patterns should hit cache
-        cache.get_or_compile(r"test\d+").unwrap();
+        cache.get_or_compile(r"test\d+")?;
         assert_eq!(cache.stats().cache_hits, 1);
     }
 }

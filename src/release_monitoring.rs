@@ -385,9 +385,10 @@ pub struct ReleaseTrends {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use anyhow::Result;
 
     #[tokio::test]
-    async fn test_metrics_calculation() {
+    async fn test_metrics_calculation() -> Result<()> {
         let config = ReleaseMonitoringConfig {
             repository: "test/repo".to_string(),
             metrics_storage_path: "test_metrics.json".to_string(),
@@ -407,15 +408,17 @@ mod tests {
             download_count: 100,
         }];
 
-        let metrics = service.calculate_metrics(&releases).await.unwrap();
+        let metrics = service.calculate_metrics(&releases).await?;
         assert_eq!(metrics.releases.len(), 1);
         assert!(metrics.overall_success_rate > 0.0);
+        Ok(())
     }
 
     #[test]
-    fn test_config_defaults() {
+    fn test_config_defaults() -> Result<()> {
         let config = ReleaseMonitoringConfig::default();
         assert_eq!(config.max_releases_to_monitor, 10);
         assert_eq!(config.post_release_issue_window_days, 30);
+        Ok(())
     }
 }

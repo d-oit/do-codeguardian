@@ -1162,7 +1162,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_multi_language_analyzer_creation() {
+    fn test_multi_language_analyzer_creation() -> Result<(), Box<dyn std::error::Error>> {
         let analyzer = MultiLanguageAstAnalyzer::new();
         assert!(analyzer.analyzers.contains_key("rust"));
         assert!(analyzer.analyzers.contains_key("python"));
@@ -1170,7 +1170,7 @@ mod tests {
     }
 
     #[test]
-    fn test_language_detection() {
+    fn test_language_detection() -> Result<(), Box<dyn std::error::Error>> {
         let analyzer = MultiLanguageAstAnalyzer::new();
 
         assert_eq!(
@@ -1201,7 +1201,7 @@ mod tests {
     }
 
     #[test]
-    fn test_python_ast_analysis() {
+    fn test_python_ast_analysis() -> Result<(), Box<dyn std::error::Error>> {
         let analyzer = MultiLanguageAstAnalyzer::new();
         let code = r#"
 def authenticate_user(username, password):
@@ -1228,7 +1228,7 @@ class UserManager:
     }
 
     #[test]
-    fn test_javascript_ast_analysis() {
+    fn test_javascript_ast_analysis() -> Result<(), Box<dyn std::error::Error>> {
         let analyzer = MultiLanguageAstAnalyzer::new();
         let code = r#"
 // User authentication module
@@ -1260,7 +1260,7 @@ class UserManager {
     }
 
     #[test]
-    fn test_similarity_calculation() {
+    fn test_similarity_calculation() -> Result<(), Box<dyn std::error::Error>> {
         let analyzer = MultiLanguageAstAnalyzer::new();
 
         let features1 = LanguageAstFeatures {
@@ -1302,7 +1302,7 @@ class UserManager {
     }
 
     #[test]
-    fn test_different_languages_similarity() {
+    fn test_different_languages_similarity() -> Result<(), Box<dyn std::error::Error>> {
         let analyzer = MultiLanguageAstAnalyzer::new();
 
         let python_features = LanguageAstFeatures {

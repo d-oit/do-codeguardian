@@ -51,7 +51,7 @@ impl FannClassifier {
 
     /// Load a pre-trained model from file
     pub fn load<P: AsRef<Path>>(path: P) -> Result<Self> {
-        let network = Fann::from_file(path.as_ref().to_str().unwrap())
+        let network = Fann::from_file(path.as_ref().to_str()?)
             .map_err(|e| anyhow!("Failed to load FANN network: {:?}", e))?;
 
         // Extract configuration from loaded network
@@ -66,7 +66,7 @@ impl FannClassifier {
     /// Save the trained model to file
     pub fn save<P: AsRef<Path>>(&self, path: P) -> Result<()> {
         self.network
-            .save(path.as_ref().to_str().unwrap())
+            .save(path.as_ref().to_str()?)
             .map_err(|e| anyhow!("Failed to save FANN network: {:?}", e))
     }
 

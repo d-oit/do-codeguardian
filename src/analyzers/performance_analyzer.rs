@@ -21,7 +21,10 @@ pub struct PerformanceAnalyzer {
 
 impl Default for PerformanceAnalyzer {
     fn default() -> Self {
-        Self::new().expect("Failed to create PerformanceAnalyzer with default patterns")
+        match Self::new() {
+            Ok(s) => s,
+            Err(e) => panic!("Failed to create default PerformanceAnalyzer: {}", e),
+        }
     }
 }
 
@@ -136,21 +139,27 @@ impl PerformanceAnalyzer {
                     .unwrap_or(0);
 
                 // Use pooled objects for finding creation
-                let mut finding = finding_pool.lock().unwrap().get();
+                let mut finding = finding_pool.lock().unwrap_or_else(|e| e.into_inner()).get();
 
                 // Use pooled strings
-                let analyzer_name = string_pool.lock().unwrap().get("performance");
-                let rule_name = string_pool.lock().unwrap().get("nested_loops");
+                let analyzer_name = string_pool
+                    .lock()
+                    .unwrap_or_else(|e| e.into_inner())
+                    .get("performance");
+                let rule_name = string_pool
+                    .lock()
+                    .unwrap_or_else(|e| e.into_inner())
+                    .get("nested_loops");
                 let message = string_pool
                     .lock()
-                    .unwrap()
+                    .unwrap_or_else(|e| e.into_inner())
                     .get("Potential nested loop detected");
-                let description = string_pool.lock().unwrap().get("Nested loops can lead to O(n^2) or higher time complexity. Consider optimizing the algorithm.");
-                let suggestion = string_pool.lock().unwrap().get("Review the algorithm for potential optimizations, such as using hash maps or breaking early.");
+                let description = string_pool.lock().unwrap_or_else(|e| e.into_inner()).get("Nested loops can lead to O(n^2) or higher time complexity. Consider optimizing the algorithm.");
+                let suggestion = string_pool.lock().unwrap_or_else(|e| e.into_inner()).get("Review the algorithm for potential optimizations, such as using hash maps or breaking early.");
 
                 // Use pooled path
                 let file_path_pooled = {
-                    let mut path_pool = path_pool.lock().unwrap();
+                    let mut path_pool = path_pool.lock().unwrap_or_else(|e| e.into_inner());
                     let mut pooled_path = path_pool.get();
                     pooled_path.push(file_path);
                     pooled_path
@@ -185,21 +194,27 @@ impl PerformanceAnalyzer {
 
                 if pattern.is_match(line) {
                     // Use pooled objects for finding creation
-                    let mut finding = finding_pool.lock().unwrap().get();
+                    let mut finding = finding_pool.lock().unwrap_or_else(|e| e.into_inner()).get();
 
                     // Use pooled strings
-                    let analyzer_name = string_pool.lock().unwrap().get("performance");
-                    let rule_name = string_pool.lock().unwrap().get("nested_loops");
+                    let analyzer_name = string_pool
+                        .lock()
+                        .unwrap_or_else(|e| e.into_inner())
+                        .get("performance");
+                    let rule_name = string_pool
+                        .lock()
+                        .unwrap_or_else(|e| e.into_inner())
+                        .get("nested_loops");
                     let message = string_pool
                         .lock()
-                        .unwrap()
+                        .unwrap_or_else(|e| e.into_inner())
                         .get("Potential nested loop detected");
-                    let description = string_pool.lock().unwrap().get("Nested loops can lead to O(n^2) or higher time complexity. Consider optimizing the algorithm.");
-                    let suggestion = string_pool.lock().unwrap().get("Review the algorithm for potential optimizations, such as using hash maps or breaking early.");
+                    let description = string_pool.lock().unwrap_or_else(|e| e.into_inner()).get("Nested loops can lead to O(n^2) or higher time complexity. Consider optimizing the algorithm.");
+                    let suggestion = string_pool.lock().unwrap_or_else(|e| e.into_inner()).get("Review the algorithm for potential optimizations, such as using hash maps or breaking early.");
 
                     // Use pooled path
                     let file_path_pooled = {
-                        let mut path_pool = path_pool.lock().unwrap();
+                        let mut path_pool = path_pool.lock().unwrap_or_else(|e| e.into_inner());
                         let mut pooled_path = path_pool.get();
                         pooled_path.push(file_path);
                         pooled_path
@@ -248,23 +263,29 @@ impl PerformanceAnalyzer {
 
                 if pattern.is_match(line) {
                     // Use pooled objects for finding creation
-                    let mut finding = finding_pool.lock().unwrap().get();
+                    let mut finding = finding_pool.lock().unwrap_or_else(|e| e.into_inner()).get();
 
                     // Use pooled strings
-                    let analyzer_name = string_pool.lock().unwrap().get("performance");
-                    let rule_name = string_pool.lock().unwrap().get("inefficient_string_ops");
+                    let analyzer_name = string_pool
+                        .lock()
+                        .unwrap_or_else(|e| e.into_inner())
+                        .get("performance");
+                    let rule_name = string_pool
+                        .lock()
+                        .unwrap_or_else(|e| e.into_inner())
+                        .get("inefficient_string_ops");
                     let message = string_pool
                         .lock()
-                        .unwrap()
+                        .unwrap_or_else(|e| e.into_inner())
                         .get("Inefficient string operation detected");
-                    let description = string_pool.lock().unwrap().get(
+                    let description = string_pool.lock().unwrap_or_else(|e| e.into_inner()).get(
                         "String concatenation in loops can be inefficient due to reallocations.",
                     );
-                    let suggestion = string_pool.lock().unwrap().get("Use String::with_capacity or collect into a Vec and join for better performance.");
+                    let suggestion = string_pool.lock().unwrap_or_else(|e| e.into_inner()).get("Use String::with_capacity or collect into a Vec and join for better performance.");
 
                     // Use pooled path
                     let file_path_pooled = {
-                        let mut path_pool = path_pool.lock().unwrap();
+                        let mut path_pool = path_pool.lock().unwrap_or_else(|e| e.into_inner());
                         let mut pooled_path = path_pool.get();
                         pooled_path.push(file_path);
                         pooled_path
@@ -309,27 +330,33 @@ impl PerformanceAnalyzer {
 
                 if pattern.is_match(line) {
                     // Use pooled objects for finding creation
-                    let mut finding = finding_pool.lock().unwrap().get();
+                    let mut finding = finding_pool.lock().unwrap_or_else(|e| e.into_inner()).get();
 
                     // Use pooled strings
-                    let analyzer_name = string_pool.lock().unwrap().get("performance");
-                    let rule_name = string_pool.lock().unwrap().get("blocking_io");
+                    let analyzer_name = string_pool
+                        .lock()
+                        .unwrap_or_else(|e| e.into_inner())
+                        .get("performance");
+                    let rule_name = string_pool
+                        .lock()
+                        .unwrap_or_else(|e| e.into_inner())
+                        .get("blocking_io");
                     let message = string_pool
                         .lock()
-                        .unwrap()
+                        .unwrap_or_else(|e| e.into_inner())
                         .get("Blocking I/O operation detected");
                     let description = string_pool
                         .lock()
-                        .unwrap()
+                        .unwrap_or_else(|e| e.into_inner())
                         .get("Blocking I/O can cause performance issues in async contexts.");
                     let suggestion = string_pool
                         .lock()
-                        .unwrap()
+                        .unwrap_or_else(|e| e.into_inner())
                         .get("Use async equivalents like tokio::fs or spawn blocking operations.");
 
                     // Use pooled path
                     let file_path_pooled = {
-                        let mut path_pool = path_pool.lock().unwrap();
+                        let mut path_pool = path_pool.lock().unwrap_or_else(|e| e.into_inner());
                         let mut pooled_path = path_pool.get();
                         pooled_path.push(file_path);
                         pooled_path
@@ -378,21 +405,27 @@ impl PerformanceAnalyzer {
 
                 if pattern.is_match(line) {
                     // Use pooled objects for finding creation
-                    let mut finding = finding_pool.lock().unwrap().get();
+                    let mut finding = finding_pool.lock().unwrap_or_else(|e| e.into_inner()).get();
 
                     // Use pooled strings
-                    let analyzer_name = string_pool.lock().unwrap().get("performance");
-                    let rule_name = string_pool.lock().unwrap().get("algorithmic_inefficiency");
+                    let analyzer_name = string_pool
+                        .lock()
+                        .unwrap_or_else(|e| e.into_inner())
+                        .get("performance");
+                    let rule_name = string_pool
+                        .lock()
+                        .unwrap_or_else(|e| e.into_inner())
+                        .get("algorithmic_inefficiency");
                     let message = string_pool
                         .lock()
-                        .unwrap()
+                        .unwrap_or_else(|e| e.into_inner())
                         .get("Potential algorithmic inefficiency detected");
-                    let description = string_pool.lock().unwrap().get("Code pattern suggests potential inefficiency, such as unnecessary collections.");
-                    let suggestion = string_pool.lock().unwrap().get("Review the algorithm for optimizations, e.g., avoid collect().iter() chains.");
+                    let description = string_pool.lock().unwrap_or_else(|e| e.into_inner()).get("Code pattern suggests potential inefficiency, such as unnecessary collections.");
+                    let suggestion = string_pool.lock().unwrap_or_else(|e| e.into_inner()).get("Review the algorithm for optimizations, e.g., avoid collect().iter() chains.");
 
                     // Use pooled path
                     let file_path_pooled = {
-                        let mut path_pool = path_pool.lock().unwrap();
+                        let mut path_pool = path_pool.lock().unwrap_or_else(|e| e.into_inner());
                         let mut pooled_path = path_pool.get();
                         pooled_path.push(file_path);
                         pooled_path
@@ -457,8 +490,9 @@ mod tests {
     use tempfile::tempdir;
 
     #[test]
-    fn test_detect_nested_loops() {
-        let analyzer = PerformanceAnalyzer::new().unwrap();
+    #[allow(clippy::disallowed_methods)]
+    fn test_detect_nested_loops() -> Result<(), Box<dyn std::error::Error>> {
+        let analyzer = PerformanceAnalyzer::new()?;
         let content = r#"
         fn example() {
             for i in 0..10 {
@@ -472,14 +506,16 @@ mod tests {
         let file_path = temp_dir.path().join("test.rs");
         std::fs::write(&file_path, content).expect("Failed to write test file");
 
-        let findings = analyzer.detect_nested_loops(content, &file_path).unwrap();
+        let findings = analyzer.detect_nested_loops(content, &file_path)?;
         assert!(!findings.is_empty());
         assert_eq!(findings[0].rule, "nested_loops");
+        Ok(())
     }
 
     #[test]
-    fn test_detect_inefficient_strings() {
-        let analyzer = PerformanceAnalyzer::new().unwrap();
+    #[allow(clippy::disallowed_methods)]
+    fn test_detect_inefficient_strings() -> Result<(), Box<dyn std::error::Error>> {
+        let analyzer = PerformanceAnalyzer::new()?;
         let content = r#"
         fn example() {
             let mut s = String::new();
@@ -492,17 +528,18 @@ mod tests {
         let file_path = temp_dir.path().join("test.rs");
         std::fs::write(&file_path, content).expect("Failed to write test file");
 
-        let findings = analyzer
-            .detect_inefficient_strings(content, &file_path)
-            .unwrap();
+        let findings = analyzer.detect_inefficient_strings(content, &file_path)?;
         assert!(!findings.is_empty());
         assert_eq!(findings[0].rule, "inefficient_string_ops");
+        Ok(())
     }
 
     #[test]
-    fn test_supports_file() {
-        let analyzer = PerformanceAnalyzer::new().unwrap();
+    #[allow(clippy::disallowed_methods)]
+    fn test_supports_file() -> Result<(), Box<dyn std::error::Error>> {
+        let analyzer = PerformanceAnalyzer::new()?;
         assert!(analyzer.supports_file(&PathBuf::from("test.rs")));
         assert!(!analyzer.supports_file(&PathBuf::from("test.js")));
+        Ok(())
     }
 }

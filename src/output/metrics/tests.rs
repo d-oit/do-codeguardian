@@ -11,7 +11,7 @@ mod tests {
     use tokio;
 
     #[test]
-    fn test_output_metrics_creation() {
+    fn test_output_metrics_creation() -> Result<(), Box<dyn std::error::Error>> {
         let metrics = OutputMetrics::new("json".to_string());
 
         assert_eq!(metrics.format, "json");
@@ -22,7 +22,7 @@ mod tests {
     }
 
     #[test]
-    fn test_metrics_collector() {
+    fn test_metrics_collector() -> Result<(), Box<dyn std::error::Error>> {
         let collector = OutputMetricsCollector::new();
 
         // Create test data
@@ -42,7 +42,7 @@ mod tests {
             "test".to_string(),
         );
 
-        let metrics = collector.collect_metrics(&results, &output_result, "json", 1500).unwrap();
+        let metrics = collector.collect_metrics(&results, &output_result, "json", 1500)?;
 
         assert_eq!(metrics.format, "json");
         assert_eq!(metrics.performance.generation_time_ms, 1500);
@@ -50,7 +50,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_real_time_monitor() {
+    async fn test_real_time_monitor() -> Result<(), Box<dyn std::error::Error>> {
         let monitor = RealTimeMonitor::new();
 
         let metrics = OutputMetrics::new("json".to_string());
@@ -60,27 +60,27 @@ mod tests {
         assert!(result.is_ok());
 
         // Test getting recent metrics
-        let recent = monitor.get_recent_metrics(10).await.unwrap();
+        let recent = monitor.get_recent_metrics(10).await?;
         assert_eq!(recent.len(), 1);
         assert_eq!(recent[0].format, "json");
     }
 
     #[tokio::test]
-    async fn test_alert_manager() {
+    async fn test_alert_manager() -> Result<(), Box<dyn std::error::Error>> {
         let alert_manager = AlertManager::new();
 
         // Test getting active alerts (should be empty initially)
-        let active = alert_manager.get_active_alerts().await.unwrap();
+        let active = alert_manager.get_active_alerts().await?;
         assert_eq!(active.len(), 0);
 
         // Test alert statistics
-        let stats = alert_manager.get_alert_statistics().await.unwrap();
+        let stats = alert_manager.get_alert_statistics().await?;
         assert_eq!(stats.total_active, 0);
         assert_eq!(stats.total_historical, 0);
     }
 
     #[tokio::test]
-    async fn test_trend_analyzer() {
+    async fn test_trend_analyzer() -> Result<(), Box<dyn std::error::Error>> {
         let trend_analyzer = TrendAnalyzer::new();
 
         let metrics = vec![
@@ -89,13 +89,13 @@ mod tests {
         ];
 
         // Test trend analysis
-        let trends = trend_analyzer.analyze_trends(&metrics).await.unwrap();
+        let trends = trend_analyzer.analyze_trends(&metrics).await?;
         assert_eq!(trends.performance_trend, TrendDirection::Stable);
         assert_eq!(trends.success_rate_trend, TrendDirection::Stable);
     }
 
     #[tokio::test]
-    async fn test_automated_reporter() {
+    async fn test_automated_reporter() -> Result<(), Box<dyn std::error::Error>> {
         let reporter = AutomatedReporter::new();
 
         let metrics = vec![OutputMetrics::new("json".to_string())];
@@ -106,7 +106,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_metrics_service_integration() {
+    async fn test_metrics_service_integration() -> Result<(), Box<dyn std::error::Error>> {
         let service = OutputMetricsService::new();
 
         let results = AnalysisResults::new("test".to_string());
@@ -122,16 +122,16 @@ mod tests {
         assert!(result.is_ok());
 
         // Test health status
-        let health = service.get_health_status().await.unwrap();
+        let health = service.get_health_status().await?;
         assert_eq!(health.overall_status, HealthStatus::Healthy);
 
         // Test report generation
-        let report = service.generate_report(None).await.unwrap();
+        let report = service.generate_report(None).await?;
         assert_eq!(report.summary.total_operations, 1);
     }
 
     #[test]
-    fn test_metric_value_operations() {
+    fn test_metric_value_operations() -> Result<(), Box<dyn std::error::Error>> {
         let int_value = MetricValue::Integer(42);
         assert_eq!(int_value.as_f64(), Some(42.0));
 
@@ -146,7 +146,7 @@ mod tests {
     }
 
     #[test]
-    fn test_output_metrics_health_calculation() {
+    fn test_output_metrics_health_calculation() -> Result<(), Box<dyn std::error::Error>> {
         let mut metrics = OutputMetrics::new("json".to_string());
         metrics.functionality.success = true;
         metrics.performance.generation_time_ms = 1000;
@@ -160,7 +160,7 @@ mod tests {
     }
 
     #[test]
-    fn test_alert_rule_evaluation() {
+    fn test_alert_rule_evaluation() -> Result<(), Box<dyn std::error::Error>> {
         let alert_manager = AlertManager::new();
 
         // Test with a simple rule
@@ -190,7 +190,7 @@ mod tests {
     }
 
     #[test]
-    fn test_trend_direction_calculation() {
+    fn test_trend_direction_calculation() -> Result<(), Box<dyn std::error::Error>> {
         let trend_analyzer = TrendAnalyzer::new();
 
         // Test stable trend
@@ -210,7 +210,7 @@ mod tests {
     }
 
     #[test]
-    fn test_metrics_aggregation() {
+    fn test_metrics_aggregation() -> Result<(), Box<dyn std::error::Error>> {
         let monitor = RealTimeMonitor::new();
 
         let metrics1 = OutputMetrics::new("json".to_string());
@@ -223,7 +223,7 @@ mod tests {
     }
 
     #[test]
-    fn test_system_health_assessment() {
+    fn test_system_health_assessment() -> Result<(), Box<dyn std::error::Error>> {
         let service = OutputMetricsService::new();
 
         let metrics = vec![

@@ -1,5 +1,6 @@
 pub mod adaptive_learning;
 pub mod advanced_feature_engineering;
+pub mod advanced_feature_extractor;
 #[cfg(feature = "ast")]
 pub mod ast_analyzer;
 pub mod cross_validation;
@@ -13,10 +14,9 @@ pub mod intelligent_caching;
 pub mod model_monitoring;
 pub mod multi_language_ast_analyzer;
 pub mod pattern_recognition;
+pub mod production_validation;
 pub mod training_data;
 pub mod unified_feature_extractor;
-pub mod advanced_feature_extractor;
-pub mod production_validation;
 
 #[cfg(test)]
 mod tests;

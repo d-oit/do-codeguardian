@@ -308,7 +308,7 @@ impl ResultsIndexer {
 
         // Simple wildcard matching (* and ?)
         let regex_pattern = pattern.replace("*", ".*").replace("?", ".");
-        let regex = Regex::new(&format!("(?i){}", regex_pattern)).unwrap();
+        let regex = Regex::new(&format!("(?i){}", regex_pattern)).expect("Failed to compile regex");
 
         for (file_path, finding_ids) in file_index.iter() {
             if regex.is_match(file_path) {
@@ -543,7 +543,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_index_and_search() -> Result<()> {
+    async fn test_index_and_search() -> Result<(), Box<dyn std::error::Error>> {
         let indexer = ResultsIndexer::new(None);
 
         let finding = create_test_finding();
@@ -563,7 +563,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_filtering() -> Result<()> {
+    async fn test_filtering() -> Result<(), Box<dyn std::error::Error>> {
         let indexer = ResultsIndexer::new(None);
 
         let finding1 = Finding::new(
@@ -602,7 +602,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_facet_values() -> Result<()> {
+    async fn test_facet_values() -> Result<(), Box<dyn std::error::Error>> {
         let indexer = ResultsIndexer::new(None);
 
         let finding1 = create_test_finding();

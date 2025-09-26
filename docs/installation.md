@@ -38,10 +38,10 @@ cargo install --path .
 docker pull do-codeguardian/do-codeguardian:latest
 
 # Run analysis
-docker run --rm -v $(pwd):/workspace do-codeguardian/do-codeguardian check /workspace
+docker run --rm -v $(pwd):/workspace do-codeguardian/codeguardian check /workspace
 
 # With custom configuration
-docker run --rm -v $(pwd):/workspace -v $(pwd)/do-codeguardian.toml:/etc/do-codeguardian.toml do-codeguardian/do-codeguardian check /workspace
+docker run --rm -v $(pwd):/workspace -v $(pwd)/codeguardian.toml:/etc/codeguardian.toml do-codeguardian/codeguardian check /workspace
 ```
 
 ### Pre-built Binaries
@@ -74,7 +74,7 @@ choco install do-codeguardian
 
 CodeGuardian includes several GitHub Actions workflows for automated CI/CD processes:
 
-- **do-codeguardian-ci.yml**: Main CI pipeline for building, testing, and linting the codebase
+- **ci.yml**: Main CI pipeline for building, testing, and linting the codebase
 - **turbo-nightly.yml**: Nightly builds and performance monitoring
 - **turbo-performance-monitor.yml**: Continuous performance benchmarking
 - **turbo-pr-analysis.yml**: Automated analysis of pull requests
@@ -90,29 +90,29 @@ After installation, initialize with a security template:
 
 ```bash
 # Initialize configuration with security template
-do-codeguardian init --template security
+codeguardian init --template security
 
 # Run analysis with ML filtering (results auto-placed in build/analysis-results/check/{date}/results.json)
-do-codeguardian check . --format json --out results.json --ml-model enhanced-model.fann
+codeguardian check . --format json --out results.json --ml-model enhanced-model.fann
 
 # Generate comprehensive report
-do-codeguardian report --from results.json --md report.md --html report.html
+codeguardian report --from results.json --md report.md --html report.html
 
 # Create GitHub issues with checklist format
-do-codeguardian gh-issue --from results.json --repo owner/repo --mode checklist
+codeguardian gh-issue --from results.json --repo owner/repo --mode checklist
 ```
 
 ## Docker Usage
 
 ```bash
 # Pull and run with default settings
-docker run --rm -v $(pwd):/workspace do-codeguardian/do-codeguardian check /workspace
+docker run --rm -v $(pwd):/workspace do-codeguardian/codeguardian check /workspace
 
 # Run with custom configuration
-docker run --rm -v $(pwd):/workspace -v $(pwd)/do-codeguardian.toml:/etc/do-codeguardian.toml do-codeguardian/do-codeguardian check /workspace
+docker run --rm -v $(pwd):/workspace -v $(pwd)/codeguardian.toml:/etc/codeguardian.toml do-codeguardian/codeguardian check /workspace
 
 # Run high-performance analysis
-docker run --rm -v $(pwd):/workspace do-codeguardian/do-codeguardian turbo /workspace --max-parallel 8 --memory-limit 2048
+docker run --rm -v $(pwd):/workspace do-codeguardian/codeguardian turbo /workspace --max-parallel 8 --memory-limit 2048
 ```
 
 ## Verification
@@ -121,11 +121,11 @@ After installation, verify everything works:
 
 ```bash
 # Check version
-do-codeguardian --version
+codeguardian --version
 
 # Initialize configuration
-do-codeguardian init --template security
+codeguardian init --template security
 
 # Run a quick test
-do-codeguardian check . --format human
+codeguardian check . --format human
 ```

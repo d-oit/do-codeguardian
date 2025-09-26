@@ -463,7 +463,7 @@ mod tests {
     }
 
     #[test]
-    fn test_base_formatter_metadata() {
+    fn test_base_formatter_metadata() -> Result<(), Box<dyn std::error::Error>> {
         let metadata = FormatMetadata {
             name: "test",
             version: "1.0.0",
@@ -479,7 +479,7 @@ mod tests {
     }
 
     #[test]
-    fn test_base_formatter_validation() {
+    fn test_base_formatter_validation() -> Result<(), Box<dyn std::error::Error>> {
         let metadata = FormatMetadata {
             name: "test",
             version: "1.0.0",
@@ -494,7 +494,7 @@ mod tests {
     }
 
     #[test]
-    fn test_base_formatter_config_hash() {
+    fn test_base_formatter_config_hash() -> Result<(), Box<dyn std::error::Error>> {
         let metadata = FormatMetadata {
             name: "test",
             version: "1.0.0",
@@ -510,7 +510,7 @@ mod tests {
     }
 
     #[test]
-    fn test_security_config_defaults() {
+    fn test_security_config_defaults() -> Result<(), Box<dyn std::error::Error>> {
         let security_config = SecurityConfig::default();
         assert!(security_config.sanitize_html);
         assert_eq!(security_config.max_content_size, 100_000_000);
@@ -519,7 +519,7 @@ mod tests {
     }
 
     #[test]
-    fn test_formatter_config_defaults() {
+    fn test_formatter_config_defaults() -> Result<(), Box<dyn std::error::Error>> {
         let config = FormatterConfig::default();
         assert!(config.include_metadata);
         assert!(config.pretty_print);

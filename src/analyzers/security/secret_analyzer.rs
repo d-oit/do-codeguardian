@@ -164,21 +164,30 @@ impl SecretAnalyzer {
                     }
 
                     // Use pooled objects for finding creation
-                    let mut finding = finding_pool.lock().unwrap().get();
+                    let mut finding = finding_pool.lock().unwrap_or_else(|e| e.into_inner()).get();
 
                     // Use pooled strings
-                    let analyzer_name = string_pool.lock().unwrap().get("security");
-                    let rule_name = string_pool.lock().unwrap().get("hardcoded_secret");
-                    let message = string_pool.lock().unwrap().get("Hardcoded secret detected");
+                    let analyzer_name = string_pool
+                        .lock()
+                        .unwrap_or_else(|e| e.into_inner())
+                        .get("security");
+                    let rule_name = string_pool
+                        .lock()
+                        .unwrap_or_else(|e| e.into_inner())
+                        .get("hardcoded_secret");
+                    let message = string_pool
+                        .lock()
+                        .unwrap_or_else(|e| e.into_inner())
+                        .get("Hardcoded secret detected");
                     let description = string_pool
                         .lock()
-                        .unwrap()
+                        .unwrap_or_else(|e| e.into_inner())
                         .get("Line contains what appears to be a hardcoded secret or credential");
-                    let suggestion = string_pool.lock().unwrap().get("Use environment variables or secure credential storage instead of hardcoding secrets");
+                    let suggestion = string_pool.lock().unwrap_or_else(|e| e.into_inner()).get("Use environment variables or secure credential storage instead of hardcoding secrets");
 
                     // Use pooled path
                     let file_path_pooled = {
-                        let mut path_pool = path_pool.lock().unwrap();
+                        let mut path_pool = path_pool.lock().unwrap_or_else(|e| e.into_inner());
                         let mut pooled_path = path_pool.get();
                         pooled_path.push(file_path);
                         pooled_path

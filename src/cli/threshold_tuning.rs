@@ -458,7 +458,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_format_metric_value() {
+    fn test_format_metric_value() -> Result<(), Box<dyn std::error::Error>> {
         use crate::output::metrics::MetricValue;
 
         assert_eq!(format_metric_value(&MetricValue::Integer(500)), "500");
@@ -469,7 +469,7 @@ mod tests {
     }
 
     #[test]
-    fn test_truncate_string() {
+    fn test_truncate_string() -> Result<(), Box<dyn std::error::Error>> {
         assert_eq!(truncate_string("short", 10), "short");
         assert_eq!(
             truncate_string("this is a very long string", 10),

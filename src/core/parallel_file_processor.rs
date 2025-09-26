@@ -327,28 +327,26 @@ mod tests {
     use tempfile::tempdir;
 
     #[tokio::test]
-    async fn test_parallel_file_processor_creation() {
+    async fn test_parallel_file_processor_creation() -> Result<(), Box<dyn std::error::Error>> {
         let processor = ParallelFileProcessor::new(Some(4));
         assert_eq!(processor.max_concurrent_files, 4);
     }
 
     #[tokio::test]
-    async fn test_batch_file_reading() {
-        let temp_dir = tempdir().unwrap();
+    async fn test_batch_file_reading() -> Result<(), Box<dyn std::error::Error>> {
+        let temp_dir = tempdir()?;
         let processor = ParallelFileProcessor::new(Some(2));
 
         // Create test files
         let mut test_files = Vec::new();
         for i in 0..5 {
             let file_path = temp_dir.path().join(format!("test_{}.txt", i));
-            tokio::fs::write(&file_path, format!("test content {}", i))
-                .await
-                .unwrap();
+            tokio::fs::write(&file_path, format!("test content {}", i)).await?;
             test_files.push(file_path);
         }
 
         let start = Instant::now();
-        let results = processor.batch_read_files(&test_files).await.unwrap();
+        let results = processor.batch_read_files(&test_files).await?;
         let duration = start.elapsed();
 
         assert_eq!(results.len(), 5);
@@ -362,40 +360,32 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_large_file_memory_mapping() {
-        let temp_dir = tempdir().unwrap();
+    async fn test_large_file_memory_mapping() -> Result<(), Box<dyn std::error::Error>> {
+        let temp_dir = tempdir()?;
         let large_file_path = temp_dir.path().join("large_test.txt");
 
         // Create a file larger than the threshold
         let large_content = "test content\n".repeat(200000); // ~2MB
-        tokio::fs::write(&large_file_path, &large_content)
-            .await
-            .unwrap();
+        tokio::fs::write(&large_file_path, &large_content).await?;
 
-        let content = ParallelFileProcessor::read_file_memory_mapped(&large_file_path)
-            .await
-            .unwrap();
+        let content = ParallelFileProcessor::read_file_memory_mapped(&large_file_path).await?;
         assert_eq!(content, large_content.as_bytes());
     }
 
     #[tokio::test]
-    async fn test_small_file_async_buffered() {
-        let temp_dir = tempdir().unwrap();
+    async fn test_small_file_async_buffered() -> Result<(), Box<dyn std::error::Error>> {
+        let temp_dir = tempdir()?;
         let small_file_path = temp_dir.path().join("small_test.txt");
 
         let small_content = "small test content";
-        tokio::fs::write(&small_file_path, small_content)
-            .await
-            .unwrap();
+        tokio::fs::write(&small_file_path, small_content).await?;
 
-        let content = ParallelFileProcessor::read_file_async_buffered(&small_file_path)
-            .await
-            .unwrap();
+        let content = ParallelFileProcessor::read_file_async_buffered(&small_file_path).await?;
         assert_eq!(content, small_content.as_bytes());
     }
 
     #[tokio::test]
-    async fn test_optimal_chunk_size_calculation() {
+    async fn test_optimal_chunk_size_calculation() -> Result<(), Box<dyn std::error::Error>> {
         let processor = ParallelFileProcessor::new(Some(4));
 
         assert_eq!(processor.get_optimal_chunk_size(2), 2); // Fewer files than workers
@@ -403,7 +393,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_processing_time_estimation() {
+    async fn test_processing_time_estimation() -> Result<(), Box<dyn std::error::Error>> {
         let processor = ParallelFileProcessor::new(Some(4));
         let estimated = processor.estimate_processing_time(100);
 
@@ -413,7 +403,7 @@ mod tests {
     }
 
     #[test]
-    fn test_parallel_processing_stats() {
+    fn test_parallel_processing_stats() -> Result<(), Box<dyn std::error::Error>> {
         let stats = ParallelProcessingStats::new(100, 50, std::time::Duration::from_secs(2), 1);
 
         assert_eq!(stats.files_processed, 100);

@@ -414,8 +414,8 @@ mod tests {
     use crate::types::AnalysisResults;
 
     #[tokio::test]
-    async fn test_parallel_output_processor_creation() {
-        let processor = ParallelOutputProcessor::new().unwrap();
+    async fn test_parallel_output_processor_creation() -> Result<(), Box<dyn std::error::Error>> {
+        let processor = ParallelOutputProcessor::new()?;
         assert_eq!(
             processor.config.max_concurrent_formats,
             num_cpus::get().min(4)
@@ -423,28 +423,27 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_process_multiple_formats_empty() {
-        let processor = ParallelOutputProcessor::new().unwrap();
+    async fn test_process_multiple_formats_empty() -> Result<(), Box<dyn std::error::Error>> {
+        let processor = ParallelOutputProcessor::new()?;
         let results = AnalysisResults::new("test".to_string());
         let formats = vec![];
 
         let result = processor
             .process_multiple_formats(&results, formats)
-            .await
-            .unwrap();
+            .await?;
         assert!(result.is_empty());
     }
 
     #[test]
-    fn test_chunk_parallel_processor() {
+    fn test_chunk_parallel_processor() -> Result<(), Box<dyn std::error::Error>> {
         let processor = ChunkParallelProcessor::new();
         assert_eq!(processor.config.chunk_size, 1000);
     }
 
     #[test]
-    fn test_parallel_performance_metrics() {
+    fn test_parallel_performance_metrics() -> Result<(), Box<dyn std::error::Error>> {
         let config = ParallelOutputConfig::default();
-        let processor = ParallelOutputProcessor::with_config(config.clone()).unwrap();
+        let processor = ParallelOutputProcessor::with_config(config.clone())?;
         let metrics = processor.get_performance_metrics();
 
         assert_eq!(metrics.thread_pool_size, config.thread_pool_size);

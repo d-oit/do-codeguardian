@@ -225,7 +225,7 @@ impl TransformerClassifier {
         }
 
         // Sort by similarity score (descending)
-        results.sort_by(|a, b| b.similarity_score.partial_cmp(&a.similarity_score).unwrap());
+        results.sort_by(|a, b| b.similarity_score.partial_cmp(&a.similarity_score)?);
 
         Ok(results)
     }
@@ -484,15 +484,15 @@ mod tests {
     use super::*;
 
     #[tokio::test]
-    async fn test_transformer_classifier() {
+    async fn test_transformer_classifier() -> Result<(), Box<dyn std::error::Error>> {
         let config = TransformerConfig::default();
-        let mut classifier = TransformerClassifier::new(config).unwrap();
+        let mut classifier = TransformerClassifier::new(config)?;
 
         let result = classifier.calculate_similarity(
             "This is a security vulnerability",
             "Security issue detected",
             "security"
-        ).await.unwrap();
+        ).await?;
 
         assert!(result.similarity_score > 0.0);
         assert!(result.confidence > 0.0);
@@ -500,9 +500,9 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_semantic_search() {
+    async fn test_semantic_search() -> Result<(), Box<dyn std::error::Error>> {
         let config = TransformerConfig::default();
-        let mut classifier = TransformerClassifier::new(config).unwrap();
+        let mut classifier = TransformerClassifier::new(config)?;
 
         let candidates = vec![
             "Password vulnerability found".to_string(),
@@ -514,16 +514,16 @@ mod tests {
             "Security vulnerability",
             &candidates,
             "security"
-        ).await.unwrap();
+        ).await?;
 
         assert!(!results.is_empty());
-        assert!(results[0].similarity_score >= results.last().unwrap().similarity_score);
+        assert!(results[0].similarity_score >= results.last()?.similarity_score);
     }
 
     #[tokio::test]
-    async fn test_fine_tuning() {
+    async fn test_fine_tuning() -> Result<(), Box<dyn std::error::Error>> {
         let config = TransformerConfig::default();
-        let mut classifier = TransformerClassifier::new(config).unwrap();
+        let mut classifier = TransformerClassifier::new(config)?;
 
         let training_data = vec![
             TrainingExample {
@@ -545,9 +545,9 @@ mod tests {
     }
 
     #[test]
-    fn test_cosine_similarity() {
+    fn test_cosine_similarity() -> Result<(), Box<dyn std::error::Error>> {
         let config = TransformerConfig::default();
-        let classifier = TransformerClassifier::new(config).unwrap();
+        let classifier = TransformerClassifier::new(config)?;
 
         let vec1 = vec![1.0, 0.0, 0.0];
         let vec2 = vec![1.0, 0.0, 0.0];
