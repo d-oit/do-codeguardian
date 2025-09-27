@@ -213,7 +213,10 @@ impl ParallelFileProcessor {
             let semaphore = Arc::clone(&semaphore);
 
             let task = tokio::spawn(async move {
-                let _permit = semaphore.acquire().await.map_err(|e| anyhow::anyhow!("Failed to acquire semaphore: {}", e))?;
+                let _permit = semaphore
+                    .acquire()
+                    .await
+                    .map_err(|e| anyhow::anyhow!("Failed to acquire semaphore: {}", e))?;
                 let content = Self::read_file_async_buffered(&file_path).await?;
                 Ok::<(PathBuf, Vec<u8>), anyhow::Error>((file_path, content))
             });
@@ -344,7 +347,9 @@ mod tests {
         let mut test_files = Vec::new();
         for i in 0..5 {
             let file_path = temp_dir.path().join(format!("test_{}.txt", i));
-            tokio::fs::write(&file_path, format!("test content {}", i)).await.unwrap();
+            tokio::fs::write(&file_path, format!("test content {}", i))
+                .await
+                .unwrap();
             test_files.push(file_path);
         }
 
@@ -369,9 +374,13 @@ mod tests {
 
         // Create a file larger than the threshold
         let large_content = "test content\n".repeat(200000); // ~2MB
-        tokio::fs::write(&large_file_path, &large_content).await.unwrap();
+        tokio::fs::write(&large_file_path, &large_content)
+            .await
+            .unwrap();
 
-        let content = ParallelFileProcessor::read_file_memory_mapped(&large_file_path).await.unwrap();
+        let content = ParallelFileProcessor::read_file_memory_mapped(&large_file_path)
+            .await
+            .unwrap();
         assert_eq!(content, large_content.as_bytes());
     }
 
@@ -381,9 +390,13 @@ mod tests {
         let small_file_path = temp_dir.path().join("small_test.txt");
 
         let small_content = "small test content";
-        tokio::fs::write(&small_file_path, small_content).await.unwrap();
+        tokio::fs::write(&small_file_path, small_content)
+            .await
+            .unwrap();
 
-        let content = ParallelFileProcessor::read_file_async_buffered(&small_file_path).await.unwrap();
+        let content = ParallelFileProcessor::read_file_async_buffered(&small_file_path)
+            .await
+            .unwrap();
         assert_eq!(content, small_content.as_bytes());
     }
 
