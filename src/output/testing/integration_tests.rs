@@ -312,7 +312,9 @@ impl IntegrationTestRunner {
             return Err(anyhow::anyhow!("Failed to retrieve stored results"));
         }
 
-        let (retrieved_results, retrieved_outputs) = retrieved.unwrap();
+        let (retrieved_results, retrieved_outputs) = retrieved.ok_or_else(|| {
+            anyhow::anyhow!("Failed to retrieve test results from storage")
+        })?;
 
         // Verify data integrity
         if retrieved_results.findings.len() != test_data.findings.len() {
@@ -645,7 +647,9 @@ impl IntegrationTestRunner {
                     return Err(anyhow::anyhow!("Failed to retrieve stored data"));
                 }
 
-                let (retrieved_data, _) = retrieved.unwrap();
+                let (retrieved_data, _) = retrieved.ok_or_else(|| {
+                    anyhow::anyhow!("Failed to retrieve performance test data")
+                })?;
 
                 // Verify data consistency
                 if original_data.findings.len() != retrieved_data.findings.len() {

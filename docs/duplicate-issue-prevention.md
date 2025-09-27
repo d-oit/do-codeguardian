@@ -69,11 +69,11 @@ You can also use the scripts manually:
 # Create or update issue with duplicate prevention
 ./scripts/create_performance_regression_issue.sh "Regression details here"
 
-# Generate performance metrics report
+# Generate performance metrics report (saved to reports/duplicate-detection/)
 ./scripts/performance_monitoring_metrics.sh analyze
 
-# Create monitoring dashboard
-./scripts/duplicate_detection_dashboard.sh generate dashboard.html
+# Create monitoring dashboard (saved to reports/dashboards/)
+./scripts/duplicate_detection_dashboard.sh generate
 ```
 
 ## Architecture
@@ -133,16 +133,29 @@ The system implements intelligent caching with the following features:
 
 ### Accessing Reports
 
+**Important**: All reports are automatically saved to organized subdirectories under `reports/`. No files are ever created in the project root.
+
 ```bash
-# Generate metrics report
+# Generate metrics report (saved to reports/duplicate-detection/)
 ./scripts/performance_monitoring_metrics.sh analyze
 
-# Generate HTML dashboard
-./scripts/duplicate_detection_dashboard.sh generate dashboard.html
+# Generate HTML dashboard (saved to reports/dashboards/)
+./scripts/duplicate_detection_dashboard.sh generate
 
 # Clean up old metrics
 ./scripts/performance_monitoring_metrics.sh cleanup
+
+# View generated reports
+ls reports/duplicate-detection/    # Metrics reports
+ls reports/dashboards/            # HTML dashboards
+ls reports/optimization/          # Performance optimization reports
 ```
+
+**Directory Structure**:
+- `reports/duplicate-detection/` - Metrics and analysis reports (.md files)
+- `reports/dashboards/` - Interactive HTML dashboards (.html files)  
+- `reports/optimization/` - Performance optimization recommendations (.md files)
+- All scripts work correctly regardless of current working directory
 
 ## Testing
 

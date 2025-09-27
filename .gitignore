@@ -85,3 +85,13 @@ results/
 
 tmp/
 
+# Generated Reports
+reports/duplicate-detection/
+reports/dashboards/
+reports/optimization/
+
+# Temporary test files
+tmp_rovodev_*
+
+# Generated HTML dashboards
+*.html

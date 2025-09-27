@@ -6,9 +6,12 @@ set -euo pipefail
 
 # Configuration
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 CACHE_DIR="${GITHUB_ISSUE_CACHE_DIR:-$HOME/.cache/codeguardian/github-issues}"
 METRICS_LOG="$CACHE_DIR/metrics.log"
-DASHBOARD_FILE="${1:-duplicate_detection_dashboard_$(date +%Y%m%d_%H%M%S).html}"
+DASHBOARDS_DIR="$PROJECT_ROOT/reports/dashboards"
+mkdir -p "$DASHBOARDS_DIR"
+DASHBOARD_FILE="${1:-$DASHBOARDS_DIR/duplicate_detection_dashboard_$(date +%Y%m%d_%H%M%S).html}"
 
 # Function to generate HTML dashboard
 generate_dashboard() {
@@ -19,12 +22,12 @@ generate_dashboard() {
     
     # Calculate metrics if log exists
     if [ -f "$METRICS_LOG" ]; then
-        total_events=$(wc -l < "$METRICS_LOG" 2>/dev/null || echo "0")
-        new_issues=$(grep -c "new_issue" "$METRICS_LOG" 2>/dev/null || echo "0")
-        duplicates_prevented=$(grep -c "duplicate_update" "$METRICS_LOG" 2>/dev/null || echo "0")
+        total_events=$(awk 'END{print NR}' "$METRICS_LOG" 2>/dev/null || echo "0")
+        new_issues=$(awk '/new_issue/{count++}END{print count+0}' "$METRICS_LOG" 2>/dev/null || echo "0")
+        duplicates_prevented=$(awk '/duplicate_update/{count++}END{print count+0}' "$METRICS_LOG" 2>/dev/null || echo "0")
         
         if [ "$total_events" -gt 0 ]; then
-            prevention_rate=$(( (duplicates_prevented * 100) / total_events ))
+            prevention_rate=$(awk "BEGIN{print int($duplicates_prevented * 100 / $total_events)}")
         fi
     fi
 

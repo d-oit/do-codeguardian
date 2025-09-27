@@ -335,7 +335,9 @@ impl MarkdownFormatter {
 
             content.push_str(&format!("### {} {{#{}}}\n\n", file.display(), file_anchor));
 
-            let findings = file_findings.get(file).unwrap();
+            let findings = file_findings.get(file).ok_or_else(|| {
+                anyhow::anyhow!("No findings found for file: {}", file.display())
+            })?;
             for finding in findings {
                 content.push_str(&self.format_finding(finding)?);
                 content.push('\n');

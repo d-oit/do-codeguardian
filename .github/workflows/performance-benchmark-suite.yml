@@ -309,7 +309,8 @@ jobs:
           echo "💡 Generating performance optimization recommendations..."
           echo "=========================================================="
 
-          RECOMMENDATIONS_FILE="optimization_recommendations_$(date +%Y%m%d_%H%M%S).md"
+          mkdir -p "reports/optimization"
+          RECOMMENDATIONS_FILE="reports/optimization/optimization_recommendations_$(date +%Y%m%d_%H%M%S).md"
 
           cat > "$RECOMMENDATIONS_FILE" << 'EOF'
           # Performance Optimization Recommendations
@@ -354,7 +355,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: optimization-recommendations-${{ github.run_number }}
-          path: optimization_recommendations_*.md
+          path: reports/optimization/optimization_recommendations_*.md
           retention-days: 30
 
   performance-summary:

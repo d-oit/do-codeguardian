@@ -359,7 +359,10 @@ impl SecurityTestRunner {
                                 sanitized
                             ));
                         } else {
-                            let error_msg = result.unwrap_err().to_string();
+                            let error_msg = match result {
+                        Err(e) => e.to_string(),
+                        Ok(_) => return Err(anyhow::anyhow!("Expected error but got success")),
+                    };
                             if !error_msg.contains(expected_error) {
                                 return Err(anyhow::anyhow!(
                                     "File path sanitization failed with wrong error: '{}'",

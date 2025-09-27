@@ -302,13 +302,14 @@ impl ResultsIndexer {
     }
 
     /// Search for findings matching file pattern
-    async fn search_files(&self, pattern: &str) -> HashSet<String> {
+    async fn search_files(&self, pattern: &str) -> anyhow::Result<HashSet<String>> {
         let file_index = self.file_index.read().await;
         let mut results = HashSet::new();
 
         // Simple wildcard matching (* and ?)
         let regex_pattern = pattern.replace("*", ".*").replace("?", ".");
-        let regex = Regex::new(&format!("(?i){}", regex_pattern)).expect("Failed to compile regex");
+        let regex = Regex::new(&format!("(?i){}", regex_pattern))
+            .map_err(|e| anyhow::anyhow!("Failed to compile regex pattern '{}': {}", regex_pattern, e))?;
 
         for (file_path, finding_ids) in file_index.iter() {
             if regex.is_match(file_path) {

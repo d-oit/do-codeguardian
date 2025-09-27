@@ -16,7 +16,7 @@ use std::sync::Arc;
 use std::time::{Duration, Instant};
 
 /// Performance metrics collector
-#[derive(Debug, Default)]
+#[derive(Debug)]
 pub struct PerformanceMetrics {
     pub total_files_processed: AtomicUsize,
     pub total_processing_time: AtomicU64, // nanoseconds
@@ -26,9 +26,15 @@ pub struct PerformanceMetrics {
     pub parallel_efficiency: AtomicU64, // percentage * 100
 }
 
+
 impl PerformanceMetrics {
     pub fn new() -> Self {
-        Self::default()
+        Self {
+            cpu_threshold: 80.0,
+            memory_threshold: 1024 * 1024 * 1024, // 1GB
+            disk_threshold: 10 * 1024 * 1024 * 1024, // 10GB
+            enabled: true,
+        }
     }
 
     pub fn record_file_processed(&self, duration: Duration) {
@@ -85,12 +91,20 @@ impl PerformanceMetrics {
     }
 }
 
+impl Default for PerformanceMetrics {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+
 /// Performance profiler for tracking operation timings
 pub struct PerformanceProfiler {
     metrics: Arc<PerformanceMetrics>,
     #[allow(dead_code)]
     start_time: Instant,
 }
+
 
 impl PerformanceProfiler {
     pub fn new(metrics: Arc<PerformanceMetrics>) -> Self {
@@ -120,6 +134,7 @@ impl PerformanceProfiler {
     }
 }
 
+
 /// Performance optimization recommendations
 #[derive(Debug, Clone)]
 pub struct OptimizationRecommendation {
@@ -129,6 +144,7 @@ pub struct OptimizationRecommendation {
     pub estimated_improvement: String,
     pub implementation_effort: ImplementationEffort,
 }
+
 
 #[derive(Debug, Clone)]
 pub enum OptimizationCategory {
@@ -140,6 +156,7 @@ pub enum OptimizationCategory {
     Algorithm,
 }
 
+
 #[derive(Debug, Clone)]
 pub enum Priority {
     Critical,
@@ -148,6 +165,7 @@ pub enum Priority {
     Low,
 }
 
+
 #[derive(Debug, Clone)]
 pub enum ImplementationEffort {
     Low,
@@ -155,10 +173,12 @@ pub enum ImplementationEffort {
     High,
 }
 
+
 /// Performance analyzer that provides optimization recommendations
 pub struct PerformanceAnalyzer {
     metrics: Arc<PerformanceMetrics>,
 }
+
 
 impl PerformanceAnalyzer {
     pub fn new(metrics: Arc<PerformanceMetrics>) -> Self {
@@ -220,10 +240,10 @@ impl PerformanceAnalyzer {
     pub fn generate_performance_report(&self) -> String {
         let mut report = String::new();
 
-        report.push_str("# CodeGuardian Performance Report\n\n");
+        report.push_str("#[derive(Debug)]CodeGuardian Performance Report\n\n");
 
         // Basic metrics
-        report.push_str("## Performance Metrics\n\n");
+        report.push_str("##[derive(Debug)]Performance Metrics\n\n");
         report.push_str(&format!(
             "- **Files Processed**: {}\n",
             self.metrics.total_files_processed.load(Ordering::Relaxed)
@@ -248,7 +268,7 @@ impl PerformanceAnalyzer {
         // Optimization recommendations
         let recommendations = self.analyze_performance();
         if !recommendations.is_empty() {
-            report.push_str("## Optimization Recommendations\n\n");
+            report.push_str("##[derive(Debug)]Optimization Recommendations\n\n");
             for (i, rec) in recommendations.iter().enumerate() {
                 report.push_str(&format!(
                     "{}. **{:?} - {:?} Priority**\n",
@@ -271,6 +291,7 @@ impl PerformanceAnalyzer {
         report
     }
 }
+
 
 #[cfg(test)]
 mod tests {
@@ -332,3 +353,4 @@ mod tests {
         Ok(())
     }
 }
+

@@ -78,7 +78,7 @@ impl SwarmOrchestrator {
                 Some(Arc::new(SwarmPerformanceMonitor::new(performance_config)));
             let resource_manager = Some(Arc::new(ResourceManager::new(config.clone())));
             let scheduler = Some(ResourceAwareScheduler::new(
-                resource_manager.as_ref().unwrap().clone(),
+                resource_manager.as_ref().ok_or(SwarmError::InitializationError("Resource manager not initialized".to_string()))?.clone(),
             ));
 
             let (task_sender, task_receiver) = mpsc::unbounded_channel();

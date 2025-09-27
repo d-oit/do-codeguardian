@@ -631,7 +631,7 @@ impl MemoryTracker {
         });
     }
 
-    pub fn calculate_stats(&self) -> MemoryStats {
+    pub fn calculate_stats(&self) -> anyhow::Result<MemoryStats> {
         let peak_memory_mb = self.peak_memory as f64 / (1024.0 * 1024.0);
         let avg_memory_mb = if !self.samples.is_empty() {
             let total: usize = self.samples.iter().map(|s| s.memory_bytes).sum();
@@ -641,7 +641,9 @@ impl MemoryTracker {
         };
 
         let memory_growth_mb = if !self.samples.is_empty() {
-            let last_memory = self.samples.last().unwrap().memory_bytes;
+            let last_memory = self.samples.last()
+                .ok_or_else(|| anyhow::anyhow!("No memory samples available"))?
+                .memory_bytes;
             (last_memory.saturating_sub(self.start_memory) as f64) / (1024.0 * 1024.0)
         } else {
             0.0
@@ -650,12 +652,12 @@ impl MemoryTracker {
         // Simplified GC pressure calculation
         let gc_pressure_score = memory_growth_mb / peak_memory_mb.max(1.0);
 
-        MemoryStats {
+        Ok(MemoryStats {
             peak_memory_mb,
             avg_memory_mb,
             memory_growth_mb,
             gc_pressure_score,
-        }
+        })
     }
 }
 

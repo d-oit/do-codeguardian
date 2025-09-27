@@ -824,16 +824,16 @@ fn markdown_to_html(markdown: &str) -> anyhow::Result<String> {
 
     // Regex patterns for markdown elements
     let header_regex =
-        Regex::new(r"^(#{1,6})\s+(.+)$").expect("Failed to compile regex for headers");
-    let bold_regex = Regex::new(r"\*\*(.*?)\*\*").expect("Failed to compile regex for bold text");
-    let italic_regex = Regex::new(r"\*(.*?)\*").expect("Failed to compile regex for italic text");
-    let code_regex = Regex::new(r"`([^`]+)`").expect("Failed to compile regex for code");
-    let list_regex = Regex::new(r"^\s*-\s+(.+)$").expect("Failed to compile regex for list items");
+        Regex::new(r"^(#{1,6})\s+(.+)$").map_err(|e| anyhow::anyhow!("Failed to compile header regex: {}", e))?;
+    let bold_regex = Regex::new(r"\*\*(.*?)\*\*").map_err(|e| anyhow::anyhow!("Failed to compile bold regex: {}", e))?;
+    let italic_regex = Regex::new(r"\*(.*?)\*").map_err(|e| anyhow::anyhow!("Failed to compile italic regex: {}", e))?;
+    let code_regex = Regex::new(r"`([^`]+)`").map_err(|e| anyhow::anyhow!("Failed to compile code regex: {}", e))?;
+    let list_regex = Regex::new(r"^\s*-\s+(.+)$").map_err(|e| anyhow::anyhow!("Failed to compile list regex: {}", e))?;
     let table_row_regex =
-        Regex::new(r"^\|(.+)\|$").expect("Failed to compile regex for table rows");
+        Regex::new(r"^\|(.+)\|$").map_err(|e| anyhow::anyhow!("Failed to compile table regex: {}", e))?;
     let severity_header_regex =
         Regex::new(r"###\s+(\u{1F534}|\u{1F7E0}|\u{1F7E1}|\u{1F535}|\u{2139})\s+(\w+)\s+Issues")
-            .expect("Failed to compile regex for severity headers");
+            .map_err(|e| anyhow::anyhow!("Failed to compile severity regex: {}", e))?;
 
     let mut in_list = false;
     let mut in_table = false;

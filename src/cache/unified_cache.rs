@@ -638,7 +638,12 @@ impl UnifiedCache {
 
 impl Default for UnifiedCache {
     fn default() -> Self {
-        Self::new(UnifiedCacheConfig::default()).expect("Failed to create default UnifiedCache")
+        Self::new(UnifiedCacheConfig::default()).unwrap_or_else(|_| {
+            // Fallback to minimal cache if default creation fails
+            Self {
+                strategy: crate::cache::optimized_cache::OptimizedCache::new(),
+            }
+        })
     }
 }
 

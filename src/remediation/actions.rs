@@ -611,7 +611,7 @@ fn set_nested_yaml_value(
                 }
                 current = map
                     .get_mut(&key_value)
-                    .expect("Key should exist after insert");
+                    .ok_or_else(|| anyhow::anyhow!("Key '{}' should exist after insert", key_value))?;
             }
         }
     }

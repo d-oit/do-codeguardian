@@ -5,8 +5,12 @@
 set -eo pipefail
 
 # Configuration
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 METRICS_LOG="${GITHUB_ISSUE_CACHE_DIR:-$HOME/.cache/codeguardian/github-issues}/metrics.log"
-REPORT_FILE="${1:-duplicate_detection_metrics_$(date +%Y%m%d_%H%M%S).md}"
+REPORTS_DIR="$PROJECT_ROOT/reports/duplicate-detection"
+mkdir -p "$REPORTS_DIR"
+REPORT_FILE="${1:-$REPORTS_DIR/duplicate_detection_metrics_$(date +%Y%m%d_%H%M%S).md}"
 
 # Function to analyze metrics
 analyze_metrics() {
@@ -20,15 +24,15 @@ analyze_metrics() {
     local duplicates_prevented=0
     
     if [ -f "$METRICS_LOG" ]; then
-        total_events=$(wc -l < "$METRICS_LOG" 2>/dev/null || echo "0")
-        new_issues=$(grep -c "new_issue" "$METRICS_LOG" 2>/dev/null || echo "0")
-        duplicates_prevented=$(grep -c "duplicate_update" "$METRICS_LOG" 2>/dev/null || echo "0")
+        total_events=$(awk 'END{print NR}' "$METRICS_LOG" 2>/dev/null || echo "0")
+        new_issues=$(awk '/new_issue/{count++}END{print count+0}' "$METRICS_LOG" 2>/dev/null || echo "0")
+        duplicates_prevented=$(awk '/duplicate_update/{count++}END{print count+0}' "$METRICS_LOG" 2>/dev/null || echo "0")
     fi
     
     # Calculate effectiveness metrics
     local prevention_rate=0
     if [ "$total_events" -gt 0 ]; then
-        prevention_rate=$(( duplicates_prevented * 100 / total_events ))
+        prevention_rate=$(awk "BEGIN{print int($duplicates_prevented * 100 / $total_events)}")
     fi
 
     # Generate report

@@ -299,6 +299,25 @@ impl Default for EnhancedCacheConfig {
     }
 }
 
+/// Monitoring level for performance data collection
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum MonitoringLevel {
+    /// Minimal monitoring - only critical metrics
+    Minimal,
+    /// Standard monitoring - basic performance metrics
+    Standard,
+    /// Detailed monitoring - comprehensive metrics collection
+    Detailed,
+    /// Debug monitoring - extensive metrics for debugging
+    Debug,
+}
+
+impl Default for MonitoringLevel {
+    fn default() -> Self {
+        Self::Standard
+    }
+}
+
 /// Performance monitoring configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PerformanceMonitoringConfig {
