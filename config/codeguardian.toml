@@ -75,6 +75,9 @@ compression_enabled = false
 enabled = true
 metrics_collection = true
 reporting_interval_seconds = 60
+level = "minimal"
+sampling_rate = 10
+batch_updates = true
 
 [analyzers]
 [analyzers.integrity]

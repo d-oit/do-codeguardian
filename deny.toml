@@ -8,15 +8,15 @@ targets = [
 ]
 
 [advisories]
-version = 2
 # A list of advisory IDs to ignore
 ignore = [
     #"RUSTSEC-0000-0000",
 ]
+# Lint level for crates with security notices
+unmaintained = "deny"
 
 
 [licenses]
-version = 2
 # List of explicitly allowed licenses
 # https://spdx.org/licenses/
 allow = [

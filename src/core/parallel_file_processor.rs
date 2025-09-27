@@ -213,7 +213,7 @@ impl ParallelFileProcessor {
             let semaphore = Arc::clone(&semaphore);
 
             let task = tokio::spawn(async move {
-                let _permit = semaphore.acquire().await?;
+                let _permit = semaphore.acquire().await.map_err(|e| anyhow::anyhow!("Failed to acquire semaphore: {}", e))?;
                 let content = Self::read_file_async_buffered(&file_path).await?;
                 Ok::<(PathBuf, Vec<u8>), anyhow::Error>((file_path, content))
             });
@@ -223,9 +223,10 @@ impl ParallelFileProcessor {
 
         let mut results = Vec::new();
         for task in tasks {
-            match task.await? {
-                Ok((path, content)) => results.push((path, content)),
-                Err(e) => warn!("Failed to read file: {}", e),
+            match task.await {
+                Ok(Ok((path, content))) => results.push((path, content)),
+                Ok(Err(e)) => warn!("Failed to read file: {}", e),
+                Err(e) => warn!("Task join error: {}", e),
             }
         }
 
@@ -335,20 +336,20 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_batch_file_reading() -> Result<(), Box<dyn std::error::Error>> {
-        let temp_dir = tempdir()?;
+    async fn test_batch_file_reading() {
+        let temp_dir = tempdir().unwrap();
         let processor = ParallelFileProcessor::new(Some(2));
 
         // Create test files
         let mut test_files = Vec::new();
         for i in 0..5 {
             let file_path = temp_dir.path().join(format!("test_{}.txt", i));
-            tokio::fs::write(&file_path, format!("test content {}", i)).await?;
+            tokio::fs::write(&file_path, format!("test content {}", i)).await.unwrap();
             test_files.push(file_path);
         }
 
         let start = Instant::now();
-        let results = processor.batch_read_files(&test_files).await?;
+        let results = processor.batch_read_files(&test_files).await.unwrap();
         let duration = start.elapsed();
 
         assert_eq!(results.len(), 5);
@@ -362,27 +363,27 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_large_file_memory_mapping() -> Result<(), Box<dyn std::error::Error>> {
-        let temp_dir = tempdir()?;
+    async fn test_large_file_memory_mapping() {
+        let temp_dir = tempdir().unwrap();
         let large_file_path = temp_dir.path().join("large_test.txt");
 
         // Create a file larger than the threshold
         let large_content = "test content\n".repeat(200000); // ~2MB
-        tokio::fs::write(&large_file_path, &large_content).await?;
+        tokio::fs::write(&large_file_path, &large_content).await.unwrap();
 
-        let content = ParallelFileProcessor::read_file_memory_mapped(&large_file_path).await?;
+        let content = ParallelFileProcessor::read_file_memory_mapped(&large_file_path).await.unwrap();
         assert_eq!(content, large_content.as_bytes());
     }
 
     #[tokio::test]
-    async fn test_small_file_async_buffered() -> Result<(), Box<dyn std::error::Error>> {
-        let temp_dir = tempdir()?;
+    async fn test_small_file_async_buffered() {
+        let temp_dir = tempdir().unwrap();
         let small_file_path = temp_dir.path().join("small_test.txt");
 
         let small_content = "small test content";
-        tokio::fs::write(&small_file_path, small_content).await?;
+        tokio::fs::write(&small_file_path, small_content).await.unwrap();
 
-        let content = ParallelFileProcessor::read_file_async_buffered(&small_file_path).await?;
+        let content = ParallelFileProcessor::read_file_async_buffered(&small_file_path).await.unwrap();
         assert_eq!(content, small_content.as_bytes());
     }
 

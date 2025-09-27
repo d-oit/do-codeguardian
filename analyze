@@ -1,0 +1,26 @@
+# Duplicate Detection Effectiveness Report
+
+Generated: 2025-09-27 06:52:21 UTC
+Metrics Period: Last 30 days
+
+## Summary Metrics
+
+- **Total Events**: 1
+- **New Issues Created**: 1
+- **Duplicates Prevented**: 0
+0
+- **Prevention Rate**: 0%
+
+## Effectiveness Analysis
+
+❌ **Status**: Poor - Low duplicate prevention rate
+
+## Detailed Breakdown
+
+### Recent Activity (Last 10 events)
+```
+2025-09-27T06:51:28Z,new_issue,test/repo,
+```
+
+### Recommendations
+

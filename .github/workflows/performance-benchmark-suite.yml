@@ -239,43 +239,54 @@ jobs:
             echo "regression_details=No regressions detected" >> $GITHUB_OUTPUT
           fi
 
-      - name: 🚨 Create Performance Regression Issue
+      - name: 🚨 Create Performance Regression Issue with Duplicate Prevention
         if: steps.regression_analysis.outputs.regression_detected == 'true'
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const regressionDetails = `${{ steps.regression_analysis.outputs.regression_details }}`;
-
-            await github.rest.issues.create({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              title: '🚨 Performance Regression Detected',
-              body: `## Performance Regression Alert
-
-            A performance regression has been detected in the CodeGuardian codebase.
-
-            ### Details
-            ${regressionDetails.split('\n').map(line => `- ${line}`).join('\n')}
-
-            ### Environment
-            - Run ID: ${context.runId}
-            - Branch: \`${context.ref}\`
-            - Commit: \`${context.sha.substring(0, 8)}\`
-            - Date: ${new Date().toISOString()}
-
-            ### Actions Required
-            1. Review the benchmark results
-            2. Identify the root cause of the regression
-            3. Implement performance optimizations
-            4. Re-run benchmarks to verify fixes
-
-            ### Benchmark Artifacts
-            Check the workflow artifacts for detailed benchmark results.
-
-            ### Labels
-            performance, regression, urgent`,
-              labels: ['performance', 'regression', 'urgent']
-            });
+        run: |
+          echo "🚨 Creating performance regression issue with enhanced duplicate prevention..."
+          echo "=================================================================="
+          echo "Features:"
+          echo "  ✅ Duplicate detection using multiple strategies"
+          echo "  ✅ Smart cache invalidation"
+          echo "  ✅ Configurable similarity thresholds"
+          echo "  ✅ Performance metrics collection"
+          echo "  ✅ Fallback mechanisms for reliability"
+          echo "=================================================================="
+          
+          # Install GitHub CLI if not available
+          if ! command -v gh &> /dev/null; then
+            echo "Installing GitHub CLI..."
+            curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
+            echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null
+            sudo apt update
+            sudo apt install gh -y
+          fi
+          
+          # Authenticate with GitHub CLI using the GitHub token
+          echo "${{ github.token }}" | gh auth login --with-token
+          
+          # Execute the enhanced issue creation script
+          if ./scripts/create_performance_regression_issue.sh "${{ steps.regression_analysis.outputs.regression_details }}"; then
+            echo "✅ Successfully processed performance regression issue"
+          else
+            echo "❌ Failed to create performance regression issue" >&2
+            echo "🔄 Falling back to basic issue creation to ensure notification..."
+            
+            # Fallback: Create issue without duplicate detection
+            gh issue create \
+              --repo "${{ github.repository }}" \
+              --title "🚨 Performance Regression Detected - Fallback" \
+              --body "**Fallback Issue Creation**
+            
+            A performance regression was detected but the enhanced issue creation failed.
+            
+            **Details:** ${{ steps.regression_analysis.outputs.regression_details }}
+            **Run ID:** ${{ github.run_id }}
+            **Commit:** ${{ github.sha }}
+            **Date:** $(date -u)
+            
+            Please investigate the enhanced issue creation system and the performance regression." \
+              --label "performance,regression,urgent,fallback"
+          fi
 
   performance-optimization-recommendations:
     name: 💡 Performance Optimization Recommendations

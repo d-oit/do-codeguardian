@@ -11,7 +11,7 @@ use rand::seq::SliceRandom;
 use rand::{thread_rng, Rng};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::time::{Duration, Instant};
+use std::time::Instant;
 use tracing::{debug, info, warn};
 
 /// Cross-validation configuration

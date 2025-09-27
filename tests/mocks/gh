@@ -1,0 +1,25 @@
+#!/bin/bash
+# Mock gh command for testing
+
+case "$1" in
+    "issue")
+        case "$2" in
+            "list")
+                # Mock issue list response
+                echo '[]'
+                ;;
+            "create")
+                # Mock issue creation
+                echo "https://github.com/test/repo/issues/123"
+                ;;
+            "edit")
+                # Mock issue edit
+                echo "Issue updated"
+                ;;
+        esac
+        ;;
+    *)
+        echo "Unknown gh command: $*" >&2
+        exit 1
+        ;;
+esac

@@ -4,12 +4,11 @@ use crate::ml::feature_extractor::FeatureExtractor;
 use crate::types::Finding;
 use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
-use std::collections::{HashMap, VecDeque};
 use std::path::Path;
 use std::sync::Arc;
-use std::time::{Duration, SystemTime};
+use std::time::SystemTime;
 use tokio::sync::RwLock;
-use tracing::{debug, info, warn};
+use tracing::{debug, warn};
 
 /// Unified feature extractor that combines base and enhanced implementations
 /// into a single, configurable system with multiple extraction modes.
@@ -355,13 +354,19 @@ impl UnifiedFeatureExtractor {
             let ast_features = self.extract_ast_features_secure(&finding.file).await?;
             let feature_vector = ast_features.to_feature_vector();
 
+            // Get file size for caching
+            let file_size = tokio::fs::metadata(&finding.file)
+                .await
+                .map(|m| m.len())
+                .unwrap_or(0);
+
             // Cache the result
             let cached_analysis = CachedFileAnalysis {
                 ast_features,
                 base_features: vec![], // Not cached here
                 file_hash: self.calculate_file_hash(&feature_vector),
                 timestamp: SystemTime::now(),
-                file_size: content.len() as u64, // Get actual file size from content
+                file_size,
             };
 
             let mut cache = self.cache.write().await;

@@ -1,8 +1,8 @@
 {
   "memory_threshold_mb": 200,
-  "time_threshold_ms": 2000,
-  "cache_hit_rate": 0.7,
-  "regression_threshold_percent": 10,
+  "time_threshold_ms": 1500,
+  "cache_hit_rate": 0.75,
+  "regression_threshold_percent": 5,
   "max_concurrent_operations": 16,
   "test_duration_seconds": 60,
   "ramp_up_duration_seconds": 10,
